@@ -759,7 +759,8 @@ namespace System
 
 		public TimeSpan GetUtcOffset (DateTimeOffset dateTimeOffset)
 		{
-			throw new NotImplementedException ();
+			bool isDST;
+			return GetUtcOffset (dateTimeOffset.UtcDateTime, out isDST);
 		}
 
 		private TimeSpan GetUtcOffset (DateTime dateTime, out bool isDST)
