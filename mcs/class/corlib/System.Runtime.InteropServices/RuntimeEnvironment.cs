@@ -69,7 +69,7 @@ namespace System.Runtime.InteropServices
 		[SecuritySafeCritical]
 		public static string GetSystemVersion ()
 		{
-			return "v" + Environment.Version.Major + "." + Environment.Version.Minor + "." + Environment.Version.Build;
+            return Assembly.GetExecutingAssembly().ImageRuntimeVersion;
 		}
 
 		[DllImport("mscoree")]
