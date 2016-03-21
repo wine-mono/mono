@@ -503,7 +503,7 @@ namespace System.Diagnostics {
 		[DesignerSerializationVisibility (DesignerSerializationVisibility.Hidden)]
 		[MonitoringDescription ("The session ID for this process.")]
 		public int SessionId {
-			get { throw new NotImplementedException (); }
+			get { return 0; }
 		}
 
 		/* the meaning of type is as follows: 0: user, 1: system, 2: total */
