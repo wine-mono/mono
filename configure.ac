@@ -2325,6 +2325,9 @@ else
 		#include <winsock2.h>
 		#include <ws2tcpip.h>
 	], [
+		#ifndef inet_pton
+		(void) inet_pton;
+		#endif
 		inet_pton (0, NULL, NULL);
 	], [
 		# Yes, we have it...
