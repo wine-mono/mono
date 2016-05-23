@@ -5,7 +5,7 @@ LIBRARY = WindowsBase.dll
 
 LIB_REFS = System System.Xml
 LIB_MCS_FLAGS = -unsafe
-TEST_MCS_FLAGS = -unsafe -r:WindowsBase.dll -r:System.dll -r:System.Xml.dll -r:System.Core.dll
+TEST_MCS_FLAGS = -unsafe -r:WindowsBase.dll -r:System.dll -r:System.Xml.dll -r:System.Core.dll -r:System.IO.Compression
 
 ifeq (2.0, $(FRAMEWORK_VERSION))
 LIB_MCS_FLAGS += -d:NET_3_0
