@@ -487,16 +487,10 @@ MonoArray *ves_icall_System_Diagnostics_Process_GetModules_internal (MonoObject 
 	guint32 i, num_added = 0;
 	static MonoClass *proc_class = NULL;
 	GPtrArray *assemblies = NULL;
-	static HANDLE current_process = 0;
-	
-	if (current_process == 0) {
-		int pid = mono_process_current_pid ();
-		current_process = ves_icall_System_Diagnostics_Process_GetProcess_internal (pid);
-	}
 
 	STASH_SYS_ASS (this_obj);
 
-	if (process == current_process) {
+	if (GetProcessId (process) == mono_process_current_pid ()) {
 		assemblies = get_domain_assemblies (mono_domain_get ());
 		assembly_count = assemblies->len;
 	}
