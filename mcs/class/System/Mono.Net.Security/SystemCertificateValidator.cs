@@ -55,7 +55,7 @@ namespace Mono.Net.Security
 #elif MONODROID
 			is_macosx = false;
 #else
-			is_macosx = System.IO.File.Exists (OSX509Certificates.SecurityLibrary);
+			is_macosx = Environment.OSVersion.Platform != PlatformID.Win32NT && Environment.OSVersion.Platform == PlatformID.MacOSX;
 #endif
 
 #if !MOBILE
