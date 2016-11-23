@@ -450,13 +450,8 @@ namespace System.Net.NetworkInformation {
 #if !MOBILE
 		class Win32NetworkInterfaceAPI : NetworkInterfaceFactory
 		{
-			private const string IPHLPAPI = "iphlpapi.dll";
-
-			[DllImport (IPHLPAPI, SetLastError = true)]
+			[DllImport ("iphlpapi.dll", SetLastError = true)]
 			static extern int GetAdaptersAddresses (uint family, uint flags, IntPtr reserved, byte [] info, ref int size);
-
-			[DllImport (IPHLPAPI)]
-			static extern uint GetBestInterfaceEx (byte[] ipAddress, out int index);
 
 			unsafe static Win32_IP_ADAPTER_ADDRESSES [] GetAdaptersAddresses ()
 			{
@@ -490,20 +485,9 @@ namespace System.Net.NetworkInformation {
 				return ret;
 			}
 
-			private static int GetBestInterfaceForAddress (IPAddress addr) {
-				int index;
-				SocketAddress address = new SocketAddress (addr);
-				int error = (int) GetBestInterfaceEx (address.m_Buffer, out index);
-				if (error != 0) {
-					throw new NetworkInformationException (error);
-				}
-
-				return index;
-			}
-
 			public override int GetLoopbackInterfaceIndex ()
 			{
-				return GetBestInterfaceForAddress (IPAddress.Loopback);
+				throw new NotImplementedException ();
 			}
 
 			public override IPAddress GetNetMask (IPAddress address)
