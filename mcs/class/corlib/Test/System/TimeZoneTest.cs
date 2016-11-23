@@ -320,7 +320,7 @@ public class TimeZoneTest {
 		[Test]
 		public void FindSystemTimeZoneById ()
 		{
-			TimeZoneInfo tzi = TimeZoneInfo.FindSystemTimeZoneById (TimeZoneInfoTest.MapTimeZoneId ("Canada/Eastern"));
+			TimeZoneInfo tzi = TimeZoneInfo.FindSystemTimeZoneById ("Canada/Eastern");
 			Assert.IsTrue ("EDT" == tzi.DaylightName || "Eastern Daylight Time" == tzi.DaylightName, "DaylightName");
 			Assert.IsTrue ("EST" == tzi.StandardName || "Eastern Standard Time" == tzi.StandardName, "StandardName");
 			Assert.IsTrue (tzi.SupportsDaylightSavingTime, "SupportsDaylightSavingTime");
