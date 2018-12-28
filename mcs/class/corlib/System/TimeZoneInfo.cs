@@ -182,14 +182,16 @@ namespace System
 		{
 #if !FULL_AOT_DESKTOP || WIN_PLATFORM
 			if (IsWindows && LocalZoneKey != null) {
-				/* Wine Mono hack: Wine doesn't set TimeZoneKeyName, so use
-				GetTimeZoneInformation to get the name. This may not quite be
-				correct because StandardName isn't the same as TimeZoneKeyName,
-				but it is for all builtin Wine timezones at least.
-
 				string name = (string)LocalZoneKey.GetValue ("TimeZoneKeyName");
 				name = TrimSpecial (name);
-				if (name != null) */
+				if (name != null && name != "")
+					return TimeZoneInfo.FindSystemTimeZoneById (name);
+
+				/* Wine Mono hack: Wine < 3.7 doesn't set TimeZoneKeyName, so use
+				GetTimeZoneInformation to get the name. This may not quite be
+				correct because StandardName isn't the same as TimeZoneKeyName,
+				but it is for all builtin Wine timezones at least. */
+
 				_TIME_ZONE_INFORMATION tzi;
 				if (GetTimeZoneInformation(out tzi) <= 2)
 					return TimeZoneInfo.FindSystemTimeZoneById (tzi.StandardName);
