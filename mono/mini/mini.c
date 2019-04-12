@@ -3358,7 +3358,9 @@ mini_method_compile (MonoMethod *method, guint32 opts, MonoDomain *domain, JitFl
 		for (i = 0; verbose_method_names [i] != NULL; i++){
 			const char *name = verbose_method_names [i];
 
-			if ((strchr (name, '.') > name) || strchr (name, ':')) {
+			if (strcmp (cfg->method->name, name) == 0)
+				cfg->verbose_level = 4;
+			else if ((strchr (name, '.') > name) || strchr (name, ':')) {
 				MonoMethodDesc *desc;
 				
 				desc = mono_method_desc_new (name, TRUE);
@@ -3368,9 +3370,6 @@ mini_method_compile (MonoMethod *method, guint32 opts, MonoDomain *domain, JitFl
 					}
 					mono_method_desc_free (desc);
 				}
-			} else {
-				if (strcmp (cfg->method->name, name) == 0)
-					cfg->verbose_level = 4;
 			}
 		}
 	}
