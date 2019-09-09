@@ -3392,6 +3392,7 @@ typedef struct
 	int (STDCALL *Return22NoICall)(MonoComObject* pUnk);
 	int (STDCALL *IntOut)(MonoComObject* pUnk, int *a);
 	int (STDCALL *ArrayIn)(MonoComObject* pUnk, void *array);
+	int (STDCALL *ArrayIn2)(MonoComObject* pUnk, void *array);
 	int (STDCALL *GetDefInterface1)(MonoComObject* pUnk, MonoDefItfObject **iface);
 	int (STDCALL *GetDefInterface2)(MonoComObject* pUnk, MonoDefItfObject **iface);
 } MonoIUnknown;
@@ -3535,6 +3536,12 @@ ArrayIn(MonoComObject* pUnk, void *array)
 }
 
 LIBTEST_API int STDCALL
+ArrayIn2(MonoComObject* pUnk, void *array)
+{
+	return S_OK;
+}
+
+LIBTEST_API int STDCALL
 GetDefInterface1(MonoComObject* pUnk, MonoDefItfObject **obj)
 {
 	return S_OK;
@@ -3580,6 +3587,7 @@ static void create_com_object (MonoComObject** pOut)
 	(*pOut)->vtbl->Return22NoICall = Return22NoICall;
 	(*pOut)->vtbl->IntOut = IntOut;
 	(*pOut)->vtbl->ArrayIn = ArrayIn;
+	(*pOut)->vtbl->ArrayIn2 = ArrayIn2;
 	(*pOut)->vtbl->GetDefInterface1 = GetDefInterface1;
 	(*pOut)->vtbl->GetDefInterface2 = GetDefInterface2;
 }
@@ -5639,6 +5647,8 @@ mono_test_marshal_safearray_in_ccw(MonoComObject *pUnk)
 	SafeArrayPutElement(array, &index, &var);
 
 	ret = pUnk->vtbl->ArrayIn (pUnk, (void *)array);
+	if (!ret)
+		ret = pUnk->vtbl->ArrayIn2 (pUnk, (void *)array);
 
 	SafeArrayDestroy(array);
 
