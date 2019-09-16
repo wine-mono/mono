@@ -1306,6 +1306,8 @@ mono_gc_alloc_vector (MonoVTable *vtable, size_t size, uintptr_t max_length)
 	MonoArray *arr;
 	TLAB_ACCESS_INIT;
 
+	size += SIZEOF_VOID_P;
+
 	if (!SGEN_CAN_ALIGN_UP (size))
 		return NULL;
 

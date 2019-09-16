@@ -274,6 +274,9 @@ emit_managed_allocator_ilgen (MonoMethodBuilder *mb, gboolean slowpath, gboolean
 		/* * n */
 		mono_mb_emit_ldarg (mb, 1);
 		mono_mb_emit_byte (mb, CEE_MUL_OVF_UN);
+		/* + sizeof (void*) padding */
+		mono_mb_emit_icon (mb, SIZEOF_VOID_P);
+		mono_mb_emit_byte (mb, CEE_ADD_OVF_UN);
 		/* + sizeof (MonoArray) */
 		mono_mb_emit_icon (mb, MONO_SIZEOF_MONO_ARRAY);
 		mono_mb_emit_byte (mb, CEE_ADD_OVF_UN);

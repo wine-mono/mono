@@ -206,7 +206,7 @@ mono_gc_alloc_obj (MonoVTable *vtable, size_t size)
 MonoArray*
 mono_gc_alloc_vector (MonoVTable *vtable, size_t size, uintptr_t max_length)
 {
-	MonoArray *obj = g_calloc (1, size);
+	MonoArray *obj = g_calloc (1, size + SIZEOF_VOID_P);
 
 	obj->obj.vtable = vtable;
 	obj->max_length = max_length;

@@ -760,6 +760,8 @@ mono_gc_alloc_array (MonoVTable *vtable, size_t size, uintptr_t max_length, uint
 {
 	MonoArray *obj;
 
+	size += SIZEOF_VOID_P;
+
 	if (!m_class_has_references (vtable->klass)) {
 		obj = (MonoArray *)GC_MALLOC_ATOMIC (size);
 		if (G_UNLIKELY (!obj))
