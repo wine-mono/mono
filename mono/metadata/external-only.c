@@ -16,6 +16,10 @@
 #include "class-init.h"
 #include "marshal.h"
 #include "object.h"
+#include "assembly-internals.h"
+#include "external-only.h"
+#include "threads.h"
+#include "threads-types.h"
 
 /**
  * mono_gchandle_new:
@@ -185,4 +189,14 @@ mono_bool
 mono_class_init (MonoClass *klass)
 {
 	MONO_EXTERNAL_ONLY_GC_UNSAFE (gboolean, mono_class_init_internal (klass));
+}
+
+/**
+ * mono_thread_manage:
+ *
+ */
+void
+mono_thread_manage (void)
+{
+	MONO_EXTERNAL_ONLY_GC_UNSAFE_VOID (mono_thread_manage_internal ());
 }

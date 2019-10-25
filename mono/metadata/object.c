@@ -5078,7 +5078,7 @@ mono_runtime_exec_managed_code (MonoDomain *domain,
 	mono_thread_create_checked (domain, exec_managed_thread, exec_args, error);
 	mono_error_assert_ok (error);
 
-	mono_thread_manage ();
+	mono_thread_manage_internal ();
 }
 
 static void
