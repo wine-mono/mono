@@ -174,7 +174,7 @@ namespace MonoTests.Microsoft_VisualBasic.CompilerServices
 
 
 		[Test]
-		[ExpectedException (typeof (InvalidCastException), "'ReDim' cannot change the number of dimensions.")]
+		[ExpectedException (typeof (InvalidCastException))]
 		public void TestCopyArrayDifferentDimensions ()
 		{
 			string [] source = new string [2];
