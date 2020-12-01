@@ -29,6 +29,7 @@
 ' WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 Imports System
+Imports System.Globalization
 Imports System.Runtime.InteropServices
 Namespace Microsoft.VisualBasic.CompilerServices
     <System.ComponentModel.EditorBrowsable(ComponentModel.EditorBrowsableState.Never)> _
@@ -90,6 +91,10 @@ Namespace Microsoft.VisualBasic.CompilerServices
 #End If
 
             Try
+                If Value.TrimStart(Nothing).StartsWith("&H", StringComparison.CurrentCultureIgnoreCase) Then
+                    Return Int32.Parse(Value.TrimStart(Nothing).Substring(2), NumberStyles.AllowHexSpecifier)
+                End If
+
 #If TRACE Then
                 System.Console.WriteLine("TRACE:IntegerType.FromString:Value:" + Int32.Parse(Value).ToString())
 #End If

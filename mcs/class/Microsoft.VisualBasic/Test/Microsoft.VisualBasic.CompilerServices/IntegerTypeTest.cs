@@ -75,6 +75,16 @@ namespace MonoTests.Microsoft_VisualBasic.CompilerServices
 			i = Microsoft.VisualBasic.CompilerServices.IntegerType.FromString(st);
 		}
 
+		[Test]
+		public void FromStringHex()
+		{
+			int i;
+			i = Microsoft.VisualBasic.CompilerServices.IntegerType.FromString("&H1aB");
+			Assert.AreEqual (0x1ab, i, "&H1aB");
+			i = Microsoft.VisualBasic.CompilerServices.IntegerType.FromString(" &H1");
+			Assert.AreEqual (1, i, " &H1");
+		}
+
 		#endregion
 
 		#region FromObject
