@@ -74,6 +74,18 @@ namespace MonoTests.Microsoft_VisualBasic.CompilerServices
 			b = Microsoft.VisualBasic.CompilerServices.BooleanType.FromString("0");
 			Assert.AreEqual (false.ToString(), b.ToString(), "FromString1#3");
 
+			// test string = "&H0"
+			b = Microsoft.VisualBasic.CompilerServices.BooleanType.FromString("&H0");
+			Assert.AreEqual (false.ToString(), b.ToString(), "FromString1#4");
+
+			// test string = "&H1"
+			b = Microsoft.VisualBasic.CompilerServices.BooleanType.FromString("&H1");
+			Assert.AreEqual (true.ToString(), b.ToString(), "FromString1#5");
+
+			// test string = "&Ha"
+			b = Microsoft.VisualBasic.CompilerServices.BooleanType.FromString("&Ha");
+			Assert.AreEqual (true.ToString(), b.ToString(), "FromString1#6");
+
 		}
 
 		[Test]

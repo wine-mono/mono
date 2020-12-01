@@ -91,8 +91,10 @@ Namespace Microsoft.VisualBasic.CompilerServices
 #End If
 
             Try
-                If Value.TrimStart(Nothing).StartsWith("&H", StringComparison.CurrentCultureIgnoreCase) Then
-                    Return Int32.Parse(Value.TrimStart(Nothing).Substring(2), NumberStyles.AllowHexSpecifier)
+                Value = Value.TrimStart()
+
+                If Value.StartsWith("&H", StringComparison.CurrentCultureIgnoreCase) Then
+                    Return Int32.Parse(Value.Substring(2), NumberStyles.AllowHexSpecifier)
                 End If
 
 #If TRACE Then

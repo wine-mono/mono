@@ -29,6 +29,7 @@
 ' WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 '
 Imports System
+Imports System.Globalization
 
 Namespace Microsoft.VisualBasic.CompilerServices
     <System.ComponentModel.EditorBrowsable(ComponentModel.EditorBrowsableState.Never)> _
@@ -40,6 +41,12 @@ Namespace Microsoft.VisualBasic.CompilerServices
         Public Shared Function FromString(ByVal value As String) As Byte
             Try
                 If value Is Nothing Then Return 0
+
+                Value = Value.TrimStart()
+
+                If Value.StartsWith("&H", StringComparison.CurrentCultureIgnoreCase) Then
+                    Return Byte.Parse(Value.Substring(2), NumberStyles.AllowHexSpecifier)
+                End If
 
                 Return Byte.Parse(value)
             Catch ex As FormatException

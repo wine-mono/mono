@@ -29,6 +29,7 @@
 ' WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 Imports System
+Imports System.Globalization
 
 Namespace Microsoft.VisualBasic.CompilerServices
     <System.ComponentModel.EditorBrowsable(ComponentModel.EditorBrowsableState.Never)> _
@@ -58,6 +59,12 @@ Namespace Microsoft.VisualBasic.CompilerServices
                 Return 0
             End If
             Try
+                Value = Value.TrimStart()
+
+                If Value.StartsWith("&H", StringComparison.CurrentCultureIgnoreCase) Then
+                    Return Int64.Parse(Value.Substring(2), NumberStyles.AllowHexSpecifier)
+                End If
+
                 Return Convert.ToInt64(DecimalType.FromString(value))
             Catch ex As Exception
                 Throw New InvalidCastException(String.Format(Utils.GetResourceString("CastFromStringToType"), value, "Long"), ex)

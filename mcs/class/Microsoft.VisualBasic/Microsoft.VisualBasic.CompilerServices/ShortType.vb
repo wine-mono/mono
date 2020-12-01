@@ -29,6 +29,7 @@
 ' WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 Imports System
+Imports System.Globalization
 Namespace Microsoft.VisualBasic.CompilerServices
     <System.ComponentModel.EditorBrowsable(ComponentModel.EditorBrowsableState.Never)> _
     Public NotInheritable Class ShortType
@@ -63,6 +64,12 @@ Namespace Microsoft.VisualBasic.CompilerServices
             End If
 
             Try
+                Value = Value.TrimStart()
+
+                If Value.StartsWith("&H", StringComparison.CurrentCultureIgnoreCase) Then
+                    Return Short.Parse(Value.Substring(2), NumberStyles.AllowHexSpecifier)
+                End If
+
                 Return Short.Parse(value)
             Catch ex As Exception
                 Throw New InvalidCastException(String.Format(Utils.GetResourceString("CastFromStringToType"), value, "Short"), ex)
