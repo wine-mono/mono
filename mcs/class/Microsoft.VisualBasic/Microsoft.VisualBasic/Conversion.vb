@@ -381,7 +381,23 @@ Namespace Microsoft.VisualBasic
                     Return Convert.ToString(Number, CultureInfo.InvariantCulture)
                 End If
             ElseIf TypeOf Number Is String Then
-                Throw New System.NullReferenceException("Object reference not set to an instance of an object.")
+                Dim value As Double
+                Try
+                    value = Convert.ToDouble(Number)
+                Catch exception As System.FormatException
+                    Throw New System.InvalidCastException("Argument 'Number' cannot be converted to a numeric value.")
+                End Try
+                if value > 0
+                    Return " " + Convert.ToString(value, CultureInfo.InvariantCulture)
+                Else
+                    Return Convert.ToString(value, CultureInfo.InvariantCulture)
+                End if
+            ElseIf TypeOf Number is Boolean Then
+                If Convert.ToBoolean(Number) Then
+                    Return "True"
+                Else
+                    Return "False"
+                End If
             Else
                 Throw New System.InvalidCastException("Argument 'Number' cannot be converted to a numeric value.")
             End If
@@ -406,6 +422,14 @@ Namespace Microsoft.VisualBasic
                 Return Val(Convert.ToString(Expression))
             ElseIf TypeOf Expression Is Boolean Then
                 Return Val(Convert.ToString((-1) * Convert.ToInt16(Expression)))
+            ElseIf TypeOf Expression Is Integer Then
+                Return Val(Convert.ToString(Expression))
+            ElseIf TypeOf Expression Is System.Enum Then
+                Return Val(Convert.ToString(Convert.ToInt32(Expression)))
+            ElseIf TypeOf Expression Is System.Single Then
+                Return Convert.ToDouble(Expression)
+            ElseIf TypeOf Expression Is System.Double Then
+                Return Convert.ToDouble(Expression)
                 'FIXME: add more types. Return Val(StringType.FromObject(Expression))
             Else
                 Throw New System.ArgumentException("Argument 'Expression' cannot be converted to type '" + Expression.GetType.FullName + "'.")

@@ -1092,6 +1092,7 @@ namespace MonoTests.Microsoft_VisualBasic
 			short short1;
 			double dbl1;
 			float f;
+			bool b;
 
 			byte1 = 11;
 			Assert.AreEqual(" 11",Conversion.Str(byte1));
@@ -1128,6 +1129,25 @@ namespace MonoTests.Microsoft_VisualBasic
 			f = 234.234F;
 			Assert.AreEqual(" 234.234",Conversion.Str(f));
 
+			Assert.AreEqual(" 234.234", Conversion.Str("234.234"));
+
+			b = true;
+			Assert.AreEqual("True", Conversion.Str(b));
+			b = false;
+			Assert.AreEqual("False", Conversion.Str(b));
+
+			bool caughtException = false;
+
+			try
+			{
+				Conversion.Str("q234.234");
+			}
+			catch (Exception e)
+			{
+				Assert.AreEqual(typeof(InvalidCastException), e.GetType());
+				caughtException = true;
+			}
+			Assert.AreEqual(true, caughtException);
 		}
 
 		[Test]
@@ -1149,6 +1169,13 @@ namespace MonoTests.Microsoft_VisualBasic
 		#endregion
 
 		#region Val Tests
+
+		public enum TestEnumType
+		{
+			Val1,
+			Val2,
+			Val3,
+		}
 
 		// Test the Val function
 		[Test]
@@ -1194,6 +1221,24 @@ namespace MonoTests.Microsoft_VisualBasic
 
 			Assert.AreEqual(0, Conversion.Val (null));
 			Assert.AreEqual(0, Conversion.Val (String.Empty));
+
+			double v;
+
+			Int32 int32_v = 28;
+			v = Conversion.Val(int32_v);
+			Assert.AreEqual(28.0, v);
+
+			TestEnumType enum_v = TestEnumType.Val3;
+			v = Conversion.Val(enum_v);
+			Assert.AreEqual(2.0, v);
+
+			Single single_v = 2.12f;
+			v = Conversion.Val(single_v);
+			Assert.AreEqual(Convert.ToSingle(v), single_v, "T#1");
+
+			double double_v = 2.12;
+			v = Conversion.Val(double_v);
+			Assert.AreEqual(v, double_v, "T#2");
 		}
 
 
