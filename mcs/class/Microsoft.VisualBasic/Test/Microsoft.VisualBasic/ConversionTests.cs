@@ -1182,7 +1182,7 @@ namespace MonoTests.Microsoft_VisualBasic
 		public void Val() 
 		{
 			Assert.AreEqual(4, Conversion.Val('4'));
-			Assert.AreEqual(-3542.76, Conversion.Val("    -   3       5   .4   2  7   6E+    0 0 2    "));
+			Assert.AreEqual(-3542.7600000000002, Conversion.Val("    -   3       5   .4   2  7   6E+    0 0 2    "));
 			Assert.AreEqual(255D, Conversion.Val("&HFF"));
 			Assert.AreEqual(255D, Conversion.Val("&o377"));
 
@@ -1277,7 +1277,13 @@ namespace MonoTests.Microsoft_VisualBasic
 			s1 = "123.321";
 			Assert.AreEqual(123.321,Conversion.Val(s1));
 
+			s1 = "12+3.321";
+			Assert.AreEqual(12,Conversion.Val(s1));
+
 			s1 = "9 . 9 a";
+			Assert.AreEqual(9.9,Conversion.Val(s1));
+
+			s1 = "\t9\n.\r9 a";
 			Assert.AreEqual(9.9,Conversion.Val(s1));
 
 			s1 = "B9 . 9 a";
@@ -1330,6 +1336,12 @@ namespace MonoTests.Microsoft_VisualBasic
 
 			s1 = "&HFFFFFFFFFFFFFFFD";
 			Assert.AreEqual(-3,Conversion.Val(s1));
+
+			s1 = "&HFFFFFFFFFFFFFFFf";
+			Assert.AreEqual(-1,Conversion.Val(s1));
+
+			s1 = "&H8000000000000000";
+			Assert.AreEqual(-9.2233720368547758E+18,Conversion.Val(s1));
 
 			s1 = "&HFF.FF";
 			Assert.AreEqual(255,Conversion.Val(s1));

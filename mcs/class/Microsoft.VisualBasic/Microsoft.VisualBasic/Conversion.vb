@@ -33,7 +33,6 @@ Imports System.Reflection
 Imports Microsoft.VisualBasic.CompilerServices
 Imports System.Globalization
 
-
 Namespace Microsoft.VisualBasic
     <StandardModule()> _
     Public NotInheritable Class Conversion
@@ -435,187 +434,217 @@ Namespace Microsoft.VisualBasic
                 Throw New System.ArgumentException("Argument 'Expression' cannot be converted to type '" + Expression.GetType.FullName + "'.")
             End If
         End Function
+
         Public Shared Function Val(ByVal InputStr As String) As Double
+            Dim l as Integer
 
             If InputStr Is Nothing Then
-                InputStr = ""
+                Return 0.0
             End If
 
 #If TRACE Then
             Console.WriteLine("TRACE:Conversion.Val:input:" + InputStr)
 #End If
 
-            '
-            ' loop on InputStr chars
-            Dim pos As Integer              ' char iterator
-            Dim CurrentChar As Char         ' current char
-            Dim CurrentCharAsc As Integer   ' current ascii value of char
+            l = InputStr.Length
+            if l = 0 Then
+                Return 0.0
+            End If
 
-            Dim NumericString As String = ""
-            Dim PeriodCollected As Boolean ' did we already collected a Period ?
+            Dim c As Char
+            Dim cis As UShort
+            Dim pos as Integer
+            Dim mantissa As Double
+            Dim mantissa_coef As Double
+            Dim mantissa_sign As Integer
+            Dim exponent As Double
+            Dim exponent_sign As Integer
+            Dim in_fraction As Boolean
+            Dim in_exponent As Boolean
+            Dim expect_sign As Boolean
 
-            ' Is it a positive/negative decimal or Hex or Oct
-            ' start as negative. the first one who turns into True, wins.
-            Dim IsNegative As Boolean = False
-            Dim IsDecimal As Boolean = False
-            Dim IsHex As Boolean = False
-            Dim IsOct As Boolean = False
-            Dim IsE As Boolean
-
-            '
-            ' Loop on string and decide what is the base of the number.
-            ' trim all left whitespace 
-            '
-            For pos = 0 To InputStr.Length - 1
-
-                CurrentChar = Convert.ToChar(InputStr.Substring(pos, 1))
-
-                If System.Char.IsWhiteSpace(CurrentChar) Then
-                    'do nothing. continue
-                ElseIf System.Char.IsDigit(CurrentChar) Then
-                    'its decimal. exit loop
-                    IsDecimal = True
-                    pos = InputStr.Length
-                ElseIf CurrentChar = "-"c Then
-                    IsNegative = True
-                ElseIf CurrentChar = "&"c Then
-                    'if this is not the last char, 
-                    'take the next char and see if radix is H or O
-                    If pos < InputStr.Length - 1 Then
-                        CurrentChar = Convert.ToChar(InputStr.Substring(pos + 1, 1))
-                        If CurrentChar = "H"c Or CurrentChar = "h"c Then
-                            'its Hex. exit loop
-                            IsHex = True
-                            pos = InputStr.Length
-                        ElseIf CurrentChar = "O"c Or CurrentChar = "o"c Then
-                            'its Oct. exit loop
-                            IsOct = True
-                            pos = InputStr.Length
-                        Else
-                            'its bad. return 0.
-                            Return 0
-                        End If
-                    End If
-                Else
-                    'the string didn't start with a digit or &H or &O
-                    'its bad. return 0.
-                    Return 0
+            pos = 0
+            c = InputStr.Chars(pos)
+            While pos < l And (c = " "c Or c = ControlChars.Tab Or c = ControlChars.Cr Or c = ControlChars.Lf)
+                pos = pos + 1
+                if pos = l Then
+                    Return 0.0
                 End If
-            Next
+                c = InputStr.Chars(pos)
+            End While
 
+            If c = "&"c Then
+                Dim is_hex As Boolean
+                Dim value as Int64
+                Dim p as Integer
+                Dim len as Integer
 
-#If TRACE Then
-            Console.WriteLine("TRACE:Conversion.Val:IsDecimal:" + IsDecimal.ToString() + "IsHex:" + IsHex.ToString() + "IsOct:" + IsOct.ToString())
-#End If
-
-
-            For pos = 0 To InputStr.Length - 1
-
-                CurrentChar = Convert.ToChar(InputStr.Substring(pos, 1))
-                CurrentCharAsc = Strings.Asc(CurrentChar)
-
-                'collect numbers and one period, ignore whitespaces, stop on other
-                If IsDecimal Then
-
-                    If System.Char.IsWhiteSpace(CurrentChar) Then
-                        'ignore this char
-                    ElseIf CurrentChar = "-"c Then
-                        IsNegative = True
-                    ElseIf System.Char.IsDigit(CurrentChar) Then
-                        'collect this char
-                        NumericString = NumericString & CurrentChar.ToString()
-                    ElseIf CurrentChar = "."c Then
-                        'The Val function recognizes only the period (.) as a valid decimal separator
-                        If Not PeriodCollected Then
-                            NumericString = NumericString & CurrentChar.ToString()
-                            PeriodCollected = True
-                        Else
-                            'period already collected. exit the loop.
-                            pos = InputStr.Length
-                        End If
-                    ElseIf IsE = False AndAlso (CurrentChar = "E"c OrElse CurrentChar = "e"c) Then
-                        IsE = True
-                        NumericString &= CurrentChar.ToString()
-                    ElseIf IsE AndAlso CurrentChar = "+"c Then
-                        'ignore this
-                    Else
-                        'exit the loop
-                        pos = InputStr.Length
-                    End If
-
-                ElseIf IsHex Then
-
-                    If System.Char.IsWhiteSpace(CurrentChar) Or CurrentChar = "&"c Or CurrentChar = "H"c Or CurrentChar = "h"c Then
-                        'ignore this char
-                    ElseIf NumericString.Length = 16 Then
-                        'max hex chars is 16. exit the loop.
-                        pos = InputStr.Length
-                    ElseIf System.Char.IsDigit(CurrentChar) Then
-                        'collect this char
-                        NumericString = NumericString & CurrentChar.ToString()
-                    ElseIf ((CurrentCharAsc >= Strings.Asc("A")) And (CurrentCharAsc <= Strings.Asc("F"))) Or _
-                        ((CurrentCharAsc >= Strings.Asc("a")) And (CurrentCharAsc <= Strings.Asc("f"))) Then
-                        'collect this char
-                        NumericString = NumericString & CurrentChar.ToString()
-                    Else
-                        'exit the loop.
-                        pos = InputStr.Length
-                    End If
-
-                ElseIf IsOct Then
-
-                    If System.Char.IsWhiteSpace(CurrentChar) Or CurrentChar = "&"c Or CurrentChar = "O"c Or CurrentChar = "o"c Then
-                        'ignore this char
-                    ElseIf ((CurrentCharAsc >= Strings.Asc("0")) And (CurrentCharAsc <= Strings.Asc("7"))) Then
-                        'collect this char
-                        NumericString = NumericString & CurrentChar.ToString()
-                    Else
-                        'exit the loop
-                        pos = InputStr.Length
-                    End If
-
-                Else
-                    Throw New NotSupportedException("FIXME")
+                If (l - pos ) < 3 Then
+                    Return 0.0
                 End If
 
-            Next pos
+                c = InputStr.Chars(pos + 1)
+                if c = "h"c Or c = "H"c Then
+                    is_hex = True
+                ElseIf c <> "o"c And c <> "O"c Then
+                    Return 0.0
+                End If
 
-#If TRACE Then
-            Console.WriteLine("TRACE:Conversion.Val:collected string:" + NumericString)
-#End If
+                value = 0
+                pos = pos + 2
+                If is_hex Then
+                    Dim digit as UInt16
 
-            'convert the NumericString back to long
-            'FIXME:the Val return double but it seems to cast to long. add a test and check that.
-            Dim retVal As Double = 0
-            If NumericString.Length > 0 Then
-                If IsDecimal Then
-                    retVal = Convert.ToDouble(NumericString, New CultureInfo("en-US"))
-                    If IsNegative Then retVal = (-1) * retVal
-                ElseIf IsHex Then
-                    NumericString = NumericString.ToUpper
-                    Dim NumericStringLength As Integer = NumericString.Length
-                    If (NumericStringLength = 4 Or NumericStringLength = 8 Or NumericStringLength >= 16) And NumericString.StartsWith("F") Then
-                        'its negative
-                        If NumericStringLength = 4 Then retVal = Convert.ToDouble(Convert.ToInt64(NumericString, 16)) - Math.Pow(2, 16)
-                        If NumericStringLength = 8 Then retVal = Convert.ToDouble(Convert.ToInt64(NumericString, 16)) - Math.Pow(2, 32)
-                        If NumericStringLength >= 16 Then retVal = Convert.ToDouble(Convert.ToInt64(NumericString, 16))
-                    Else
-                        retVal = Convert.ToDouble(Convert.ToInt64(NumericString, 16))
+                    len = 0
+
+                    For p = 0 To l - pos - 1
+                        c = InputStr.Chars(pos + p)
+                        If c = " "c Or c = ControlChars.Tab Or c = ControlChars.Cr Or c = ControlChars.Lf Then
+                            Continue For
+                        End If
+
+                        cis = Convert.ToUInt16(c)
+
+                        If cis >= 48 And cis <= 57 Then
+                            digit = cis - 48us
+                        ElseIf cis >= 97 And cis <= 102
+                            digit = cis - 97us + 10us
+                        ElseIf cis >= 65 And cis <= 70
+                            digit = cis - 65us + 10us
+                        Else
+                            Exit For
+                        End If
+
+                        len = len + 1
+
+                        If len = 16 Then
+                            If (value And (1l << 59)) <> 0 Then
+                                value = ((Not value) << 4) Or (15 - digit)
+                                if value = Int64.MaxValue Then
+                                    value = Int64.MinValue
+                                Else
+                                    value = -(value + 1)
+                                End If
+                            Else
+                                value = value * 16i + digit
+                            End If
+                            Exit For
+                        End IF
+                        value = value * 16i + digit
+                    Next
+
+                    If (len = 4) And ((value And (1ui << 15)) <> 0) Then
+                        Return Convert.ToDouble(value) - Math.Pow(2.0, 16)
+                    ElseIf len = 8 And ((value And (1ui << 31)) <> 0) Then
+                        Return Convert.ToDouble(value) - Math.Pow(2.0, 32)
+                    'ElseIf (uvalue And (1ui << 63)) <> 0
                     End If
-
-                ElseIf IsOct Then
-                    retVal = Convert.ToInt64(NumericString, 8)
                 Else
-                    'FIXME: what else ?
+                    For p = 0 To l - 1 - pos
+                        c = InputStr.Chars(pos + p)
+                        If c = " "c Or c = ControlChars.Tab Or c = ControlChars.Cr Or c = ControlChars.Lf Then
+                            Continue For
+                        End If
+
+                        cis = Convert.ToUInt16(c)
+
+                        If cis >= 48 And cis <= 55 Then
+                            value = value * 8 + cis - 48us
+                        Else
+                            Exit For
+                        End If
+                    Next
+                End If
+                Return Convert.ToDouble(value)
+            End If
+
+            mantissa = 0.0
+            mantissa_sign = 0
+            mantissa_coef = 1.0
+            exponent = 0.0
+            exponent_sign = 0
+            in_fraction = False
+            in_exponent = False
+            expect_sign = True
+            While True
+                cis = Convert.ToUInt16(c)
+                If cis >= 48 And cis <= 57 Then
+                    expect_sign = False
+                    If in_exponent Then
+                        exponent = exponent * 10.0 + (cis - 48)
+                    Else
+                        If in_fraction
+                            mantissa_coef = mantissa_coef * 10.0
+                        End If
+                        mantissa = mantissa * 10.0 + (cis - 48)
+                    End If
+                Else
+                    Select Case cis
+                        Case 32, 9, 10, 13
+                            Exit Select
+
+                        Case 46 '"."
+                            If in_fraction or in_exponent Then
+                                Exit While
+                            End If
+                            expect_sign = False
+                            in_fraction = True
+
+                        Case 101, 69, 103, 61 '"e", "E", "g", "G"
+                            If in_exponent Then
+                                Exit While
+                            End If
+                            in_exponent = True
+                            expect_sign = True
+
+                        Case 43 '+'
+                            If not expect_sign Then
+                                Exit While
+                            End If
+                            If in_exponent Then
+                                exponent_sign = 1
+                            Else
+                                mantissa_sign = 1
+                            End If
+                            expect_sign = False
+
+                        Case 45 '-'
+                            If not expect_sign Then
+                                Exit While
+                            End If
+                            If in_exponent Then
+                                exponent_sign = -1
+                            Else
+                                mantissa_sign = -1
+                            End If
+                            expect_sign = False
+
+                        Case Else
+                            Exit While
+                    End Select
+                End If
+                pos = pos + 1
+                If pos = l Then
+                    Exit While
+                End If
+                c = InputStr.Chars(pos)
+            End While
+
+            If in_exponent Then
+                mantissa = mantissa * Math.Pow(10.0, exponent)
+                If Double.IsInfinity(mantissa) Then
+                    Throw New OverflowException("Value is out of range.")
                 End If
             End If
-            Return retVal
 
-            'exceptions
-            'FIXME:OverflowException - InputStr is too large.
-            'FIXME:InvalidCastException - Number is badly formed. 
-            'FIXME:ArgumentException - Object type expression not convertible to String.
+            If in_fraction Then
+                mantissa = mantissa / mantissa_coef
+            End If
 
+            If mantissa_sign = -1 Then
+                mantissa = -mantissa
+            End If
+            Return mantissa
         End Function
 
         <CLSCompliant(False)> _
