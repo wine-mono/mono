@@ -94,13 +94,15 @@ Namespace Microsoft.VisualBasic
 
             Dim rkey As RegistryKey
             rkey = Registry.CurrentUser
+            rkey = rkey.OpenSubKey("Software\VB and VBA Program Settings\", true)
             If Section Is Nothing Then
                 rkey.DeleteSubKeyTree(AppName)
             Else
+                rkey = rkey.OpenSubKey(AppName, true)
                 If Key Is Nothing Then
                     rkey.DeleteSubKeyTree(Section)
                 Else
-                    rkey = rkey.OpenSubKey(Section)
+                    rkey = rkey.OpenSubKey(Section, true)
                     rkey.DeleteValue(Key)
                 End If
             End If
@@ -172,6 +174,9 @@ Namespace Microsoft.VisualBasic
             End If
             rkey = Registry.CurrentUser
             rkey = rkey.OpenSubKey("Software\VB and VBA Program Settings\" + AppName)
+            If (rkey Is Nothing) Then
+                Return [Default]
+            End If
             rkey = rkey.OpenSubKey(Section)
             If (rkey Is Nothing) Then
                 Return [Default]

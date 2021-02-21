@@ -192,6 +192,61 @@ Public Sub GetAllSettings_1()
         str_tmp = Interaction.GetAllSettings("TEST", Nothing)
     End Sub
 
+    <Test()> _
+    Public Sub GetSetting()
+        Dim caughtException as Boolean
+
+        Assert.AreEqual("Default", Interaction.GetSetting("NoSuchApp", "NoSuchSection", "NoSuchSetting", "Default"))
+
+        Interaction.SaveSetting("TestSettingApp", "TestSettingSection", "TestSetting", "TestValue")
+        Assert.AreEqual("TestValue", Interaction.GetSetting("TestSettingApp", "TestSettingSection", "TestSetting", "Default"))
+        Assert.AreEqual("Default", Interaction.GetSetting("TestSettingApp", "TestSettingSection", "NoSuchSetting", "Default"))
+        Assert.AreEqual("Default", Interaction.GetSetting("TestSettingApp", "NoSuchSection", "TestSetting", "Default"))
+
+        Interaction.SaveSetting("TestSettingApp", "TestSettingSection2", "TestSetting", "TestValue")
+        Assert.AreEqual("TestValue", Interaction.GetSetting("TestSettingApp", "TestSettingSection2", "TestSetting", "Default"))
+
+        Interaction.SaveSetting("TestSettingApp", "TestSettingSection3", "TestSetting", "TestValue")
+        Assert.AreEqual("TestValue", Interaction.GetSetting("TestSettingApp", "TestSettingSection3", "TestSetting", "Default"))
+
+        Interaction.DeleteSetting("TestSettingApp", "TestSettingSection3", "TestSetting")
+        Assert.AreEqual("Default", Interaction.GetSetting("TestSettingApp", "TestSettingSection3", "TestSetting", "Default"))
+        caughtException = True
+        Try
+            Interaction.DeleteSetting("TestSettingApp", "TestSettingSection3", "TestSetting")
+        Catch e As ArgumentException
+            Assert.AreEqual("No value exists with that name.", e.Message)
+            caughtException = True
+        End Try
+        Assert.AreEqual(True, caughtException)
+
+        Interaction.SaveSetting("TestSettingApp", "TestSettingSection3", "TestSetting", "TestValue")
+        Assert.AreEqual("TestValue", Interaction.GetSetting("TestSettingApp", "TestSettingSection3", "TestSetting", "Default"))
+
+        Interaction.DeleteSetting("TestSettingApp", "TestSettingSection3")
+        Assert.AreEqual("Default", Interaction.GetSetting("TestSettingApp", "TestSettingSection3", "TestSetting", "Default"))
+        caughtException = True
+        Try
+            Interaction.DeleteSetting("TestSettingApp", "TestSettingSection3")
+        Catch e As ArgumentException
+            Assert.AreEqual("Cannot delete a subkey tree because the subkey does not exist.", e.Message)
+            caughtException = True
+        End Try
+        Assert.AreEqual(True, caughtException)
+
+        Interaction.DeleteSetting("TestSettingApp")
+        Assert.AreEqual("Default", Interaction.GetSetting("TestSettingApp", "TestSettingSection", "TestSetting", "Default"))
+        Assert.AreEqual("Default", Interaction.GetSetting("TestSettingApp", "TestSettingSection2", "TestSetting", "Default"))
+        caughtException = True
+        Try
+            Interaction.DeleteSetting("TestSettingApp")
+        Catch e As ArgumentException
+            Assert.AreEqual("Cannot delete a subkey tree because the subkey does not exist.", e.Message)
+            caughtException = True
+        End Try
+        Assert.AreEqual(True, caughtException)
+    End Sub
+
 #End Region
 #End If
 End Class
