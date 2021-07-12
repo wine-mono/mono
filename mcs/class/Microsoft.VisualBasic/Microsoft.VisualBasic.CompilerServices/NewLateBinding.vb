@@ -68,7 +68,11 @@ Namespace Microsoft.VisualBasic.CompilerServices
         End Sub
         <DebuggerStepThrough(), DebuggerHidden()> _
         Public Shared Sub LateSetComplex(ByVal Instance As Object, ByVal Type As Type, ByVal MemberName As String, ByVal Arguments As Object(), ByVal ArgumentNames As String(), ByVal TypeArguments As Type(), ByVal OptimisticSet As Boolean, ByVal RValueBase As Boolean)
-            LateSet(Instance, Type, MemberName, Arguments, ArgumentNames, TypeArguments)
+            Try
+                LateSet(Instance, Type, MemberName, Arguments, ArgumentNames, TypeArguments)
+            Catch exc As MissingMethodException When OptimisticSet
+                ' Suppress exception for missing method
+            End Try
         End Sub
     End Class
 End Namespace
