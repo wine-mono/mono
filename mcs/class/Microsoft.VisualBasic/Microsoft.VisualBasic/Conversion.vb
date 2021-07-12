@@ -30,6 +30,7 @@
 '
 Imports System
 Imports System.Reflection
+Imports System.Runtime.InteropServices
 Imports Microsoft.VisualBasic.CompilerServices
 Imports System.Globalization
 
@@ -659,9 +660,22 @@ Namespace Microsoft.VisualBasic
         Public Shared Function Hex(ByVal Number As UInteger) As String
             Return Convert.ToString(Number, 16).ToUpper
         End Function
+
+        <StructLayout(LayoutKind.Explicit)>
+        Private Structure LongUnion
+            <FieldOffset(0)> Public Lng as Long
+            <FieldOffset(0)> Public ULng as ULong
+        End Structure
+
+        Private Shared Function LongUnchecked(ByVal Number as ULong) As Long
+            Dim LU As New LongUnion
+            LU.ULng = Number
+            Return LU.Lng
+        End Function
+
         <CLSCompliant(False)> _
         Public Shared Function Hex(ByVal Number As ULong) As String
-            Return Convert.ToString(CLng(Number), 16).ToUpper
+            Return Convert.ToString(LongUnchecked(Number), 16).ToUpper
         End Function
         <CLSCompliant(False)> _
         Public Shared Function Oct(ByVal Number As SByte) As String
@@ -677,7 +691,7 @@ Namespace Microsoft.VisualBasic
         End Function
         <CLSCompliant(False)> _
         Public Shared Function Oct(ByVal Number As ULong) As String
-            Return Convert.ToString(CLng(Number), 8).ToUpper
+            Return Convert.ToString(LongUnchecked(Number), 8).ToUpper
         End Function
     End Class
 End Namespace

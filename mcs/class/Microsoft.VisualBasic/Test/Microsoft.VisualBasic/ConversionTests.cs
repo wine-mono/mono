@@ -500,6 +500,7 @@ namespace MonoTests.Microsoft_VisualBasic
 			System.Int16 I16;
 			System.Int32 I32;
 			System.Int64 I64;
+			System.UInt64 UI64;
 			System.Object O;
 			System.String S;
 
@@ -532,6 +533,15 @@ namespace MonoTests.Microsoft_VisualBasic
 			
 			I64 = -2;
 			Assert.AreEqual("FFFFFFFFFFFFFFFE", Conversion.Hex(I64));
+
+			UI64 = System.UInt32.MaxValue;
+			Assert.AreEqual("FFFFFFFF", Conversion.Hex(UI64));
+
+			UI64 = UI64 << 32;
+			Assert.AreEqual("FFFFFFFF00000000", Conversion.Hex(UI64));
+			
+			UI64 = UI64 + System.UInt32.MaxValue - 1;
+			Assert.AreEqual("FFFFFFFFFFFFFFFE", Conversion.Hex(UI64));
 			
 			I16 = System.Byte.MaxValue;
 			S = I16.ToString();
