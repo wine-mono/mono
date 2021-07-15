@@ -749,6 +749,8 @@ Namespace Microsoft.VisualBasic.CompilerServices
                 End If
 
             End If
+
+            Return SignatureCompare.Equal
         End Function
 
         Private Function GetArgumentType(ByVal args() As Object, ByVal number As Integer) As Type
