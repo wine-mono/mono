@@ -34,7 +34,7 @@ Imports System.Resources
 
 Namespace Microsoft.VisualBasic.CompilerServices
     <System.ComponentModel.EditorBrowsable(ComponentModel.EditorBrowsableState.Never)> _
-    Public NotInheritable Class Utils
+    Public Partial NotInheritable Class Utils
 
         Private Shared m_Resources As ResourceManager
 

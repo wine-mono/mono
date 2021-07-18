@@ -242,5 +242,9 @@ Namespace Microsoft.VisualBasic.Devices
 #End If
             End Get
         End Property
+
+		Friend Sub DisconnectListener()
+			' network events not implemented, nothing to do here
+		End Sub
     End Class
 End Namespace
