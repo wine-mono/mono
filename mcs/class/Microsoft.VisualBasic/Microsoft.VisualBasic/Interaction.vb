@@ -85,8 +85,47 @@ Namespace Microsoft.VisualBasic
             Return String.Join(" ", Environment.GetCommandLineArgs)
         End Function
         Public Shared Function CreateObject(ByVal ProgId As String, Optional ByVal ServerName As String = "") As Object
-            'TODO: COM
-            Throw New NotImplementedException
+            'Creates local or remote COM2 objects.  Should not be used to create COM+ objects.
+            'Applications that need to be STA should set STA either on their Sub Main via STAThreadAttribute
+            'or through Thread.CurrentThread.ApartmentState - the VB runtime will not change this.
+            'DO NOT SET THREAD STATE - Thread.CurrentThread.ApartmentState = ApartmentState.STA
+
+            Dim t As Type
+
+            If ProgId.Length = 0 Then
+                Throw New Exception("Cannot create ActiveX component.")
+            End If
+
+            If ServerName Is Nothing OrElse ServerName.Length = 0 Then
+                ServerName = Nothing
+            Else
+                'Does the ServerName match the MachineName?
+                If String.Equals(Environment.MachineName, ServerName, StringComparison.OrdinalIgnoreCase) Then
+                    ServerName = Nothing
+                End If
+            End If
+
+            Try
+                If ServerName Is Nothing Then
+                    t = Type.GetTypeFromProgID(ProgId)
+                Else
+                    t = Type.GetTypeFromProgID(ProgId, ServerName, True)
+                End If
+
+                Return System.Activator.CreateInstance(t)
+            Catch e As System.Runtime.InteropServices.COMException
+                If e.ErrorCode = &H800706BA Then                    '&H800706BA = The RPC Server is unavailable
+                    Throw New Exception("The remote server machine does not exist or is unavailable.")
+                Else
+                    Throw New Exception("Cannot create ActiveX component.")
+                End If
+            Catch ex As StackOverflowException
+                Throw ex
+            Catch ex As OutOfMemoryException
+                Throw ex
+            Catch e As Exception
+                Throw New Exception("Cannot create ActiveX component.")
+            End Try
         End Function
         Public Shared Sub DeleteSetting(ByVal AppName As String, Optional ByVal Section As String = Nothing, Optional ByVal Key As String = Nothing)
 
