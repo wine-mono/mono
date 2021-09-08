@@ -127,3 +127,7 @@ AppModel_SplashAndMainFormTheSame=Splash screen and main form cannot be the same
 General_ArgumentNullException=Argument cannot be Nothing.
 ID53=File not found.
 ID70=Permission denied.
+Argument_InvalidNullValue1=Argument '{0}' is Nothing.
+Argument_InvalidValue1=Argument '{0}' is not a valid value.
+ProcessNotFound=Process '{0}' was not found.
+Argument_InvalidValueType2=Argument '{0}' cannot be converted to type '{1}'.

@@ -42,17 +42,9 @@ Imports System.Runtime.InteropServices
 
 Namespace Microsoft.VisualBasic
     <StandardModule()> _
-    Public NotInheritable Class Interaction
+    Partial Public NotInheritable Class Interaction
 
 #If Not MOONLIGHT Then
-        Public Shared Sub AppActivate(ByVal ProcessId As Integer)
-            'TODO: OS Specific
-            Throw New NotImplementedException
-        End Sub
-        Public Shared Sub AppActivate(ByVal Title As String)
-            'TODO: OS Specific
-            Throw New NotImplementedException
-        End Sub
         Public Shared Sub Beep()
             'TODO: OS Specific
             ' Removed Throw exception, as it does not really harm that the beep does not work.
@@ -339,15 +331,6 @@ Namespace Microsoft.VisualBasic
         End Class
 #End If
 
-        Public Shared Function InputBox(ByVal Prompt As String, Optional ByVal Title As String = "", Optional ByVal DefaultResponse As String = "", Optional ByVal XPos As Integer = -1, Optional ByVal YPos As Integer = -1) As String
-#If TARGET_JVM = False Then
-            Dim f As InputForm
-            f = New InputForm(Prompt, Title, DefaultResponse, XPos, YPos)
-            Return f.Run()
-#Else
-            Throw New NotImplementedException
-#End If
-        End Function
 #End If
         Public Shared Function Partition(ByVal Number As Long, ByVal Start As Long, ByVal [Stop] As Long, ByVal Interval As Long) As String
 
@@ -436,10 +419,6 @@ Namespace Microsoft.VisualBasic
             Throw New NotImplementedException
 #End If
         End Sub
-        Public Shared Function Shell(ByVal Pathname As String, Optional ByVal Style As Microsoft.VisualBasic.AppWinStyle = Microsoft.VisualBasic.AppWinStyle.MinimizedFocus, Optional ByVal Wait As Boolean = False, Optional ByVal Timeout As Integer = -1) As Integer
-            'TODO: OS Specific
-            Throw New NotImplementedException
-        End Function
 #End If
         Public Shared Function Switch(ByVal ParamArray VarExpr() As Object) As Object
             Dim i As Integer
@@ -456,71 +435,5 @@ Namespace Microsoft.VisualBasic
             Return Nothing
         End Function
 
-#If Not MOONLIGHT Then
-        Public Shared Function MsgBox(ByVal Prompt As Object, Optional ByVal Button As MsgBoxStyle = MsgBoxStyle.OkOnly, _
-         Optional ByVal Title As Object = Nothing) As MsgBoxResult
-#If TARGET_JVM = False Then
-
-            Dim wf_buttons As MessageBoxButtons
-            Dim wf_icon As MessageBoxIcon
-            Dim wf_default As MessageBoxDefaultButton
-            Dim wf_options As MessageBoxOptions
-
-            If Title Is Nothing Then
-                Title = ""
-            End If
-            wf_icon = MessageBoxIcon.None
-            wf_options = 0
-
-            Select Case Button And 7
-                Case 0
-                    wf_buttons = MessageBoxButtons.OK
-                Case 1
-                    wf_buttons = MessageBoxButtons.OKCancel
-                Case 2
-                    wf_buttons = MessageBoxButtons.AbortRetryIgnore
-                Case 3
-                    wf_buttons = MessageBoxButtons.YesNoCancel
-                Case 4
-                    wf_buttons = MessageBoxButtons.YesNo
-                Case 5
-                    wf_buttons = MessageBoxButtons.RetryCancel
-            End Select
-
-            If (Button And 16) = 16 Then
-                wf_icon = MessageBoxIcon.Error
-            ElseIf (Button And 32) = 32 Then
-                wf_icon = MessageBoxIcon.Question
-            ElseIf (Button And 64) = 64 Then
-                wf_icon = MessageBoxIcon.Information
-            End If
-
-            If (Button And 256) = 256 Then
-                wf_default = MessageBoxDefaultButton.Button2
-            ElseIf (Button And 512) = 512 Then
-                wf_default = MessageBoxDefaultButton.Button3
-            Else
-                wf_default = MessageBoxDefaultButton.Button1
-            End If
-
-            If (Button And 4096) = 4096 Then
-                ' Ignore, we do not support SystemModal dialog boxes, or I cant find how to do this
-            End If
-
-            If (Button And 524288) = 524288 Then
-                wf_options = MessageBoxOptions.RightAlign
-            End If
-
-            If (Button And 1048576) = 1048576 Then
-                wf_options = wf_options Or MessageBoxOptions.RtlReading
-            End If
-
-            Return CType(MessageBox.Show(Prompt.ToString, Title.ToString(), wf_buttons, wf_icon, wf_default, wf_options), MsgBoxResult)
-#Else
-            Throw New NotImplementedException
-#End If
-
-        End Function
-#End If
     End Class
 End Namespace
