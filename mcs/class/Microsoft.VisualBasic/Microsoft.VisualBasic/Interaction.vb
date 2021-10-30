@@ -36,6 +36,7 @@ Imports Microsoft.Win32
 #If Not MOONLIGHT Then
 Imports System.Windows.Forms
 Imports System.Drawing
+Imports System.Runtime.InteropServices
 #End If
 #End If
 
@@ -80,9 +81,33 @@ Namespace Microsoft.VisualBasic
             End If
         End Function
 #If Not MOONLIGHT Then
+        <DllImport ("kernel32.dll", CharSet:=CharSet.Unicode)>
+        Private Shared Function GetCommandLineW() As String
+        End Function
         Public Shared Function Command() As String
-            'TODO: OS Specific
-            Return String.Join(" ", Environment.GetCommandLineArgs)
+            Dim cmdline as String
+
+            Try
+                cmdline = GetCommandLineW
+            Catch
+                cmdline = Environment.CommandLine
+            End Try
+
+            Dim idx As Integer = 0
+
+            If cmdline.StartsWith ("""") Then
+                idx = cmdline.IndexOf ("""", 1)
+            End If
+
+            If idx <> -1 Then
+                idx = cmdline.IndexOf (" ", idx)
+            End If
+
+            If idx = -1 Then
+                Return String.Empty
+            End If
+
+            Return cmdline.Substring (idx + 1)
         End Function
         Public Shared Function CreateObject(ByVal ProgId As String, Optional ByVal ServerName As String = "") As Object
             'Creates local or remote COM2 objects.  Should not be used to create COM+ objects.
