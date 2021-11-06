@@ -85,7 +85,11 @@ Namespace Microsoft.VisualBasic.CompilerServices
         <DebuggerStepThrough(), DebuggerHidden()> _
         Public Shared Sub LateIndexSetComplex(ByVal o As Object, ByVal args() As Object, ByVal paramnames() As String, ByVal OptimisticSet As Boolean, ByVal RValueBase As Boolean)
             'FIXME
-            LateIndexSet(o, args, paramnames)
+			Try
+            	LateIndexSet(o, args, paramnames)
+			Catch exc As MissingMethodException When OptimisticSet
+				' Suppress exception for missing method
+			End Try
         End Sub
 
         <DebuggerStepThrough(), DebuggerHidden()> _
