@@ -822,7 +822,7 @@ Namespace Microsoft.VisualBasic.CompilerServices
                 Right = ""
             End If
             If TextCompare Then
-                Return Left.CompareTo(Right)
+                Return String.Compare(Left, Right, True)
             Else
                 Return String.CompareOrdinal(Left, Right)
             End If
