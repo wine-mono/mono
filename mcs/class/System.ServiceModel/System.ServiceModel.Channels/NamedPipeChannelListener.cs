@@ -96,7 +96,7 @@ Console.WriteLine ("NamedPipeChannelListener.OnAcceptChannel.3");
 			// FIXME: support IDuplexSessionChannel
 			TChannel ch;
 			if (typeof (TChannel) == typeof (IDuplexSessionChannel))
-				throw new NotImplementedException ();
+				ch = (TChannel) (object) new NamedPipeDuplexSessionChannel (this, MessageEncoder, server);
 			else if (typeof (TChannel) == typeof (IReplyChannel))
 				ch = (TChannel) (object) new NamedPipeReplyChannel (this, MessageEncoder, server);
 			else

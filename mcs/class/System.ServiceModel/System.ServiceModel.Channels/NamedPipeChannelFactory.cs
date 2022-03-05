@@ -71,8 +71,8 @@ namespace System.ServiceModel.Channels
 				throw new NotSupportedException ("Only local namde pipes are supported in this binding");
 
 			// FIXME: implement duplex session channel.
-//			if (typeof (TChannel) == typeof (IDuplexSessionChannel))
-//				return (TChannel) (object) new NamedPipeDuplexSessionChannel (this, address, via);
+			if (typeof (TChannel) == typeof (IDuplexSessionChannel))
+				return (TChannel) (object) new NamedPipeDuplexSessionChannel (this, address, via);
 
 			if (typeof (TChannel) == typeof (IRequestChannel))
 				return (TChannel) (object) new NamedPipeRequestChannel (this, MessageEncoder, address, targetUri);
