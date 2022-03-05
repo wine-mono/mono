@@ -119,3 +119,4 @@ System.Configuration/TimeSpanValidatorAttribute.cs
 System.Configuration/TypeNameConverter.cs
 System.Configuration/ValidatorCallback.cs
 System.Configuration/WhiteSpaceTrimStringConverter.cs
+../referencesource/System.Configuration/System/Configuration/ClientConfigPaths.cs

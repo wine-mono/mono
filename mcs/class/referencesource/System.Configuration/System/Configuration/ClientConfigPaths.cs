@@ -60,6 +60,8 @@ namespace System.Configuration {
         string  _productName;
         string  _productVersion;
 
+		[DllImport("kernel32", EntryPoint="GetModuleFileNameW", CharSet=CharSet.Unicode)]
+		private extern static int GetModuleFileName(HandleRef hModule, [Out] StringBuilder lpFilename, int nSize);
         
         [FileIOPermission(SecurityAction.Assert, AllFiles=FileIOPermissionAccess.PathDiscovery | FileIOPermissionAccess.Read)]
         [SecurityPermission(SecurityAction.Assert, UnmanagedCode=true)]
@@ -89,13 +91,13 @@ namespace System.Configuration {
 
                     // If it is a local file URI, convert it to its filename, without invoking Uri class.
                     // example: "file:///C:/WINNT/Microsoft.NET/Framework/v2.0.x86fre/csc.exe"
-                    if (StringUtil.StartsWithIgnoreCase(applicationUri, FILE_URI_LOCAL)) {
+                    if (applicationUri.ToLowerInvariant().StartsWith(FILE_URI_LOCAL)) {
                         isFile = true;
                         applicationUri = applicationUri.Substring(FILE_URI_LOCAL.Length);
                     }
                     // If it is a UNC file URI, convert it to its filename, without invoking Uri class.
                     // example: "file://server/share/csc.exe"
-                    else if (StringUtil.StartsWithIgnoreCase(applicationUri, FILE_URI_UNC)) {
+                    else if (applicationUri.ToLowerInvariant().StartsWith(FILE_URI_UNC)) {
                         isFile = true;
                         applicationUri = applicationUri.Substring(FILE_URI.Length);
                     }
@@ -114,7 +116,7 @@ namespace System.Configuration {
                     int length = 0;
                     // Iterating by allocating chunk of memory each time we find the length is not sufficient.
                     // Performance should not be an issue for current MAX_PATH length due to this change.
-                    while (((length = UnsafeNativeMethods.GetModuleFileName(new HandleRef(null, IntPtr.Zero), sb, sb.Capacity)) == sb.Capacity) 
+                    while (((length = GetModuleFileName(new HandleRef(null, IntPtr.Zero), sb, sb.Capacity)) == sb.Capacity) 
                             && Marshal.GetLastWin32Error() == ERROR_INSUFFICIENT_BUFFER 
                             && sb.Capacity < MAX_UNICODESTRING_LEN) {
                         noOfTimes += 2; // increasing buffer size by 520 in each iteration - perf.
@@ -128,8 +130,8 @@ namespace System.Configuration {
             }
             else {
                 applicationUri = Path.GetFullPath(exePath);
-                if (!FileUtil.FileExists(applicationUri, false))
-                    throw ExceptionUtil.ParameterInvalid("exePath");
+                if (!System.IO.File.Exists(applicationUri))
+                    throw new ArgumentException("exePath");
 
                 applicationFilename = applicationUri;
             }
@@ -153,7 +155,7 @@ namespace System.Configuration {
                 return;
             }
 
-            bool isHttp = StringUtil.StartsWithIgnoreCase(_applicationConfigUri, HTTP_URI);
+            bool isHttp = _applicationConfigUri.ToLowerInvariant().StartsWith(HTTP_URI);
 
             SetNamesAndVersion(applicationFilename, exeAssembly, isHttp);
 
