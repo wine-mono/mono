@@ -8186,7 +8186,7 @@ calli_end:
 		}
 		case MONO_CEE_RET:
 			if (!detached_before_ret)
-				mini_profiler_emit_leave (cfg, sig->ret->type != MONO_TYPE_VOID ? sp [-1] : NULL);
+				mini_profiler_emit_leave (cfg, (sig->ret->type != MONO_TYPE_VOID && sp != stack_start) ? sp [-1] : NULL);
 
 			g_assert (!method_does_not_return (method));
 
