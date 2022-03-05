@@ -51,7 +51,7 @@ namespace System.Net.Http
 		}
 #elif !WASM
 		public HttpClient ()
-			: this (new HttpClientHandler (), true)
+			: this (null, true)
 		{
 		}
 #endif
@@ -62,7 +62,7 @@ namespace System.Net.Http
 		}
 
 		public HttpClient (HttpMessageHandler handler, bool disposeHandler)
-			: base (handler, disposeHandler)
+			: base (handler ?? new HttpClientHandler(), disposeHandler)
 		{
 			buffer_size = int.MaxValue;
 			timeout = TimeoutDefault;
