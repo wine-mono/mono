@@ -6456,7 +6456,7 @@ emit_managed_wrapper_ilgen (MonoMethodBuilder *mb, MonoMethodSignature *invoke_s
 	/* ret = method (...) */
 	mono_mb_emit_managed_call (mb, method, NULL);
 
-	if (MONO_TYPE_ISSTRUCT (sig->ret)) {
+	if (MONO_TYPE_ISSTRUCT (sig->ret) && sig->ret->type != MONO_TYPE_GENERICINST) {
 		MonoClass *klass = mono_class_from_mono_type_internal (sig->ret);
 		mono_class_init_internal (klass);
 		if (!(mono_class_is_explicit_layout (klass) || m_class_is_blittable (klass))) {
@@ -6505,6 +6505,10 @@ emit_managed_wrapper_ilgen (MonoMethodBuilder *mb, MonoMethodSignature *invoke_s
 			char *msg = g_strdup_printf("don't know how to convert FNPTR return value\n");
 			mono_mb_emit_exception_marshal_directive (mb, msg);
 				break;
+		}
+		case MONO_TYPE_GENERICINST: {
+			mono_mb_emit_byte (mb, CEE_POP);
+			break;
 		}
 		default:
 			g_warning ("return type 0x%02x unknown", sig->ret->type);	
