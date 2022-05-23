@@ -463,7 +463,8 @@ Namespace Microsoft.VisualBasic
                 Case FileVariableType.Date ' 7 
                     Value = Date.FromOADate(BinaryReader.ReadDouble)
                 Case FileVariableType.String ' 8 
-                    Value = BinaryReader.ReadString
+                    Dim length as Integer = BinaryReader.ReadUInt16
+                    Value = New String(BinaryReader.ReadChars(length))
                 Case FileVariableType.Empty ' 0 
                     Value = Nothing
                 Case Else
