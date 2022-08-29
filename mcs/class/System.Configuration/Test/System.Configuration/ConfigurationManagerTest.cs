@@ -35,6 +35,7 @@ using System.Configuration;
 using System.Net.Configuration;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Constraints;
 using SysConfig = System.Configuration.Configuration;
 using System.Runtime.InteropServices;
 using System.Reflection;
@@ -173,7 +174,7 @@ namespace MonoTests.System.Configuration {
 
 			Console.WriteLine("application config path: {0}", config.FilePath);
 			FileInfo fi = new FileInfo (config.FilePath);
-			Assert.AreEqual (TestUtil.ThisConfigFileName, fi.Name);
+			AssertEqualIgnoringCase (TestUtil.ThisConfigFileName, fi.Name);
 		}
 
 		[Test]
@@ -460,6 +461,10 @@ namespace MonoTests.System.Configuration {
 #endif
 		}
 
+		static void AssertEqualIgnoringCase(string expected, string actual) {
+			Assert.That(actual, new EqualConstraint(expected).IgnoreCase, string.Empty, null);
+		}
+
 		[Test]
 		[Category ("NotWorking")]
 		public void mapped_ExeConfiguration_null ()
@@ -468,7 +473,7 @@ namespace MonoTests.System.Configuration {
 			Console.WriteLine("null mapped application config path: {0}", config.FilePath);
 
 			FileInfo fi = new FileInfo (config.FilePath);
-			Assert.AreEqual (TestUtil.ThisConfigFileName, fi.Name);
+			AssertEqualIgnoringCase (TestUtil.ThisConfigFileName, fi.Name);
 		}
 
 		[Test]
