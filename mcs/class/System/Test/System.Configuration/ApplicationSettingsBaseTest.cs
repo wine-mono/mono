@@ -389,7 +389,11 @@ namespace MonoTests.System.Configuration {
 		[Category ("NotWorking")]
 		public void Providers ()
 		{
-			Assert.AreEqual (0, new TestSettings1 ().Providers.Count);
+			SettingsProviderCollection providers = new TestSettings1 ().Providers;
+			Assert.AreEqual (1, providers.Count);
+			foreach (SettingsProvider provider in providers) {
+				Assert.AreEqual (typeof (LocalFileSettingsProvider), provider.GetType(), "A1");
+			}
 		}
 
                 class Bug532180 : ApplicationSettingsBase {
