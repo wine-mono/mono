@@ -273,14 +273,14 @@ namespace MonoTests.System.Configuration {
 								   typeof (int),
 								   null,
 								   true,
-								   10,
+								   8,
 								   SettingsSerializeAs.Binary,
 								   null,
 								   true,
 								   false);
 
 			SettingsPropertyValue v = new SettingsPropertyValue (p);
-			byte[] foo;
+			byte[] foo, s5;
 
 			v.PropertyValue = 10;
 
@@ -289,7 +289,7 @@ namespace MonoTests.System.Configuration {
 
 			v.PropertyValue = 5;
 			Assert.AreEqual (5, v.PropertyValue, "A2");
-
+			s5 = (byte[])v.SerializedValue;
 
 			BinaryFormatter bf = new BinaryFormatter ();
 			MemoryStream ms = new MemoryStream (foo);
@@ -297,8 +297,42 @@ namespace MonoTests.System.Configuration {
 
 			v.Deserialized = false;
 			v.SerializedValue = foo;
+			Assert.AreEqual (5, v.PropertyValue, "A4");
 
-			Assert.AreEqual (10, v.PropertyValue, "A4");
+			SettingsPropertyValue v2 = new SettingsPropertyValue (p);
+			Assert.IsFalse (v2.Deserialized, "B1");
+			v2.SerializedValue = foo; // Assignment works initially
+			Assert.IsFalse (v2.Deserialized, "B2");
+			Assert.AreEqual (10, v2.PropertyValue, "B3");
+			Assert.IsTrue (v2.Deserialized, "B4");
+
+			SettingsPropertyValue v3 = new SettingsPropertyValue (p);
+			Assert.AreEqual (8, v3.PropertyValue, "C1");
+			Assert.IsTrue (v3.Deserialized, "C2");
+			v3.Deserialized = false;
+			Assert.IsFalse (v3.Deserialized, "C3");
+			v3.SerializedValue = foo; // PropertyValue can be read before this is assigned
+			Assert.AreEqual (10, v3.PropertyValue, "C4");
+			Assert.IsTrue (v3.Deserialized, "C5");
+			v3.SerializedValue = s5; // SerializedValue can be set multiple times
+			Assert.AreEqual (5, v3.PropertyValue, "C6");
+			Assert.IsTrue (v3.Deserialized, "C7");
+
+			SettingsPropertyValue v4 = new SettingsPropertyValue (p);
+			Assert.IsTrue (v4.Deserialized, "D1");
+			v4.Deserialized = false;
+			Assert.IsFalse (v4.Deserialized, "D2");
+			v4.Deserialized = true;
+			Assert.IsTrue (v4.Deserialized, "D3");
+			v4.Deserialized = false;
+			Assert.IsFalse (v4.Deserialized, "D4");
+			v4.PropertyValue = 5;
+			Assert.IsTrue (v4.Deserialized, "D5");
+			v4.Deserialized = false;
+			Assert.IsFalse (v4.Deserialized, "D6");
+			v4.SerializedValue = foo; // No effect after PropertyValue is assigned
+			Assert.AreEqual (5, v4.PropertyValue, "D7");
+			Assert.IsTrue (v4.Deserialized, "D7");
 		}
 
 		[Test]
