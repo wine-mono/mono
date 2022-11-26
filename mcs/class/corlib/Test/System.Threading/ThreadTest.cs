@@ -1307,6 +1307,31 @@ namespace MonoTests.System.Threading
 			t1.Join ();
 		}
 
+		public void DoSetApartmentState ()
+		{
+
+		}
+
+		[Test]
+		[Category ("MultiThreaded")]
+		public void TestTrySetApartmentStateCurrent ()
+		{
+			ApartmentState? prevThreadApartmentState = null;
+			bool aptStateResult = false;
+			ApartmentState? threadApartmentState = null;
+			Thread t1 = new Thread (new ThreadStart (() => {
+				prevThreadApartmentState = Thread.CurrentThread.ApartmentState;
+				aptStateResult = Thread.CurrentThread.TrySetApartmentState (ApartmentState.STA);
+				threadApartmentState = Thread.CurrentThread.ApartmentState;
+			}));
+			Assert.AreEqual (ApartmentState.Unknown, t1.ApartmentState, "ApartmentState");
+			t1.Start ();
+			t1.Join ();
+			Assert.AreEqual (ApartmentState.MTA, prevThreadApartmentState, "prevThreadApartmentState");
+			Assert.IsFalse (aptStateResult, "aptStateResult");
+			Assert.AreEqual (ApartmentState.MTA, threadApartmentState, "threadApartmentState");
+		}
+
 		[Test]
 		public void Volatile () {
 			double v3 = 55667;
