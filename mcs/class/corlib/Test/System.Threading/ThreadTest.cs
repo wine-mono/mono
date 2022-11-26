@@ -1274,6 +1274,16 @@ namespace MonoTests.System.Threading
 		}
 
 		[Test]
+		public void TestTrySetApartmentStateDiffState ()
+		{
+			Thread t1 = new Thread (new ThreadStart (Start));
+			Assert.IsTrue (t1.TrySetApartmentState (ApartmentState.STA));
+			Assert.AreEqual (ApartmentState.STA, t1.ApartmentState, "Thread1 Set Once");
+
+			Assert.IsFalse (t1.TrySetApartmentState (ApartmentState.MTA));
+		}
+
+		[Test]
 		[Category ("MultiThreaded")]
 		public void TestTrySetApartmentState ()
 		{
