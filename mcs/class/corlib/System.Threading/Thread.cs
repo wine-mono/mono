@@ -675,18 +675,34 @@ namespace System.Threading {
 
 		public void SetApartmentState (ApartmentState state)
 		{
-			if (!TrySetApartmentState (state))
-				throw new InvalidOperationException ("Failed to set the specified COM apartment state.");
+			InternalSetApartmentState (state, true);
 		}
 
 		public bool TrySetApartmentState (ApartmentState state) 
 		{
+			return InternalSetApartmentState (state, false);
+		}
+
+		private bool InternalSetApartmentState (ApartmentState state, bool throw_exceptions) 
+		{
+			if (object.ReferenceEquals (this, CurrentThread)) {
+				if ((ApartmentState)Internal.apartment_state == ApartmentState.Unknown)
+					throw new NotImplementedException ("Cannot set current thread Apartment State");
+				return false;
+			}
+
 			if ((ThreadState & ThreadState.Unstarted) == 0)
 				throw new ThreadStateException ("Thread was in an invalid state for the operation being executed.");
 
 			if ((ApartmentState)Internal.apartment_state != ApartmentState.Unknown && 
 			    (ApartmentState)Internal.apartment_state != state)
+			{
+				if (throw_exceptions)
+				{
+					throw new InvalidOperationException ("Failed to set the specified COM apartment state.");
+				}
 				return false;
+			}
 
 			Internal.apartment_state = (byte)state;
 
