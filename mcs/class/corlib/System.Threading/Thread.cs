@@ -351,7 +351,7 @@ namespace System.Threading {
 
 			set {
 				ValidateThreadState ();
-				TrySetApartmentState (value);
+				InternalSetApartmentState (value, false);
 			}
 		}
 
@@ -675,7 +675,8 @@ namespace System.Threading {
 
 		public void SetApartmentState (ApartmentState state)
 		{
-			InternalSetApartmentState (state, true);
+			if (!InternalSetApartmentState (state, true))
+				throw new InvalidOperationException ("Failed to set the specified COM apartment state.");
 		}
 
 		public bool TrySetApartmentState (ApartmentState state) 

@@ -1324,6 +1324,28 @@ namespace MonoTests.System.Threading
 
 		[Test]
 		[Category ("MultiThreaded")]
+		public void TestSetApartmentStateCurrent ()
+		{
+			ApartmentState? prevThreadApartmentState = null;
+			Exception threadException = null;
+			Thread t1 = new Thread (new ThreadStart (() => {
+				prevThreadApartmentState = Thread.CurrentThread.ApartmentState;
+				try {
+					Thread.CurrentThread.SetApartmentState (ApartmentState.STA);
+				}
+				catch (Exception e) {
+					threadException = e;
+				}
+			}));
+			Assert.AreEqual (ApartmentState.Unknown, t1.ApartmentState, "ApartmentState");
+			t1.Start ();
+			t1.Join ();
+			Assert.AreEqual (ApartmentState.MTA, prevThreadApartmentState, "prevThreadApartmentState");
+			Assert.AreEqual (typeof (InvalidOperationException), threadException.GetType(), "threadException");
+		}
+
+		[Test]
+		[Category ("MultiThreaded")]
 		public void TestTrySetApartmentStateCurrent ()
 		{
 			ApartmentState? prevThreadApartmentState = null;
