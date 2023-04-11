@@ -1,5 +1,7 @@
 thisdir = tools
 
+# Wine Mono disabled tools: mono-xmltool dtd2rng
+
 net_4_5_dirs := \
 	al		\
 	aprofutil	\
@@ -18,7 +20,6 @@ net_4_5_dirs := \
 	mono-api-diff \
 	mono-api-html \
 	compiler-tester	\
-	mono-xmltool	\
 	mono-shlib-cop	\
 	sgen		\
 	mconfig		\
@@ -34,7 +35,6 @@ net_4_5_dirs := \
 	browsercaps-updater	\
 	cil-strip	\
 	macpack		\
-	dtd2rng		\
 	dtd2xsd		\
 	mdoc		\
 	mod		\

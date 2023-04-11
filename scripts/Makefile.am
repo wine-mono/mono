@@ -63,11 +63,12 @@ scripts_2_0 = \
 	resgen2$(SCRIPT_SUFFIX)			\
 	wsdl2$(SCRIPT_SUFFIX)
 
+# Wine Mono disabled scripts: mono-xmltool dtd2rng
+
 scripts_4_0 = \
 	aprofutil$(SCRIPT_SUFFIX)		\
 	disco$(SCRIPT_SUFFIX)			\
 	dtd2xsd$(SCRIPT_SUFFIX)			\
-	dtd2rng$(SCRIPT_SUFFIX)			\
 	installvst$(SCRIPT_SUFFIX)		\
 	genxs$(SCRIPT_SUFFIX)			\
 	macpack$(SCRIPT_SUFFIX)			\
@@ -94,7 +95,6 @@ scripts_4_0 = \
 	permview$(SCRIPT_SUFFIX)		\
 	pdb2mdb$(SCRIPT_SUFFIX)			\
 	xsd$(SCRIPT_SUFFIX)			\
-	mono-xmltool$(SCRIPT_SUFFIX)		\
 	setreg$(SCRIPT_SUFFIX)			\
 	secutil$(SCRIPT_SUFFIX)			\
 	signcode$(SCRIPT_SUFFIX)		\

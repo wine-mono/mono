@@ -254,7 +254,10 @@ net_4_x_dirs := \
 	System	\
 	System.XML
 
-# Wine Mono hack: Do not build Mono.Btls.Interface. Our BTLS changes break it, and it's not needed.
+# Wine Mono disabled assemblies:
+#  Mono.Btls.Interface - Our BTLS changes break it, and it's not needed.
+#  Commons.Xml.Relaxng - not needed
+
 net_4_x_parallel_dirs = \
 	System.Security			\
 	Mono.Posix			\
@@ -284,7 +287,6 @@ net_4_x_parallel_dirs = \
 	System.Configuration.Install 	\
 	System.Management		\
 	System.Data.OracleClient	\
-	Commons.Xml.Relaxng		\
 	Mono.Messaging			\
 	System.Messaging	        \
 	System.ServiceProcess           \
