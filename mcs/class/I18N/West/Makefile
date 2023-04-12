@@ -2,8 +2,8 @@ thisdir = class/I18N/West
 SUBDIRS = 
 include ../../../build/rules.make
 
-LIBRARY = I18N.West.dll
-LIB_REFS = I18N
+LIBRARY = WineMono.I18N.West.dll
+LIB_REFS = WineMono.I18N
 KEYFILE = ../../mono.pub
 LOCAL_MCS_FLAGS = /unsafe
 

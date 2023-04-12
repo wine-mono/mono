@@ -224,7 +224,7 @@ public class Manager
 						{
 							// we use the same strong name as I18N.dll except the assembly name
 							AssemblyName myName = typeof(Manager).Assembly.GetName();
-							myName.Name = region;
+							myName.Name = "WineMono."+region;
 							assembly = Assembly.Load(myName);
 						}
 						catch(SystemException)
