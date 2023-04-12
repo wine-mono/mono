@@ -257,6 +257,7 @@ net_4_x_dirs := \
 # Wine Mono disabled assemblies:
 #  Mono.Btls.Interface - Our BTLS changes break it, and it's not needed.
 #  Commons.Xml.Relaxng - not needed
+#  IBM.Data.DB2 - unused
 
 net_4_x_parallel_dirs = \
 	System.Security			\
@@ -328,7 +329,6 @@ net_4_x_parallel_dirs = \
 	System.Web.Http.SelfHost \
 	System.Web.Http.WebHost \
 	CustomMarshalers		\
-	IBM.Data.DB2			\
 	PEAPI				\
 	I18N				\
 	Cscompmgd			\
