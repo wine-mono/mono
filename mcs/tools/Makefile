@@ -1,6 +1,6 @@
 thisdir = tools
 
-# Wine Mono disabled tools: mono-xmltool dtd2rng mdoc mod
+# Wine Mono disabled tools: mono-xmltool dtd2rng mdoc mod cccheck ccrewrite
 
 net_4_5_dirs := \
 	al		\
@@ -39,8 +39,6 @@ net_4_5_dirs := \
 	installvst	\
 	lc		\
 	mono-configuration-crypto \
-	ccrewrite	\
-	cccheck		\
 	security	\
 	mdbrebase	\
 	mdb2ppdb	\

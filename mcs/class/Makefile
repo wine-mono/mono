@@ -262,6 +262,7 @@ net_4_x_dirs := \
 #  Mono.Http - unused
 #  ICSharpCode.SharpZipLib - used by monodoc and Mono.Http
 #  Mono.Cairo - unused
+#  Mono.CodeContracts - used only by cccheck/ccrewrite
 
 net_4_x_parallel_dirs = \
 	System.Security			\
@@ -345,7 +346,6 @@ net_4_x_parallel_dirs = \
 	Mono.Options 			\
 	Mono.Simd			\
 	Mono.Tasklets       		\
-	Mono.CodeContracts \
 	Mono.Parallel \
 	Mono.Security.Win32		\
 	Mono.Messaging.RabbitMQ		\
