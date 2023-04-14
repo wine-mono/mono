@@ -261,6 +261,7 @@ net_4_x_dirs := \
 #  monodoc - unused
 #  Mono.Http - unused
 #  ICSharpCode.SharpZipLib - used by monodoc and Mono.Http
+#  Mono.Cairo - unused
 
 net_4_x_parallel_dirs = \
 	System.Security			\
@@ -335,7 +336,6 @@ net_4_x_parallel_dirs = \
 	I18N				\
 	Cscompmgd			\
 	Mono.CompilerServices.SymbolWriter \
-	Mono.Cairo                      \
 	Mono.Cecil			\
 	Mono.Cecil.Mdb			\
 	Mono.CSharp			\
