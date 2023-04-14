@@ -144,7 +144,7 @@ namespace System.Reflection.Emit {
 			}
 
 			if (emitSymbolInfo) {
-				Assembly asm = Assembly.LoadWithPartialName ("Mono.CompilerServices.SymbolWriter");
+				Assembly asm = Assembly.LoadWithPartialName ("WineMono.CompilerServices.SymbolWriter");
 
 				Type t = null;
 				if (asm != null)

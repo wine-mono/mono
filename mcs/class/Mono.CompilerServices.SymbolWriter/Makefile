@@ -2,7 +2,7 @@ thisdir = class/Mono.CompilerServices.SymbolWriter
 SUBDIRS =
 include ../../build/rules.make
 
-LIBRARY = Mono.CompilerServices.SymbolWriter.dll
+LIBRARY = WineMono.CompilerServices.SymbolWriter.dll
 LIB_REFS = System
 KEYFILE = ../mono.pub
 LIB_MCS_FLAGS =
