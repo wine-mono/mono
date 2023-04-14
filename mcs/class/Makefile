@@ -258,6 +258,9 @@ net_4_x_dirs := \
 #  Mono.Btls.Interface - Our BTLS changes break it, and it's not needed.
 #  Commons.Xml.Relaxng - not needed
 #  IBM.Data.DB2 - unused
+#  monodoc - unused
+#  Mono.Http - unused
+#  ICSharpCode.SharpZipLib - used by monodoc and Mono.Http
 
 net_4_x_parallel_dirs = \
 	System.Security			\
@@ -292,7 +295,6 @@ net_4_x_parallel_dirs = \
 	System.Messaging	        \
 	System.ServiceProcess           \
 	System.Drawing.Design		\
-	ICSharpCode.SharpZipLib		\
 	Microsoft.CSharp	\
 	System.ServiceModel.Internals	\
 	SMDiagnostics	\
@@ -333,7 +335,6 @@ net_4_x_parallel_dirs = \
 	I18N				\
 	Cscompmgd			\
 	Mono.CompilerServices.SymbolWriter \
-	Mono.Http			\
 	Mono.Cairo                      \
 	Mono.Cecil			\
 	Mono.Cecil.Mdb			\
@@ -376,7 +377,6 @@ net_4_x_parallel_dirs = \
 	RabbitMQ.Client			\
 	Microsoft.VisualC		\
 	WebMatrix.Data \
-	monodoc	\
 	System.Deployment \
 	System.Web.Mobile \
 	System.Web.RegularExpressions \

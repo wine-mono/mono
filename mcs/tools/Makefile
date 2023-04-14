@@ -1,6 +1,6 @@
 thisdir = tools
 
-# Wine Mono disabled tools: mono-xmltool dtd2rng
+# Wine Mono disabled tools: mono-xmltool dtd2rng mdoc mod
 
 net_4_5_dirs := \
 	al		\
@@ -36,8 +36,6 @@ net_4_5_dirs := \
 	cil-strip	\
 	macpack		\
 	dtd2xsd		\
-	mdoc		\
-	mod		\
 	installvst	\
 	lc		\
 	mono-configuration-crypto \
