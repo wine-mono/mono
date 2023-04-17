@@ -263,6 +263,7 @@ net_4_x_dirs := \
 #  ICSharpCode.SharpZipLib - used by monodoc and Mono.Http
 #  Mono.Cairo - unused
 #  Mono.CodeContracts - used only by cccheck/ccrewrite
+#  Mono.CSharp - was used by csharp.exe, moved code into the exe
 
 net_4_x_parallel_dirs = \
 	System.Security			\
@@ -339,7 +340,6 @@ net_4_x_parallel_dirs = \
 	Mono.CompilerServices.SymbolWriter \
 	Mono.Cecil			\
 	Mono.Cecil.Mdb			\
-	Mono.CSharp			\
 	Mono.Debugger.Soft		\
 	Mono.C5				\
 	Mono.Management			\
