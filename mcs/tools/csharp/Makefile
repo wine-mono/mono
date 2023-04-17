@@ -7,7 +7,7 @@ include ../../build/rules.make
 // 3021: CLS attribute not needed since assembly is not CLS compliant
 NOWARNS = -nowarn:3021
 LOCAL_MCS_FLAGS = -unsafe -main:Mono.Driver $(NOWARNS)
-LIB_REFS = Mono.Posix Mono.Management System System.Core System.Xml
+LIB_REFS = Mono.Management System System.Core System.Xml
 
 BUILT_SOURCES = $(PROFILE)-parser.cs
 
