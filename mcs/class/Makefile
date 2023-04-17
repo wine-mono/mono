@@ -264,6 +264,7 @@ net_4_x_dirs := \
 #  Mono.Cairo - unused
 #  Mono.CodeContracts - used only by cccheck/ccrewrite
 #  Mono.CSharp - was used by csharp.exe, moved code into the exe
+#  WebMatrix.Data - unused
 
 net_4_x_parallel_dirs = \
 	System.Security			\
@@ -376,7 +377,6 @@ net_4_x_parallel_dirs = \
 	System.DirectoryServices.Protocols	\
 	RabbitMQ.Client			\
 	Microsoft.VisualC		\
-	WebMatrix.Data \
 	System.Deployment \
 	System.Web.Mobile \
 	System.Web.RegularExpressions \
