@@ -6,8 +6,13 @@ include ../../build/rules.make
 
 // 3021: CLS attribute not needed since assembly is not CLS compliant
 NOWARNS = -nowarn:3021
-LOCAL_MCS_FLAGS = -unsafe $(NOWARNS)
-LIB_REFS = Mono.CSharp Mono.Posix Mono.Management System 
+LOCAL_MCS_FLAGS = -unsafe -main:Mono.Driver $(NOWARNS)
+LIB_REFS = Mono.Posix Mono.Management System System.Core System.Xml
+
+BUILT_SOURCES = $(PROFILE)-parser.cs
+
+$(PROFILE)-parser.cs: $(topdir)/mcs/cs-parser.jay $(topdir)/jay/skeleton.cs
+	$(topdir)/jay/jay -c -o $(PROFILE)-jay-tmp.out $< < $(topdir)/jay/skeleton.cs && mv $(PROFILE)-jay-tmp.out $@
 
 PROGRAM = csharp.exe
 
