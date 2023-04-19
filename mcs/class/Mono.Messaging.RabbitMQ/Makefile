@@ -2,7 +2,7 @@ thisdir = class/Mono.Messaging.RabbitMQ
 SUBDIRS = 
 include ../../build/rules.make
 
-LIBRARY = Mono.Messaging.RabbitMQ.dll
+LIBRARY = WineMono.Messaging.RabbitMQ.dll
 LIB_REFS = System System.Messaging Mono.Messaging RabbitMQ.Client
 KEYFILE = ../mono.pub
 LIB_MCS_FLAGS = -nowarn:618
