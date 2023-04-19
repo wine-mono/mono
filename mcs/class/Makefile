@@ -267,6 +267,7 @@ net_4_x_dirs := \
 #  WebMatrix.Data - unused
 #  Mono.Data.Sqlite - was used by Sqlite*Provider classes in System.Web, WebMatrix.Data, and sqlmetal.exe
 #  Mono.Data.Tds - unused
+#  Mono.Debugger.Soft - unused, and it's unclear whether an application-provided version would be compatible
 
 net_4_x_parallel_dirs = \
 	System.Security			\
@@ -342,7 +343,6 @@ net_4_x_parallel_dirs = \
 	Mono.CompilerServices.SymbolWriter \
 	Mono.Cecil			\
 	Mono.Cecil.Mdb			\
-	Mono.Debugger.Soft		\
 	Mono.C5				\
 	Mono.Management			\
 	Mono.Options 			\
