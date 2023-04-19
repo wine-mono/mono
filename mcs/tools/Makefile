@@ -1,6 +1,6 @@
 thisdir = tools
 
-# Wine Mono disabled tools: mono-xmltool dtd2rng mdoc mod cccheck ccrewrite
+# Wine Mono disabled tools: mono-xmltool dtd2rng mdoc mod cccheck ccrewrite sqlmetal
 
 net_4_5_dirs := \
 	al		\
@@ -27,7 +27,6 @@ net_4_5_dirs := \
 	nunitreport	\
 	pdb2mdb		\
 	sqlsharp	\
-	sqlmetal	\
 	svcutil		\
 	ictool		\
 	disco		\

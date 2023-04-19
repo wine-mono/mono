@@ -265,6 +265,7 @@ net_4_x_dirs := \
 #  Mono.CodeContracts - used only by cccheck/ccrewrite
 #  Mono.CSharp - was used by csharp.exe, moved code into the exe
 #  WebMatrix.Data - unused
+#  Mono.Data.Sqlite - was used by Sqlite*Provider classes in System.Web, WebMatrix.Data, and sqlmetal.exe
 
 net_4_x_parallel_dirs = \
 	System.Security			\
@@ -284,7 +285,6 @@ net_4_x_parallel_dirs = \
 	Mono.WebBrowser			\
 	System.Runtime.Serialization.Formatters.Soap \
 	System.Windows.Forms		\
-	Mono.Data.Sqlite		\
 	System.Web.ApplicationServices	\
 	Novell.Directory.Ldap		\
 	System.DirectoryServices	\

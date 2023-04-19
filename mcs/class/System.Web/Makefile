@@ -247,7 +247,7 @@ endif
 TXT_RESOURCE_STRINGS = ../referencesource/System.Web/System.Web.txt
 
 LIB_REFS = System System.Core System.Drawing System.Data System.Xml System.EnterpriseServices System.Runtime.Serialization.Formatters.Soap \
-	System.ComponentModel.DataAnnotations System.Web.ApplicationServices System.Configuration Mono.Data.Sqlite System.Web.Services System.Design
+	System.ComponentModel.DataAnnotations System.Web.ApplicationServices System.Configuration System.Web.Services System.Design
 KEYFILE = ../msfinal.pub
 LIB_MCS_FLAGS = \
 	-unsafe \

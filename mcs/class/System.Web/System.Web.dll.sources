@@ -432,7 +432,6 @@ System.Web.Profile/ProfileProviderAttribute.cs
 System.Web.Profile/ProfileProviderCollection.cs
 System.Web.Profile/ProfileProvider.cs
 System.Web.Profile/SettingsAllowAnonymousAttribute.cs
-System.Web.Profile/SqliteProfileProvider.cs
 System.Web.Profile/SqlProfileProvider.cs
 System.Web.Properties/TranslationProperties.Designer.cs
 System.Web/QueueManager.cs
@@ -465,8 +464,6 @@ System.Web.Security/RoleManagerModule.cs
 System.Web.Security/RolePrincipal.cs
 System.Web.Security/RoleProviderCollection.cs
 System.Web.Security/Roles.cs
-System.Web.Security/SqliteMembershipProvider.cs
-System.Web.Security/SqliteRoleProvider.cs
 System.Web.Security/SqlMembershipProvider.cs
 System.Web.Security/SqlRoleProvider.cs
 System.Web.Security/UrlAuthorizationModule.cs
