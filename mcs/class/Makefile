@@ -266,6 +266,7 @@ net_4_x_dirs := \
 #  Mono.CSharp - was used by csharp.exe, moved code into the exe
 #  WebMatrix.Data - unused
 #  Mono.Data.Sqlite - was used by Sqlite*Provider classes in System.Web, WebMatrix.Data, and sqlmetal.exe
+#  Mono.Data.Tds - unused
 
 net_4_x_parallel_dirs = \
 	System.Security			\
@@ -350,7 +351,6 @@ net_4_x_parallel_dirs = \
 	Mono.Parallel \
 	Mono.Security.Win32		\
 	Mono.Messaging.RabbitMQ		\
-	Mono.Data.Tds			\
 	System.Dynamic			\
 	System.Windows.Forms.DataVisualization	\
 	System.Reactive.Interfaces \
