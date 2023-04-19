@@ -287,6 +287,9 @@ $(dep_dirs): Makefile
 
 -include $(dep_dirs)
 
+WineMono.Messaging: Mono.Messaging
+.PHONY: WineMono.Messaging
+
 endif
 
 .PHONY: gen-deps
