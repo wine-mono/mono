@@ -2,14 +2,14 @@ thisdir = class/Mono.Posix
 SUBDIRS = 
 include ../../build/rules.make
 
-LIBRARY = Mono.Posix.dll
+LIBRARY = WineMono.Posix.dll
 # Don't warn about [Obsolete] members, as there are now *lots* of [Obsolete]
 # members, generating volumes of output.
 LIB_REFS = System
 KEYFILE = ../mono.pub
 LIB_MCS_FLAGS = /unsafe /nowarn:0618,612
 TEST_MCS_FLAGS = /unsafe /nowarn:0219,0618
-TEST_LIB_REFS = Mono.Posix System
+TEST_LIB_REFS = WineMono.Posix System
 
 LIBRARY_COMPILE = $(BOOT_COMPILE)
 

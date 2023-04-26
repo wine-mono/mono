@@ -3,7 +3,7 @@ SUBDIRS =
 include ../../build/rules.make
 
 LOCAL_MCS_FLAGS =
-LIB_REFS = Mono.Posix System System.Xml
+LIB_REFS = WineMono.Posix System System.Xml
 
 PROGRAM = mono-shlib-cop.exe
 

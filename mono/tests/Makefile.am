@@ -2029,7 +2029,7 @@ tailcall/coreclr/JIT/opt/Tailcall/TailcallVerifyWithPrefix.exe: \
 if !FULL_AOT_TESTS
 if !HYBRID_AOT_TESTS
 if !FULL_AOT_INTERP_TESTS
-TEST_DRIVER_HARD_KILL_FEATURE=-r:$(CLASS)/Mono.Posix.dll
+TEST_DRIVER_HARD_KILL_FEATURE=-r:$(CLASS)/WineMono.Posix.dll
 endif
 endif
 endif

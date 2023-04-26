@@ -7,7 +7,7 @@ PROGRAM = mono-service.exe
 PROGRAM_SNK = ../../class/mono.snk
 
 LOCAL_MCS_FLAGS = -unsafe -publicsign -keyfile:../../class/mono.snk
-LIB_REFS = System.ServiceProcess Mono.Posix System
+LIB_REFS = System.ServiceProcess WineMono.Posix System
 
 include ../../build/executable.make
 

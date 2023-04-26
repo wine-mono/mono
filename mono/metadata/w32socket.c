@@ -1832,11 +1832,11 @@ ves_icall_System_Net_Sockets_Socket_GetSocketOption_obj_icall (gsize sock, gint3
 		
 		if (mono_posix_image == NULL) {
 			MonoAssemblyLoadContext *alc = mono_domain_default_alc (domain);
-			mono_posix_image = mono_image_loaded_internal (alc, "Mono.Posix", FALSE);
+			mono_posix_image = mono_image_loaded_internal (alc, "WineMono.Posix", FALSE);
 			if (!mono_posix_image) {
 				MonoAssemblyOpenRequest req;
 				mono_assembly_request_prepare_open (&req, MONO_ASMCTX_DEFAULT, alc);
-				MonoAssembly *sa = mono_assembly_request_open ("Mono.Posix.dll", &req, NULL);
+				MonoAssembly *sa = mono_assembly_request_open ("WineMono.Posix.dll", &req, NULL);
 				if (!sa) {
 					*werror = WSAENOPROTOOPT;
 					return;

@@ -11,7 +11,7 @@ LIB_REFS = System
 KEYFILE = ../mono.pub
 LIB_MCS_FLAGS =
 TEST_MCS_FLAGS =
-TEST_LIB_REFS = Mono.Posix System System.Core
+TEST_LIB_REFS = WineMono.Posix System System.Core
 
 mono_sourcelibs_DIR  = $(DESTDIR)$(mono_libdir)/mono-source-libs
 mono_options_DATA = Mono.Options/Options.cs
@@ -58,7 +58,7 @@ Documentation/en/examples/Mono.Options.dll: $(the_lib)
 	cp $^ $@
 
 %.exe: %.cs Documentation/en/examples/Mono.Options.dll
-	$(CSCOMPILE) -debug:portable -r:$(topdir)/class/lib/$(PROFILE)/Mono.Posix.dll -r:$(topdir)/class/lib/$(PROFILE)/System.Core.dll -r:$(topdir)/class/lib/$(PROFILE)/System.dll \
+	$(CSCOMPILE) -debug:portable -r:$(topdir)/class/lib/$(PROFILE)/WineMono.Posix.dll -r:$(topdir)/class/lib/$(PROFILE)/System.Core.dll -r:$(topdir)/class/lib/$(PROFILE)/System.dll \
 	-r:$(topdir)/class/lib/$(PROFILE)/mscorlib.dll \
 	-r:$(topdir)/class/lib/$(PROFILE)/Mono.Options.dll -out:$@ $<
 

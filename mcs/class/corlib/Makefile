@@ -162,13 +162,13 @@ ifndef AOT_FRIENDLY_PROFILE
 ifneq ($(PROFILE),xammac)
 ifneq ($(PROFILE),testing_aot_hybrid)
 ifneq ($(PROFILE),testing_aot_full_interp)
-TEST_LIB_REFS += Mono.Posix
+TEST_LIB_REFS += WineMono.Posix
 endif
 endif
 endif
 endif
 
-# System.IO/DirectoryInfoTest.cs needs Mono.Posix
+# System.IO/DirectoryInfoTest.cs needs WineMono.Posix
 TEST_MCS_FLAGS += -debug -nowarn:168,219,618,672 -unsafe -nowarn:67,114,162,169,649,659 \
 				 -define:MONO_DATACONVERTER_STATIC_METHODS $(TEST_RESX_RESOURCES:%=-resource:%) -resource:LinkerDescriptor/mscorlib_test.xml,$(test_lib:.dll=.xml)
 
