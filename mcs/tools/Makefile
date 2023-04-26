@@ -1,10 +1,9 @@
 thisdir = tools
 
-# Wine Mono disabled tools: mono-xmltool dtd2rng mdoc mod cccheck ccrewrite sqlmetal
+# Wine Mono disabled tools: mono-xmltool dtd2rng mdoc mod cccheck ccrewrite sqlmetal aprofutil
 
 net_4_5_dirs := \
 	al		\
-	aprofutil	\
 	linker		\
 	culevel		\
 	genxs		\

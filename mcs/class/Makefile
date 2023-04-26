@@ -271,6 +271,7 @@ net_4_x_dirs := \
 #  Mono.Management - was used by csharp.exe but can't work on Windows
 #  Mono.Parallel - unused
 #  Mono.Options - all users just include the source code
+#  Mono.Profiler.Log - unused
 
 net_4_x_parallel_dirs = \
 	System.Security			\
@@ -384,7 +385,6 @@ net_4_x_parallel_dirs = \
 	System.Workflow.ComponentModel \
 	System.Workflow.Runtime \
 	System.Reflection.Context \
-	Mono.Profiler.Log	\
 	Mono.Runtime.Tests	\
 	System.Runtime.CompilerServices.Unsafe \
 	legacy/Mono.Cecil \
