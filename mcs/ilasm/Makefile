@@ -5,7 +5,7 @@ include ../build/rules.make
 PROGRAM = ilasm.exe
 BUILT_SOURCES = ILParser.cs
 
-LIB_REFS = PEAPI System
+LIB_REFS = WineMono.PEAPI System
 
 API_BUILD := $(filter build, $(PROFILE))
 ifdef API_BUILD

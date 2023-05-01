@@ -288,6 +288,7 @@ $(dep_dirs): Makefile
 -include $(dep_dirs)
 
 WineMono.Messaging: Mono.Messaging
+WineMono.PEAPI: PEAPI
 WineMono.Posix: Mono.Posix
 WineMono.Novell.Directory.Ldap: Novell.Directory.Ldap
 .PHONY: WineMono.Messaging WineMono.Posix WineMono.Novell.Directory.Ldap

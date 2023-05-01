@@ -2,7 +2,7 @@ thisdir = class/PEAPI
 SUBDIRS = 
 include ../../build/rules.make
 
-LIBRARY = PEAPI.dll
+LIBRARY = WineMono.PEAPI.dll
 LIB_MCS_FLAGS = -nowarn:414,618
 
 LIB_REFS = System
