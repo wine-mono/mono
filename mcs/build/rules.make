@@ -289,7 +289,8 @@ $(dep_dirs): Makefile
 
 WineMono.Messaging: Mono.Messaging
 WineMono.Posix: Mono.Posix
-.PHONY: WineMono.Messaging WineMono.Posix
+WineMono.Novell.Directory.Ldap: Novell.Directory.Ldap
+.PHONY: WineMono.Messaging WineMono.Posix WineMono.Novell.Directory.Ldap
 
 endif
 

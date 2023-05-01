@@ -2,7 +2,7 @@ thisdir = class/Novell.Directory.Ldap
 SUBDIRS = 
 include ../../build/rules.make
 
-LIBRARY = Novell.Directory.Ldap.dll
+LIBRARY = WineMono.Novell.Directory.Ldap.dll
 
 LIB_REFS = System Mono.Security
 KEYFILE = ../mono.pub
