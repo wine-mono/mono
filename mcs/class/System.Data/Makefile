@@ -22,7 +22,7 @@ LIB_REFS += System.EnterpriseServices System.Configuration
 endif
 
 ifndef NO_MONO_SECURITY
-LIB_REFS += Mono.Security
+LIB_REFS += WineMono.Security
 endif
 
 ifdef MONO_FEATURE_APPLETLS

@@ -2,7 +2,7 @@ thisdir = tools/security/certview
 SUBDIRS = 
 include ../../../build/rules.make
 
-LIB_REFS = Mono.Security System.Xml
+LIB_REFS = WineMono.Security System.Xml
 LOCAL_MCS_FLAGS = /win32icon:mono.ico
 
 all-local: certview.exe

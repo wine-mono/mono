@@ -32,9 +32,9 @@ LIB_MCS_FLAGS = -d:COREFX -d:CONFIGURATION_2_0 -d:SYSTEM_NET_PRIMITIVES_DLL -d:X
 XTEST_MCS_FLAGS += $(XTEST_RESOURCE_FILES:%=-resource:%)
 
 ifndef NO_MONO_SECURITY
-MONO_SECURITY := Mono.Security
+MONO_SECURITY := WineMono.Security
 LIB_MCS_FLAGS += -d:MONO_SECURITY_ALIAS
-LIB_REFS += MonoSecurity=Mono.Security
+LIB_REFS += MonoSecurity=WineMono.Security
 else
 LIB_MCS_FLAGS += -d:INSIDE_SYSTEM
 endif

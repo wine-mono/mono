@@ -19,7 +19,7 @@
 	url = https://github.com/mono/ikdasm.git
 [submodule "external/reference-assemblies"]
 	path = external/binary-reference-assemblies
-	url = https://github.com/mono/reference-assemblies.git
+	url = https://github.com/madewokherd/reference-assemblies.git
 [submodule "external/nunit-lite"]
 	path = external/nunit-lite
 	url = https://github.com/mono/NUnitLite.git

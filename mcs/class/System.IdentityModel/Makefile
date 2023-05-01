@@ -3,7 +3,7 @@ SUBDIRS =
 include ../../build/rules.make
 
 ifndef NO_MONO_SECURITY
-MONO_SECURITY=Mono.Security
+MONO_SECURITY=WineMono.Security
 endif
 
 LIBRARY = System.IdentityModel.dll

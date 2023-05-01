@@ -2,7 +2,7 @@ thisdir = class/Mono.Security
 SUBDIRS = 
 include ../../build/rules.make
 
-LIBRARY = Mono.Security.dll
+LIBRARY = WineMono.Security.dll
 LOCAL_MCS_FLAGS =
 API_BIN_REFS = System
 KEYFILE = ../mono.pub

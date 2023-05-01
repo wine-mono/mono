@@ -6,7 +6,7 @@ RESOURCE_FILES = \
 		resources/schemas-xmlsoap-or-ws-2005-05-identity.rnc
 
 LIBRARY = Mono.ServiceModel.IdentitySelectors.dll
-LIB_REFS = System System.Xml System.Configuration System.Security System.Transactions System.Web System.Web.Services Mono.Security
+LIB_REFS = System System.Xml System.Configuration System.Security System.Transactions System.Web System.Web.Services WineMono.Security
 KEYFILE = ../mono.pub
 LIB_MCS_FLAGS = \
 		/nowarn:414,169,67,3005,436 \

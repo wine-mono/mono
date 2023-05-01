@@ -4,7 +4,7 @@ include ../../build/rules.make
 
 LIBRARY = WineMono.Novell.Directory.Ldap.dll
 
-LIB_REFS = System Mono.Security
+LIB_REFS = System WineMono.Security
 KEYFILE = ../mono.pub
 LIB_MCS_FLAGS = -warn:1 -nowarn:612 
 

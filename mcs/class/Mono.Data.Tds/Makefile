@@ -3,7 +3,7 @@ SUBDIRS =
 include ../../build/rules.make
 
 LIBRARY = Mono.Data.Tds.dll
-LIB_REFS = System System.Xml Mono.Security
+LIB_REFS = System System.Xml WineMono.Security
 KEYFILE = ../mono.pub
 LIB_MCS_FLAGS =
 
