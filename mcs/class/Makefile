@@ -275,6 +275,7 @@ net_4_x_dirs := \
 #  Mono.Security.Win32 - unused
 #  Mono.Simd - unused
 #  Mono.Tasklets - unused
+#  Mono.WebBrowser - would be used by System.Windows.Forms, but it doesn't work and Mono's SWF isn't used in Wine Mono
 
 net_4_x_parallel_dirs = \
 	System.Security			\
@@ -291,7 +292,6 @@ net_4_x_parallel_dirs = \
 	System.Data		\
 	System.ComponentModel.DataAnnotations	\
 	Accessibility			\
-	Mono.WebBrowser			\
 	System.Runtime.Serialization.Formatters.Soap \
 	System.Windows.Forms		\
 	System.Web.ApplicationServices	\
