@@ -537,6 +537,8 @@ common_sources = \
 
 endif # !ENABLE_MSVC_ONLY
 
+# not building in Wine Mono because not building Mono.Simd: basic-simd
+
 # keep in sync with mcs/class/Mono.Runtime.Tests
 test_sources = 			\
 	basic-calls.cs 		\
@@ -554,7 +556,6 @@ test_sources = 			\
 	test.cs			\
 	generics.cs		\
 	generics-variant-types.il\
-	basic-simd.cs \
 	basic-vectors.cs \
 	aot-tests.cs \
 	gc-test.cs \
@@ -579,7 +580,6 @@ regtests_UNIVERSAL = \
 	iltests.exe \
 	devirtualization.exe \
 	generics.exe \
-	basic-simd.exe \
 	unaligned.exe	\
 	basic-vectors.exe	\
 	ratests.exe
