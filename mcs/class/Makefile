@@ -274,6 +274,7 @@ net_4_x_dirs := \
 #  Mono.Profiler.Log - unused
 #  Mono.Security.Win32 - unused
 #  Mono.Simd - unused
+#  Mono.Tasklets - unused
 
 net_4_x_parallel_dirs = \
 	System.Security			\
@@ -350,7 +351,6 @@ net_4_x_parallel_dirs = \
 	Mono.Cecil			\
 	Mono.Cecil.Mdb			\
 	Mono.C5				\
-	Mono.Tasklets       		\
 	Mono.Messaging.RabbitMQ		\
 	System.Dynamic			\
 	System.Windows.Forms.DataVisualization	\
