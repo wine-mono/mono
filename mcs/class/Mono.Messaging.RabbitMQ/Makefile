@@ -3,7 +3,7 @@ SUBDIRS =
 include ../../build/rules.make
 
 LIBRARY = WineMono.Messaging.RabbitMQ.dll
-LIB_REFS = System System.Messaging WineMono.Messaging RabbitMQ.Client
+LIB_REFS = System System.Messaging WineMono.Messaging WineMono.RabbitMQ.Client
 KEYFILE = ../mono.pub
 LIB_MCS_FLAGS = -nowarn:618
 
