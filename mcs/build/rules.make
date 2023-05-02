@@ -292,7 +292,8 @@ WineMono.PEAPI: PEAPI
 WineMono.Posix: Mono.Posix
 WineMono.Novell.Directory.Ldap: Novell.Directory.Ldap
 WineMono.Security: Mono.Security
-.PHONY: WineMono.Messaging WineMono.Posix WineMono.Novell.Directory.Ldap WineMono.Security
+WineMono.XBuild.Tasks: Mono.XBuild.Tasks
+.PHONY: WineMono.Messaging WineMono.Posix WineMono.Novell.Directory.Ldap WineMono.Security WineMono.XBuild.Tasks
 
 endif
 

@@ -9,7 +9,7 @@ endif
 XBUILD_FRAMEWORK := Microsoft.Build.Framework
 XBUILD_ENGINE := Microsoft.Build.Engine
 XBUILD_UTILITIES := Microsoft.Build.Utilities$(NAME_SUFFIX)
-XBUILD_TASKS := Mono.XBuild.Tasks
+XBUILD_TASKS := WineMono.XBuild.Tasks
 XBUILD_MSTASKS := Microsoft.Build.Tasks$(NAME_SUFFIX)
 ifeq (14.0, $(XBUILD_VERSION))
 XBUILD_MSTASKS := Microsoft.Build.Tasks.Core
