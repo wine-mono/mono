@@ -1,6 +1,6 @@
 thisdir = tools
 
-# Wine Mono disabled tools: mono-xmltool dtd2rng mdoc mod cccheck ccrewrite sqlmetal aprofutil
+# Wine Mono disabled tools: mono-xmltool dtd2rng mdoc mod cccheck ccrewrite sqlmetal aprofutil mono-service
 
 net_4_5_dirs := \
 	al		\
@@ -9,7 +9,6 @@ net_4_5_dirs := \
 	genxs		\
 	mkbundle	\
 	monop		\
-	mono-service	\
 	mono-xsd	\
 	resgen		\
 	wsdl		\
