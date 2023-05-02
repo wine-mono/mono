@@ -272,6 +272,7 @@ net_4_x_dirs := \
 #  Mono.Parallel - unused
 #  Mono.Options - all users just include the source code
 #  Mono.Profiler.Log - unused
+#  Mono.Security.Win32 - unused
 
 net_4_x_parallel_dirs = \
 	System.Security			\
@@ -350,7 +351,6 @@ net_4_x_parallel_dirs = \
 	Mono.C5				\
 	Mono.Simd			\
 	Mono.Tasklets       		\
-	Mono.Security.Win32		\
 	Mono.Messaging.RabbitMQ		\
 	System.Dynamic			\
 	System.Windows.Forms.DataVisualization	\
