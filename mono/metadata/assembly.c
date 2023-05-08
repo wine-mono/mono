@@ -398,7 +398,7 @@ static MonoAssembly*
 mono_problematic_image_reprobe (MonoAssemblyLoadContext *alc, MonoImage *image, MonoImageOpenStatus *status);
 
 static MonoAssembly *
-invoke_assembly_preload_hook (MonoAssemblyLoadContext *alc, MonoAssemblyName *aname, gchar **apath);
+invoke_assembly_preload_hook (MonoAssemblyLoadContext *alc, MonoAssemblyName *aname, int *flags, gchar **apath);
 
 static MonoBoolean
 mono_assembly_is_in_gac (const gchar *filanem);
@@ -2109,10 +2109,12 @@ static AssemblyPreLoadHook *assembly_preload_hook = NULL;
 static AssemblyPreLoadHook *assembly_refonly_preload_hook = NULL;
 
 static MonoAssembly *
-invoke_assembly_preload_hook (MonoAssemblyLoadContext *alc, MonoAssemblyName *aname, gchar **apath)
+invoke_assembly_preload_hook (MonoAssemblyLoadContext *alc, MonoAssemblyName *aname, int *flags, gchar **apath)
 {
 	AssemblyPreLoadHook *hook;
 	MonoAssembly *assembly;
+
+	*flags = 0;
 
 	for (hook = assembly_preload_hook; hook; hook = hook->next) {
 		if (hook->version == 1)
@@ -2122,6 +2124,15 @@ invoke_assembly_preload_hook (MonoAssemblyLoadContext *alc, MonoAssemblyName *an
 			int halt_search=0;
 			assembly = hook->func.wine (aname, apath, &halt_search, hook->user_data);
 			if (assembly == NULL && halt_search)
+			{
+				*flags = WINE_PRELOAD_SKIP_PRIVATE_PATH;
+				break;
+			}
+		}
+		else if (hook->version == -2)
+		{
+			assembly = hook->func.wine (aname, apath, flags, hook->user_data);
+			if (assembly == NULL && (*flags & WINE_PRELOAD_SKIP_PRIVATE_PATH))
 				break;
 		}
 		else {
@@ -2192,6 +2203,21 @@ wine_mono_install_assembly_preload_hook (WineMonoAssemblyPreLoadFunc func, gpoin
 
 	hook = g_new0 (AssemblyPreLoadHook, 1);
 	hook->version = -1;
+	hook->func.wine = func;
+	hook->user_data = user_data;
+	hook->next = assembly_preload_hook;
+	assembly_preload_hook = hook;
+}
+
+void
+wine_mono_install_assembly_preload_hook_v2 (WineMonoAssemblyPreLoadFunc func, gpointer user_data)
+{
+	AssemblyPreLoadHook *hook;
+	
+	g_return_if_fail (func != NULL);
+
+	hook = g_new0 (AssemblyPreLoadHook, 1);
+	hook->version = -2;
 	hook->func.wine = func;
 	hook->user_data = user_data;
 	hook->next = assembly_preload_hook;
@@ -3879,6 +3905,7 @@ mono_assembly_load_with_partial_name_internal (const char *name, MonoAssemblyLoa
 	MonoAssembly *res;
 	MonoAssemblyName *aname, base_name;
 	MonoAssemblyName mapped_aname;
+	int preload_flags=0;
 
 	MONO_REQ_GC_UNSAFE_MODE;
 
@@ -3903,12 +3930,15 @@ mono_assembly_load_with_partial_name_internal (const char *name, MonoAssemblyLoa
 		return res;
 	}
 
-	res = invoke_assembly_preload_hook (alc, aname, assemblies_path);
+	res = invoke_assembly_preload_hook (alc, aname, &preload_flags, assemblies_path);
 	if (res) {
-		res->in_gac = FALSE;
+		res->in_gac = (preload_flags & WINE_PRELOAD_SET_GAC) != 0;
 		mono_assembly_name_free_internal (aname);
 		return res;
 	}
+
+	if (preload_flags & WINE_PRELOAD_SKIP_GAC)
+		goto skip_gac;
 
 #ifndef DISABLE_GAC
 	gchar *fullname, *gacpath;
@@ -3940,6 +3970,8 @@ mono_assembly_load_with_partial_name_internal (const char *name, MonoAssemblyLoa
 	if (res)
 		res->in_gac = TRUE;
 #endif
+
+skip_gac:
 
 	mono_assembly_name_free_internal (aname);
 
@@ -4456,6 +4488,7 @@ mono_assembly_load_corlib (const MonoRuntimeInfo *runtime, MonoImageOpenStatus *
 {
 	MonoAssemblyName *aname;
 	MonoAssemblyOpenRequest req;
+	int preload_flags = 0;
 	mono_assembly_request_prepare_open (&req, MONO_ASMCTX_DEFAULT, mono_domain_default_alc (mono_domain_get ()));
 
 	if (corlib) {
@@ -4465,7 +4498,7 @@ mono_assembly_load_corlib (const MonoRuntimeInfo *runtime, MonoImageOpenStatus *
 
 	// A nonstandard preload hook may provide a special mscorlib assembly
 	aname = mono_assembly_name_new ("mscorlib.dll");
-	corlib = invoke_assembly_preload_hook (req.request.alc, aname, assemblies_path);
+	corlib = invoke_assembly_preload_hook (req.request.alc, aname, &preload_flags, assemblies_path);
 	mono_assembly_name_free_internal (aname);
 	g_free (aname);
 	if (corlib != NULL)
@@ -4599,6 +4632,7 @@ mono_assembly_request_byname_nosearch (MonoAssemblyName *aname,
 	MonoAssembly *result = NULL;
 	MonoAssemblyName maped_aname;
 	MonoAssemblyName maped_name_pp;
+	int preload_flags = 0;
 
 	aname = mono_assembly_remap_version (aname, &maped_aname);
 
@@ -4612,13 +4646,14 @@ mono_assembly_request_byname_nosearch (MonoAssemblyName *aname,
 	if (result)
 		return result;
 
-	result = refonly ? invoke_assembly_refonly_preload_hook (req->request.alc, aname, assemblies_path) : invoke_assembly_preload_hook (req->request.alc, aname, assemblies_path);
+	result = refonly ? invoke_assembly_refonly_preload_hook (req->request.alc, aname, assemblies_path) : invoke_assembly_preload_hook (req->request.alc, aname, &preload_flags, assemblies_path);
 	if (result) {
-		result->in_gac = FALSE;
+		result->in_gac = (preload_flags & WINE_PRELOAD_SET_GAC) != 0;
 		return result;
 	}
 
-	result = mono_assembly_load_full_gac_base_default (aname, req->basedir, req->request.alc, req->request.asmctx, status);
+	if (!(preload_flags & WINE_PRELOAD_SKIP_GAC))
+		result = mono_assembly_load_full_gac_base_default (aname, req->basedir, req->request.alc, req->request.asmctx, status);
 	return result;
 }
 
