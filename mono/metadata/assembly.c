@@ -4481,6 +4481,79 @@ mono_assembly_load_from_gac (MonoAssemblyName *aname,  gchar *filename, MonoImag
 
 	return result;
 }
+
+static MonoAssembly*
+wine_mono_assembly_load_from_gac_unsafe (MonoAssemblyName *aname, MonoImageOpenStatus *status, MonoBoolean refonly)
+{
+	MonoAssembly *result;
+	MonoAssemblyName maped_aname;
+	char *filename;
+	int ext_index;
+	const char *ext;
+	int len;
+
+	/* If we remap e.g. 4.1.3.0 to 4.0.0.0, look in the 4.0.0.0
+	 * GAC directory, not 4.1.3.0 */
+	aname = mono_assembly_remap_version (aname, &maped_aname);
+
+	/* Currently we retrieve the loaded corlib for reflection 
+	 * only requests, like a common reflection only assembly 
+	 */
+	gboolean name_is_corlib = strcmp (aname->name, MONO_ASSEMBLY_CORLIB_NAME) == 0;
+	/* Assembly.Load (new AssemblyName ("mscorlib.dll")) (respectively,
+	 * "System.Private.CoreLib.dll" for netcore) is treated the same as
+	 * "mscorlib" (resp "System.Private.CoreLib"). */
+	name_is_corlib = name_is_corlib || strcmp (aname->name, MONO_ASSEMBLY_CORLIB_NAME ".dll") == 0;
+	if (name_is_corlib) {
+		return NULL;
+	}
+
+	MonoAssemblyCandidatePredicate predicate = NULL;
+	void* predicate_ud = NULL;
+	if (mono_loader_get_strict_assembly_name_check ()) {
+		predicate = &mono_assembly_candidate_predicate_sn_same_name;
+		predicate_ud = aname;
+	}
+
+	MonoAssemblyOpenRequest req;
+	mono_assembly_request_prepare_open (&req, MONO_ASMCTX_DEFAULT, mono_domain_default_alc (mono_domain_get ()));
+	req.request.predicate = predicate;
+	req.request.predicate_ud = predicate_ud;
+
+	len = strlen (aname->name);
+	for (ext_index = 0; ext_index < 2; ext_index ++) {
+		ext = ext_index == 0 ? ".dll" : ".exe";
+		if (len > 4 && (!strcmp (aname->name + len - 4, ".dll") || !strcmp (aname->name + len - 4, ".exe"))) {
+			filename = g_strdup (aname->name);
+			/* Don't try appending .dll/.exe if it already has one of those extensions */
+			ext_index++;
+		} else {
+			filename = g_strconcat (aname->name, ext, (const char*)NULL);
+		}
+
+		result = mono_assembly_load_from_gac (aname, filename, status, refonly);
+		if (result) {
+			g_free (filename);
+			return result;
+		}
+
+		g_free (filename);
+		if (result)
+			return result;
+	}
+
+	return result;
+}
+
+MonoAssembly*
+wine_mono_assembly_load_from_gac (MonoAssemblyName *aname, MonoImageOpenStatus *status, MonoBoolean refonly)
+{
+	MonoAssembly *result;
+	MONO_ENTER_GC_UNSAFE;
+	result = wine_mono_assembly_load_from_gac_unsafe (aname, status, refonly);
+	MONO_EXIT_GC_UNSAFE;
+	return result;
+}
 #endif /* DISABLE_GAC */
 
 MonoAssembly*

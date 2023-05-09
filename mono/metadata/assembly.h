@@ -40,6 +40,9 @@ MONO_API MONO_RT_EXTERNAL_ONLY
 MonoAssembly* mono_assembly_load_with_partial_name (const char *name, MonoImageOpenStatus *status);
 
 MONO_API MONO_RT_EXTERNAL_ONLY
+MonoAssembly* wine_mono_assembly_load_from_gac (MonoAssemblyName *aname, MonoImageOpenStatus *status, MonoBoolean refonly);
+
+MONO_API MONO_RT_EXTERNAL_ONLY
 MonoAssembly* mono_assembly_loaded     (MonoAssemblyName *aname);
 MONO_API MONO_RT_EXTERNAL_ONLY
 MonoAssembly* mono_assembly_loaded_full (MonoAssemblyName *aname, mono_bool refonly);
