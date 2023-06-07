@@ -509,7 +509,7 @@ gpointer  mono_jit_compile_method_jit_only  (MonoMethod *method, MonoError *erro
 void      mono_set_bisect_methods          (guint32 opt, const char *method_list_filename);
 guint32   mono_get_optimizations_for_method (MonoMethod *method, guint32 default_opt);
 char*     mono_opt_descr                   (guint32 flags);
-void      mono_set_verbose_level           (guint32 level);
+MONO_API void      mono_set_verbose_level           (guint32 level);
 const char*mono_ji_type_to_string           (MonoJumpInfoType type);
 void      mono_print_ji                     (const MonoJumpInfo *ji);
 MONO_API void      mono_print_method_from_ip         (void *ip);

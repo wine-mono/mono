@@ -38,6 +38,6 @@ MONO_PROFILER_API gboolean mono_callspec_eval_exception	(MonoClass *klass,
 							 MonoCallSpec *spec);
 MONO_PROFILER_API gboolean mono_callspec_eval		(MonoMethod *method,
 							 const MonoCallSpec *spec);
-void			   mono_callspec_set_assembly	(MonoAssembly *assembly);
+MONO_API void			   mono_callspec_set_assembly	(MonoAssembly *assembly);
 
 #endif /* __MONO_CALLSPEC_H__ */
