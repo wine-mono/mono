@@ -11,7 +11,6 @@
 
 .assembly 'PureApp'
 {
-  .permissionset reqmin = {[mscorlib]System.Security.Permissions.SecurityPermissionAttribute = {property bool 'SkipVerification' = bool(true)}}
   .hash algorithm 0x00008004
   .ver  0:0:0:0
 }

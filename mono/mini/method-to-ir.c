@@ -1887,6 +1887,8 @@ target_type_is_incompatible (MonoCompile *cfg, MonoType *target, MonoInst *arg)
 		}
 		if (arg->type == STACK_PTR)
 			return 0;
+		if (arg->type == STACK_OBJ && MONO_TYPE_IS_PRIMITIVE_SCALAR (target))
+			return 0;
 		return 1;
 	}
 
