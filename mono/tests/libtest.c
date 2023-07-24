@@ -196,6 +196,12 @@ mono_return_int (int a) {
 	return a;
 }
 
+LIBTEST_API int STDCALL
+mono_preserve_sig_test (int hr, int *out_int) {
+	*out_int = 6;
+	return hr;
+}
+
 LIBTEST_API float STDCALL  
 mono_test_marshal_pass_return_float (float f) {
 	return f + 1.0;

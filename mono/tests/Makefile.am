@@ -447,6 +447,7 @@ TESTS_CS_SRC=		\
 	marshal8.cs		\
 	marshal9.cs		\
 	marshalbool.cs		\
+	marshalsig.cs		\
 	test-byval-in-struct.cs	\
 	thread.cs		\
 	thread5.cs		\
