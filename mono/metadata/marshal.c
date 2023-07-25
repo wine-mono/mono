@@ -1843,6 +1843,11 @@ mono_marshal_method_from_wrapper (MonoMethod *wrapper)
 			return info->d.managed_to_native.method;
 		else
 			return NULL;
+	case MONO_WRAPPER_MANAGED_TO_MANAGED:
+		if (info && (info->subtype == WRAPPER_SUBTYPE_ADJUST_SIG))
+			return info->d.adjust_sig.method;
+		else
+			return NULL;
 	case MONO_WRAPPER_RUNTIME_INVOKE:
 		if (info && (info->subtype == WRAPPER_SUBTYPE_RUNTIME_INVOKE_DIRECT || info->subtype == WRAPPER_SUBTYPE_RUNTIME_INVOKE_VIRTUAL))
 			return info->d.runtime_invoke.method;
@@ -3500,6 +3505,98 @@ mono_marshal_set_callconv_from_modopt (MonoMethod *method, MonoMethodSignature *
 	}
 }
 
+static MonoMethod *
+mono_marshal_get_adjust_sig_wrapper (MonoMethod *method, GHashTable *cache, gboolean check_exceptions, gboolean aot) {
+	MonoMethod *res, *wrapper_adjusted;
+	MonoMethodPInvoke *piinfo_adjusted;
+	MonoImage *image = m_class_get_image (method->klass);
+	MonoMethodSignature *sig, *csig, *sig_adjusted;
+	MonoMethodBuilder *mb;
+	WrapperInfo *info;
+	gboolean has_result;
+	int sigsize, param_count, i;
+	int loc_result = -1;
+
+	sig = mono_method_signature_internal (method);
+
+	has_result = !MONO_TYPE_IS_VOID (sig->ret);
+
+	param_count = sig->param_count + !!has_result;
+
+	/* adjust signature */
+	sig_adjusted = mono_metadata_signature_alloc (image, param_count);
+	sigsize = MONO_SIZEOF_METHOD_SIGNATURE + sig->param_count * sizeof (MonoType *);
+	memcpy (sig_adjusted, sig, sigsize);
+	sig_adjusted->param_count = param_count;
+
+	if (has_result) {
+		sig_adjusted->params[sig->param_count] = mono_metadata_type_dup (image, sig->ret);
+		sig_adjusted->params[sig->param_count]->byref = 1;
+		sig_adjusted->params[sig->param_count]->attrs = PARAM_ATTRIBUTE_OUT;
+	}
+
+	sig_adjusted->ret = mono_get_int32_type();
+
+	/* create a pinvoke method with the adjusted signature */
+	piinfo_adjusted = (MonoMethodPInvoke*)mono_image_alloc0 (image, sizeof (MonoMethodPInvoke));
+
+	piinfo_adjusted->method.slot = -1;
+	piinfo_adjusted->method.klass = method->klass;
+	piinfo_adjusted->method.flags = method->flags;
+	piinfo_adjusted->method.iflags = method->iflags | METHOD_IMPL_ATTRIBUTE_PRESERVE_SIG;
+	piinfo_adjusted->method.token = method->token;
+	piinfo_adjusted->method.name = method->name;
+	piinfo_adjusted->method.signature = sig_adjusted;
+	piinfo_adjusted->addr = ((MonoMethodPInvoke*)method)->addr;
+	piinfo_adjusted->implmap_idx = ((MonoMethodPInvoke*)method)->implmap_idx;
+	piinfo_adjusted->piflags = ((MonoMethodPInvoke*)method)->piflags;
+
+	wrapper_adjusted = mono_marshal_get_native_wrapper (&piinfo_adjusted->method, check_exceptions, aot);
+
+	/* build the wrapper method that adjusts the signature */
+	mb = mono_mb_new (method->klass, method->name, MONO_WRAPPER_MANAGED_TO_MANAGED);
+
+	info = mono_wrapper_info_create (mb, WRAPPER_SUBTYPE_ADJUST_SIG);
+	info->d.adjust_sig.method = method;
+
+	if (has_result) {
+		loc_result = mono_mb_add_local (mb, sig->ret);
+	}
+
+	/* load arguments */
+	for (i = 0; i < sig->param_count; i++) {
+		mono_mb_emit_ldarg (mb, i);
+	}
+
+	if (has_result) {
+		mono_mb_emit_ldloc_addr (mb, loc_result);
+	}
+
+	mono_mb_emit_managed_call (mb, wrapper_adjusted, NULL);
+
+	MONO_STATIC_POINTER_INIT (MonoMethod, ThrowExceptionForHR)
+
+		ERROR_DECL (error);
+		ThrowExceptionForHR = mono_class_get_method_from_name_checked (mono_defaults.marshal_class, "ThrowExceptionForHR", 1, 0, error);
+		mono_error_assert_ok (error);
+
+	MONO_STATIC_POINTER_INIT_END (MonoMethod, ThrowExceptionForHR)
+
+	mono_mb_emit_managed_call (mb, ThrowExceptionForHR, NULL);
+
+	if (has_result)
+		mono_mb_emit_ldloc (mb, loc_result);
+
+	mono_mb_emit_byte (mb, CEE_RET);
+
+	csig = mono_metadata_signature_dup_full (image, sig);
+	csig->pinvoke = 0;
+	res = mono_mb_create_and_cache (cache, method, mb, csig, csig->param_count + 16);
+
+	mono_mb_free (mb);
+	return res;
+}
+
 /**
  * mono_marshal_get_native_wrapper:
  * \param method The \c MonoMethod to wrap.
@@ -3559,6 +3656,11 @@ mono_marshal_get_native_wrapper (MonoMethod *method, gboolean check_exceptions, 
 #else
 		g_assert_not_reached ();
 #endif
+	}
+
+	if ((method->flags & METHOD_ATTRIBUTE_PINVOKE_IMPL) &&
+		!(method->iflags & (METHOD_IMPL_ATTRIBUTE_PRESERVE_SIG|METHOD_IMPL_ATTRIBUTE_INTERNAL_CALL))) {
+		return mono_marshal_get_adjust_sig_wrapper (method, cache, check_exceptions, aot);
 	}
 
 	sig = mono_method_signature_internal (method);

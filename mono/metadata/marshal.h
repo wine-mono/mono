@@ -124,6 +124,7 @@ typedef enum {
 	WRAPPER_SUBTYPE_ARRAY_ACCESSOR,
 	/* Subtypes of MONO_WRAPPER_MANAGED_TO_MANAGED */
 	WRAPPER_SUBTYPE_GENERIC_ARRAY_HELPER,
+	WRAPPER_SUBTYPE_ADJUST_SIG,
 	/* Subtypes of MONO_WRAPPER_DELEGATE_INVOKE */
 	WRAPPER_SUBTYPE_DELEGATE_INVOKE_VIRTUAL,
 	WRAPPER_SUBTYPE_DELEGATE_INVOKE_BOUND,
@@ -176,6 +177,10 @@ typedef struct {
 	const char *name;
 	MonoMethod *method;
 } GenericArrayHelperWrapperInfo;
+
+typedef struct {
+	MonoMethod *method;
+} AdjustSigWrapperInfo;
 
 typedef struct {
 	MonoJitICallId jit_icall_id;
@@ -287,6 +292,8 @@ typedef struct {
 		AOTInitWrapperInfo aot_init;
 		/* LLVM_FUNC */
 		LLVMFuncWrapperInfo llvm_func;
+		/* ADJUST_SIG */
+		AdjustSigWrapperInfo adjust_sig;
 	} d;
 } WrapperInfo;
 
