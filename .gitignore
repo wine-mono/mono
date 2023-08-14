@@ -137,6 +137,7 @@ extensions-config.h
 llvm/build/
 llvm/usr/
 mcs/build/compiler-server.log
+/mcs/tools/csharp/net_4_x-parser.cs
 
 ##############################################################################
 # Arcade output directories
