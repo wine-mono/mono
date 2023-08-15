@@ -367,10 +367,19 @@ mono_lookup_pinvoke_call_internal (MonoMethod *method, MonoError *error)
 {
 	gpointer result;
 	MonoLookupPInvokeStatus status;
+#ifdef WIN32
+	/* Looking up pinvoke targets usually results in a "procedure not found" error,
+	 * which can mess up code that sets last error to 0 before making a call, if
+	 * the native wrapper is compiled at the wrong time. */
+	DWORD last_error = GetLastError();
+#endif
 	memset (&status, 0, sizeof (status));
 	result = lookup_pinvoke_call_impl (method, &status);
 	if (status.err_code)
 		pinvoke_probe_convert_status_to_error (&status, error);
+#ifdef WIN32
+	SetLastError(last_error);
+#endif
 	return result;
 }
 
