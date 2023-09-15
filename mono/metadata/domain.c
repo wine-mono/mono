@@ -380,6 +380,15 @@ static gsize domain_gc_bitmap [sizeof(MonoDomain)/4/32 + 1];
 static MonoGCDescriptor domain_gc_desc = MONO_GC_DESCRIPTOR_NULL;
 static guint32 domain_shadow_serial = 0L;
 
+static void mono_assembly_aliases_free(GSList *list)
+{
+	for (GSList *ptr = list; ptr; ptr = ptr->next) {
+		MonoAssemblyAlias *alias = (MonoAssemblyAlias *)ptr->data;
+		mono_assembly_name_free_internal (&alias->aname);
+		g_free (alias);
+	}
+}
+
 /**
  * mono_domain_create:
  *
@@ -438,6 +447,7 @@ mono_domain_create (void)
 	domain->lock_free_mp = lock_free_mempool_new ();
 	domain->env = mono_g_hash_table_new_type_internal ((GHashFunc)mono_string_hash_internal, (GCompareFunc)mono_string_equal_internal, MONO_HASH_KEY_VALUE_GC, MONO_ROOT_SOURCE_DOMAIN, domain, "Domain Environment Variable Table");
 	domain->domain_assemblies = NULL;
+	domain->assembly_aliases = NULL;
 	domain->assembly_bindings = NULL;
 	domain->assembly_bindings_parsed = FALSE;
 	domain->proxy_vtable_hash = g_hash_table_new ((GHashFunc)mono_ptrarray_hash, (GCompareFunc)mono_ptrarray_equal);
@@ -1155,6 +1165,9 @@ mono_domain_free (MonoDomain *domain, gboolean force)
 	}
 	g_slist_free (domain->domain_assemblies);
 	domain->domain_assemblies = NULL;
+	mono_assembly_aliases_free (domain->assembly_aliases);
+	g_slist_free (domain->assembly_aliases);
+	domain->assembly_aliases = NULL;
 
 	/* 
 	 * Send this after the assemblies have been unloaded and the domain is still in a 

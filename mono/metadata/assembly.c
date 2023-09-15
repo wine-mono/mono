@@ -3284,6 +3284,33 @@ mono_assembly_load_from (MonoImage *image, const char *fname,
 }
 
 /**
+* mono_assembly_name_copy:
+* \param dst destination assembly name
+* \param src source assembly name
+*
+* Copies the src assembly name object to dst, including the name members.
+*/
+void
+mono_assembly_name_copy (MonoAssemblyName *dest, MonoAssemblyName *src)
+{
+	memcpy (dest, src, sizeof(MonoAssemblyName));
+
+	dest->name = g_strdup (dest->name);
+	dest->culture = g_strdup (dest->culture);
+	dest->hash_value = g_strdup (dest->hash_value);
+
+	if (src->public_key) {
+		const gchar *pkey_end;
+		int len = mono_metadata_decode_blob_size ((const gchar*) src->public_key, &pkey_end);
+		pkey_end += len; /* move to end */
+		size_t size = pkey_end - (const gchar*)src->public_key;
+		guchar *tmp = g_new (guchar, size);
+		memcpy (tmp, src->public_key, size);
+		dest->public_key = tmp;
+	}
+}
+
+/**
  * mono_assembly_name_free_internal:
  * \param aname assembly name to free
  * 

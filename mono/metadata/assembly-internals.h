@@ -34,6 +34,9 @@ G_ENUM_FUNCTIONS (MonoAssemblyNameEqFlags)
 void
 mono_assembly_name_free_internal (MonoAssemblyName *aname);
 
+void
+mono_assembly_name_copy (MonoAssemblyName *dest, MonoAssemblyName *src);
+
 gboolean
 mono_assembly_name_culture_is_neutral (const MonoAssemblyName *aname);
 

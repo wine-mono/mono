@@ -176,6 +176,13 @@ struct _MonoAssemblyName {
 	MonoBoolean without_public_key_token;
 };
 
+struct _MonoAssemblyAlias {
+	MonoAssemblyName aname;
+	MonoAssembly *assembly;
+};
+
+typedef struct _MonoAssemblyAlias MonoAssemblyAlias;
+
 struct MonoTypeNameParse {
 	char *name_space;
 	char *name;

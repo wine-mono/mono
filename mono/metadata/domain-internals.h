@@ -371,6 +371,7 @@ struct _MonoDomain {
 	 * list.
 	 */
 	GSList             *domain_assemblies;
+	GSList             *assembly_aliases;
 	MonoAssembly       *entry_assembly;
 	char               *friendly_name;
 	/* maps remote class key -> MonoRemoteClass */

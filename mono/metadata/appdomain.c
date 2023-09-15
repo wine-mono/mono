@@ -1404,12 +1404,25 @@ mono_domain_assembly_postload_search (MonoAssemblyLoadContext *alc, MonoAssembly
 	ERROR_DECL (error);
 	MonoAssembly *assembly;
 	char *aname_str;
+	MonoDomain *domain = mono_alc_domain (alc);
 
 	aname_str = mono_stringify_assembly_name (aname);
 
 	/* FIXME: We invoke managed code here, so there is a potential for deadlocks */
 
 	assembly = mono_try_assembly_resolve (alc, aname_str, requesting, refonly, error);
+
+	if (assembly) {
+		mono_domain_assemblies_lock (domain);
+
+		MonoAssemblyAlias *alias = g_new0 (MonoAssemblyAlias, 1);
+		alias->assembly = assembly;
+		mono_assembly_name_copy (&alias->aname, aname);
+		domain->assembly_aliases = g_slist_prepend (domain->assembly_aliases, alias);
+
+		mono_domain_assemblies_unlock (domain);
+	}
+
 	g_free (aname_str);
 	mono_error_cleanup (error);
 
@@ -2333,6 +2346,17 @@ mono_domain_assembly_search (MonoAssemblyLoadContext *alc, MonoAssembly *request
 		(MONO_ANAME_EQ_IGNORE_PUBKEY | MONO_ANAME_EQ_IGNORE_VERSION | MONO_ANAME_EQ_IGNORE_CASE));
 
 	mono_domain_assemblies_lock (domain);
+	for (tmp = domain->assembly_aliases; tmp; tmp = tmp->next) {
+		MonoAssemblyAlias *alias = (MonoAssemblyAlias *)tmp->data;
+
+		gboolean ass_ref_only = mono_asmctx_get_kind (&alias->assembly->context) == MONO_ASMCTX_REFONLY;
+		if (assembly_is_dynamic (alias->assembly) || refonly != ass_ref_only || !mono_assembly_names_equal_flags (aname, &alias->aname, eq_flags))
+			continue;
+
+		mono_domain_assemblies_unlock (domain);
+		return alias->assembly;
+	}
+
 	for (tmp = domain->domain_assemblies; tmp; tmp = tmp->next) {
 		ass = (MonoAssembly *)tmp->data;
 		g_assert (ass != NULL);
@@ -2581,17 +2605,26 @@ ves_icall_System_AppDomain_LoadAssembly (MonoAppDomainHandle ad, MonoStringHandl
 	req.basedir = basedir;
 	req.no_postload_search = TRUE;
 	ass = mono_assembly_request_byname (&aname, &req, &status);
-	mono_assembly_name_free_internal (&aname);
 
 	if (!ass) {
 		/* MS.NET doesn't seem to call the assembly resolve handler for refonly assemblies */
 		if (!refOnly) {
 			ass = mono_try_assembly_resolve_handle (mono_domain_default_alc (domain), assRef, NULL, refOnly, error);
-			goto_if_nok (error, fail);
+			goto_if_nok (error, free_fail);
 		}
 		if (!ass)
-			goto fail;
+			goto free_fail;
+
+		mono_domain_assemblies_lock (domain);
+
+		MonoAssemblyAlias *alias = g_new0 (MonoAssemblyAlias, 1);
+		alias->assembly = ass;
+		mono_assembly_name_copy (&alias->aname, &aname);
+		domain->assembly_aliases = g_slist_prepend (domain->assembly_aliases, alias);
+
+		mono_domain_assemblies_unlock (domain);
 	}
+	mono_assembly_name_free_internal (&aname);
 
 	g_assert (ass);
 	MonoReflectionAssemblyHandle refass;
@@ -2601,6 +2634,8 @@ ves_icall_System_AppDomain_LoadAssembly (MonoAppDomainHandle ad, MonoStringHandl
 	MONO_HANDLE_SET (refass, evidence, evidence);
 
 	return refass;
+free_fail:
+	mono_assembly_name_free_internal (&aname);
 fail:
 	return MONO_HANDLE_CAST (MonoReflectionAssembly, NULL_HANDLE);
 }
