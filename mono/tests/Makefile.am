@@ -294,6 +294,7 @@ TESTS_CS_SRC=		\
 	assemblyresolve_event5.cs	\
 	assemblyresolve_event6.cs	\
 	assemblyresolve_event7.cs	\
+	assemblyresolve_event8.cs   \
 	checked.cs		\
 	char-isnumber.cs	\
 	field-layout.cs		\
@@ -2809,6 +2810,12 @@ assemblyresolve_event5.exe: assemblyresolve_event5_helper.dll
 
 assemblyresolve_event6.exe$(PLATFORM_AOT_SUFFIX): assemblyresolve_asm.dll$(PLATFORM_AOT_SUFFIX) assemblyresolve_deps/Test.dll$(PLATFORM_AOT_SUFFIX) assemblyresolve_deps/TestBase.dll$(PLATFORM_AOT_SUFFIX)
 assemblyresolve_event6.exe: assemblyresolve_asm.dll assemblyresolve_deps/Test.dll assemblyresolve_deps/TestBase.dll
+
+assemblyresolve_event8_helper.dll: $(srcdir)/assemblyresolve_event8_helper.cs
+	$(MCS) -target:library -out:assemblyresolve_deps/assemblyresolve_event8_helper.dll $(srcdir)/assemblyresolve_event8_helper.cs
+	$(MCS) -target:library -out:assemblyresolve_deps/assemblyresolve_event8_helper2.dll $(srcdir)/assemblyresolve_event8_helper.cs
+
+assemblyresolve_event8.exe: assemblyresolve_event8_helper.dll
 
 # We use 'test-support-files' to handle an ordering issue between the 'mono/' and 'runtime/' directories
 bug-80307.exe: $(srcdir)/bug-80307.cs
