@@ -1028,6 +1028,11 @@ cominterop_class_marshalled_as_interface (MonoClass* klass)
 	if (MONO_CLASS_IS_INTERFACE_INTERNAL (klass))
 		return TRUE;
 
+	// subclasses of SafeHandle should use default marshaling
+	if (mono_class_try_get_safehandle_class () != NULL &&
+		mono_class_is_subclass_of_internal (klass, mono_class_try_get_safehandle_class (), FALSE))
+		return FALSE;
+
 	// Classes are marshalled as interfaces if their layout is not specified explicitly
 	if (mono_class_is_auto_layout (klass))
 		return TRUE;
