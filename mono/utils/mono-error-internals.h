@@ -309,7 +309,7 @@ void
 mono_error_set_first_argument (MonoError *oerror, const char *first_argument);
 
 #if HOST_WIN32
-#if HOST_X86 || HOST_AMD64
+#if HOST_X86 // || HOST_AMD64 // Direct GS access causes problems on macOS
 
 #include <windows.h>
 
