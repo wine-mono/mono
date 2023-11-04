@@ -375,6 +375,58 @@ namespace MonoTests.System.Collections.Generic {
 		}
 
 		[Test]
+		public void SortTestCIterSorted ()
+		{
+			int[] array = new int[] { 1, 2, 3, 4, 5 };
+
+			var list = array.ToList<int>();
+
+			foreach (int i in list)
+			{
+				list.Sort ((int a, int b) => a.CompareTo(b));
+			}
+		}
+
+		[Test]
+		public void SortTestCIterUnsorted ()
+		{
+			int[] array = new int[] { 5, 4, 3, 2, 1 };
+
+			var list = array.ToList<int>();
+
+			foreach (int i in list)
+			{
+				list.Sort ((int a, int b) => a.CompareTo(b));
+			}
+		}
+
+		[Test, ExpectedException (typeof (InvalidOperationException))]
+		public void SortTestIterSorted ()
+		{
+			int[] array = new int[] { 1, 2, 3, 4, 5 };
+
+			var list = array.ToList<int>();
+
+			foreach (int i in list)
+			{
+				list.Sort ();
+			}
+		}
+
+		[Test, ExpectedException (typeof (InvalidOperationException))]
+		public void SortTestIterUnsorted ()
+		{
+			int[] array = new int[] { 5, 4, 3, 2, 1 };
+
+			var list = array.ToList<int>();
+
+			foreach (int i in list)
+			{
+				list.Sort ();
+			}
+		}
+
+		[Test]
 		public void SortTestTrickyPivot ()
 		{
 			int[] array = new int[] { 1, 3, 5, 2, 6, 6, 6, 6, 6, 6, 6,7 ,4 };
