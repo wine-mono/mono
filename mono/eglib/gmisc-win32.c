@@ -218,16 +218,11 @@ const gchar *
 g_get_tmp_dir (void)
 {
 	if (tmp_dir == NULL){
+		tmp_dir = g_getenv ("TMP");
 		if (tmp_dir == NULL){
-			tmp_dir = g_getenv ("TMPDIR");
-			if (tmp_dir == NULL){
-				tmp_dir = g_getenv ("TMP");
-				if (tmp_dir == NULL){
-					tmp_dir = g_getenv ("TEMP");
-					if (tmp_dir == NULL)
-						tmp_dir = "C:\\temp";
-				}
-			}
+			tmp_dir = g_getenv ("TEMP");
+			if (tmp_dir == NULL)
+				tmp_dir = "C:\\temp";
 		}
 	}
 	return tmp_dir;
