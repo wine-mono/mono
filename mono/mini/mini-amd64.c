@@ -4392,7 +4392,8 @@ emit_get_last_error (guint8* code, int dreg)
 {
 	/* Threads last error value is located in TEB_LAST_ERROR_OFFSET. */
 	x86_prefix (code, X86_GS_PREFIX);
-	amd64_mov_reg_mem (code, dreg, TEB_LAST_ERROR_OFFSET, sizeof (guint32));
+	amd64_mov_reg_mem (code, dreg, 0x30, 8);
+	amd64_mov_reg_membase (code, dreg, dreg, TEB_LAST_ERROR_OFFSET, sizeof (guint32));
 	return code;
 }
 
