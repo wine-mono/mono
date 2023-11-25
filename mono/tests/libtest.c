@@ -2333,6 +2333,25 @@ typedef struct {
 	float i;
 } SmallStruct8;
 	
+#if defined(WIN32) && defined(TARGET_X86)
+/* clang incorrectly expects result in FP(0) for this struct on x86 Windows */
+typedef uint32_t (STDCALL *SmallStructDelegate8) (SmallStruct8 ss);
+
+LIBTEST_API int STDCALL 
+mono_test_marshal_small_struct_delegate8 (SmallStructDelegate8 delegate)
+{
+	SmallStruct8 ss;
+	uint32_t res;
+
+	ss.i = 1.0;
+
+	res = delegate (ss);
+	if (! ((res == 0xbf800000)))
+		return 1;
+
+	return 0;
+}
+#else
 typedef SmallStruct8 (STDCALL *SmallStructDelegate8) (SmallStruct8 ss);
 
 LIBTEST_API int STDCALL 
@@ -2348,11 +2367,31 @@ mono_test_marshal_small_struct_delegate8 (SmallStructDelegate8 delegate)
 
 	return 0;
 }
+#endif
 
 typedef struct {
 	double i;
 } SmallStruct9;
 	
+#if defined(WIN32) && defined(TARGET_X86)
+/* clang incorrectly expects result in FP(0) for this struct on x86 Windows */
+typedef uint64_t (STDCALL *SmallStructDelegate9) (SmallStruct9 ss);
+
+LIBTEST_API int STDCALL 
+mono_test_marshal_small_struct_delegate9 (SmallStructDelegate9 delegate)
+{
+	SmallStruct9 ss;
+	uint64_t res;
+
+	ss.i = 1.0;
+
+	res = delegate (ss);
+	if (! ((res == 0xbff0000000000000)))
+		return 1;
+
+	return 0;
+}
+#else
 typedef SmallStruct9 (STDCALL *SmallStructDelegate9) (SmallStruct9 ss);
 
 LIBTEST_API int STDCALL 
@@ -2368,6 +2407,7 @@ mono_test_marshal_small_struct_delegate9 (SmallStructDelegate9 delegate)
 
 	return 0;
 }
+#endif
 
 typedef struct {
 	float i, j;
