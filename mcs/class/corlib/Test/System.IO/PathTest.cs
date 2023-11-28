@@ -773,7 +773,7 @@ namespace MonoTests.System.IO
 		public void GetFullPath2 ()
 		{
 			if (Windows) {
-				Assert.AreEqual (@"Z:\", Path.GetFullPath ("Z:"), "GetFullPath w#01");
+				Assert.AreEqual (@"X:\", Path.GetFullPath ("X:"), "GetFullPath w#01");
 				Assert.AreEqual (@"c:\abc\def", Path.GetFullPath (@"c:\abc\def"), "GetFullPath w#02");
 				Assert.IsTrue (Path.GetFullPath (@"\").EndsWith (@"\"), "GetFullPath w#03");
 				// "\\\\" is not allowed
