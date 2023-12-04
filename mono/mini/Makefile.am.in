@@ -1062,6 +1062,9 @@ pkgconfigdir = $(libdir)/pkgconfig
 
 BUILT_SOURCES = version.h $(arch_built)
 
+.PHONY: built_sources
+built_sources: $(BUILT_SOURCES)
+
 CLEANFILES= $(BUILT_SOURCES) *.exe *.dll
 EXTRA_DIST = TestDriver.cs \
 	TestHelpers.cs \
