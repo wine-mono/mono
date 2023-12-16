@@ -27,6 +27,7 @@
 //
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Net;
@@ -98,12 +99,11 @@ namespace MonoTests.Helpers
 				try {
 					listenSocket = tcpListener.AcceptSocket ();
 					listenSocket.Send (requestHandler (listenSocket));
+					if (listenSocket.Available != 0)
+						throw new SocketResponderException ("not all client data was read by requestHandler");
 					try {
-						// On Windows a Receive() is needed here before Shutdown() to consume the data some tests send.
-						listenSocket.ReceiveTimeout = 10 * 1000;
-						listenSocket.Receive (new byte [0]);
-						listenSocket.Shutdown (SocketShutdown.Send);
 						listenSocket.Shutdown (SocketShutdown.Receive);
+						listenSocket.Shutdown (SocketShutdown.Send);
 					} catch {
 					}
 				} catch (SocketException ex) {
@@ -126,6 +126,34 @@ namespace MonoTests.Helpers
 						listenSocket.Close ();
 				}
 			}
+		}
+
+		private static bool EndsWith (List<byte> list, byte[] terminator)
+		{
+			if (list.Count < terminator.Length)
+				return false;
+
+			for (int i = 0; i < terminator.Length; i++)
+				if (list[list.Count - terminator.Length + i] != terminator[i])
+					return false;
+
+			return true;
+		}
+
+		public static List<byte> ReadHttpHeader (Socket socket)
+		{
+			List<byte> result = new List<byte>();
+			byte[] buf = new byte[1];
+			byte[] term = new byte[] { 13, 10, 13, 10 };
+
+			while (!EndsWith (result, term))
+			{
+				if (socket.Receive (buf) == 0)
+					throw new SocketResponderException ("Client did not send full HTTP header");
+				result.Add (buf [0]);
+			}
+
+			return result;
 		}
 	}
 }

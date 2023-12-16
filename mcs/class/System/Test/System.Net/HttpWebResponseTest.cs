@@ -473,6 +473,8 @@ namespace MonoTests.System.Net
 
 		internal static byte [] FullResponseHandler (Socket socket)
 		{
+			SocketResponder.ReadHttpHeader (socket);
+
 			StringWriter sw = new StringWriter ();
 			sw.NewLine = "\r\n";
 			sw.WriteLine ("HTTP/1.0 200 OK");

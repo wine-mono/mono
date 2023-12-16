@@ -1558,6 +1558,8 @@ namespace MonoTests.System.Net
 
 		static byte [] NotModifiedSinceHandler (Socket socket)
 		{
+			SocketResponder.ReadHttpHeader (socket);
+
 			StringWriter sw = new StringWriter ();
 			sw.WriteLine ("HTTP/1.1 304 Not Modified");
 			sw.WriteLine ("Date: Fri, 06 Feb 2009 12:50:26 GMT");
