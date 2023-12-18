@@ -35,7 +35,6 @@ System.Configuration/ApplicationScopedSettingAttribute.cs
 System.Configuration/ApplicationSettingsBase.cs
 System.Configuration/ApplicationSettingsGroup.cs
 System.Configuration/AppSettingsReader.cs
-System.Configuration/ClientSettingsSection.cs
 System.Configuration/ConfigHelper.cs
 System.Configuration/ConfigurationException.cs
 System.Configuration/ConfigurationSettings.cs
@@ -56,11 +55,10 @@ System.Configuration/LocalFileSettingsProvider.cs
 System.Configuration/NameValueFileSectionHandler.cs
 System.Configuration/NameValueSectionHandler.cs
 System.Configuration/NoSettingsVersionUpgradeAttribute.cs
+../referencesource/System/sys/system/configuration/sections/ClientSettingsSection.cs
 System.Configuration/SettingAttribute.cs
 System.Configuration/SettingChangingEventArgs.cs
 System.Configuration/SettingChangingEventHandler.cs
-System.Configuration/SettingElementCollection.cs
-System.Configuration/SettingElement.cs
 System.Configuration/SettingsAttributeDictionary.cs
 System.Configuration/SettingsBase.cs
 System.Configuration/SettingsContext.cs
@@ -79,7 +77,6 @@ System.Configuration/SettingsProvider.cs
 System.Configuration/SettingsSavingEventHandler.cs
 System.Configuration/SettingsSerializeAsAttribute.cs
 System.Configuration/SettingsSerializeAs.cs
-System.Configuration/SettingValueElement.cs
 System.Configuration/SettingsManageability.cs
 System.Configuration/SettingsManageabilityAttribute.cs
 System.Configuration/SettingsGroupDescriptionAttribute.cs
