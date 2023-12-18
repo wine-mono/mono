@@ -424,6 +424,8 @@ Namespace Microsoft.VisualBasic
                 Return Val(Convert.ToString((-1) * Convert.ToInt16(Expression)))
             ElseIf TypeOf Expression Is Integer Then
                 Return Val(Convert.ToString(Expression))
+            ElseIf TypeOf Expression Is Long Then
+                Return Val(Convert.ToString(Expression))
             ElseIf TypeOf Expression Is System.Enum Then
                 Return Val(Convert.ToString(Convert.ToInt32(Expression)))
             ElseIf TypeOf Expression Is System.Single Then
