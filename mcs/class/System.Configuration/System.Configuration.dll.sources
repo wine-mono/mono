@@ -86,9 +86,9 @@ System.Configuration/InternalConfigurationFactory.cs
 System.Configuration/InternalConfigurationHost.cs
 System.Configuration/InternalConfigurationRoot.cs
 ../referencesource/System.Configuration/System/Configuration/InvalidPropValue.cs
-System.Configuration/KeyValueConfigurationCollection.cs
+../referencesource/System.Configuration/System/Configuration/KeyValueConfigurationCollection.cs
 System.Configuration/KeyValueInternalCollection.cs
-System.Configuration/KeyValueConfigurationElement.cs
+../referencesource/System.Configuration/System/Configuration/KeyValueConfigurationElement.cs
 System.Configuration/LongValidator.cs
 System.Configuration/LongValidatorAttribute.cs
 System.Configuration/NameValueConfigurationCollection.cs
