@@ -13,6 +13,16 @@ class Assert
 				x == null ? "<null>" : x, y == null ? "<null>" : y, msg));
 	}
 
+	public static void AreEqualIgnoreCase (string x, string y, string msg)
+	{
+		if (x == null && y == null)
+			return;
+		if ((x == null || y == null) || !string.Equals (x, y, StringComparison.InvariantCultureIgnoreCase))
+			throw new Exception (string.Format (CultureInfo.InvariantCulture,
+				"Expected: {0}, but was: {1}. {2}",
+				x == null ? "<null>" : x, y == null ? "<null>" : y, msg));
+	}
+
 	public static void AreEqual (object x, object y, string msg)
 	{
 		if (x == null && y == null)

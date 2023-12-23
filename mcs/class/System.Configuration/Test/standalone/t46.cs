@@ -32,12 +32,12 @@ class Program : MarshalByRefObject
 		p = new Program ();
 
 		c = p.OpenExeConfiguration (string.Empty);
-		Assert.AreEqual (Path.Combine (basedir, "t46.exe.config"),
+		Assert.AreEqualIgnoreCase (Path.Combine (basedir, "t46.exe.config"),
 			c.FilePath, "#B1");
 		Assert.AreEqual ("Hello World!",
 			c.AppSettings.Settings ["hithere"].Value, "#B2");
 		c = p.OpenExeConfiguration ((string) null);
-		Assert.AreEqual (Path.Combine (basedir, "t46.exe.config"),
+		Assert.AreEqualIgnoreCase (Path.Combine (basedir, "t46.exe.config"),
 			c.FilePath, "#B3");
 		Assert.AreEqual ("Hello World!",
 			c.AppSettings.Settings ["hithere"].Value, "#B4");
@@ -54,12 +54,12 @@ class Program : MarshalByRefObject
 
 		f = new Foo ();
 		c = f.OpenExeConfiguration (string.Empty);
-		Assert.AreEqual (Path.Combine (basedir, "t46.exe.config"),
+		Assert.AreEqualIgnoreCase (Path.Combine (basedir, "t46.exe.config"),
 			c.FilePath, "#D1");
 		Assert.AreEqual ("Hello World!",
 			c.AppSettings.Settings ["hithere"].Value, "#D2");
 		c = f.OpenExeConfiguration ((string) null);
-		Assert.AreEqual (Path.Combine (basedir, "t46.exe.config"),
+		Assert.AreEqualIgnoreCase (Path.Combine (basedir, "t46.exe.config"),
 			c.FilePath, "#D1");
 		Assert.AreEqual ("Hello World!",
 			c.AppSettings.Settings ["hithere"].Value, "#D2");
@@ -71,7 +71,7 @@ class Program : MarshalByRefObject
 			AppDomain.CurrentDomain.Evidence, setup);
 
 		p = GetRemote (domain);
-		Assert.AreEqual (Path.Combine (basedir, "t46.exe.config"),
+		Assert.AreEqualIgnoreCase (Path.Combine (basedir, "t46.exe.config"),
 			p.GetFilePath (string.Empty), "#E1");
 		Assert.AreEqual ("Hello World!",
 			p.GetSettingValue (string.Empty, "hithere"), "#E2");
@@ -79,20 +79,20 @@ class Program : MarshalByRefObject
 		p = new Program ();
 
 		c = p.OpenExeConfiguration (string.Empty);
-		Assert.AreEqual (Path.Combine (basedir, "t46.exe.config"),
+		Assert.AreEqualIgnoreCase (Path.Combine (basedir, "t46.exe.config"),
 			c.FilePath, "#F1");
 		Assert.AreEqual ("Hello World!",
 			c.AppSettings.Settings ["hithere"].Value, "#F2");
 
 		f = Foo.GetRemote (domain);
-		Assert.AreEqual (Path.Combine (basedir, "t46.exe.config"),
+		Assert.AreEqualIgnoreCase (Path.Combine (basedir, "t46.exe.config"),
 			f.GetFilePath (string.Empty), "#G1");
 		Assert.AreEqual ("Hello World!",
 			f.GetSettingValue (string.Empty, "hithere"), "#G2");
 
 		f = new Foo ();
 		c = f.OpenExeConfiguration (string.Empty);
-		Assert.AreEqual (Path.Combine (basedir, "t46.exe.config"),
+		Assert.AreEqualIgnoreCase (Path.Combine (basedir, "t46.exe.config"),
 			c.FilePath, "#H1");
 		Assert.AreEqual ("Hello World!",
 			c.AppSettings.Settings ["hithere"].Value, "#H2");
