@@ -49,57 +49,6 @@ namespace System.Configuration {
 		static IInternalConfigSystem configSystem = new ClientConfigurationSystem ();
 		static object lockobj = new object ();
 		
-		static string GetAssemblyInfo (Assembly a)
-		{
-			string company_name;
-			string product_name;
-			string version;
-			object[] attrs;
-			byte[] hash;
-			byte[] pkt;
-
-			pkt = a.GetName ().GetPublicKeyToken ();
-
-			// Keep this in sync with System.Configuration.CustomizableFileSettingsProvider.GetCompanyName
-			attrs = a.GetCustomAttributes (typeof (AssemblyCompanyAttribute), true);
-			if ((attrs != null) && attrs.Length > 0) {
-				company_name = ((AssemblyCompanyAttribute)attrs[0]).Company;
-			} else {
-				MethodInfo entryPoint = a.EntryPoint;
-				Type entryType = entryPoint != null ? entryPoint.DeclaringType : null;
-				if (entryType != null && !String.IsNullOrEmpty (entryType.Namespace)) {
-					int end = entryType.Namespace.IndexOf ('.');
-					company_name = end < 0 ? entryType.Namespace : entryType.Namespace.Substring (0, end);
-				}
-				else
-					company_name = "Program";
-			}
-
-			// Keep this in sync with System.Configuration.CustomizableFileSettingsProvider.GetEvidenceHash
-			hash = SHA1.Create ().ComputeHash (pkt != null && pkt.Length > 0 ? pkt : Encoding.UTF8.GetBytes (a.EscapedCodeBase));
-			System.Text.StringBuilder evidence_string = new System.Text.StringBuilder();
-			foreach (byte b in hash)
-				evidence_string.AppendFormat("{0:x2}",b);
-
-			// Keep this in sync with System.Configuration.CustomizableFileSettingsProvider.GetProductName
-			attrs = a.GetCustomAttributes (typeof (AssemblyProductAttribute), false);
-			product_name = String.Format ("{0}_{1}_{2}",
-				(attrs != null && attrs.Length > 0) ? ((AssemblyProductAttribute)attrs[0]).Product : AppDomain.CurrentDomain.FriendlyName,
-				pkt != null && pkt.Length > 0 ? "StrongName" : "Url",
-				evidence_string.ToString ());
-
-			// Keep this in sync with System.Configuration.CustomizableFileSettingsProvider.GetProductVersion
-			attrs = a.GetCustomAttributes (typeof (AssemblyInformationalVersionAttribute), false);
-			if (attrs != null && attrs.Length > 0) {
-				version = ((AssemblyInformationalVersionAttribute)attrs[0]).InformationalVersion;
-			} else {
-				attrs = a.GetCustomAttributes (typeof (AssemblyFileVersionAttribute), false);
-				version = (attrs != null && attrs.Length > 0) ? ((AssemblyFileVersionAttribute)attrs[0]).Version : a.GetName ().Version.ToString ();
-			}
-
-			return Path.Combine (company_name, product_name, version);
-		}
-
 		internal static ExeConfigurationFileMap GetDefaultExeFileMap(Assembly calling_assembly, string exePath,
 			ConfigurationUserLevel userLevel) {
 			ExeConfigurationFileMap map = new ExeConfigurationFileMap ();
@@ -110,29 +59,26 @@ namespace System.Configuration {
 			  PerUserRoaming = \Documents and Settings\<username>\Application Data\...
 			  PerUserRoamingAndLocal = \Documents and Settings\<username>\Local Settings\Application Data\...
 			*/
+			if (exePath != null && exePath.Length != 0) {
+				if (!Path.IsPathRooted (exePath))
+					exePath = Path.GetFullPath (exePath);
+				if (!File.Exists (exePath)) {
+					Exception cause = new ArgumentException ("The specified path does not exist.", "exePath");
+					throw new ConfigurationErrorsException ("Error Initializing the configuration system:", cause);
+				}
+			}
 
+			ClientConfigPaths clientConfigPaths = ClientConfigPaths.GetPaths((String.IsNullOrEmpty(exePath) ? null : exePath), true);
 			switch (userLevel) {
 			case ConfigurationUserLevel.None:
-				if (exePath == null || exePath.Length == 0) {
-					map.ExeConfigFilename = AppDomain.CurrentDomain.SetupInformation.ConfigurationFile;
-				} else {
-					if (!Path.IsPathRooted (exePath))
-						exePath = Path.GetFullPath (exePath);
-					if (!File.Exists (exePath)) {
-						Exception cause = new ArgumentException ("The specified path does not exist.", "exePath");
-						throw new ConfigurationErrorsException ("Error Initializing the configuration system:", cause);
-					}
-					map.ExeConfigFilename = exePath + ".config";
-				}
+				map.ExeConfigFilename = clientConfigPaths.ApplicationConfigUri;
 				break;
 			case ConfigurationUserLevel.PerUserRoaming:
-				map.RoamingUserConfigFilename = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ApplicationData), GetAssemblyInfo(calling_assembly));
-				map.RoamingUserConfigFilename = Path.Combine (map.RoamingUserConfigFilename, "user.config");
+				map.RoamingUserConfigFilename = clientConfigPaths.RoamingConfigFilename;
 				goto case ConfigurationUserLevel.None;
 
 			case ConfigurationUserLevel.PerUserRoamingAndLocal:
-				map.LocalUserConfigFilename = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.LocalApplicationData), GetAssemblyInfo(calling_assembly));
-				map.LocalUserConfigFilename = Path.Combine (map.LocalUserConfigFilename, "user.config");
+				map.LocalUserConfigFilename = clientConfigPaths.LocalConfigFilename;
 				goto case ConfigurationUserLevel.PerUserRoaming;
  			}
 

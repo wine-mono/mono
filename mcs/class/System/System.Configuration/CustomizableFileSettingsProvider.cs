@@ -64,20 +64,6 @@ namespace System.Configuration
 		private static string userLocalPathPrevVersion = "";
 		private static string userRoamingName = "user.config";
 		private static string userLocalName = "user.config";
-		private static string userRoamingBasePath = "";
-		private static string userLocalBasePath = "";
-		private static string CompanyName = "";
-		private static string ProductName = "";
-		private static string ForceVersion = "";
-		private static string[] ProductVersion;
-
-		// whether to include parts in the folder name or not:
-		private static bool isVersionMajor = true;	// 0x0001	major version
-		private static bool isVersionMinor = true;	// 0x0002	minor version
-		private static bool isVersionBuild = true;	// 0x0004	build version
-		private static bool isVersionRevision = true;	// 0x0008	revision
-		private static bool isCompany = true;		// 0x0010	corporate name
-		private static bool isProduct = true;		// 0x0020	product name
 
 		public override void Initialize (string name, NameValueCollection config)
 		{
@@ -104,128 +90,13 @@ namespace System.Configuration
 			get { return Path.Combine (userLocalPathPrevVersion, userLocalName); }
 		}
 
-		// AssemblyCompanyAttribute->Namespace->"Program"
-		private static string GetCompanyName ()
-		{
-			Assembly assembly = Assembly.GetEntryAssembly ();
-			if (assembly == null)
-				assembly = Assembly.GetCallingAssembly ();
-
-			AssemblyCompanyAttribute [] attrs = (AssemblyCompanyAttribute []) assembly.GetCustomAttributes (typeof (AssemblyCompanyAttribute), true);
-		
-			if ((attrs != null) && attrs.Length > 0) {
-				return attrs [0].Company;
-			}
-
-			MethodInfo entryPoint = assembly.EntryPoint;
-			Type entryType = entryPoint != null ? entryPoint.DeclaringType : null;
-			if (entryType != null && !String.IsNullOrEmpty (entryType.Namespace)) {
-				int end = entryType.Namespace.IndexOf ('.');
-				return end < 0 ? entryType.Namespace : entryType.Namespace.Substring (0, end);
-			}
-			return "Program";
-		}
-
-		private static string GetProductName ()
-		{
-			Assembly assembly = Assembly.GetEntryAssembly ();
-			if (assembly == null)
-				assembly = Assembly.GetCallingAssembly ();
-
-			object [] attrs = assembly.GetCustomAttributes (typeof (AssemblyProductAttribute), false);
-			byte [] pkt = assembly.GetName ().GetPublicKeyToken ();
-			return String.Format ("{0}_{1}_{2}",
-				(attrs != null && attrs.Length > 0) ? ((AssemblyProductAttribute)attrs[0]).Product : AppDomain.CurrentDomain.FriendlyName,
-				pkt != null && pkt.Length > 0 ? "StrongName" : "Url",
-				GetEvidenceHash());
-		}
-
-		// Note: Changed from base64() to hex output to avoid unexpected chars like '\' or '/' with filesystem meaning.
-		//       Otherwise eventually filenames, which are invalid on linux or windows, might be created.
-		// Signed-off-by:  Carsten Schlote <schlote@vahanus.net>
-		// TODO: Compare with .NET. It might be also, that their way isn't suitable for Unix OS derivates (slahes in output)
-		private static string GetEvidenceHash ()
-		{
-			Assembly assembly = Assembly.GetEntryAssembly ();
-			if (assembly == null)
-				assembly = Assembly.GetCallingAssembly ();
-
-			byte [] pkt = assembly.GetName ().GetPublicKeyToken ();
-			byte [] hash = SHA1.Create ().ComputeHash (pkt != null && pkt.Length >0 ? pkt : Encoding.UTF8.GetBytes (assembly.EscapedCodeBase));
-			System.Text.StringBuilder evidence_string = new System.Text.StringBuilder();
-			foreach (byte b in hash)
-				evidence_string.AppendFormat("{0:x2}",b);
-			return evidence_string.ToString ();
-		}
-
-		private static string GetProductVersion ()
-		{
-			Assembly assembly = Assembly.GetEntryAssembly ();
-			if (assembly == null)
-				assembly = Assembly.GetCallingAssembly ();
-			if (assembly == null)
-				return string.Empty;
-
-			object [] attrs = assembly.GetCustomAttributes (typeof (AssemblyInformationalVersionAttribute), false);
-			if (attrs != null && attrs.Length > 0)
-				return ((AssemblyInformationalVersionAttribute)attrs[0]).InformationalVersion;
-
-			attrs = assembly.GetCustomAttributes (typeof (AssemblyFileVersionAttribute), false);
-			if (attrs != null && attrs.Length > 0)
-				return ((AssemblyFileVersionAttribute)attrs[0]).Version;
-
-			return assembly.GetName ().Version.ToString ();
-		}
-
 		private static void CreateUserConfigPath ()
 		{
-			if (ProductName == "")
-				ProductName = GetProductName ();
-			if (CompanyName == "")
-				CompanyName = GetCompanyName ();
-			if (ForceVersion == "")
-				ProductVersion = GetProductVersion ().Split('.');
+			/* Get one directory above the version directory. */
+			userRoamingPath = Path.GetDirectoryName(ClientConfigPaths.Current.RoamingConfigDirectory);
+			userLocalPath = Path.GetDirectoryName(ClientConfigPaths.Current.LocalConfigDirectory);
 
-			// C:\Documents and Settings\(user)\Application Data
-			if (userRoamingBasePath == "")
-				userRoamingPath = Environment.GetFolderPath (Environment.SpecialFolder.ApplicationData);
-			else
-				userRoamingPath = userRoamingBasePath;
-
-			// C:\Documents and Settings\(user)\Local Settings\Application Data (on Windows)
-			if (userLocalBasePath == "")
-				userLocalPath = Environment.GetFolderPath (Environment.SpecialFolder.LocalApplicationData);
-			else
-				userLocalPath = userLocalBasePath;
-
-			if (isCompany) {
-				userRoamingPath = Path.Combine (userRoamingPath, CompanyName);
-				userLocalPath = Path.Combine (userLocalPath, CompanyName);
-			}
-
-			if (isProduct) {
-				userRoamingPath = Path.Combine (userRoamingPath, ProductName);
-				userLocalPath = Path.Combine (userLocalPath, ProductName);
-				
-			}
-
-			string versionName;
-
-			if (ForceVersion == "") {
-				if (isVersionRevision)
-					versionName = String.Join ('.', ProductVersion);
-				else if (isVersionBuild && ProductVersion.Length >= 3)
-					versionName = String.Format ("{0}.{1}.{2}", ProductVersion [0], ProductVersion [1], ProductVersion [2]);
-				else if (isVersionMinor && ProductVersion.Length >= 2)
-					versionName = String.Format ("{0}.{1}", ProductVersion [0], ProductVersion [1]);
-				else if (isVersionMajor && ProductVersion.Length >= 1)
-					versionName = ProductVersion [0];
-				else
-					versionName = "";
-			}
-			else
-				versionName = ForceVersion;
-
+			string versionName = ClientConfigPaths.Current.ProductVersion;
 			string prevVersionRoaming = PrevVersionPath (userRoamingPath, versionName);
 			string prevVersionLocal = PrevVersionPath (userLocalPath, versionName);
 			
