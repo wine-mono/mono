@@ -650,6 +650,16 @@ namespace System.Configuration {
                 if (limitSize) {
                     validated = (validated.Length > MAX_LENGTH_TO_USE) ? validated.Substring(0, MAX_LENGTH_TO_USE) : validated;
                 }
+
+		/*
+		 * For Mono compatibility:
+		 * Mono creates/accesses the generated user configuration file paths
+		 * through a different set of API calls than referencesource does.
+		 * As a result of this, the trailing period in directory names is
+		 * not truncated, which results in an inability to access the user
+		 * configuration file. We'll add a workaround for this here.
+		 */
+		validated = validated.TrimEnd('.');
             }
 
             return validated;
