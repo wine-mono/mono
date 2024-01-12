@@ -43,23 +43,6 @@ using System.Xml;
 
 namespace System.Configuration
 {
-	// location to store user configuration settings.
-	internal enum UserConfigLocationOption : uint
-	{
-		Product = 0x20,
-		Product_VersionMajor = 0x21,
-		Product_VersionMinor = 0x22,
-		Product_VersionBuild = 0x24,
-		Product_VersionRevision = 0x28,
-		Company_Product = 0x30,
-		Company_Product_VersionMajor = 0x31,
-		Company_Product_VersionMinor = 0x32,
-		Company_Product_VersionBuild = 0x34,
-		Company_Product_VersionRevision = 0x38,
-		Evidence = 0x40,
-		Other = 0x8000
-	}
-	
 	internal class CustomizableFileSettingsProvider : SettingsProvider, IApplicationSettingsProvider
 	{
 		// KLUDGE WARNING.
@@ -96,10 +79,6 @@ namespace System.Configuration
 		private static bool isCompany = true;		// 0x0010	corporate name
 		private static bool isProduct = true;		// 0x0020	product name
 
-		private static bool userDefine = false;		// 0x8000	ignore all above and use user definition
-
-		private static UserConfigLocationOption userConfig = UserConfigLocationOption.Company_Product;
-
 		public override void Initialize (string name, NameValueCollection config)
 		{
 			base.Initialize (name, config);
@@ -123,115 +102,6 @@ namespace System.Configuration
 		// previous full path to local user.config
 		public static string PrevUserLocalFullPath {
 			get { return Path.Combine (userLocalPathPrevVersion, userLocalName); }
-		}
-
-		// path to roaming user.config
-		public static string UserRoamingPath {
-			get { return userRoamingPath; }
-		}
-
-		// path to local user.config
-		public static string UserLocalPath {
-			get { return userLocalPath; }
-		}
-
-		// file name which is equivalent to user.config, for roaming user
-		public static string UserRoamingName {
-			get { return userRoamingName; }
-		}
-
-		// file name which is equivalent to user.config, for local user
-		public static string UserLocalName {
-			get { return userLocalName; }
-		}
-
-		public static UserConfigLocationOption UserConfigSelector
-		{
-			get { return userConfig; }
-			set {
-				userConfig = value;
-
-				if (((uint) userConfig & 0x8000) != 0) {
-					isVersionMajor = false;
-					isVersionMinor = false;
-					isVersionBuild = false;
-					isVersionRevision = false;
-					isCompany = false;
-					return;
-				}
-
-				isVersionRevision = ((uint) userConfig & 0x0008) != 0;
-				isVersionBuild = isVersionRevision | ((uint)userConfig & 0x0004) != 0;
-				isVersionMinor = isVersionBuild | ((uint)userConfig & 0x0002) != 0;
-				isVersionMajor = IsVersionMinor | ((uint)userConfig & 0x0001) != 0;
-
-				isCompany = ((uint) userConfig & 0x0010) != 0;
-				isProduct = ((uint) userConfig & 0x0020) != 0;
-			}
-		}
-
-		// whether the path to include the major version.
-		public static bool IsVersionMajor
-		{
-			get { return isVersionMajor; }
-			set
-			{
-				isVersionMajor = value;
-				isVersionMinor = false;
-				isVersionBuild = false;
-				isVersionRevision = false;
-			}
-		}
-
-		// whether the path to include minor version.
-		public static bool IsVersionMinor
-		{
-			get { return isVersionMinor; }
-			set
-			{
-				isVersionMinor = value;
-				if (isVersionMinor)
-					isVersionMajor = true;
-				isVersionBuild = false;
-				isVersionRevision = false;
-			}
-		}
-
-		// whether the path to include build version.
-		public static bool IsVersionBuild
-		{
-			get { return isVersionBuild; }
-			set
-			{
-				isVersionBuild = value;
-				if (isVersionBuild) {
-					isVersionMajor = true;
-					isVersionMinor = true;
-				}
-				isVersionRevision = false;
-			}
-		}
-
-		// whether the path to include revision.
-		public static bool IsVersionRevision
-		{
-			get { return isVersionRevision; }
-			set
-			{
-				isVersionRevision = value;
-				if (isVersionRevision) {
-					isVersionMajor = true;
-					isVersionMinor = true;
-					isVersionBuild = true;
-				}
-			}
-		}
-
-		// whether the path to include company name.
-		public static bool IsCompany
-		{
-			get { return isCompany; }
-			set { isCompany = value; }
 		}
 
 		// AssemblyCompanyAttribute->Namespace->"Program"
@@ -309,9 +179,6 @@ namespace System.Configuration
 
 		private static void CreateUserConfigPath ()
 		{
-			if (userDefine)
-				return;
-
 			if (ProductName == "")
 				ProductName = GetProductName ();
 			if (CompanyName == "")
@@ -385,172 +252,6 @@ namespace System.Configuration
 
 			return prevVersionString;
 		}
-
-		// sets the explicit path to store roaming user.config or equivalent.
-		// (returns the path validity.)
-		public static bool SetUserRoamingPath (string configPath)
-		{
-			if (CheckPath (configPath))
-			{
-				userRoamingBasePath = configPath;
-				return true;
-			}
-			else
-				return false;
-		}
-
-		// sets the explicit path to store local user.config or equivalent.
-		// (returns the path validity.)
-		public static bool SetUserLocalPath (string configPath)
-		{
-			if (CheckPath (configPath))
-			{
-				userLocalBasePath = configPath;
-				return true;
-			}
-			else
-				return false;
-		}
-
-		private static bool CheckFileName (string configFile)
-		{
-			/*
-			char[] invalidFileChars = Path.GetInvalidFileNameChars();
-
-			foreach (char invalidChar in invalidFileChars)
-			{
-				if (configFile.Contains(invalidChar.ToString()))
-				{
-					return false;
-				}
-			}
-			return true;
-			*/
-			return configFile.IndexOfAny (Path.GetInvalidFileNameChars ()) < 0;
-		}
-
-		// sets the explicit roaming file name which is user.config equivalent.
-		// (returns the file name validity.)
-		public static bool SetUserRoamingFileName (string configFile)
-		{
-			if (CheckFileName (configFile))
-			{
-				userRoamingName = configFile;
-				return true;
-			}
-			else
-				return false;
-		}
-
-		// sets the explicit local file name which is user.config equivalent.
-		// (returns the file name validity.)
-		public static bool SetUserLocalFileName (string configFile)
-		{
-			if (CheckFileName (configFile))
-			{
-				userLocalName = configFile;
-				return true;
-			}
-			else
-				return false;
-		}
-
-		// sets the explicit company name for folder.
-		// (returns the file name validity.)
-		public static bool SetCompanyName (string companyName)
-		{
-			if (CheckFileName (companyName))
-			{
-				CompanyName = companyName;
-				return true;
-			}
-			else
-				return false;
-		}
-
-		// sets the explicit product name for folder.
-		// (returns the file name validity.)
-		public static bool SetProductName (string productName)
-		{
-			if (CheckFileName (productName))
-			{
-				ProductName = productName;
-				return true;
-			}
-			else
-				return false;
-		}
-
-		// sets the explicit major version for folder.
-		public static bool SetVersion (int major)
-		{
-			ForceVersion = string.Format ("{0}", major);
-			return true;
-		}
-
-		// sets the explicit major and minor versions for folder.
-		public static bool SetVersion (int major, int minor)
-		{
-			ForceVersion = string.Format ("{0}.{1}", major, minor);
-			return true;
-		}
-
-		// sets the explicit major/minor/build numbers for folder.
-		public static bool SetVersion (int major, int minor, int build)
-		{
-			ForceVersion = string.Format ("{0}.{1}.{2}", major, minor, build);
-			return true;
-		}
-
-		// sets the explicit major/minor/build/revision numbers for folder.
-		public static bool SetVersion (int major, int minor, int build, int revision)
-		{
-			ForceVersion = string.Format ("{0}.{1}.{2}.{3}", major, minor, build, revision);
-			return true;
-		}
-
-		// sets the explicit version number string for folder.
-		public static bool SetVersion (string forceVersion)
-		{
-			if (CheckFileName (forceVersion))
-			{
-				ForceVersion = forceVersion;
-				return true;
-			}
-			else
-				return false;
-		}
-
-		private static bool CheckPath (string configPath)
-		{
-			char[] invalidPathChars = Path.GetInvalidPathChars ();
-
-			/*
-			foreach (char invalidChar in invalidPathChars)
-			{
-				if (configPath.Contains (invalidChar.ToString()))
-				{
-					return false;
-				}
-			}
-			*/
-			if (configPath.IndexOfAny (invalidPathChars) >= 0)
-				return false;
-
-			string folder = configPath;
-			string fileName;
-			while ((fileName = Path.GetFileName (folder)) != "")
-			{
-				if (!CheckFileName (fileName))
-				{
-					return false;
-				}
-				folder = Path.GetDirectoryName (folder);
-			}
-
-			return true;
-		}
-
 
 		public override string Name {
 			get { return base.Name; }
