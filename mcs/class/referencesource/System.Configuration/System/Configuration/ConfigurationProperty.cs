@@ -45,11 +45,6 @@ namespace System.Configuration {
 			return IsConfigurationElementType;
 		}
 	}
-
-	/* Used from within Mono's ConfigurationElementCollection. */
-	internal ConfigurationCollectionAttribute CollectionAttribute {
-                get { return collectionAttribute; }
-        }
 	/* End of Mono compatibility code. */
 
         public ConfigurationProperty(String name, Type type) {

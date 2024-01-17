@@ -35,7 +35,7 @@ System.Configuration/ConfigurationAllowExeDefinition.cs
 System.Configuration/ConfigurationCollectionAttribute.cs
 System.Configuration/ConfigurationConverterBase.cs
 System.Configuration/ConfigurationElement.cs
-System.Configuration/ConfigurationElementCollection.cs
+../referencesource/System.Configuration/System/Configuration/ConfigurationElementCollection.cs
 System.Configuration/ConfigurationElementCollectionType.cs
 System.Configuration/ConfigurationElementProperty.cs
 System.Configuration/ConfigurationErrorsException.cs

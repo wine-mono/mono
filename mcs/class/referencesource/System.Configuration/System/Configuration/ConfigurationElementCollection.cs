@@ -12,7 +12,12 @@ using System.Xml;
 namespace System.Configuration {
 
     [System.Diagnostics.DebuggerDisplay("Count = {Count}")]
+#if !MONO
     public abstract class ConfigurationElementCollection : ConfigurationElement, ICollection {
+#else
+    /* FIXME:MONO: Class is set as partial for compatibility with Mono. */
+    public abstract partial class ConfigurationElementCollection : ConfigurationElement, ICollection {
+#endif
         internal const string DefaultAddItemName = "add";
         internal const string DefaultRemoveItemName = "remove";
         internal const string DefaultClearItemsName = "clear";
@@ -30,6 +35,45 @@ namespace System.Configuration {
         private IComparer _comparer;
         internal bool internalAddToEnd = false;
         internal String internalElementTagName = string.Empty;
+
+	/* Start of Mono compatibility code. */
+	internal override void PrepareSave (ConfigurationElement parentElement, ConfigurationSaveMode mode)
+	{
+		var parent = (ConfigurationElementCollection)parentElement;
+		base.PrepareSave (parentElement, mode);
+
+		foreach (Entry entry in _items) {
+		    if (entry._entryType != EntryType.Removed) {
+		        ConfigurationElement elem = entry._value;
+		        object key = GetElementKeyInternal(elem);
+		        ConfigurationElement pitem = parent != null ? parent.BaseGet (key) as ConfigurationElement : null;
+
+		        elem.PrepareSave (pitem, mode);
+		    }
+		}
+	}
+
+	internal override bool HasValues (ConfigurationElement parentElement, ConfigurationSaveMode mode)
+	{
+		var parent = (ConfigurationElementCollection)parentElement;
+
+		if (mode == ConfigurationSaveMode.Full)
+			return this.Count > 0;
+
+		foreach (Entry entry in _items) {
+		    if (entry._entryType != EntryType.Removed) {
+		        ConfigurationElement elem = entry._value;
+		        object key = GetElementKeyInternal(elem);
+		        ConfigurationElement pitem = parent != null ? parent.BaseGet (key) as ConfigurationElement : null;
+
+			if (elem.HasValues (pitem, mode))
+				return true;
+		    }
+		}
+
+		return false;
+	}
+	/* End of Mono compatibility code. */
 
         protected ConfigurationElementCollection() {
         }
@@ -97,7 +141,8 @@ namespace System.Configuration {
         //
         // Associate a collection of values with a configRecord
         //
-        internal override void AssociateContext(BaseConfigurationRecord configRecord) {
+//        internal override void AssociateContext(BaseConfigurationRecord configRecord) {
+        internal override void AssociateContext(Configuration configRecord) {
             base.AssociateContext(configRecord);
 
             foreach (Entry entry in _items) {
@@ -209,14 +254,16 @@ namespace System.Configuration {
                 ConfigurationElementCollection parentCollection = parentElement as ConfigurationElementCollection;
                 ConfigurationElementCollection sourceCollection = sourceElement as ConfigurationElementCollection;
                 Hashtable Inheritance = new Hashtable();
+		/* FIXME:MONO:Configuration-Lock: Mono's ConfigurationElement doesn't implement locking.
                 _lockedAllExceptAttributesList = sourceElement._lockedAllExceptAttributesList;
                 _lockedAllExceptElementsList = sourceElement._lockedAllExceptElementsList;
                 _fItemLocked = sourceElement._fItemLocked;
                 _lockedAttributesList = sourceElement._lockedAttributesList;
                 _lockedElementsList = sourceElement._lockedElementsList;
-
+		*/
                 AssociateContext(sourceElement._configRecord);
 
+		/* FIXME:MONO:Configuration-Lock: Mono's ConfigurationElement doesn't implement locking.
                 if (parentElement != null) {
                     if (parentElement._lockedAttributesList != null)
                         _lockedAttributesList = UnMergeLockList(sourceElement._lockedAttributesList,
@@ -231,6 +278,7 @@ namespace System.Configuration {
                         _lockedAllExceptElementsList = UnMergeLockList(sourceElement._lockedAllExceptElementsList,
                             parentElement._lockedAllExceptElementsList, saveMode);
                 }
+		*/
 
                 if (CollectionType == ConfigurationElementCollectionType.AddRemoveClearMap ||
                     CollectionType == ConfigurationElementCollectionType.AddRemoveClearMapAlternate) {
@@ -313,9 +361,11 @@ namespace System.Configuration {
 
                                 elem.Unmerge(entry._value, null, saveMode);
 
+				/* FIXME:MONO:Configuration-Lock: Mono's ConfigurationElement doesn't implement locking.
                                 if (tp == InheritedType.inSelf) {
                                     elem.RemoveAllInheritedLocks(); // If the key changed only local locks are kept
                                 }
+				*/
 
                                 BaseAdd(elem,ThrowOnDuplicate,true);                     // Add it
                             }
@@ -384,8 +434,9 @@ namespace System.Configuration {
 
         protected internal override void Reset(ConfigurationElement parentElement) {
             ConfigurationElementCollection parentCollection = parentElement as ConfigurationElementCollection;
+	    /* FIXME:MONO:Configuration-Lock: Mono's ConfigurationElement doesn't implement locking.
             ResetLockLists(parentElement);
-
+	    */
             if (parentCollection != null) {
                 foreach (Entry entry in parentCollection.Items) {
                     ConfigurationElement elem = CallCreateNewElement(entry.GetKey(this).ToString());
@@ -423,8 +474,10 @@ namespace System.Configuration {
                     throw new ConfigurationErrorsException(SR.GetString(SR.Config_base_read_only));
                 }
                 if (value == true) {
+		    /* FIXME:MONO:Configuration-Lock: Mono's ConfigurationElement doesn't implement locking.
                     CheckLockedElement(_clearElement, null);  // has clear been locked?
                     CheckLockedElement(_removeElement, null); // has remove been locked? Clear implies remove
+		    */
                 }
                 bModified = true;
                 bEmitClearTag = value;
@@ -475,18 +528,22 @@ namespace System.Configuration {
                 throw new ConfigurationErrorsException(SR.GetString(SR.Config_base_read_only));
             }
 
+	    /* FIXME:MONO:Configuration-Lock: Mono's ConfigurationElement doesn't implement locking.
             if (LockItem == true && ignoreLocks == false) {
                 throw new ConfigurationErrorsException(SR.GetString(SR.Config_base_element_locked, _addElement));
             }
+	    */
 
             Object key = GetElementKeyInternal(element);
             int iFoundItem = -1;
             for (int index = 0; index < _items.Count; index++) {
                 Entry entry = (Entry)_items[index];
                 if (CompareKeys(key, entry.GetKey(this))) {
+		    /* FIXME:MONO:Configuration-Lock: Mono's ConfigurationElement doesn't implement locking.
                     if (entry._value != null && entry._value.LockItem == true && ignoreLocks == false) {
                         throw new ConfigurationErrorsException(SR.GetString(SR.Config_base_collection_item_locked));
                     }
+		    */
                     if (entry._entryType != EntryType.Removed && throwIfExists) {
                         if (!element.Equals(entry._value)) {
                             throw new ConfigurationErrorsException(SR.GetString(SR.Config_base_collection_entry_already_exists, key),
@@ -518,11 +575,13 @@ namespace System.Configuration {
                     }
                     else {
                         // check to see if the element is trying to set a locked property.
+			/* FIXME:MONO:Configuration-Lock: Mono's ConfigurationElement doesn't implement locking.
                         if (ignoreLocks == false) {
                             element.HandleLockedAttributes(entry._value);
                             // copy the lock from the removed element before setting the new element
                             element.MergeLocks(entry._value);
                         }
+			*/
                         entry._value = element;
                         bModified = true;
                         return;
@@ -584,6 +643,7 @@ namespace System.Configuration {
                 throw new ConfigurationErrorsException(SR.GetString(SR.Config_base_read_only));
             }
 
+	    /* FIXME:MONO:Configuration-Lock: Mono's ConfigurationElement doesn't implement locking.
             if (!ignoreLocks) { // during reset we ignore locks so we can copy the elements
                 if(CollectionType == ConfigurationElementCollectionType.BasicMap ||
                     CollectionType == ConfigurationElementCollectionType.BasicMapAlternate) {
@@ -594,10 +654,10 @@ namespace System.Configuration {
                 }
                 if(CollectionType == ConfigurationElementCollectionType.AddRemoveClearMap ||
                     CollectionType == ConfigurationElementCollectionType.AddRemoveClearMapAlternate) {
-
                     CheckLockedElement(_addElement, null);
                 }
             }
+	    */
 
             if (CollectionType == ConfigurationElementCollectionType.BasicMapAlternate ||
                 CollectionType == ConfigurationElementCollectionType.AddRemoveClearMapAlternate) {
@@ -709,6 +769,7 @@ namespace System.Configuration {
                         }
                     }
 
+		    /* FIXME:MONO:Configuration-Lock: Mono's ConfigurationElement doesn't implement locking.
                     if (entry._value.LockItem == true) {
                         throw new ConfigurationErrorsException(SR.GetString(SR.Config_base_attribute_locked, key));
                     }
@@ -716,6 +777,7 @@ namespace System.Configuration {
                     if (entry._value.ElementPresent == false) {
                         CheckLockedElement(_removeElement, null); // has remove been locked?
                     }
+		    */
 
                     switch (entry._entryType) {
                         case EntryType.Added:
@@ -882,8 +944,10 @@ namespace System.Configuration {
                 throw new ConfigurationErrorsException(SR.GetString(SR.Config_base_read_only));
             }
 
+	    /* FIXME:MONO:Configuration-Lock: Mono's ConfigurationElement doesn't implement locking.
             CheckLockedElement(_clearElement, null);  // has clear been locked?
             CheckLockedElement(_removeElement, null); // has remove been locked? Clear implies remove
+	    */
 
             bModified = true;
             bCollectionCleared = true;
@@ -909,12 +973,14 @@ namespace System.Configuration {
                 int initialCount = Count;
                 
                 // check for locks before removing any items from the collection
+		/* FIXME:MONO:Configuration-Lock: Mono's ConfigurationElement doesn't implement locking.
                 for (int CheckIndex = 0; CheckIndex < _items.Count; CheckIndex++) {
                     Entry entry = (Entry)_items[CheckIndex];
                     if (entry._value != null && entry._value.LockItem == true) {
                         throw new ConfigurationErrorsException(SR.GetString(SR.Config_base_collection_item_locked_cannot_clear));
                     }
                 }
+		*/
 
                 for (int RemoveIndex = _items.Count - 1; RemoveIndex >= 0; RemoveIndex--) {
                     Entry entry = (Entry)_items[RemoveIndex];
@@ -957,6 +1023,7 @@ namespace System.Configuration {
                 throw new ConfigurationErrorsException(SR.GetString(SR.IndexOutOfRange, index));
             }
             else {
+		/* FIXME:MONO:Configuration-Lock: Mono's ConfigurationElement doesn't implement locking.
                 if (entry._value.LockItem == true) {
                     throw new ConfigurationErrorsException(SR.GetString(SR.Config_base_attribute_locked, entry.GetKey(this)));
                 }
@@ -964,6 +1031,7 @@ namespace System.Configuration {
                 if (entry._value.ElementPresent == false) {
                     CheckLockedElement(_removeElement, null); // has remove been locked?
                 }
+		*/
 
                 switch (entry._entryType) {
                     case EntryType.Added:
@@ -986,9 +1054,11 @@ namespace System.Configuration {
                         }
                         else {
                             // don't really remove it from the collection just mark it removed
+			    /* FIXME:MONO:Configuration-Lock: Mono's ConfigurationElement doesn't implement locking.
                             if (entry._value.ElementPresent == false) {
                                 CheckLockedElement(_removeElement, null); // has remove been locked?
                             }
+			    */
 
                             entry._entryType = EntryType.Removed;
                             _removedItemCount++;
@@ -1081,14 +1151,19 @@ namespace System.Configuration {
                 CollectionType == ConfigurationElementCollectionType.AddRemoveClearMapAlternate) {
                 if (elementName == _addElement) {
                     ConfigurationElement elem = CallCreateNewElement();
-                    elem.ResetLockLists(this);
+
+		    /* FIXME:MONO:Configuration-Lock: Mono's ConfigurationElement doesn't implement locking.
+		    elem.ResetLockLists(this);
+		    */
                     elem.DeserializeElement(reader, false);
                     BaseAdd(elem);
                     handled = true;
                 }
                 else if (elementName == _removeElement) {
                     ConfigurationElement elem = CallCreateNewElement();
+		    /* FIXME:MONO:Configuration-Lock: Mono's ConfigurationElement doesn't implement locking.
                     elem.ResetLockLists(this);
+		    */
                     elem.DeserializeElement(reader, true);
                     if (IsElementRemovable(elem) == true) {
                         BaseRemove(GetElementKeyInternal(elem), false);
@@ -1097,14 +1172,18 @@ namespace System.Configuration {
                     handled = true;
                 }
                 else if (elementName == _clearElement) {
+		    reader.MoveToContent (); // FIXME:MONO: Needed to be compatible with Mono's ConfigurationElement:DeserializeElement.
                     if (reader.AttributeCount > 0) {
                         while (reader.MoveToNextAttribute()) {
                             String propertyName = reader.Name;
                             throw new ConfigurationErrorsException(SR.GetString(SR.Config_base_unrecognized_attribute, propertyName), reader);
                         }
                     }
+		    /* FIXME:MONO:Configuration-Lock: Mono's ConfigurationElement doesn't implement locking.
                     CheckLockedElement(elementName, reader);
+		    */
                     reader.MoveToElement();
+                    reader.Skip (); // FIXME:MONO: Needed to be compatible with Mono's ConfigurationElement:DeserializeElement.
                     BaseClear(); //
                     bEmitClearTag = true;
                     handled = true;
@@ -1115,7 +1194,9 @@ namespace System.Configuration {
                     throw new ArgumentException(SR.GetString(SR.Basicmap_item_name_reserved, elementName));
                 }
                 ConfigurationElement elem = CallCreateNewElement();
+	        /* FIXME:MONO:Configuration-Lock: Mono's ConfigurationElement doesn't implement locking.
                 elem.ResetLockLists(this);
+		*/
                 elem.DeserializeElement(reader, false);
                 BaseAdd(elem);
 
@@ -1127,7 +1208,9 @@ namespace System.Configuration {
                 }
                 // have multiple tags for the collection
                 ConfigurationElement elem = CallCreateNewElement(elementName);
+		/* FIXME:MONO:Configuration-Lock: Mono's ConfigurationElement doesn't implement locking.
                 elem.ResetLockLists(this);
+		*/
                 elem.DeserializeElement(reader, false);
                 BaseAdd(-1, elem);
                 handled = true;
