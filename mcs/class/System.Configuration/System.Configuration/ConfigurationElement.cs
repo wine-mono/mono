@@ -551,6 +551,147 @@ namespace System.Configuration
 			Configuration = config;
 			Values.AssociateContext(config);
 		}
+
+		protected internal virtual void Unmerge(ConfigurationElement sourceElement,
+							ConfigurationElement parentElement,
+							ConfigurationSaveMode saveMode) {
+			if (sourceElement != null) {
+				bool hasAnyChildElements = false;
+
+				/* FIXME:MONO:Configuration-Lock: Mono's ConfigurationElement doesn't implement locking.
+				_lockedAllExceptAttributesList = sourceElement._lockedAllExceptAttributesList;
+				_lockedAllExceptElementsList = sourceElement._lockedAllExceptElementsList;
+				_fItemLocked = sourceElement._fItemLocked;
+				_lockedAttributesList = sourceElement._lockedAttributesList;
+				_lockedElementsList = sourceElement._lockedElementsList;
+				*/
+				AssociateContext(sourceElement._configRecord);
+
+				/* FIXME:MONO:Configuration-Lock: Mono's ConfigurationElement doesn't implement locking.
+				if (parentElement != null) {
+					if (parentElement._lockedAttributesList != null)
+						_lockedAttributesList = UnMergeLockList(sourceElement._lockedAttributesList,
+							parentElement._lockedAttributesList, saveMode);
+					if (parentElement._lockedElementsList != null)
+						_lockedElementsList = UnMergeLockList(sourceElement._lockedElementsList,
+							parentElement._lockedElementsList, saveMode);
+					if (parentElement._lockedAllExceptAttributesList != null)
+						_lockedAllExceptAttributesList = UnMergeLockList(sourceElement._lockedAllExceptAttributesList,
+							parentElement._lockedAllExceptAttributesList, saveMode);
+					if (parentElement._lockedAllExceptElementsList != null)
+						_lockedAllExceptElementsList = UnMergeLockList(sourceElement._lockedAllExceptElementsList,
+							parentElement._lockedAllExceptElementsList, saveMode);
+				}
+				*/
+
+				ConfigurationPropertyCollection props = Properties;
+				ConfigurationPropertyCollection collectionKeys = null;
+
+				// check for props not in bag from source
+				for (int index = 0; index < sourceElement.Values.Count; index++) {
+					string key = sourceElement.Values.GetKey(index);
+					object value = sourceElement.Values[index];
+					ConfigurationProperty prop = (ConfigurationProperty)sourceElement.Properties[key];
+					if (prop == null || (collectionKeys != null && !collectionKeys.Contains(prop.Name)))
+						continue;
+					if (prop.IsConfigurationElementType) {
+						hasAnyChildElements = true;
+					}
+					else {
+						if (value != s_nullPropertyValue) {
+							if (!props.Contains(key)) // this is for optional provider models keys
+							{
+								// _values[key] = value;
+								ConfigurationValueFlags valueFlags = sourceElement.Values.RetrieveFlags(key);
+								_values.SetValue(key, value, valueFlags, null);
+
+								props.Add(prop);
+							}
+						}
+					}
+				}
+
+				foreach (ConfigurationProperty prop in Properties) {
+					if (prop == null || (collectionKeys != null && !collectionKeys.Contains(prop.Name))) {
+						continue;
+					}
+					if (prop.IsConfigurationElementType) {
+						hasAnyChildElements = true;
+					}
+					else {
+						object value = sourceElement.Values[prop.Name];
+
+						// if the property is required or we are writing a full config make sure we have defaults
+						if ((prop.IsRequired == true || saveMode == ConfigurationSaveMode.Full) &&
+								(value == null || value == s_nullPropertyValue)) {
+							// If the default value is null, this means there wasnt a reasonable default for the value
+							// and there is nothing more we can do. Otherwise reset the value to the default
+
+							// Note: 'null' should be used as default for non-empty strings instead
+							// of the current practice to use String.Epmty
+
+							if (prop.DefaultValue != null) {
+								value = prop.DefaultValue; // need to make sure required properties are persisted
+							}
+						}
+
+						if (value != null && value != s_nullPropertyValue) {
+							object value2 = null;
+							if (parentElement != null)// Is there a parent
+								value2 = parentElement.Values[prop.Name]; // if so get it's value
+
+							if (value2 == null) // no parent use default
+								value2 = prop.DefaultValue;
+							// If changed and not same as parent write or required
+
+							switch (saveMode) {
+								case ConfigurationSaveMode.Minimal: {
+										if (!Object.Equals(value, value2) || prop.IsRequired == true)
+											_values[prop.Name] = value;
+									}
+									break;
+								// (value != null && value != s_nullPropertyValue) ||
+								case ConfigurationSaveMode.Modified: {
+										bool modified = sourceElement.Values.IsModified(prop.Name);
+										bool inherited = sourceElement.Values.IsInherited(prop.Name);
+
+										// update the value if the property is required, modified or it was not inherited
+										// Also update properties that ARE inherited when we are resetting the object
+										// as long as the property is not the same as the default value for the property
+										if ((prop.IsRequired || modified || !inherited) ||
+											(parentElement == null && inherited && !Object.Equals(value, value2))) {
+											_values[prop.Name] = value;
+										}
+									}
+									break;
+								case ConfigurationSaveMode.Full: {
+										if (value != null && value != s_nullPropertyValue)
+											_values[prop.Name] = value;
+										else
+											_values[prop.Name] = value2;
+
+									}
+									break;
+							}
+						}
+					}
+				}
+
+				if (hasAnyChildElements) {
+					foreach (ConfigurationProperty prop in Properties) {
+						if (prop.IsConfigurationElementType) {
+							ConfigurationElement pElem = (ConfigurationElement)((parentElement != null) ? parentElement[prop] : null);
+							ConfigurationElement childElement = (ConfigurationElement)this[prop];
+							if ((ConfigurationElement)sourceElement[prop] != null)
+								childElement.Unmerge((ConfigurationElement)sourceElement[prop],
+									pElem, saveMode);
+						}
+
+					}
+				}
+			}
+		}
+
 		/* End of referencesource code. */
 
 		internal Configuration Configuration {
@@ -919,55 +1060,6 @@ namespace System.Configuration
 			return res;
 		}
 
-		protected internal virtual void Unmerge (
-				ConfigurationElement sourceElement, ConfigurationElement parentElement,
-				ConfigurationSaveMode saveMode)
-		{
-			if (parentElement != null && sourceElement.GetType() != parentElement.GetType())
-				throw new ConfigurationErrorsException ("Can't unmerge two elements of different type");
-
-			bool isMinimalOrModified = saveMode == ConfigurationSaveMode.Minimal ||
-				saveMode == ConfigurationSaveMode.Modified;
-
-			foreach (PropertyInformation prop in sourceElement.ElementInformation.Properties)
-			{
-				if (prop.ValueOrigin == PropertyValueOrigin.Default)
-					continue;
-				
-				PropertyInformation unmergedProp = ElementInformation.Properties [prop.Name];
-				
-				object sourceValue = prop.Value;
-				if (parentElement == null || !parentElement.HasValue (prop.Name)) {
-					unmergedProp.Value = sourceValue;
-					continue;
-				}
-
-				if (sourceValue == null)
-					continue;
-
-				object parentValue = parentElement [prop.Name];
-				if (!prop.IsElement) {
-					if (!object.Equals (sourceValue, parentValue) || 
-					    (saveMode == ConfigurationSaveMode.Full) ||
-					    (saveMode == ConfigurationSaveMode.Modified && prop.ValueOrigin == PropertyValueOrigin.SetHere))
-						unmergedProp.Value = sourceValue;
-					continue;
-				}
-
-				var sourceElementValue = (ConfigurationElement) sourceValue;
-				if (isMinimalOrModified && !sourceElementValue.IsModified ())
-					continue;
-				if (parentValue == null) {
-					unmergedProp.Value = sourceValue;
-					continue;
-				}
-
-				var parentElementValue = (ConfigurationElement) parentValue;
-				ConfigurationElement copy = (ConfigurationElement) unmergedProp.Value;
-				copy.Unmerge (sourceElementValue, parentElementValue, saveMode);
-			}
-		}
-		
 		internal bool HasValue (string propName)
 		{
 			PropertyInformation info = ElementInformation.Properties [propName];
