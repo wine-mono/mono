@@ -198,6 +198,9 @@ namespace System.Configuration
 				// The default impl does not save the ApplicationScopedSetting properties
 				if (value.Property.Attributes.Contains (typeof (ApplicationScopedSettingAttribute)))
 					continue;
+				/* Unless the value has been changed, don't attempt to save it. */
+				if (!value.IsDirty)
+					continue;
 
 				hasChanges = true;
 				SettingElement element = userSection.Settings.Get (value.Name);
