@@ -208,8 +208,8 @@ namespace System.Configuration
 					element = new SettingElement (value.Name, value.Property.SerializeAs);
 					userSection.Settings.Add (element);
 				}
-				if (element.Value.ValueXml == null)
-					element.Value.ValueXml = new XmlDocument ().CreateElement ("value");
+
+				element.Value.ValueXml = new XmlDocument ().CreateElement ("value");
 				switch (value.Property.SerializeAs) {
 				case SettingsSerializeAs.Xml:
 					element.Value.ValueXml.InnerXml = StripXmlHeader (value.SerializedValue as string);
