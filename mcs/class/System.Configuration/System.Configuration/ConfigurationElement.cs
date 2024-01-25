@@ -1024,7 +1024,7 @@ namespace System.Configuration
 
 				if (saveContext == null)
 					throw new InvalidOperationException ();
-				if (!saveContext.HasValue (prop))
+				if (Values[prop.Name] == null || Values[prop.Name] == s_nullPropertyValue)
 					continue;
 
 				if (writer != null) writer.WriteAttributeString (prop.Name, prop.GetStringValue ());
@@ -1211,13 +1211,6 @@ namespace System.Configuration
 				this.Element = element;
 				this.Parent = parent;
 				this.Mode = mode;
-			}
-
-			public bool HasValue (PropertyInformation prop)
-			{
-				if (Mode == ConfigurationSaveMode.Full)
-					return true;
-				return Element.HasValue (Parent, prop, Mode);
 			}
 		}
 	}
