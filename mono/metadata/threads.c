@@ -749,7 +749,7 @@ mono_thread_internal_set_priority (MonoInternalThread *internal, MonoThreadPrior
 	// When this API becomes available on an arbitrary thread, we can use it,
 	// not available on current Zircon
 	//
-#else /* !HOST_WIN32 and not HOST_FUCHSIA */
+#elif defined(_POSIX_PRIORITY_SCHEDULING)
 	pthread_t tid;
 	int policy;
 	struct sched_param param;
@@ -763,7 +763,6 @@ mono_thread_internal_set_priority (MonoInternalThread *internal, MonoThreadPrior
 	if (res != 0)
 		g_error ("%s: pthread_getschedparam failed, error: \"%s\" (%d)", __func__, g_strerror (res), res);
 
-#ifdef _POSIX_PRIORITY_SCHEDULING
 	int max, min;
 
 	/* Necessary to get valid priority range */
@@ -779,10 +778,6 @@ mono_thread_internal_set_priority (MonoInternalThread *internal, MonoThreadPrior
 #endif
 	MONO_EXIT_GC_SAFE;
 
-	/* Not tunable. Bail out */
-	if ((min == -1) || (max == -1))
-		return;
-
 	if (max > 0 && min >= 0 && max > min) {
 		double srange, drange, sposition, dposition;
 		srange = MONO_THREAD_PRIORITY_HIGHEST - MONO_THREAD_PRIORITY_LOWEST;
@@ -791,33 +786,8 @@ mono_thread_internal_set_priority (MonoInternalThread *internal, MonoThreadPrior
 		dposition = (sposition / srange) * drange;
 		param.sched_priority = (int)(dposition + min);
 	} else
-#endif
-	{
-		switch (policy) {
-		case SCHED_FIFO:
-		case SCHED_RR:
-			param.sched_priority = 50;
-			break;
-#ifdef SCHED_BATCH
-		case SCHED_BATCH:
-#endif
-#ifdef SCHED_IA
-		case SCHED_IA:
-#endif
-#ifdef SCHED_FSS
-		case SCHED_FSS:
-#endif
-#ifdef SCHED_FX
-		case SCHED_FX:
-#endif
-		case SCHED_OTHER:
-			param.sched_priority = 0;
-			break;
-		default:
-			g_warning ("%s: unknown policy %d", __func__, policy);
-			return;
-		}
-	}
+		/* Not tunable. Bail out */
+		return;
 
 	MONO_ENTER_GC_SAFE;
 #if defined(__PASE__)
@@ -839,6 +809,9 @@ mono_thread_internal_set_priority (MonoInternalThread *internal, MonoThreadPrior
 		}
 		g_error ("%s: pthread_setschedparam failed, error: \"%s\" (%d)", __func__, g_strerror (res), res);
 	}
+#else
+	/* Not supported */
+	return;
 #endif /* HOST_WIN32 */
 }
 
