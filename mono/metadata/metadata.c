@@ -8205,7 +8205,8 @@ mono_guid_signature_append_type (GString *res, MonoType *type)
 		for (i = 0; i < type->data.array->rank; ++i)
 		{
 			if (i > 0) g_string_append_c (res, ',');
-			if (type->data.array->sizes[i] == 0 || type->data.array->lobounds[i] == 0) continue;
+			if (i >= type->data.array->numsizes || type->data.array->sizes[i] == 0 ||
+				i >= type->data.array->numlobounds || type->data.array->lobounds[i] == 0) continue;
                         g_string_append_printf (res, "%d", type->data.array->lobounds[i]);
                         g_string_append (res, "...");
                         g_string_append_printf (res, "%d", type->data.array->lobounds[i] + type->data.array->sizes[i] + 1);
