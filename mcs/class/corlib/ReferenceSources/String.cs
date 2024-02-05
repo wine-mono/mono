@@ -92,7 +92,32 @@ namespace System
 		public static String Concat(Object arg0, Object arg1, Object arg2, Object arg3, __arglist) 
 		{
 			// Added to maintain backward compatibility, see https://github.com/mono/mono/issues/9996
-			throw new PlatformNotSupportedException();
+			ArgIterator iterator = new ArgIterator (__arglist);
+
+			StringBuilder result = StringBuilderCache.Acquire ();
+
+			if (!(arg0 is null))
+				result.Append (arg0.ToString ());
+
+			if (!(arg1 is null))
+				result.Append (arg1.ToString ());
+
+			if (!(arg2 is null))
+				result.Append (arg2.ToString ());
+
+			if (!(arg3 is null))
+				result.Append (arg3.ToString ());
+
+			int count = iterator.GetRemainingCount ();
+
+			for (int i=0; i<count; i++) {
+				TypedReference typedref = iterator.GetNextArg ();
+				object val = TypedReference.ToObject (typedref);
+				if (!(val is null))
+					result.Append (val.ToString ());
+			}
+
+			return StringBuilderCache.GetStringAndRelease (result);
 		}
 
 		internal unsafe int IndexOfUncheckedIgnoreCase (string value, int startIndex, int count)
