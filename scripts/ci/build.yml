@@ -19,4 +19,8 @@ linux-amd64-test:
     script:
         - "scripts/ci/update-submodules.sh"
         - "scripts/ci/build.sh"
+    artifacts:
+        paths:
+            - test-bundle/
+        expire_in: 1 week
 
