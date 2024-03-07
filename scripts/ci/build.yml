@@ -1,0 +1,22 @@
+
+linux-amd64-test:
+    stage: build
+    image: $CI_REGISTRY/wine-mono/mono:debian-bookworm-linux-build
+    interruptible: true
+    cache:
+        -
+            key: $CI_JOB_NAME-ccache
+            paths:
+                - ccache/
+    before_script:
+        - export BASEDIR="$PWD"
+        - export CCACHE_BASEDIR="$BASEDIR"
+        - export CCACHE_DIR="$BASEDIR/ccache"
+        - export CCACHE_COMPILERCHECK=content
+        - export PATH="/usr/lib/ccache:$PATH"
+        - git config --global --add safe.directory $CI_PROJECT_DIR
+        - rm -fr .git/rebase-merge  # in case a previous CI run failed in git rebase
+    script:
+        - "scripts/ci/update-submodules.sh"
+        - "scripts/ci/build.sh"
+
