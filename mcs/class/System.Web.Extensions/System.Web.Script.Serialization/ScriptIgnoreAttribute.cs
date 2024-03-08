@@ -36,5 +36,10 @@ namespace System.Web.Script.Serialization
 	[AttributeUsage (AttributeTargets.Property | AttributeTargets.Field)]
 	public sealed class ScriptIgnoreAttribute : Attribute
 	{
+		public bool ApplyToOverrides
+		{
+			get;
+			set;
+		}
 	}
 }

@@ -239,6 +239,8 @@ namespace System.Web.Script.Serialization
 
 		bool ShouldIgnoreMember (MemberInfo mi, out MethodInfo getMethod)
 		{
+			ScriptIgnoreAttribute scriptIgnoreAttr;
+
 			getMethod = null;
 			if (mi == null)
 				return true;
@@ -246,6 +248,10 @@ namespace System.Web.Script.Serialization
 			if (mi.IsDefined (typeof (ScriptIgnoreAttribute), true))
 				return true;
 			
+			scriptIgnoreAttr = (ScriptIgnoreAttribute)Attribute.GetCustomAttribute(mi, typeof(ScriptIgnoreAttribute), true);
+			if (scriptIgnoreAttr != null && scriptIgnoreAttr.ApplyToOverrides)
+				return true;
+
 			FieldInfo fi = mi as FieldInfo;
 			if (fi != null)
 				return false;
