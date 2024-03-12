@@ -1,0 +1,9 @@
+
+linux-amd64-test:
+    stage: test
+    image: $CI_REGISTRY/wine-mono/mono:debian-bookworm-linux-test
+    interruptible: true
+    needs:
+        - job: linux-amd64-build
+    script:
+        - "scripts/ci/test.sh"
