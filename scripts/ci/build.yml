@@ -1,5 +1,5 @@
 
-linux-amd64-test:
+linux-amd64-build:
     stage: build
     image: $CI_REGISTRY/wine-mono/mono:debian-bookworm-linux-build
     interruptible: true
