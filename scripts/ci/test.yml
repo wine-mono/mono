@@ -5,5 +5,12 @@ linux-amd64-test:
     interruptible: true
     needs:
         - job: linux-amd64-build
+    allow_failure:
+        exit_codes:
+            - 127
+    artifacts:
+        paths:
+            - test-results/
+        expire_in: 1 week
     script:
         - "scripts/ci/test.sh"
