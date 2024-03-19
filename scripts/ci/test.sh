@@ -29,6 +29,8 @@ run_test mini-aot --mini --aot="mcpu=native"
 
 run_test runtime --runtime
 
+run_test corlib --nunit net_4_x/tests/net_4_x_corlib_test.dll
+
 touch "$TEST_RESULTS_DIR"/expected-failures.txt
 
 diff -q "$TEST_RESULTS_DIR"/test-failures.txt "$TEST_RESULTS_DIR"/expected-failures.txt >/dev/null || exit 127
