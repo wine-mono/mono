@@ -182,6 +182,11 @@ fi
 if [ "$test_suite" = "--mini" ]; then
     cd tests/mini || exit 1
 
+	case "$test_argument_1" in
+		--aot=*) rm -f *.exe.so *.exe.dylib *.exe.dylib.dSYM *.exe.dll; "${MONO_EXECUTABLE}" --config "$r/_tmpinst/etc/mono/config" "$test_argument_1" ./*.exe || exit 1;;
+		*) true;;
+	esac
+
     "${MONO_EXECUTABLE}" --config "$r/_tmpinst/etc/mono/config" --regression ./*.exe > regressiontests.out 2>&1
     cat regressiontests.out
     if grep -q "100% pass" regressiontests.out; then
@@ -203,6 +208,12 @@ if [ "$test_suite" = "--mini" ]; then
                 </collection>\
             </assembly>\
         </assemblies>" >> "${xunit_results_path}";
+
+	case "$test_argument_1" in
+		--aot=*) rm -f *.exe.so *.exe.dylib *.exe.dylib.dSYM *.exe.dll;;
+		*) true;;
+	esac
+
     exit $failurescount
 fi
 
