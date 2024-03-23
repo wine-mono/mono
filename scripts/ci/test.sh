@@ -29,7 +29,9 @@ run_test mini-aot --mini --aot="mcpu=native"
 
 run_test runtime --runtime
 
-run_test corlib --nunit net_4_x/tests/net_4_x_corlib_test.dll
+for name in corlib System.Xml Mono.Security System.Security System.Data Mono.Posix System.Web System.Web.Services System.Runtime.Serialization.Formatters.Soap System.Runtime.Remoting Cscompmgd Commons.Xml.Relaxng System.ServiceProcess I18N.CJK I18N.West I18N.MidEast I18N.Rare I18N.Other System.DirectoryServices Microsoft.Build.Engine Microsoft.Build.Framework Microsoft.Build.Tasks Microsoft.Build.Utilities Mono.C5 Mono.Options Mono.Tasklets System.Configuration System.Transactions System.Web.Extensions System.Core System.Xml.Linq System.Data.DataSetExtensions System.Web.Abstractions System.Web.Routing System.Runtime.Serialization System.IdentityModel System.ServiceModel System.ServiceModel.Web System.ComponentModel.DataAnnotations Mono.CodeContracts System.Data.Services System.Web.DynamicData Mono.CSharp WindowsBase System.Numerics System.Runtime.DurableInstancing System.ServiceModel.Discovery System.Xaml System.Net.Http System.Net.Http.WebRequest System.Json System.Threading.Tasks.Dataflow Mono.Debugger.Soft Microsoft.Build System.IO.Compression; do
+	run_test $name --nunit net_4_x/tests/net_4_x_${name}_test.dll
+done
 
 touch "$TEST_RESULTS_DIR"/expected-failures.txt
 
