@@ -524,6 +524,34 @@ namespace MonoTests.System.Drawing {
 			Assert.Throws<FileNotFoundException> (() => Icon.ExtractAssociatedIcon ("does-not-exists.png"));
 		}
 
+
+		[Test]
+		public void CreateFromCursor ()
+		{
+			if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+				Assert.Ignore ("Can only create cursor handle on Windows.");
+
+			IntPtr handle = icon64.Handle;
+			IconInfo ii;
+
+			GDIPlus.GetIconInfo (handle, out ii);
+			ii.IsIcon = false;
+			handle = GDIPlus.CreateIconIndirect (ref ii);
+			Assert.IsNotNull(handle);
+
+			try
+			{
+				Bitmap bitmap = Bitmap.FromHicon(handle);
+				Assert.Fail ("must throw ArgumentException");
+			}
+			catch (ArgumentException)
+			{
+			}
+
+			Icon icon = Icon.FromHandle(handle);
+			Assert.IsNotNull(icon);
+		}
+
 		private static bool RunningOnUnix {
 			get {
 				int p = (int) Environment.OSVersion.Platform;
