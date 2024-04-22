@@ -1,4 +1,4 @@
-# FROM debian:bookworm # FROM line will be added by CI process
+FROM debian:bookworm
 
 WORKDIR /tmp
 
@@ -11,7 +11,7 @@ RUN export DEBIAN_FRONTEND=noninteractive; \
     echo 'exit 101' >> /usr/sbin/policy-rc.d && \
     chmod +x /usr/sbin/policy-rc.d && \
     apt-get update && \
-    apt-get install -y git build-essential ca-certificates autoconf libtool automake cmake python3 gettext wget && \
+    apt-get install -y git build-essential ca-certificates autoconf libtool automake cmake python3 gettext wget pkg-config libglib2.0-dev libcairo2-dev libjpeg62-turbo-dev libtiff-dev libgif-dev libexif-dev moreutils && \
     apt-get clean && \
     useradd -m gitlab
 

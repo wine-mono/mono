@@ -9,14 +9,13 @@ build-image-linux-build:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
   variables:
-    IMAGE_SOURCE: "$CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX/debian:bookworm"
     IMAGE_LOCAL: "$CI_REGISTRY_IMAGE:debian-bookworm-linux-build"
     DOCKER_FILE: "$CI_PROJECT_DIR/scripts/ci/linux-build.docker"
   script:
     - mkdir -p /kaniko/.docker
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(printf "%s:%s" "$CI_REGISTRY_USER" "$CI_REGISTRY_PASSWORD" | base64 | tr -d '\n')\"},\"$CI_DEPENDENCY_PROXY_SERVER\":{\"auth\":\"$(printf "%s:%s" "$CI_DEPENDENCY_PROXY_USER" "$CI_DEPENDENCY_PROXY_PASSWORD" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
-    - sed -i "1iFROM $IMAGE_SOURCE" "$DOCKER_FILE"
-    - /kaniko/executor --context "$CI_PROJECT_DIR" --dockerfile "$DOCKER_FILE" --destination "$IMAGE_LOCAL"
+    - 'sed "s#^FROM #FROM ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/#" "$DOCKER_FILE" > build-proxied.docker'
+    - /kaniko/executor --context "$CI_PROJECT_DIR" --dockerfile build-proxied.docker --destination "$IMAGE_LOCAL"
 
 build-image-linux-test:
   stage: image
@@ -29,11 +28,10 @@ build-image-linux-test:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
   variables:
-    IMAGE_SOURCE: "$CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX/debian:bookworm"
     IMAGE_LOCAL: "$CI_REGISTRY_IMAGE:debian-bookworm-linux-test"
     DOCKER_FILE: "$CI_PROJECT_DIR/scripts/ci/linux-test.docker"
   script:
     - mkdir -p /kaniko/.docker
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(printf "%s:%s" "$CI_REGISTRY_USER" "$CI_REGISTRY_PASSWORD" | base64 | tr -d '\n')\"},\"$CI_DEPENDENCY_PROXY_SERVER\":{\"auth\":\"$(printf "%s:%s" "$CI_DEPENDENCY_PROXY_USER" "$CI_DEPENDENCY_PROXY_PASSWORD" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
-    - sed -i "1iFROM $IMAGE_SOURCE" "$DOCKER_FILE"
-    - /kaniko/executor --context "$CI_PROJECT_DIR" --dockerfile "$DOCKER_FILE" --destination "$IMAGE_LOCAL"
+    - 'sed "s#^FROM #FROM ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/#" "$DOCKER_FILE" > build-proxied.docker'
+    - /kaniko/executor --context "$CI_PROJECT_DIR" --dockerfile build-proxied.docker --destination "$IMAGE_LOCAL"
