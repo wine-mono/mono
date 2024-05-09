@@ -25,9 +25,15 @@ namespace System.Configuration {
         internal PropertyInformationCollection(ConfigurationElement thisElement) : base(StringComparer.Ordinal) {
             ThisElement = thisElement;
             foreach (ConfigurationProperty prop in ThisElement.Properties) {
+                /* INFO:MONO: This check in referencesource seems wrong to begin with, and it also breaks
+                 * Mono's ConfigurationElement class's methods which use PropertyInformation for most things
+                 * instead of ConfigurationProperty (which is what referencesource uses). If an element has
+                 * a ConfigurationProperty that you can't get PropertyInformation for, that seems like a bug.
                 if (prop.Name != ThisElement.ElementTagName) {                    
                     BaseAdd(prop.Name, new PropertyInformation(thisElement, prop.Name));
                 }
+                */
+                BaseAdd(prop.Name, new PropertyInformation(thisElement, prop.Name));
             }
             IsReadOnly = true;
         }
