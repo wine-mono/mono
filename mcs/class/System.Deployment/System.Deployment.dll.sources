@@ -1,3 +1,12 @@
 ../../build/common/Consts.cs
 Assembly/AssemblyInfo.cs
+System.Deployment.Application/ApplicationDeployment.cs
+System.Deployment.Application/CheckForUpdateCompletedEventArgs.cs
+System.Deployment.Application/CheckForUpdateCompletedEventHandler.cs
 System.Deployment.Application/DeploymentException.cs
+System.Deployment.Application/DeploymentProgressChangedEventArgs.cs
+System.Deployment.Application/DeploymentProgressChangedEventHandler.cs
+System.Deployment.Application/DeploymentProgressState.cs
+System.Deployment.Application/DownloadFileGroupCompletedEventArgs.cs
+System.Deployment.Application/DownloadFileGroupCompletedEventHandler.cs
+System.Deployment.Application/UpdateCheckInfo.cs
