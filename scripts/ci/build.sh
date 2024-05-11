@@ -1,11 +1,14 @@
 #!/bin/sh
 
-set -e
+do_build ()
+{
+	./autogen.sh || exit 1
 
-./autogen.sh
+	make -j$(nproc) all || exit 1
 
-make -j$(nproc) all | ts '[%H:%M:%S]'
+	make test || exit 1
 
-make test | ts '[%H:%M:%S]'
+	make TEST_BUNDLE_PATH=$PWD/test-bundle test-bundle || exit 1
+}
 
-make TEST_BUNDLE_PATH=$PWD/test-bundle test-bundle | ts '[%H:%M:%S]'
+do_build | ts '[%H:%M:%S]'
