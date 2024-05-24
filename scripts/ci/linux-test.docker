@@ -11,7 +11,7 @@ RUN export DEBIAN_FRONTEND=noninteractive; \
     echo 'exit 101' >> /usr/sbin/policy-rc.d && \
     chmod +x /usr/sbin/policy-rc.d && \
     apt-get update && \
-    apt-get install -y git ca-certificates wget binutils iputils-ping libgdiplus unzip xinit fvwm xserver-xorg-video-dummy xserver-xorg xfonts-base && \
+    apt-get install -y git ca-certificates wget binutils iputils-ping libgdiplus unzip xinit fvwm xserver-xorg-video-dummy xserver-xorg xfonts-base sqlite3 && \
     apt-get clean && \
     useradd -m gitlab
 
