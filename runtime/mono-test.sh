@@ -73,11 +73,6 @@ if [ "$test_suite" = "--nunit" ]; then
         *"Mono.Messaging.RabbitMQ"*)
             export MONO_MESSAGING_PROVIDER=Mono.Messaging.RabbitMQ.RabbitMQMessagingProvider,Mono.Messaging.RabbitMQ
             ;;
-        *"System.Windows.Forms"*)
-            sudo apt install -y xvfb xauth
-            XVFBRUN="xvfb-run -a --"
-            ADDITIONAL_TEST_EXCLUDES="NotWithXvfb" # TODO: find out why this works on Jenkins?
-            ;;
     esac
     case "$test_argument_2" in
         "--flaky-test-retries="*)
