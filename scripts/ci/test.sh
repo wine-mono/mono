@@ -1,10 +1,13 @@
 #!/bin/sh
 
-wget -nv -O libgdiplus.zip "https://gitlab.winehq.org/wine-mono/libgdiplus/-/jobs/artifacts/main/download?job=linux-build" || exit 1
-unzip -q libgdiplus.zip || exit 1
-cp usr/local/lib/libgdiplus.so test-bundle/mono-libgdiplus.so || exit 1
+if test ! -e test-bundle/mono-libgdiplus.so; then
+	wget -nv -O libgdiplus.zip "https://gitlab.winehq.org/wine-mono/libgdiplus/-/jobs/artifacts/main/download?job=linux-build" || exit 1
+	unzip -q libgdiplus.zip || exit 1
+	cp usr/local/lib/libgdiplus.so test-bundle/mono-libgdiplus.so || exit 1
+fi
 
-cat >$HOME/xorg.conf << EOF
+if test x$GITLAB_CI = xtrue; then
+	cat >$HOME/xorg.conf << EOF
 Section "Device"
   Identifier "dummy"
   Driver "dummy"
@@ -12,9 +15,10 @@ Section "Device"
 EndSection
 EOF
 
-echo 'exec /usr/bin/fvwm -f config -c "Style * MwmDecor" -c "Style * UsePPosition" 2>/dev/null' >$HOME/.xinitrc
-export DISPLAY=:0
-startx -- -config $HOME/xorg.conf $DISPLAY &
+	echo 'exec /usr/bin/fvwm -f config -c "Style * MwmDecor" -c "Style * UsePPosition" 2>/dev/null' >$HOME/.xinitrc
+	export DISPLAY=:0
+	startx -- -config $HOME/xorg.conf $DISPLAY &
+fi
 
 rm -rf test-results
 
