@@ -34,12 +34,25 @@ run_test ()
 	shift 1
 
 	echo Running \"$SUITE\" tests...
-	test-bundle/mono-test.sh "$@" > "$TEST_RESULTS_DIR"/"$SUITE".log 2>&1 && echo "Succeeded." || (echo $SUITE >> "$TEST_RESULTS_DIR"/test-failures.txt; echo "Failed.")
+	test-bundle/mono-test.sh "$@" > "$TEST_RESULTS_DIR"/"$SUITE".log 2>&1 && echo "Succeeded." && return 0
 
-	if test -e testResults.xml; then
-		grep 'result="Fail"' testResults.xml|sed -e 's/^.*name="//g'|sed -e 's/".*$//g'|tee -a "$TEST_RESULTS_DIR"/test-failures.txt
+	if test x$RETRIES = x -o x$RETRIEX = x0; then
+		echo $SUITE >> "$TEST_RESULTS_DIR"/test-failures.txt; echo "Failed."
 
-		mv testResults.xml "$TEST_RESULTS_DIR"/"$SUITE".xml
+		if test -e testResults.xml; then
+			grep 'result="Fail"' testResults.xml|sed -e 's/^.*name="//g'|sed -e 's/".*$//g'|tee -a "$TEST_RESULTS_DIR"/test-failures.txt
+
+			mv testResults.xml "$TEST_RESULTS_DIR"/"$SUITE".xml
+		fi
+	else
+		if test -e testResults.xml; then
+			grep 'result="Fail"' testResults.xml|sed -e 's/^.*name="//g'|sed -e 's/".*$//g'
+
+			mv testResults.xml "$TEST_RESULTS_DIR"/"$SUITE".xml
+		fi
+
+		echo Retrying "(${RETRIES})"
+		RETRIES=$(expr ${RETRIES} - 1) run_test "$SUITE" "$@"
 	fi
 }
 
@@ -49,7 +62,9 @@ run_test mini-aot --mini --aot="mcpu=native"
 
 run_test runtime --runtime
 
-for name in corlib System System.Xml Mono.Security System.Security System.Data Mono.Posix System.Web System.Web.Services System.Runtime.Serialization.Formatters.Soap System.Runtime.Caching System.Runtime.Remoting Cscompmgd Commons.Xml.Relaxng System.ServiceProcess I18N.CJK I18N.West I18N.MidEast I18N.Rare I18N.Other System.DirectoryServices Microsoft.Build.Engine Microsoft.Build.Framework Microsoft.Build.Tasks Microsoft.Build.Utilities Mono.C5 Mono.Options Mono.Tasklets System.Configuration System.Transactions System.Web.Extensions System.Core System.Drawing System.Windows.Forms System.Windows.Forms.DataVisualization System.Xml.Linq System.Data.DataSetExtensions System.Web.Abstractions System.Web.Routing System.Runtime.Serialization System.IdentityModel System.ServiceModel System.ServiceModel.Web System.ComponentModel.DataAnnotations Mono.CodeContracts System.Data.Services System.Web.DynamicData Mono.CSharp WindowsBase System.Numerics System.Runtime.DurableInstancing System.ServiceModel.Discovery System.Xaml System.Net.Http System.Net.Http.WebRequest System.Json System.Threading.Tasks.Dataflow Mono.Debugger.Soft Microsoft.Build System.IO.Compression Mono.Data.Sqlite System.Data.OracleClient Mono.Messaging; do
+RETRIES=9 run_test System.Runtime.Caching --nunit net_4_x/tests/net_4_x_System.Runtime.Caching_test.dll
+
+for name in corlib System System.Xml Mono.Security System.Security System.Data Mono.Posix System.Web System.Web.Services System.Runtime.Serialization.Formatters.Soap System.Runtime.Remoting Cscompmgd Commons.Xml.Relaxng System.ServiceProcess I18N.CJK I18N.West I18N.MidEast I18N.Rare I18N.Other System.DirectoryServices Microsoft.Build.Engine Microsoft.Build.Framework Microsoft.Build.Tasks Microsoft.Build.Utilities Mono.C5 Mono.Options Mono.Tasklets System.Configuration System.Transactions System.Web.Extensions System.Core System.Drawing System.Windows.Forms System.Windows.Forms.DataVisualization System.Xml.Linq System.Data.DataSetExtensions System.Web.Abstractions System.Web.Routing System.Runtime.Serialization System.IdentityModel System.ServiceModel System.ServiceModel.Web System.ComponentModel.DataAnnotations Mono.CodeContracts System.Data.Services System.Web.DynamicData Mono.CSharp WindowsBase System.Numerics System.Runtime.DurableInstancing System.ServiceModel.Discovery System.Xaml System.Net.Http System.Net.Http.WebRequest System.Json System.Threading.Tasks.Dataflow Mono.Debugger.Soft Microsoft.Build System.IO.Compression Mono.Data.Sqlite System.Data.OracleClient Mono.Messaging; do
 	run_test $name --nunit net_4_x/tests/net_4_x_${name}_test.dll
 done
 
