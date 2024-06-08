@@ -34,7 +34,7 @@ run_test ()
 	shift 1
 
 	echo Running \"$SUITE\" tests...
-	test-bundle/mono-test.sh "$@" > "$TEST_RESULTS_DIR"/"$SUITE".log 2>&1 && echo "Succeeded." && return 0
+	timeout -v 300 test-bundle/mono-test.sh "$@" > "$TEST_RESULTS_DIR"/"$SUITE".log 2>&1 && echo "Succeeded." && return 0
 
 	if test x$RETRIES = x -o x$RETRIES = x0; then
 		echo $SUITE >> "$TEST_RESULTS_DIR"/test-failures.txt; echo "Failed."
