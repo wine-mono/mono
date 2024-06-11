@@ -68,6 +68,10 @@ for name in corlib System System.Xml Mono.Security System.Security System.Data M
 	run_test $name --nunit net_4_x/tests/net_4_x_${name}_test.dll
 done
 
+for name in corlib System System.Core System.Xml System.Runtime.CompilerServices.Unsafe System.Json System.Xml.Linq System.ComponentModel.Composition System.Drawing System.Security System.Runtime.Serialization System.Net.Http.UnitTests System.Net.Http.FunctionalTests Mono.Profiler.Log System.Data System.Numerics System.Threading.Tasks.Dataflow System.ComponentModel.Composition Microsoft.CSharp; do
+	run_test ${name}-xunit --xunit net_4_x/tests/net_4_x_${name}_xunit-test.dll
+done
+
 touch "$TEST_RESULTS_DIR"/expected-failures.txt
 
 diff -q "$TEST_RESULTS_DIR"/test-failures.txt "$TEST_RESULTS_DIR"/expected-failures.txt >/dev/null || exit 127
