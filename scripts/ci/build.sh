@@ -8,6 +8,8 @@ do_build ()
 
 	make test || exit 1
 
+	make -C runtime xunit-test || exit 1
+
 	make TEST_BUNDLE_PATH=$PWD/test-bundle test-bundle || exit 1
 }
 
