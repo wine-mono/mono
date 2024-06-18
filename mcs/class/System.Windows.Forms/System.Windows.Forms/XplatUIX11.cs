@@ -3583,7 +3583,7 @@ namespace System.Windows.Forms {
 			lock (XlibLock) {
 				if (hwnd.whole_window != IntPtr.Zero) {
 					DriverDebug ("XDestroyWindow (whole_window = {0:X})", hwnd.whole_window.ToInt32());
-					Keyboard.DestroyICForWindow (hwnd.whole_window);
+					Keyboard.DestroyICForWindow (hwnd.client_window);
 					XDestroyWindow(DisplayHandle, hwnd.whole_window);
 				}
 				else if (hwnd.client_window != IntPtr.Zero) {
@@ -4018,7 +4018,7 @@ namespace System.Windows.Forms {
 			// hwnds, since much of the event handling code makes requests using the hwnd's
 			// client_window, and that'll result in BadWindow errors if there's some lag
 			// between the XDestroyWindow call and the DestroyNotify event.
-			if (hwnd == null || hwnd.zombie && xevent.AnyEvent.type != XEventName.ClientMessage) {
+			if (hwnd == null || hwnd.zombie && xevent.AnyEvent.type != XEventName.ClientMessage && xevent.type != XEventName.DestroyNotify) {
 				DriverDebug("GetMessage(): Got message {0} for non-existent or already destroyed window {1:X}", xevent.type, xevent.AnyEvent.window.ToInt32());
 				goto ProcessNextMessage;
 			}
