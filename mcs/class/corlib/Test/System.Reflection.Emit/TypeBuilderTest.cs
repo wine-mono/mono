@@ -11169,6 +11169,8 @@ namespace MonoTests.System.Reflection.Emit
 			Console.WriteLine (fromDisk);
 			var t = fromDisk.GetType ("Wrapped");
 			Activator.CreateInstance (t, new object[] { "string"});
+
+			File.Delete (AssemblyFileName);
 		}
 
 		public interface IFace16096 {
