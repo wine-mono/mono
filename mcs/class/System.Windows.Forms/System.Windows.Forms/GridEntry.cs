@@ -49,6 +49,9 @@ namespace System.Windows.Forms.PropertyGridInternal
 		private int top;
 		private Rectangle plus_minus_bounds;
 		private GridItemCollection child_griditems_cache;
+
+		protected static IComparer DisplayNameComparer = new DisplayNameSortComparer();
+
 		#endregion	// Local Variables
 
 		#region  Contructors
@@ -796,6 +799,8 @@ namespace System.Windows.Forms.PropertyGridInternal
 					continue;
 
 				PropertyDescriptorCollection properties = GetProperties (objects[i], property_grid.BrowsableAttributes);
+				if ((property_grid.PropertySort & PropertySort.Alphabetical) != 0)
+					properties = properties.Sort(GridEntry.DisplayNameComparer);
 				ArrayList new_intersection = new ArrayList ();
 
 				foreach (PropertyDescriptor currentProperty in (i == 0 ? (ICollection)properties : (ICollection)intersection)) {
@@ -845,5 +850,13 @@ namespace System.Windows.Forms.PropertyGridInternal
 			return property_grid.SelectedTab.GetProperties ((ITypeDescriptorContext)this, propertyOwner, atts);
 		}
 #endregion  // Population
+
+		public class DisplayNameSortComparer : IComparer
+		{
+			public int Compare(object left, object right)
+			{
+				return string.Compare(((PropertyDescriptor)left).DisplayName, ((PropertyDescriptor)right).DisplayName, true, CultureInfo.CurrentCulture);
+			}
+		}
 	}
 }
