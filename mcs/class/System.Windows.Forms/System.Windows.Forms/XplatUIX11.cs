@@ -1560,7 +1560,7 @@ namespace System.Windows.Forms {
 				
 				if (PeekMessage(queue, ref msg, IntPtr.Zero, 0, 0, (uint)PeekMessageFlags.PM_REMOVE)) {
 					if ((Msg)msg.message == Msg.WM_QUIT) {
-						PostQuitMessage (0);
+						PostQuitMessage ((int)(long)(msg.wParam));
 						done = true;
 					}
 					else {
