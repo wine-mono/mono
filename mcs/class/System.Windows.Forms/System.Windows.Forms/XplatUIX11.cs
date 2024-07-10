@@ -3985,6 +3985,12 @@ namespace System.Windows.Forms {
 
 				if (((XEventQueue)queue_id).Count > 0) {
 					xevent = (XEvent) ((XEventQueue)queue_id).Dequeue ();
+				} else if (((XEventQueue)queue_id).GetQuitMessage (true, out int exit_code)) {
+					msg.message = Msg.WM_QUIT;
+					msg.hwnd = IntPtr.Zero;
+					msg.wParam = (IntPtr)exit_code;
+					msg.lParam = IntPtr.Zero;
+					return false;
 				} else if (((XEventQueue)queue_id).Paint.Count > 0) {
 					xevent = ((XEventQueue)queue_id).Paint.Dequeue();
 				} else {
@@ -4705,10 +4711,7 @@ namespace System.Windows.Forms {
 						msg.message = (Msg) xevent.ClientMessageEvent.ptr2.ToInt32 ();
 						msg.wParam = xevent.ClientMessageEvent.ptr3;
 						msg.lParam = xevent.ClientMessageEvent.ptr4;
-						if (msg.message == (Msg)Msg.WM_QUIT)
-							return false;
-						else
-							return true;
+						return true;
 					}
 
 					if  (xevent.ClientMessageEvent.message_type == _XEMBED) {
@@ -5155,7 +5158,7 @@ namespace System.Windows.Forms {
 			}
 
 			pending = false;
-			if (queue.Count > 0) {
+			if (queue.Count > 0 || queue.GetQuitMessage(false, out int _exitcode)) {
 				pending = true;
 			} else {
 				// Only call UpdateMessageQueue if real events are pending 
@@ -5207,13 +5210,8 @@ namespace System.Windows.Forms {
 
 		internal override void PostQuitMessage(int exitCode)
 		{
-			ApplicationContext ctx = Application.MWFThread.Current.Context;
-			Form f = ctx != null ? ctx.MainForm : null;
-			if (f != null)
-				PostMessage (Application.MWFThread.Current.Context.MainForm.window.Handle, Msg.WM_QUIT, IntPtr.Zero, IntPtr.Zero);
-			else
-				PostMessage (FosterParent, Msg.WM_QUIT, IntPtr.Zero, IntPtr.Zero);
-			XFlush(DisplayHandle);
+			var queue = ThreadQueue(Thread.CurrentThread);
+			queue.PostQuitMessage(exitCode);
 		}
 
 		internal override void RequestAdditionalWM_NCMessages(IntPtr hwnd, bool hover, bool leave)
