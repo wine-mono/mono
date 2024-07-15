@@ -1668,6 +1668,10 @@ public class DirectoryTest
 			Assert.AreEqual (tempFile4, files [0], "#N3");
 		else // on Windows, the trailing dot is automatically trimmed
 			Assert.AreEqual (Path.Combine (TempFolder, "tempFile4"), files [0], "#N3");
+
+		files = Directory.GetFiles (TempFolder, "");
+		Assert.IsNotNull (files, "#O1");
+		Assert.AreEqual (0, files.Length, "#O2");
 	}
 
 	[Test]
