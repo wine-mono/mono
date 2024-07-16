@@ -9,6 +9,7 @@
 using System;
 using System.Collections;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
 using System.Runtime.Remoting;
@@ -690,6 +691,19 @@ namespace MonoTests.System.Windows.Forms
 				Assert.IsFalse (t.Recursive, "#3");
 			}
 		}
+
+		private void WaitEventsPredicate (int timeout, Func<bool> predicate)
+		{
+			Stopwatch sw = new Stopwatch();
+			sw.Start();
+
+			while (!predicate() && sw.ElapsedMilliseconds < timeout)
+			{
+				Application.DoEvents();
+				Thread.Sleep(10);
+			}
+		}
+
 		[Test]
 		[Category ("Interactive")]
 		public void OnPaintDoubleBufferedTest ()
@@ -698,6 +712,7 @@ namespace MonoTests.System.Windows.Forms
 				t.DoubleBuffered = true;
 				t.TestRefresh = true;
 				t.Show ();
+				WaitEventsPredicate (1000, () => { return t.Recursive; });
 				Assert.IsTrue (t.Recursive, "#1");
 			}
 
