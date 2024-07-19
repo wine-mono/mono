@@ -15,6 +15,8 @@ do_build ()
 	make -C mono/unit-tests check || exit 1
 
 	make -C mono/eglib check || exit 1
+
+	make -C mono/tests/fullaot-mixed check || exit 1
 }
 
 do_build | ts '[%H:%M:%S]'
