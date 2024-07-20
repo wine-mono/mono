@@ -86,6 +86,8 @@ for name in corlib System System.Core System.Xml System.Runtime.CompilerServices
 	run_test ${name}-xunit --xunit net_4_x/tests/net_4_x_${name}_xunit-test.dll
 done
 
+MONO_TLS_PROVIDER=btls run_test corlib-btls --nunit net_4_x/tests/net_4_x_corlib_test.dll -include:X509Certificates
+
 touch "$TEST_RESULTS_DIR"/expected-failures.txt
 
 diff -q "$TEST_RESULTS_DIR"/test-failures.txt "$TEST_RESULTS_DIR"/expected-failures.txt >/dev/null || exit 127
