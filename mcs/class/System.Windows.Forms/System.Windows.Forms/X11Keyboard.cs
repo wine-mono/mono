@@ -309,7 +309,7 @@ namespace System.Windows.Forms {
 			if ((xevent.KeyEvent.keycode >> 8) == 0x10)
 				xevent.KeyEvent.keycode = xevent.KeyEvent.keycode & 0xFF;
 
-			int event_time = (int)xevent.KeyEvent.time;
+			uint event_time = (uint)xevent.KeyEvent.time;
 
 			if (status == XLookupStatus.XLookupChars) {
 				// do not ignore those inputs. They are mostly from XIM.
@@ -553,7 +553,7 @@ namespace System.Windows.Forms {
 			return msg;
 		}
 
-		private MSG SendKeyboardInput (VirtualKeys vkey, int scan, int keycode, KeybdEventFlags dw_flags, int time)
+		private MSG SendKeyboardInput (VirtualKeys vkey, int scan, int keycode, KeybdEventFlags dw_flags, uint time)
 		{
 			Msg message;
 
@@ -620,7 +620,7 @@ namespace System.Windows.Forms {
 			return (IntPtr)lparam;
 		}
 
-		private void GenerateMessage (VirtualKeys vkey, int scan, int key_code, XEventName type, int event_time)
+		private void GenerateMessage (VirtualKeys vkey, int scan, int key_code, XEventName type, uint event_time)
 		{
 			bool state = (vkey == VirtualKeys.VK_NUMLOCK ? num_state : cap_state);
 			KeybdEventFlags up, down;
@@ -1352,7 +1352,7 @@ namespace System.Windows.Forms {
 			(int) VirtualKeys.VK_DOWN, (int) VirtualKeys.VK_PRIOR, (int) VirtualKeys.VK_NEXT, (int) VirtualKeys.VK_END,
 			0, 0, 0, 0, 0, 0, 0, 0,					    /* FF58 */
 			/* misc keys */
-			(int) VirtualKeys.VK_SELECT, (int) VirtualKeys.VK_SNAPSHOT, (int) VirtualKeys.VK_EXECUTE, (int) VirtualKeys.VK_INSERT, 0, 0, 0, 0,  /* FF60 */
+			(int) VirtualKeys.VK_SELECT, (int) VirtualKeys.VK_SNAPSHOT, (int) VirtualKeys.VK_EXECUTE, (int) VirtualKeys.VK_INSERT, 0, 0, 0, (int) VirtualKeys.VK_APPS,  /* FF60 */
 			(int) VirtualKeys.VK_CANCEL, (int) VirtualKeys.VK_HELP, (int) VirtualKeys.VK_CANCEL, (int) VirtualKeys.VK_CANCEL, 0, 0, 0, 0,	    /* FF68 */
 			0, 0, 0, 0, 0, 0, 0, 0,					    /* FF70 */
 			/* keypad keys */
