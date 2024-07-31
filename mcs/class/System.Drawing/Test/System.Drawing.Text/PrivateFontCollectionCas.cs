@@ -39,6 +39,7 @@ namespace MonoCasTests.System.Drawing.Text {
 
 	[TestFixture]
 	[Category ("CAS")]
+	[Ignore("CAS is deprecated")]
 	public class PrivateFontCollectionCas {
 
 		[Test]

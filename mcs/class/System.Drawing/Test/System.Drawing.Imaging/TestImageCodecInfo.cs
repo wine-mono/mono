@@ -39,7 +39,6 @@ using System.Text.RegularExpressions;
 namespace MonoTests.System.Drawing.Imaging {
 
 	[TestFixture]
-	[SecurityPermission (SecurityAction.Deny, UnmanagedCode = true)]
 	public class ImageCodecInfoTest {
 
 		Hashtable decoders;

@@ -39,6 +39,7 @@ namespace MonoCasTests.System.Drawing {
 
 	[TestFixture]
 	[Category ("CAS")]
+	[Ignore("CAS is deprecated")]
 	public class GraphicsCas {
 
 		private MethodInfo fromHdcInternal;

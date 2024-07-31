@@ -40,6 +40,7 @@ namespace MonoCasTests.System.Drawing.Design {
 
 	[TestFixture]
 	[Category ("CAS")]
+	[Ignore("CAS is deprecated")]
 	public class ToolboxItemCollectionCas {
 
 		private ConstructorInfo ctor;
