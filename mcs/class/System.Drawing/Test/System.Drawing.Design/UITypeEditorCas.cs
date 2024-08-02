@@ -41,6 +41,7 @@ namespace MonoCasTests.System.Drawing.Design {
 
 	[TestFixture]
 	[Category ("CAS")]
+	[Ignore("CAS is deprecated")]
 	public class UITypeEditorCas {
 
 		private ConstructorInfo ctor;

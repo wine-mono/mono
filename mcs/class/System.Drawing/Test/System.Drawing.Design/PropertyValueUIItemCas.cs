@@ -42,6 +42,7 @@ namespace MonoCasTests.System.Drawing.Design {
 
 	[TestFixture]
 	[NUnit.Framework.Category ("CAS")]
+	[Ignore("CAS is deprecated")]
 	public class PropertyValueUIItemCas {
 
 		private ConstructorInfo ctor;

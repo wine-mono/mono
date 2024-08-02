@@ -35,7 +35,6 @@ using NUnit.Framework;
 namespace MonoTests.System.Drawing.Drawing2D {
 
 	[TestFixture]
-	[SecurityPermission (SecurityAction.Deny, UnmanagedCode = true)]
 	public class GraphicsPathIteratorTest {
 
 		private PointF [] pts_2f = new PointF [2] { new PointF (1, 2), new PointF (20, 30) };

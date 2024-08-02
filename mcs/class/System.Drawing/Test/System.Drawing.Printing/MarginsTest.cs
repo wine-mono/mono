@@ -35,7 +35,6 @@ using NUnit.Framework;
 namespace MonoTests.System.Drawing.Printing {
 
 	[TestFixture]
-	[SecurityPermission (SecurityAction.Deny, UnmanagedCode = true)]
 	public class MarginsTest {
 
 		[Test]
