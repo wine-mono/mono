@@ -19,6 +19,8 @@ do_build ()
 	make -C mono/tests/fullaot-mixed check || exit 1
 
 	make -C mcs/class/System.Web.Extensions run-standalone-test || exit 1
+
+	make -C mcs/tools/linker check || exit 1
 }
 
 do_build | ts '[%H:%M:%S]'
