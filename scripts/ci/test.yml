@@ -2,6 +2,8 @@
 linux-amd64-test:
     stage: test
     image: $CI_REGISTRY/wine-mono/mono:debian-bookworm-linux-test
+    rules:
+        - if: $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_PROJECT_NAMESPACE == 'wine-mono'
     interruptible: true
     needs:
         - job: linux-amd64-build
