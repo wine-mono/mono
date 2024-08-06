@@ -6,6 +6,9 @@ do_build ()
 
 	make -j$(nproc) all || exit 1
 
+	test ! -e mcs/class/lib/monolite-* || echo Monolite should not be required in CI
+	test ! -e mcs/class/lib/monolite-* || exit 1
+
 	make test || exit 1
 
 	make -C runtime xunit-test || exit 1
