@@ -24,5 +24,6 @@ linux-amd64-build:
     artifacts:
         paths:
             - test-bundle/
+            - mcs/class/monolite-*.tar.gz
         expire_in: 1 week
 

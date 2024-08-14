@@ -15,6 +15,8 @@ do_build ()
 
 	make TEST_BUNDLE_PATH=$PWD/test-bundle test-bundle || exit 1
 
+	make -C mcs/class package-monolite-latest-all-platforms || exit 1
+
 	make -C mono/unit-tests check || exit 1
 
 	make -C mono/eglib check || exit 1
