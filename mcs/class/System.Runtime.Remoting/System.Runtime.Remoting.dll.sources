@@ -8,6 +8,7 @@ System.Runtime.Remoting.Channels/BinaryCore.cs
 System.Runtime.Remoting.Channels/BinaryServerFormatterSink.cs
 System.Runtime.Remoting.Channels/BinaryServerFormatterSinkProvider.cs
 System.Runtime.Remoting.Channels/ChannelCore.cs
+System.Runtime.Remoting.Channels/ChunkedMemoryStream.cs
 System.Runtime.Remoting.Channels/CommonTransportKeys.cs
 System.Runtime.Remoting.Channels/IAuthorizeRemotingConnection.cs
 System.Runtime.Remoting.Channels/RemotingThreadPool.cs

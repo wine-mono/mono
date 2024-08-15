@@ -89,10 +89,15 @@ namespace System.Runtime.Remoting.Channels.Http
 			//this is only valid after the response is fetched
 			SetConnectionLimit (request);
 
-			using (response) {
+			ChunkedMemoryStream stream = new ChunkedMemoryStream();
+
+			using (response)
+			using (stream) {
 				Stream responseStream = response.GetResponseStream ();
+				responseStream.CopyTo(stream);
+
 				ITransportHeaders responseHeaders = GetHeaders (response);
-				sinkStack.AsyncProcessResponse (responseHeaders, responseStream);
+				sinkStack.AsyncProcessResponse (responseHeaders, stream);
 			}
 		}
 
