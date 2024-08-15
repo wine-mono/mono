@@ -20,3 +20,4 @@ GenericTest.cs
 IpcChannelTest.cs
 HttpBugTests.cs
 HttpServerChannelTests.cs
+CustomSink.cs
