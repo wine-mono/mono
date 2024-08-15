@@ -15,8 +15,8 @@ using NUnit.Framework;
 
 namespace MonoTests.Remoting
 {
-/*	
-	//[TestFixture]
+	
+	[TestFixture]
 	public class HttpSyncCallTest : SyncCallTest
 	{
 		public override ChannelManager CreateChannelManager ()
@@ -25,7 +25,7 @@ namespace MonoTests.Remoting
 		}
 	}
 
-	//[TestFixture]
+	[TestFixture]
 	public class HttpAsyncCallTest : AsyncCallTest
 	{
 		public override ChannelManager CreateChannelManager ()
@@ -34,6 +34,7 @@ namespace MonoTests.Remoting
 		}
 	}
 
+/*
 	//[TestFixture]
 	public class HttpReflectionCallTest : ReflectionCallTest
 	{
@@ -61,6 +62,7 @@ namespace MonoTests.Remoting
 		}
 	}
 */
+
 	[Serializable]
 	public class HttpChannelManager : ChannelManager
 	{
