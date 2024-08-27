@@ -20,7 +20,7 @@ or [the main wine-mono repo](https://gitlab.winehq.org/wine-mono/wine-mono).
 5. [Reporting bugs](#reporting-bugs)
 6. [Configuration Options](#configuration-options)
 7. [Working with Submodules](#working-with-submodules)
-8. [Winehq Migraion](#winehq-migration)
+8. [Winehq Migration](#winehq-migration)
 
 Compilation and Installation
 ============================
