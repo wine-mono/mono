@@ -3,13 +3,13 @@ create cross platform applications.  It is an open source
 implementation of Microsoft's .NET Framework based on the ECMA
 standards for C# and the Common Language Runtime.
 
-The Mono project is part of the [.NET Foundation](https://www.dotnetfoundation.org/)
+For most use cases, the Framework-compatible version of Mono in this
+tree has been superseded by modern versions of [.NET](https://github.com/dotnet/core),
+which include [a fork of the Mono runtime](https://github.com/dotnet/runtime/tree/main/src/mono).
 
-Join us on [Discord](https://aka.ms/dotnet-discord) in the `#monovm` channel:
-
-<a href="https://aka.ms/dotnet-discord">
-  <img src="https://img.shields.io/discord/732297728826277939?style=flat-square&label=Discord&logo=discord&logoColor=white&color=7289DA">
-</a>
+For Wine Mono, the fork used in the Wine project to run .NET Framework executables
+targeting Windows, see [the wine-mono branch](https://gitlab.winehq.org/wine-mono/mono/-/tree/wine-mono)
+or [the main wine-mono repo](https://gitlab.winehq.org/wine-mono/wine-mono).
 
 ### Contents
 
@@ -20,57 +20,7 @@ Join us on [Discord](https://aka.ms/dotnet-discord) in the `#monovm` channel:
 5. [Reporting bugs](#reporting-bugs)
 6. [Configuration Options](#configuration-options)
 7. [Working with Submodules](#working-with-submodules)
-
-### Build Status
-
-Public CI: [![Azure Pipelines](https://dev.azure.com/dnceng/public/_apis/build/status/mono/mono-ci?branchName=main)](https://dev.azure.com/dnceng/public/_build/latest?definitionId=952&branchName=main)
-
-Legacy Jenkins CI (no longer available publicly):
-
-| OS           | Architecture       | Status                       |
-|--------------|--------------------|------------------------------|
-| Debian 9     | amd64              | [![debian-9-amd64][1]][2]    |
-| Debian 9     | i386               | [![debian-9-i386][3]][4]     |
-| Debian 9     | armel              | [![debian-9-armel][5]][6]    |
-| Debian 9     | armhf              | [![debian-9-armhf][7]][8]    |
-| Debian 9     | arm64              | [![debian-9-arm64][9]][10]   |
-| OS X         | amd64              | [![osx-amd64][11]][12]       |
-| OS X         | i386               | [![osx-i386][13]][14]        |
-| Windows      | amd64              | [![windows-amd64][15]][16]   |
-| Windows      | i386               | [![windows-i386][17]][18]    |
-| CentOS       | s390x (cs)         | [![centos-s390x][19]][20]    |
-| Debian 9     | ppc64el (cs)       | [![debian-9-ppc64el][21]][22]|
-| AIX 6.1      | ppc64 (cs)         | [![aix-ppc64][23]][24]       |
-| FreeBSD 12   | amd64 (cs)         | [![freebsd-amd64][25]][26]   |
-
-_(cs) = community supported architecture_
-
-[1]: https://jenkins.mono-project.com/job/test-mono-mainline-linux/label=debian-9-amd64/badge/icon
-[2]: https://jenkins.mono-project.com/job/test-mono-mainline-linux/label=debian-9-amd64
-[3]: https://jenkins.mono-project.com/job/test-mono-mainline-linux/label=debian-9-i386/badge/icon
-[4]: https://jenkins.mono-project.com/job/test-mono-mainline-linux/label=debian-9-i386/
-[5]: https://jenkins.mono-project.com/job/test-mono-mainline-linux/label=debian-9-armel/badge/icon
-[6]: https://jenkins.mono-project.com/job/test-mono-mainline-linux/label=debian-9-armel/
-[7]: https://jenkins.mono-project.com/job/test-mono-mainline-linux/label=debian-9-armhf/badge/icon
-[8]: https://jenkins.mono-project.com/job/test-mono-mainline-linux/label=debian-9-armhf/
-[9]: https://jenkins.mono-project.com/job/test-mono-mainline-linux/label=debian-9-arm64/badge/icon
-[10]: https://jenkins.mono-project.com/job/test-mono-mainline-linux/label=debian-9-arm64/
-[11]: https://jenkins.mono-project.com/job/test-mono-mainline/label=osx-amd64/badge/icon
-[12]: https://jenkins.mono-project.com/job/test-mono-mainline/label=osx-amd64/
-[13]: https://jenkins.mono-project.com/job/test-mono-mainline/label=osx-i386/badge/icon
-[14]: https://jenkins.mono-project.com/job/test-mono-mainline/label=osx-i386/
-[15]: https://jenkins.mono-project.com/job/z/label=w64/badge/icon
-[16]: https://jenkins.mono-project.com/job/z/label=w64/
-[17]: https://jenkins.mono-project.com/job/z/label=w32/badge/icon
-[18]: https://jenkins.mono-project.com/job/z/label=w32/
-[19]: https://jenkins.mono-project.com/job/test-mono-mainline-community/label=centos-s390x/badge/icon
-[20]: https://jenkins.mono-project.com/job/test-mono-mainline-community/label=centos-s390x
-[21]: https://jenkins.mono-project.com/job/test-mono-mainline-community-chroot/label=debian-9-ppc64el/badge/icon
-[22]: https://jenkins.mono-project.com/job/test-mono-mainline-community-chroot/label=debian-9-ppc64el
-[23]: https://jenkins.mono-project.com/job/test-mono-mainline-community/label=aix-ppc64/badge/icon
-[24]: https://jenkins.mono-project.com/job/test-mono-mainline-community/label=aix-ppc64
-[25]: https://jenkins.mono-project.com/job/test-mono-mainline-community/label=freebsd-12-amd64/badge/icon
-[26]: https://jenkins.mono-project.com/job/test-mono-mainline-community/label=freebsd-12-amd64
+8. [Winehq Migraion](#winehq-migration)
 
 Compilation and Installation
 ============================
@@ -110,9 +60,6 @@ Testing and Installation
 ------------------------
 
 You can run the mono and mcs test suites with the command: `make check`.
-
-Expect to find a few test suite failures. As a sanity check, you
-can compare the failures you got with [https://jenkins.mono-project.com/](https://jenkins.mono-project.com/).
 
 You can now install mono with: `make install`
 
@@ -213,21 +160,31 @@ runtime as an embedded library.
 Contributing to Mono
 ====================
 
-Before submitting changes to Mono, please review the [contribution
-guidelines](https://www.mono-project.com/community/contributing/).
-Please pay particular attention to the [Important
-Rules](https://www.mono-project.com/community/contributing/#important-rules)
-section.
+To contribute, you will need to make a Merge Request on
+[the Gitlab repository](https://gitlab.winehq.org/wine-mono/mono).
+
+This requires creating a Gitlab profile, which must use your real
+name. Your commits must also use your real name. You can configure
+this using `git config`.
+
+```
+git config --global user.name "Your Name"
+git config --global user.email "me@example.com"
+```
+
+When your changes are ready, [fork the Mono repository](https://gitlab.winehq.org/wine-mono/mono/-/forks/new),
+push your changes to a branch to your fork, and [create a Merge Request](https://gitlab.winehq.org/wine-mono/mono/-/merge_requests/new).
+
+Your work must adhere to the [Clean Room Guidelines](https://wiki.winehq.org/Clean_Room_Guidelines).
+
+Winehq does not require a Contributor License Agreement. Sending
+your code implies licensing your work under the same free
+software license as the existing code.
 
 Reporting bugs
 ==============
 
-To submit bug reports, please [open an issue on the mono GitHub repo](https://github.com/mono/mono/issues/new).
-
-Please use the search facility to ensure the same bug hasn't already
-been submitted and follow our
-[guidelines](https://www.mono-project.com/community/bugs/make-a-good-bug-report/)
-on how to make a good bug report.
+To submit bug reports, please [file a bug on the Winehq Bugzilla](https://bugs.winehq.org/enter_bug.cgi?product=Mono).
 
 Configuration Options
 =====================
@@ -540,7 +497,7 @@ This section describes how to use it.
 An initial clone should be done recursively so all submodules will also be
 cloned in a single pass:
 
-	$ git clone --recursive git@github.com:mono/mono
+	$ git clone --recursive https://gitlab.winehq.org/wine-mono/mono.git
 
 Once cloned, submodules can be updated to pull down the latest changes.
 This can also be done after an initial non-recursive clone:
@@ -556,16 +513,20 @@ To pull external changes into a submodule:
 	$ git commit
 
 By default, submodules are detached because they point to a specific commit.
-Use `git checkout` to move back to a branch before making changes:
+Use `git switch` to move back to a branch before making changes:
 
 	$ cd <submodule>
-	$ git checkout <branch>
+	$ git switch <branch>
 	# work as normal; the submodule is a normal repo
 	$ git commit/push new changes to the repo (submodule)
 
 	$ cd <top-level>
 	$ git add <submodule> # this will record the new commits to the submodule
 	$ git commit
+
+The default can be changed to attempt to keep branches attached with:
+
+	$ git config --global submodule.propagateBranches true
 
 To switch the repo of a submodule (this should not be a common or normal thing
 to do at all), first edit `.gitmodules` to point to the new location, then:
@@ -588,3 +549,15 @@ Mono Trademark Use Policy
 =========================
 
 The use of trademarks and logos for Mono can be found [here](https://www.dotnetfoundation.org/legal/mono-tm). 
+
+Winehq Migration
+================
+
+Migration from [mono/mono](https://github.com/mono/mono/) to Winehq is in progress.
+
+Tasks that remain:
+* **Migrate monolite**. In progress. We need a process for making official builds of monolite, and somewhere to put them. Then the code that fetches monolite needs to be updated.
+* **Remove test suite dependencies on Mono hosting**. Not yet started.
+* **Implement continuous integration on GitLab**. In progress. Currently, this is only implemented for the Linux platform. Windows CI in particular will require an alternative build process to Cygwin, likely based on WSL or Wine.
+* **Copy all required GitHub repositories to Winehq GitLab**. In progress.
+* **Create a release process**. Not yet started.
