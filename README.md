@@ -184,7 +184,7 @@ software license as the existing code.
 Reporting bugs
 ==============
 
-To submit bug reports, please [file a bug on the Winehq Bugzilla](https://bugs.winehq.org/enter_bug.cgi?product=Mono).
+To submit bug reports, please [file a bug on the Winehq Bugzilla](https://bugs.winehq.org/enter_bug.cgi?product=Framework%20Mono).
 
 Configuration Options
 =====================
