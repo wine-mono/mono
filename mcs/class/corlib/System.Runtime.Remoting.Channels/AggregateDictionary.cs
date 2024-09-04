@@ -37,7 +37,6 @@ namespace System.Runtime.Remoting.Channels
 	internal class AggregateDictionary: IDictionary
 	{
 		IDictionary[] dictionaries;
-		ArrayList _values;
 		ArrayList _keys;
 		
 		public AggregateDictionary (IDictionary[] dics)
@@ -52,7 +51,7 @@ namespace System.Runtime.Remoting.Channels
 		
 		public bool IsReadOnly 
 		{ 
-			get { return true; }
+			get { return false; }
 		} 
 		
 		public object this [object key]
@@ -66,7 +65,8 @@ namespace System.Runtime.Remoting.Channels
 			
 			set
 			{
-				throw new NotSupportedException ();
+				foreach (IDictionary dic in dictionaries)
+					if (dic.Contains(key)) dic[key] = value;
 			}
 		}
 		
@@ -87,12 +87,10 @@ namespace System.Runtime.Remoting.Channels
 		{ 
 			get
 			{
-				if (_values != null) return _values;
-				
-				_values = new ArrayList ();
+				ArrayList values = new ArrayList ();
 				foreach (IDictionary dic in dictionaries)
-					_values.AddRange (dic.Values);
-				return _values;
+					values.AddRange (dic.Values);
+				return values;
 			}
 		}
 		
