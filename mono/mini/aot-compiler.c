@@ -9334,7 +9334,7 @@ append_mangled_signature (GString *s, MonoMethodSignature *sig)
 	supported = append_mangled_type (s, sig->ret);
 	if (!supported)
 		return FALSE;
-		g_string_append_printf (s, "_");
+	g_string_append_printf (s, "_");
 	if (sig->hasthis)
 		g_string_append_printf (s, "this_");
 	for (i = 0; i < sig->param_count; ++i) {
