@@ -1118,12 +1118,12 @@ mono_gc_set_stack_end (void *stack_end)
 {
 }
 
-void GC_start_blocking ()
+static void GC_start_blocking (void)
 {
 
 }
 
-void GC_end_blocking ()
+static void GC_end_blocking (void)
 {
 
 }
