@@ -1,7 +1,7 @@
 #!/bin/sh
 
 if test ! -e test-bundle/mono-libgdiplus.so; then
-	wget -nv -O libgdiplus.zip "https://gitlab.winehq.org/wine-mono/libgdiplus/-/jobs/artifacts/main/download?job=linux-build" || exit 1
+	wget -nv -O libgdiplus.zip "https://gitlab.winehq.org/mono/libgdiplus/-/jobs/artifacts/main/download?job=linux-build" || exit 1
 	unzip -q libgdiplus.zip || exit 1
 	cp usr/local/lib/libgdiplus.so test-bundle/mono-libgdiplus.so || exit 1
 fi

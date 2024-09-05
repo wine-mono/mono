@@ -8,8 +8,8 @@ tree has been superseded by modern versions of [.NET](https://github.com/dotnet/
 which include [a fork of the Mono runtime](https://github.com/dotnet/runtime/tree/main/src/mono).
 
 For Wine Mono, the fork used in the Wine project to run .NET Framework executables
-targeting Windows, see [the wine-mono branch](https://gitlab.winehq.org/wine-mono/mono/-/tree/wine-mono)
-or [the main wine-mono repo](https://gitlab.winehq.org/wine-mono/wine-mono).
+targeting Windows, see [the wine-mono branch](https://gitlab.winehq.org/mono/mono/-/tree/wine-mono)
+or [the main wine-mono repo](https://gitlab.winehq.org/mono/wine-mono).
 
 ### Contents
 
@@ -161,7 +161,7 @@ Contributing to Mono
 ====================
 
 To contribute, you will need to make a Merge Request on
-[the Gitlab repository](https://gitlab.winehq.org/wine-mono/mono).
+[the Gitlab repository](https://gitlab.winehq.org/mono/mono).
 
 This requires creating a Gitlab profile, which must use your real
 name. Your commits must also use your real name. You can configure
@@ -172,8 +172,8 @@ git config --global user.name "Your Name"
 git config --global user.email "me@example.com"
 ```
 
-When your changes are ready, [fork the Mono repository](https://gitlab.winehq.org/wine-mono/mono/-/forks/new),
-push your changes to a branch to your fork, and [create a Merge Request](https://gitlab.winehq.org/wine-mono/mono/-/merge_requests/new).
+When your changes are ready, [fork the Mono repository](https://gitlab.winehq.org/mono/mono/-/forks/new),
+push your changes to a branch to your fork, and [create a Merge Request](https://gitlab.winehq.org/mono/mono/-/merge_requests/new).
 
 Your work must adhere to the [Clean Room Guidelines](https://wiki.winehq.org/Clean_Room_Guidelines).
 
@@ -497,7 +497,7 @@ This section describes how to use it.
 An initial clone should be done recursively so all submodules will also be
 cloned in a single pass:
 
-	$ git clone --recursive https://gitlab.winehq.org/wine-mono/mono.git
+	$ git clone --recursive https://gitlab.winehq.org/mono/mono.git
 
 Once cloned, submodules can be updated to pull down the latest changes.
 This can also be done after an initial non-recursive clone:
