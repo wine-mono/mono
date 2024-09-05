@@ -4640,6 +4640,7 @@ add_module_cb (gpointer key, gpointer value, gpointer user_data)
 	g_ptr_array_add ((GPtrArray*)user_data, value);
 }
 
+#ifdef TARGET_WASM
 static gboolean
 inst_is_private (MonoGenericInst *inst)
 {
@@ -4653,6 +4654,7 @@ inst_is_private (MonoGenericInst *inst)
 	}
 	return FALSE;
 }
+#endif
 
 gboolean
 mono_aot_can_dedup (MonoMethod *method)
