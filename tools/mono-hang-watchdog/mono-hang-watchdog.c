@@ -30,10 +30,10 @@ int main (int argc, char* argv[])
 
 #ifndef HAVE_KILL
     /* just inform the user */
-    printf ("Mono process with pid %llu appears to be hung", (uint64_t)pid);
+    printf ("Mono process with pid %lu appears to be hung", (unsigned long)pid);
     return 0;
 #else
-    printf ("Mono process hang detected, sending kill signal to pid %llu\n", (uint64_t)pid);
+    printf ("Mono process hang detected, sending kill signal to pid %lu\n", (unsigned long)pid);
     return kill (pid, SIGKILL);
 #endif
 }
