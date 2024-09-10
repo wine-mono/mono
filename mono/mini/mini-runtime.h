@@ -518,7 +518,7 @@ MONO_API char     *mono_pmip_u                       (void *ip);
 MONO_API int mono_ee_api_version (void);
 gboolean  mono_debug_count                  (void);
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__MINGW32__)
 #define XDEBUG_ENABLED 1
 #endif
 

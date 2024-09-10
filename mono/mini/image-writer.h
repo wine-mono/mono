@@ -22,12 +22,12 @@
 
 typedef struct _MonoImageWriter MonoImageWriter;
 
-#if defined(TARGET_AMD64) && !defined(HOST_WIN32) && !defined(__APPLE__)
+#if defined(TARGET_AMD64) && (!defined(HOST_WIN32) || defined(__MINGW32__)) && !defined(__APPLE__)
 #define USE_ELF_WRITER 1
 #define USE_ELF_RELA 1
 #endif
 
-#if defined(TARGET_X86) && !defined(HOST_WIN32) && !defined(__APPLE__)
+#if defined(TARGET_X86) && (!defined(HOST_WIN32) || defined(__MINGW32__)) && !defined(__APPLE__)
 #define USE_ELF_WRITER 1
 #endif
 
