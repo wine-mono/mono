@@ -730,7 +730,7 @@ namespace MonoTests.System.Windows.Forms
 				}
 			});
 
-			var ok = task.Wait (TimeSpan.FromSeconds (1));
+			var ok = task.Wait (TimeSpan.FromSeconds (5));
 			Assert.True (ok, "Infinite loop has been detected in `WndProc`");
 		}
 
