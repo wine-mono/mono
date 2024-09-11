@@ -101,7 +101,7 @@ call_methods (MonoObject *obj)
 {
 	MonoClass *klass;
 	MonoDomain *domain;
-	MonoMethod *method = NULL, *m = NULL, *ctor = NULL, *fail = NULL, *mvalues;
+	MonoMethod *method = NULL, *m = NULL, *ctor = NULL, *fail = NULL, *mvalues = NULL;
 	MonoProperty *prop;
 	MonoObject *result, *exception;
 	MonoString *str;
