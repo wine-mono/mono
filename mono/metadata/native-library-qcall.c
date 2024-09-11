@@ -31,11 +31,6 @@ static const MonoQCallDef c_qcalls[] =
 const int c_nECClasses = sizeof (c_qcalls) / sizeof (c_qcalls[0]);
 
 static gboolean is_end_of_array (MonoQCallFunc *func) { return !!((int)func->flags & func_flag_end_of_array); }
-static gboolean has_signature (MonoQCallFunc *func) { return !!((int)func->flags & func_flag_has_signature); }
-static gboolean is_unreferenced (MonoQCallFunc *func) { return !!((int)func->flags & func_flag_unreferenced); }
-static gboolean is_qcall (MonoQCallFunc *func) { return !!((int)func->flags & func_flag_qcall); }
-//CorInfoIntrinsics   IntrinsicID(ECFunc *func)   { return (CorInfoIntrinsics)((INT8)(func->m_dwFlags >> 16)); }
-//int                 DynamicID(ECFunc *func)     { return (int)              ((int8)(func->m_dwFlags >> 24)); }
 
 static MonoQCallFunc *
 next_in_array (MonoQCallFunc *func)
