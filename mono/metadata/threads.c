@@ -6985,7 +6985,7 @@ mono_threads_summarize_execute_internal (MonoContext *ctx, gchar **out, MonoStac
 {
 	static SummarizerGlobalState state;
 
-	int current_idx;
+	int current_idx = -1;
 	MonoNativeThreadId current = mono_native_thread_id_get ();
 	gboolean thread_given_control = summarizer_state_init (&state);
 
