@@ -5236,17 +5236,6 @@ check_type_depth (MonoType *t, int depth)
 static void
 add_types_from_method_header (MonoAotCompile *acfg, MonoMethod *method);
 
-static gboolean
-inst_has_vtypes (MonoGenericInst *inst)
-{
-	for (int i = 0; i < inst->type_argc; ++i) {
-		MonoType *t = inst->type_argv [i];
-		if (MONO_TYPE_ISSTRUCT (t))
-			return TRUE;
-	}
-	return FALSE;
-}
-
 /*
  * add_generic_class:
  *
