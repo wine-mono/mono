@@ -122,7 +122,7 @@ Mono_Posix_Syscall_strerror_r (int errnum, char *buf, mph_size_t n)
 		return -1;
 	}
 
-	strncpy (buf, r, len);
+	strncpy (buf, r, blen);
 	buf[len] = '\0';
 
 	return 0;
