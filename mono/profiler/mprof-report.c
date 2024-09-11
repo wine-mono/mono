@@ -2739,9 +2739,7 @@ decode_buffer (ProfContext *ctx)
 		}
 		case TYPE_MONITOR: {
 			int has_bt = *p & TYPE_MONITOR_BT;
-			int event;
-			if (ctx->data_version < 13)
-				event = (*p >> 4) & 0x3;
+			int event = (*p >> 4) & 0x3;
 			uint64_t tdiff = decode_uleb128 (p + 1, &p);
 			if (ctx->data_version > 13)
 				event = *p++;
