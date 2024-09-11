@@ -6567,7 +6567,7 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 		case OP_ATOMIC_STORE_U4:
 		case OP_ATOMIC_STORE_I8:
 		case OP_ATOMIC_STORE_U8: {
-			int size;
+			int size = 0;
 
 			switch (ins->opcode) {
 			case OP_ATOMIC_STORE_I1:
