@@ -169,7 +169,7 @@ parse_optimizations (guint32 opt, const char* p, gboolean cpu_opts)
 		} else {
 			invert = FALSE;
 		}
-		for (i = 0; i < G_N_ELEMENTS (opt_names) && optflag_get_name (i); ++i) {
+		for (i = 0; i < G_N_ELEMENTS (opt_names); ++i) {
 			n = optflag_get_name (i);
 			if (!strcmp (p, n)) {
 				if (invert)
@@ -179,7 +179,7 @@ parse_optimizations (guint32 opt, const char* p, gboolean cpu_opts)
 				break;
 			}
 		}
-		if (i == G_N_ELEMENTS (opt_names) || !optflag_get_name (i)) {
+		if (i == G_N_ELEMENTS (opt_names)) {
 			if (strncmp (p, "all", 3) == 0) {
 				if (invert)
 					opt = 0;
@@ -287,7 +287,7 @@ mono_opt_descr (guint32 flags) {
 
 	need_comma = FALSE;
 	for (i = 0; i < G_N_ELEMENTS (opt_names); ++i) {
-		if (flags & (1 << i) && optflag_get_name (i)) {
+		if (flags & (1 << i)) {
 			if (need_comma)
 				g_string_append_c (str, ',');
 			g_string_append (str, optflag_get_name (i));
