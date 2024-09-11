@@ -7,7 +7,7 @@
  * Copyright (C) 2004 Jonathan Pryor
  */
 
-#define _SVID_SOURCE
+#define _DEFAULT_SOURCE
 #include <time.h>
 #include <errno.h>
 
