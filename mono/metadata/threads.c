@@ -1275,29 +1275,6 @@ start_wrapper (gpointer data)
 	g_assert_not_reached ();
 }
 
-static void
-throw_thread_start_exception (guint32 error_code, MonoError *error)
-{
-	ERROR_DECL (method_error);
-
-	MONO_STATIC_POINTER_INIT (MonoMethod, throw_method)
-
-	throw_method = mono_class_get_method_from_name_checked (mono_defaults.thread_class, "ThrowThreadStartException", 1, 0, method_error);
-	mono_error_assert_ok (method_error);
-
-	MONO_STATIC_POINTER_INIT_END (MonoMethod, throw_method)
-	g_assert (throw_method);
-
-	char *msg = g_strdup_printf ("0x%x", error_code);
-	MonoException *ex = mono_get_exception_execution_engine (msg);
-	g_free (msg);
-
-	gpointer args [1];
-	args [0] = ex;
-
-	mono_runtime_invoke_checked (throw_method, NULL, args, error);
-}
-
 /*
  * create_thread:
  *
