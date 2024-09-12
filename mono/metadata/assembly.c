@@ -2853,7 +2853,7 @@ mono_assembly_get_custom_attribute_data (MonoAssembly *assembly, MonoError *erro
 	mono_assembly_metadata_foreach_custom_attr (assembly, &assembly_get_custom_attribute_data_iterator, &iter_data);
 
 	const char *blob_data = NULL;
-	if (blob_data = mono_metadata_blob_heap(assembly->image, iter_data.value)) {
+	if ((blob_data = mono_metadata_blob_heap(assembly->image, iter_data.value))) {
 		*data_len = mono_metadata_decode_value(blob_data, data);
 	}
 
