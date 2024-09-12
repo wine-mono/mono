@@ -4515,6 +4515,8 @@ mini_init (const char *filename, const char *runtime_version)
 		/* So methods for multiple domains don't have the same address */
 		mono_dont_free_domains = TRUE;
 		mono_using_xdebug = TRUE;
+		if (!mono_debug_enabled())
+			mono_debug_init (MONO_DEBUG_FORMAT_MONO);
 	} else if (mini_debug_options.gdb) {
 		mono_xdebug_init ((char*)"gdb");
 		mono_dont_free_domains = TRUE;
