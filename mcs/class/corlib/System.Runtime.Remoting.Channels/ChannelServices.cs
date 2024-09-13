@@ -225,7 +225,10 @@ namespace System.Runtime.Remoting.Channels
 			IClientChannelSink csink = sink as IClientChannelSink;
 			while (csink != null)
 			{
-				dics.Add (csink.Properties);
+				IDictionary props = csink.Properties;
+				if (props != null)
+					dics.Add (props);
+
 				csink = csink.NextChannelSink;
 			}
 

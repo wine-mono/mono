@@ -1,0 +1,4043 @@
+# Georgian translation for wine-mono.
+# Copyright (C) 2024 Wine project.
+# This file is distributed under the same license as the wine-mono package.
+# Temuri Doghonadze <temuri.doghonadze@gmail.com>, 2024.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: mono 3.4.1\n"
+"Report-Msgid-Bugs-To: http://www.mono-project.com/Bugs\n"
+"POT-Creation-Date: 2014-04-16 14:52+0200\n"
+"PO-Revision-Date: 2024-09-12 02:34+0200\n"
+"Last-Translator: Temuri Doghonadze <temuri.doghonadze@gmail.com>\n"
+"Language-Team: Georgian <(nothing)>\n"
+"Language: ka\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.3.2\n"
+
+#: mcs/mcs/anonymous.cs:1025
+#, csharp-format
+msgid "Cannot convert `{0}' to an expression tree of non-delegate type `{1}'"
+msgstr ""
+"'{0}'-ის გადაყვანა არადელეგატი ტიპის '{1}' გამოსახულების ხეში შეუძლებელია"
+
+#: mcs/mcs/anonymous.cs:1030
+#, csharp-format
+msgid "Cannot convert `{0}' to non-delegate type `{1}'"
+msgstr "'{0}'-ის არადელეგატ ტიპში '{1}' გადაყვანა შეუძლებელია"
+
+#: mcs/mcs/anonymous.cs:1042
+#, csharp-format
+msgid ""
+"Cannot convert `{0}' to delegate type `{1}' since there is a parameter "
+"mismatch"
+msgstr ""
+"'{0}'-ის დელეგატ ტიპში '{1}' გადაყვანა შეუძლებელია, რადგან პარამეტრი არ "
+"ემთხვევა"
+
+#: mcs/mcs/anonymous.cs:1054 mcs/mcs/ecore.cs:5483
+#, csharp-format
+msgid "Delegate `{0}' does not take `{1}' arguments"
+msgstr "დელეგატი '{0}' არ იღებს '{1}' არგუმენტებს"
+
+#: mcs/mcs/anonymous.cs:1069
+#, csharp-format
+msgid "Parameter `{0}' should not be declared with the `{1}' keyword"
+msgstr "პარამეტრი '{0}' არ უნდა იყოს აღწერილი საკვანძო სიტყვით '{1}'"
+
+#: mcs/mcs/anonymous.cs:1072
+#, csharp-format
+msgid "Parameter `{0}' must be declared with the `{1}' keyword"
+msgstr "პარამეტრი '{0}' უნდა იყოს აღწერილი საკვანძო სიტყვით '{1}'"
+
+#: mcs/mcs/anonymous.cs:1089
+#, csharp-format
+msgid "Parameter `{0}' is declared as type `{1}' but should be `{2}'"
+msgstr "პარამეტრი '{0}' აღწერილია ტიპით '{1}' მაგრამ უნდა იყოს '{2}'"
+
+#: mcs/mcs/anonymous.cs:1235
+msgid "Async lambda expressions cannot be converted to expression trees"
+msgstr ""
+"ასინქრონული ლამბდა გამოსახულებების გადაყვანა გამოსახულების ხეებში შეუძლებელია"
+
+#: mcs/mcs/anonymous.cs:1284
+msgid "An anonymous method cannot be converted to an expression tree"
+msgstr "ანონიმური მეთოდის გამოსახულების ხეში გადაყვანა შეუძლებელია"
+
+#: mcs/mcs/anonymous.cs:1303
+#, csharp-format
+msgid ""
+"Cannot convert anonymous method block without a parameter list to delegate "
+"type `{0}' because it has one or more `out' parameters"
+msgstr ""
+"ანონიმური მეთოდის ბლოკის გადაყვანა პარამეტრების სიის დელეგატის ტიპში '{0}' "
+"შეუძლებელია, რადგან მას ერთი ან მეტი 'out' პარამეტრი გააჩნია"
+
+#: mcs/mcs/anonymous.cs:1327
+msgid ""
+"Anonymous methods and lambda expressions cannot be used in the current "
+"context"
+msgstr ""
+"ანონიმური მეთოდების და ლამბდა გამოსახულებების გამოყენება შეუძლებელია "
+"მიმდინარე კონტექსტში"
+
+#: mcs/mcs/anonymous.cs:1363
+#, csharp-format
+msgid ""
+"Local variable or parameter `{0}' cannot have their address taken and be "
+"used inside an anonymous method, lambda expression or query expression"
+msgstr ""
+"ლოკალური ცვლადი ან პარამეტრი '{0}' ვერ აიღებს თავის მისამართს და ვერ "
+"გამოიყენებს ანონიმური მეთოდის, ლამბდა გამოსახულების ან გამოთხოვის "
+"გამოახულების შიგნით"
+
+#: mcs/mcs/anonymous.cs:1383
+#, csharp-format
+msgid "Cannot convert async {0} to delegate type `{1}'"
+msgstr "ასინქრონული {0}-ის დელეგატის ტიპში '{1}' გადაყვანა შეუძლებელია"
+
+#: mcs/mcs/anonymous.cs:1693
+msgid "An expression tree cannot contain an anonymous method expression"
+msgstr ""
+"გამოსახულებების ხე, არ შეიძლება, ანონიმური მეთოდის გამოსახულებას შეიცავდეს"
+
+#: mcs/mcs/anonymous.cs:1983
+#, csharp-format
+msgid ""
+"`{0}': An anonymous type cannot have multiple properties with the same name"
+msgstr "'{0}': ანონიმურ ტიპს იგივე სახელის მქონე ერთზე მეტი თვისება ვერ ექნება"
+
+#: mcs/mcs/argument.cs:99
+msgid ""
+"An expression tree cannot contain an invocation which uses optional parameter"
+msgstr ""
+"გამოსახულებების ხე არ შეიძლება შეიცავდეს ჩაწოდებას, რომელიც არასავალდებულო "
+"პარამეტრს იყენებს"
+
+#: mcs/mcs/argument.cs:252
+msgid "An expression tree cannot contain named argument"
+msgstr "გამოსახულებების ხე, არ შეიძლება, სახელიან არგუმენტს შეიცავდეს"
+
+#: mcs/mcs/argument.cs:363
+#, csharp-format
+msgid ""
+"The method group `{0}' cannot be used as an argument of dynamic operation. "
+"Consider using parentheses to invoke the method"
+msgstr ""
+"მეთოდების ჯგუფს '{0}' დინამიკური ოპერაციის არგუმენტად ვერ გამოიყენებთ. "
+"მეთოდის ჩასაწოდებლად ფრჩხილები გამოიყენეთ"
+
+#: mcs/mcs/argument.cs:367
+msgid ""
+"An anonymous method or lambda expression cannot be used as an argument of "
+"dynamic operation. Consider using a cast"
+msgstr ""
+"ანონიმურ მეთოდს ან ლამბდა გამოსახულებას დინამიკური ოპერაციის არგუმენტად ვერ "
+"გამოიყენებთ. გამოიყენეთ გადაყვანა"
+
+#: mcs/mcs/argument.cs:370
+#, csharp-format
+msgid ""
+"An expression of type `{0}' cannot be used as an argument of dynamic "
+"operation"
+msgstr ""
+"გამოსახულებას ტიპით '{0}' დინამიკური ოპერაციის არგუმენტად ვერ გამოიყენებთ"
+
+#: mcs/mcs/assign.cs:326
+msgid "An expression tree cannot contain an assignment operator"
+msgstr "გამოსახულებების ხე არ შეიძლება, მინიჭების ოპერატორს შეიცავდეს"
+
+#: mcs/mcs/assign.cs:779
+#, csharp-format
+msgid "Cannot assign to `{0}' because it is a `{1}'"
+msgstr "შეუძლებელია '{0}'-ზე მინიჭება რადგან ის '{1}'-ია"
+
+#: mcs/mcs/assembly.cs:286
+msgid "Invalid type specified as an argument for TypeForwardedTo attribute"
+msgstr "TypeForwardTo ატრიბუტისთვის მითითებული არგუმენტის ტიპი არასწორია"
+
+#: mcs/mcs/assembly.cs:294
+#, csharp-format
+msgid "A duplicate type forward of type `{0}'"
+msgstr "გამეორებული ტიპის გადაგზავნა ტიპისთვის '{0}'"
+
+#: mcs/mcs/assembly.cs:303
+#, csharp-format
+msgid "Cannot forward type `{0}' because it is defined in this assembly"
+msgstr "ტიპის '{0}' გადაგზავნა შეუძლებელია, რადგან ის აღწერილია ამ ანაწყობში"
+
+#: mcs/mcs/assembly.cs:309
+#, csharp-format
+msgid "Cannot forward type `{0}' because it is a nested type"
+msgstr "ტიპის '{0}' გადაგზავნა შეუძლებელია, რადგან ის ერთმანეთშია ჩალაგებული"
+
+#: mcs/mcs/assembly.cs:338
+#, csharp-format
+msgid ""
+"Friend assembly reference `{0}' is invalid. InternalsVisibleTo declarations "
+"cannot have a version, culture or processor architecture specified"
+msgstr ""
+"მეგობარი ანაწყობის მიმართვა '{0}' არასწორია. აღწერებს InternalsVisibleTo "
+"ვერსია, კულტურა ან პროცესორის არქიტექტურა მითითებული ვერ ექნება"
+
+#: mcs/mcs/assembly.cs:346
+#, csharp-format
+msgid ""
+"Friend assembly reference `{0}' is invalid. Strong named assemblies must "
+"specify a public key in their InternalsVisibleTo declarations"
+msgstr ""
+"მეგობარი ანაწყობის მიმართვა '{0}' არასწორია. ძლიერი სახელიანი ანაწყობები "
+"თავიანთ InternalsVisitbleTo აღწერებში საჯარო გასაღებებს უნდა უთითებდნენ"
+
+#: mcs/mcs/assembly.cs:392
+#, csharp-format
+msgid "Referenced assembly `{0}' does not have a strong name"
+msgstr "მიმართულ ანაწყობს '{0}' ძლიერი სახელი არ გააჩნია"
+
+#: mcs/mcs/assembly.cs:398
+#, csharp-format
+msgid "Referenced assembly `{0}' has different culture setting of `{1}'"
+msgstr "მიმართულ ანაწყობს '{0}' აქვს '{1}'-ის განსხვავებული კულტურის პარამეტრი"
+
+#: mcs/mcs/assembly.cs:413
+#, csharp-format
+msgid ""
+"Friend access was granted to `{0}', but the output assembly is named `{1}'. "
+"Try adding a reference to `{0}' or change the output assembly name to match "
+"it"
+msgstr ""
+"მეგობრის წვდომა მინიჭებულია '{0}'-სთვის, მაგრამ გამოტანილი ანაწყობის სახელია "
+"'{1}'. სცადეთ, '{0}'-ზე მიმართვა დაამატოთ, ან შეცვალეთ გამოტანილი ანაწყობის "
+"სახელი, რომ მას დაემთხვეს"
+
+#: mcs/mcs/assembly.cs:427
+msgid ""
+"Could not sign the assembly. ECMA key can only be used to delay-sign "
+"assemblies"
+msgstr ""
+"ანაწყობის ხელმოწერა შეუძლებელია. ECMA გასაღებს ანაწყობებისთვის, მხოლოდ, "
+"დაყოვნებული ხელმოწერისთვის თუ გამოიყენებთ"
+
+#: mcs/mcs/assembly.cs:681
+msgid ""
+"Added modules must be marked with the CLSCompliant attribute to match the "
+"assembly"
+msgstr ""
+"დამატებითი მოდულები CLSCompliant ატრიბუტით უნდა იყო დანიშნული, რომ ანაწყობს "
+"ემთხვეოდეს"
+
+#: mcs/mcs/assembly.cs:716 mcs/mcs/assembly.cs:731
+#, csharp-format
+msgid ""
+"Option `{0}' overrides attribute `{1}' given in a source file or added module"
+msgstr ""
+"პარამეტრი '{0}' გადაფარავს ატრიბუტს '{1}' მითითებულ კოდის ფაილში ან "
+"დამატებულ მოდულში"
+
+#: mcs/mcs/assembly.cs:766
+msgid "Delay signing was requested but no key file was given"
+msgstr ""
+"მოთხოვნილია დაყოვნებული ხელმოწერა, მაგრამ გასაღებს ფაილი მითითებული არაა"
+
+#: mcs/mcs/assembly.cs:787
+msgid "Cannot link resource file when building a module"
+msgstr "რესურსების ფაილის მიბმა შეუძლებელია მოდულის აგებისას"
+
+#: mcs/mcs/assembly.cs:792
+#, csharp-format
+msgid "Error reading resource file `{0}'"
+msgstr "წაკითხვის შეცდომა რესურსის ფაილისთვის '{0}'"
+
+#: mcs/mcs/assembly.cs:862
+msgid "Could not write to file `"
+msgstr "ფაილში ჩაწერის შეცდომა"
+
+#: mcs/mcs/assembly.cs:906
+msgid "Cannot specify -main if building a module or library"
+msgstr "მოდულის ან ბიბლიოთეკის აგებისას -main-ს ვერ მიუთითებთ"
+
+#: mcs/mcs/assembly.cs:932
+#, csharp-format
+msgid "Could not find `{0}' specified for Main method"
+msgstr "მეთოდისთვის Main მითითებული '{0}' ვიპოვე"
+
+#: mcs/mcs/assembly.cs:938
+#, csharp-format
+msgid "`{0}' specified for Main method must be a valid class or struct"
+msgstr "მითითებული`{0}' მეთოდისთვის Main სწორი კლასი ან სტრუქტურა უნდა იყოს"
+
+#: mcs/mcs/assembly.cs:942
+#, csharp-format
+msgid "`{0}' does not have a suitable static Main method"
+msgstr "`{0}'-ს შესაბამისი სტატიკური მეთოდი Main არ გააჩნია"
+
+#: mcs/mcs/assembly.cs:945
+#, csharp-format
+msgid ""
+"Program `{0}' does not contain a static `Main' method suitable for an entry "
+"point"
+msgstr ""
+"პროგრამა '{0}' სტატიკურ მეთოდს 'Main', გამოსადეგს გაშვებისთვის, არ შეიცავს"
+
+#: mcs/mcs/assembly.cs:964
+msgid "Error during assembly signing. "
+msgstr "შეცდომა ანაწყობზე ხელმოწერისას. "
+
+#: mcs/mcs/assembly.cs:1149
+#, csharp-format
+msgid "Metadata file `{0}' could not be found"
+msgstr "მეტამონაცემების ფაილი '{0}' ვერ ვიპოვე"
+
+#: mcs/mcs/assembly.cs:1154
+#, csharp-format
+msgid "Metadata file `{0}' does not contain valid metadata"
+msgstr "მეტამონაცემების ფაილი '{0}' სწორ მეტამონაცემებს არ შეიცავს"
+
+#: mcs/mcs/assembly.cs:1160
+#, csharp-format
+msgid ""
+"Referenced assembly file `{0}' is a module. Consider using `-addmodule' "
+"option to add the module"
+msgstr ""
+"მიმართვის ანაწყობის ფაილი '{0}' მოდულია. მოდულის დასამატებლად '-addmodule' "
+"პარამეტრი გამოიყენეთ"
+
+#: mcs/mcs/assembly.cs:1167
+#, csharp-format
+msgid ""
+"Added module file `{0}' is an assembly. Consider using `-r' option to "
+"reference the file"
+msgstr ""
+"დამატებული მოდულის ფაილი '{0}' ანაწყობია. მის მაგიერ '-r' პარამეტრი "
+"გამოიყენეთ მიმართვის ფაილზე"
+
+#: mcs/mcs/async.cs:78
+msgid "The `await' operator cannot be used in the body of a finally clause"
+msgstr "ოპერატორს 'await' საბოლოო პირობის სხეულში ვერ გამოიყენებთ"
+
+#: mcs/mcs/async.cs:83
+msgid "The `await' operator cannot be used in the body of a lock statement"
+msgstr "ოპერატორს 'await' დაბლოკვის გამოსახულების სხეულში ვერ გამოიყენებთ"
+
+#: mcs/mcs/async.cs:88
+msgid "The `await' operator cannot be used in an unsafe context"
+msgstr "ოპერატორს 'await' სახიფათო კონტექსტში ვერ გამოიყენებთ"
+
+#: mcs/mcs/async.cs:164
+#, csharp-format
+msgid ""
+"Cannot await void method `{0}'. Consider changing method return type to "
+"`Task'"
+msgstr ""
+"ყრუ მეთოდს '{0}' ვერ დაველოდები. სჯობს მეთოდის დაბრუნების ტიპი 'Task'-ზე "
+"შეცვალოთ"
+
+#: mcs/mcs/async.cs:167
+#, csharp-format
+msgid "Cannot await `{0}' expression"
+msgstr "გამოსახულებას '{0}' ვერ დაველოდები"
+
+#: mcs/mcs/async.cs:315
+#, csharp-format
+msgid ""
+"The awaiter type `{0}' must have suitable IsCompleted and GetResult members"
+msgstr ""
+"მომლოდინე ტიპს '{0} შესაბამისი IsCompleted და GetResult წევრები უნდა ჰქონდეს"
+
+#: mcs/mcs/async.cs:323
+msgid ""
+"The `await' operator may only be used in a query expression within the first "
+"collection expression of the initial `from' clause or within the collection "
+"expression of a `join' clause"
+msgstr ""
+"ოპერატორის 'await' გამოყენება, მხოლოდ, საწყისი 'from' პირობის პირველი "
+"კოლექციის გამოსახულებაში არსებულ მოთხოვნის გამოსახულებაში, ან 'join' პირობის "
+"კოლექციის გამოსახულებაში შეიძლება"
+
+#: mcs/mcs/async.cs:328
+msgid "The `await' operator cannot be used in a catch clause"
+msgstr "ოპერატორს 'await' პირობის დასაჭერად ვერ გამოიყენებთ"
+
+#: mcs/mcs/async.cs:360
+#, csharp-format
+msgid "The `await' operand type `{0}' must have suitable GetAwaiter method"
+msgstr "'await' ოპერანდის ტიპს '{0}' შესაბამისი GetAwaiter მეთოდი უნდა ჰქონდეს"
+
+#: mcs/mcs/async.cs:376
+#, csharp-format
+msgid "The awaiter type `{0}' must implement interface `{1}'"
+msgstr "მომლოდინე ტიპს '{0}' უნდა ჰქონდეს ინტერფეისი '{1}'"
+
+#: mcs/mcs/async.cs:658
+msgid ""
+"Cannot find compiler required types for asynchronous functions support. Are "
+"you targeting the wrong framework version?"
+msgstr ""
+"ასინქრონული ფუნქციების მხარდაჭერისთვის აუცილებელი კომპილატორის ტიპები "
+"აღმოჩენილი არაა. დარწმუნებული ბრძანდებით, რომ მითითებული პროგრამების გარემოს "
+"ვერსია სწორია?"
+
+#: mcs/mcs/attribute.cs:228
+#, csharp-format
+msgid ""
+"`{0}' is not a valid named attribute argument. Named attribute arguments "
+"must be fields which are not readonly, static, const or read-write "
+"properties which are public and not static"
+msgstr ""
+"'{0}' არასწორი სახელიანი ატრიბუტის არგუმენტია. სახელიანი ატრიბუტის "
+"არგუმენტები უნდა იყოს ველები, რომლებიც არაა readonly, static, const ან read-"
+"write თვისებები, რომლებიც საჯადო და არასტატიკურია"
+
+#: mcs/mcs/attribute.cs:237
+#, csharp-format
+msgid ""
+"`{0}' is not a valid named attribute argument because it is not a valid "
+"attribute parameter type"
+msgstr ""
+"'{0}' არასწორი სახელიანი ატრიბუტის არგუმენტია, რადგან ის სწორი ატრიბუტის "
+"პარამეტრის ტიპი არაა"
+
+#: mcs/mcs/attribute.cs:243
+msgid "An attribute argument cannot be dynamic expression"
+msgstr "ატრიბუტის არგუმენტი დინამიკური გამოსახულება ვერ იქნება"
+
+#: mcs/mcs/attribute.cs:248
+msgid "The Guid attribute must be specified with the ComImport attribute"
+msgstr "CommImport ატრიბუტთან ერთად Guid ატრიბუტი უნდა მიუთითოთ"
+
+#: mcs/mcs/attribute.cs:253
+#, csharp-format
+msgid "Do not use `{0}' directly. Use parameter modifier `this' instead"
+msgstr ""
+"'{0}'-ს პირდაპირ ნუ გამოიყენებთ. ამისთვის გამოიყენეთ პარამეტრის მოდიფიკატორი "
+"'this'"
+
+#: mcs/mcs/attribute.cs:258
+#, csharp-format
+msgid "Do not use `{0}' directly. Use `dynamic' keyword instead"
+msgstr ""
+"'{0}'-ს პირდაპირ ნუ გამოიყენებთ. ამისთვის გამოიყენეთ საკვანძო სიტყვა "
+"'dynamic'"
+
+#: mcs/mcs/attribute.cs:267
+#, csharp-format
+msgid "Error during emitting `{0}' attribute. The reason is `{1}'"
+msgstr "'{0}' ატრიბუტის გამოცემის შეცდომა. მიზეზია: '{1}'"
+
+#: mcs/mcs/attribute.cs:327
+#, csharp-format
+msgid ""
+"`{0}' is ambiguous between `{1}' and `{2}'. Use either `@{0}' or `{0}"
+"Attribute'"
+msgstr ""
+"'{0} გაურკვეველია '{1}-სა და '{2}-ს შორის. გამოიყენეთ ან '@{0}', ან '{0}"
+"Attribute'"
+
+#: mcs/mcs/attribute.cs:353 mcs/mcs/attribute.cs:364
+#, csharp-format
+msgid "`{0}': is not an attribute class"
+msgstr "`{0}': ატრიბუტის კლასი არაა"
+
+#: mcs/mcs/attribute.cs:473
+#, csharp-format
+msgid "Cannot apply attribute class `{0}' because it is abstract"
+msgstr "ატრიბუტის კლასს '{0}' ვერ გადაატარებთ, რადგან ის აბსტრაქტულია"
+
+#: mcs/mcs/attribute.cs:544
+#, csharp-format
+msgid "Duplicate named attribute `{0}' argument"
+msgstr "გამეორებული სახელიანი ატრიბუტის '{0}' არგუმენტი"
+
+#: mcs/mcs/attribute.cs:1003
+#, csharp-format
+msgid ""
+"The attribute `{0}' is not valid on this declaration type. It is valid on "
+"`{1}' declarations only"
+msgstr ""
+"ატრიბუტი '{0}' არასწორია ამ აღწერის ტიპზე. ის, მხოლოდ, '{1}' გამოცხადებებზეა "
+"სწორი"
+
+#: mcs/mcs/attribute.cs:1025
+#, csharp-format
+msgid "The argument to the `{0}' attribute must be a valid identifier"
+msgstr "ატრიბუტის '{0}' არგუმენტი სწორი იდენტიფიკატორი უნდა იყოს"
+
+#: mcs/mcs/attribute.cs:1039
+#, csharp-format
+msgid "Invalid value for argument to `{0}' attribute"
+msgstr "არასწორი მნიშვნელობა არგუმენტისთვის '{0}' ატრიბუტში"
+
+#: mcs/mcs/attribute.cs:1307
+#, csharp-format
+msgid "The attribute `{0}' cannot be applied multiple times"
+msgstr "ატრიბუტს '{0}' ერთზე მეტჯერ ვერ გადაატარებთ"
+
+#: mcs/mcs/attribute.cs:1613
+#, csharp-format
+msgid "`{0}' is obsolete: `{1}'"
+msgstr "`{0}' მოძველებულია: `{1}'"
+
+#: mcs/mcs/cs-tokenizer.cs:811
+msgid ""
+"The `partial' modifier can be used only immediately before `class', "
+"`struct', `interface', or `void' keyword"
+msgstr ""
+"მოდიფიკატორი 'partial', შეიძლება, მხოლოდ, პირდაპირ 'class', 'struct', "
+"'interface' ან 'void' საკვანძო სიტყვებამდე გამოიყენოთ"
+
+#: mcs/mcs/cs-tokenizer.cs:1515 mcs/mcs/cs-tokenizer.cs:1578
+msgid "Invalid number"
+msgstr "არასწორი ნომერი"
+
+#: mcs/mcs/cs-tokenizer.cs:1793
+#, csharp-format
+msgid "Unrecognized escape sequence `\\{0}'"
+msgstr "უცნობი სპეციალური სიმბოლო `\\{0}'"
+
+#: mcs/mcs/cs-tokenizer.cs:1812
+msgid "Unrecognized escape sequence"
+msgstr "უცნობი სპეციალური სიმბოლო"
+
+#: mcs/mcs/cs-tokenizer.cs:2077
+msgid "Filename, single-line comment or end-of-line expected"
+msgstr "მოველოდი ფაილის სახელს, ერთხაზიან კომენტარს ან ხაზის ბოლოს"
+
+#: mcs/mcs/cs-tokenizer.cs:2125
+msgid "Missing identifier to pre-processor directive"
+msgstr "პრეპროცესორის დირექტივას იდენტიფიკატორი აკლია"
+
+#: mcs/mcs/cs-tokenizer.cs:2135 mcs/mcs/cs-tokenizer.cs:2139
+#, csharp-format
+msgid "Identifier expected: {0}"
+msgstr "მოელოდი იდენტიფიკატორს: {0}"
+
+#: mcs/mcs/cs-tokenizer.cs:2647
+msgid "Integral constant is too large"
+msgstr "ინტეგრალური მუდმივა მეტისმეტად დიდია"
+
+#: mcs/mcs/cs-tokenizer.cs:2652
+msgid "Invalid preprocessor directive"
+msgstr "არასწორი პრეპროცესორის დირექტივა"
+
+#: mcs/mcs/cs-tokenizer.cs:2659
+#, csharp-format
+msgid "Unexpected processor directive ({0})"
+msgstr "მოულოდნელი პროცესორის დირექტივა ({0})"
+
+#: mcs/mcs/cs-tokenizer.cs:2665
+msgid ""
+"Cannot define or undefine preprocessor symbols after first token in file"
+msgstr ""
+"პრეპროცესორის სიმბოლოების აღწერა ან აღწერის გაუქმება შეუძლებელია ფაილში "
+"პირველი ტოკენის შემდეგ"
+
+#: mcs/mcs/cs-tokenizer.cs:2671
+msgid ""
+"Preprocessor directives must appear as the first non-whitespace character on "
+"a line"
+msgstr "პრეპროცესორის დირექტივები ხაზის პირველი არა-ჰარე სიმბოლო უნდა იყოს"
+
+#: mcs/mcs/cs-tokenizer.cs:2676
+msgid "Single-line comment or end-of-line expected"
+msgstr "მოველოდი ერთხაზიან კომენტარს ან ხაზის ბოლოს"
+
+#: mcs/mcs/cs-tokenizer.cs:2721 mcs/mcs/cs-tokenizer.cs:3760
+msgid "Expected `#endif' directive"
+msgstr "მოველოდი '#endif' დირექტივას"
+
+#: mcs/mcs/cs-tokenizer.cs:2754 mcs/mcs/cs-tokenizer.cs:2775
+#: mcs/mcs/cs-tokenizer.cs:2806 mcs/mcs/cs-tokenizer.cs:3758
+msgid "#endregion directive expected"
+msgstr "მოველოდი #endregion დირექტივას"
+
+#: mcs/mcs/cs-tokenizer.cs:2855
+msgid "Wrong preprocessor directive"
+msgstr "არასწორი პრეპროცესორის დირექტივა"
+
+#: mcs/mcs/cs-tokenizer.cs:2867
+#, csharp-format
+msgid "#error: '{0}'"
+msgstr "#შეცდომა: '{0}'"
+
+#: mcs/mcs/cs-tokenizer.cs:2885
+msgid "The line number specified for #line directive is missing or invalid"
+msgstr ""
+"ხაზის ნომერი, რომელიც მითითებულია დირექტივაში #line, არ არსებობს ან არასწორია"
+
+#: mcs/mcs/cs-tokenizer.cs:2947 mcs/mcs/cs-tokenizer.cs:3599
+msgid "Newline in constant"
+msgstr "ახალი ხაზი მუდმივაში"
+
+#: mcs/mcs/cs-tokenizer.cs:2974
+msgid "Unterminated string literal"
+msgstr "გაწყვეტილი ბიტური სტრიქონი"
+
+#: mcs/mcs/cs-tokenizer.cs:3051
+msgid "Identifier too long (limit is 512 chars)"
+msgstr "იდენტიფიკატორი მეტისმეტად გრძელია (მაქს 512 სიმბოლო)"
+
+#: mcs/mcs/cs-tokenizer.cs:3437
+msgid "End-of-file found, '*/' expected"
+msgstr "მოველოდი ფაილის ბოლოს. მოველოდი - '*/'-ს"
+
+#: mcs/mcs/cs-tokenizer.cs:3548
+msgid "Keyword, identifier, or string expected after verbatim specifier: @"
+msgstr ""
+"მოველოდი საკვანძო სიტყვას, იდენტიფიკატორს ან სტრიქონს ზუსტი ასლის "
+"მიმთითებლის შემდეგ: @"
+
+#: mcs/mcs/cs-tokenizer.cs:3569
+#, csharp-format
+msgid "Unexpected character `{0}'"
+msgstr "მოულოდნელი სიმბოლო '{0}'"
+
+#: mcs/mcs/cs-tokenizer.cs:3594
+msgid "Empty character literal"
+msgstr "ცარიელი სიმბოლური მუდმივა"
+
+#: mcs/mcs/cs-tokenizer.cs:3615
+msgid "Too many characters in character literal"
+msgstr "მეტისმეტად ბევრი სიმბოლო იმბოლოს ასოითში"
+
+#: mcs/mcs/cfold.cs:73
+msgid "The operation overflows at compile time in checked mode"
+msgstr "ოპერაციის გადავსება კომპილაციისას შემოწმებულ რეჟიმში"
+
+#: mcs/mcs/cfold.cs:329 mcs/mcs/expression.cs:4145
+#, csharp-format
+msgid "Operator `{0}' is ambiguous on operands of type `{1}' and `{2}'"
+msgstr "ოპერატორი '{0}' ბუნდოვანია ოპერანდებზე ტიპებით '{1}' და '{2}'"
+
+#: mcs/mcs/cfold.cs:782 mcs/mcs/cfold.cs:868
+msgid "Division by constant zero"
+msgstr "მუდმივას გაყოფა ნულზე"
+
+#: mcs/mcs/class.cs:142
+#, csharp-format
+msgid ""
+"Partial declarations of `{0}' must be all classes, all structs or all "
+"interfaces"
+msgstr ""
+"'{0}' ის ნაწილობრივი აღწერები, ყველა ან კლასები უნდა იყოს, ან სტრუქტურები, "
+"ან ინტერფეისები"
+
+#: mcs/mcs/class.cs:151
+#, csharp-format
+msgid "Partial declarations of `{0}' have conflicting accessibility modifiers"
+msgstr ""
+"'{0}'-ის ნაწილობრივ აღწერას უერთიერთგამომრიცხავი წვდომადობის მოდიფიკატორების "
+"გააჩნია"
+
+#: mcs/mcs/class.cs:161
+#, csharp-format
+msgid ""
+"Partial declarations of `{0}' must have the same type parameter names in the "
+"same order"
+msgstr ""
+"'{0}'-ის ნაწილობრივ აღწერას იგივე ტიპის პარამეტრის სახელები უნდა ჰქონდეს, "
+"იგივე მიმდევრობით"
+
+#: mcs/mcs/class.cs:168
+#, csharp-format
+msgid ""
+"Partial declarations of `{0}' must have the same type parameter variance "
+"modifiers"
+msgstr ""
+"'{0}'-ის ნაწილობრივ აღწერას იგივე ტიპის პარამეტრის ვარიაციის მოდიფიკატორების "
+"უნდა ჰქონდეს"
+
+#: mcs/mcs/class.cs:346
+#, csharp-format
+msgid ""
+"Missing partial modifier on declaration of type `{0}'. Another partial "
+"declaration of this type exists"
+msgstr ""
+"ტიპს '{0}' აღწერისას ნაწილობრივი მოდიფიკატორი აკლია. არსებობს ამ ტიპის სხვა "
+"ნაწილობრივი აღწერა"
+
+#: mcs/mcs/class.cs:759
+#, csharp-format
+msgid ""
+"`{0}': explicit interface declaration can only be declared in a class or "
+"struct"
+msgstr ""
+"`{0}': აშკარა ინტერფეისის გამოცხადება, მხოლოდ, კლასში ან სტრუქტურაშია "
+"შესაძლებელი"
+
+#: mcs/mcs/class.cs:814
+#, csharp-format
+msgid "Duplicate type parameter `{0}'"
+msgstr "გამეორებული ტიპის პარამეტრი '{0}'"
+
+#: mcs/mcs/class.cs:816
+#, csharp-format
+msgid ""
+"Primary constructor of type `{0}' has parameter of same name as type "
+"parameter `{1}'"
+msgstr ""
+"ტიპის '{0}' ძირითად კონსტრუქტორს აქვს იგივე სახელი, რაც ტიპის პარამეტრს '{1}'"
+
+#: mcs/mcs/class.cs:820
+#, csharp-format
+msgid "The type `{0}' already contains a definition for `{1}'"
+msgstr "ტიპი '{0}' უკვე შეიცავს აღწერას '{1}'-სთვის"
+
+#: mcs/mcs/class.cs:897
+msgid ""
+"Cannot specify the `DefaultMember' attribute on type containing an indexer"
+msgstr ""
+"ტიპზე, რომელიც ინდექსერს შეიცავს, ატრიბუტს 'DefaultMember' ვერ მიუთითებთ"
+
+#: mcs/mcs/class.cs:902
+msgid "The RequiredAttribute attribute is not permitted on C# types"
+msgstr "ატრიბუტი RequiredAttribute დაუშვებელია C#-ის ტიპებზე"
+
+#: mcs/mcs/class.cs:1142
+#, csharp-format
+msgid "Class `{0}' cannot derive from the dynamic type"
+msgstr "კლასი `{0}' დინამიკურ ტიპიდან მიღებული ვერ იქნება"
+
+#: mcs/mcs/class.cs:1159
+#, csharp-format
+msgid "`{0}' is already listed in interface list"
+msgstr "`{0}' უკვე არსებობს ინტერფეისების სიაში"
+
+#: mcs/mcs/class.cs:1167
+#, csharp-format
+msgid ""
+"Inconsistent accessibility: base interface `{0}' is less accessible than "
+"interface `{1}'"
+msgstr ""
+"არამდგრადი წვდომადობა: საბაზისო ინტერფეისი '{0}' ნაკლებად წვდომადია, ვიდრე "
+"ინტერფეისი '{1}'"
+
+#: mcs/mcs/class.cs:1173
+#, csharp-format
+msgid "Type `{0}' in interface list is not an interface"
+msgstr "ტიპი `{0}' ინტერფეისების სიაში ინტერფეისი არაა"
+
+#: mcs/mcs/class.cs:1175
+#, csharp-format
+msgid "`{0}': Classes cannot have multiple base classes (`{1}' and `{2}')"
+msgstr "`{0}': კლასებს ერთზე მეტი საბაზისო კლასი ვერ ექნება (`{1}' და `{2}')"
+
+#: mcs/mcs/class.cs:1178
+#, csharp-format
+msgid "`{0}': Base class `{1}' must be specified as first"
+msgstr "`{0}': საბაზისო კლასი `{1}' პირველი უნდა იყოს მითითებული"
+
+#: mcs/mcs/class.cs:1239
+#, csharp-format
+msgid ""
+"The operator `{0}' requires a matching operator `{1}' to also be defined"
+msgstr "ოპერატორს '{0}' დამთხვეული ოპერატორის '{1}' აღწერაც სჭირდება"
+
+#: mcs/mcs/class.cs:1494
+#, csharp-format
+msgid "Partial declarations of `{0}' must not specify different base classes"
+msgstr "'{0}'-ის ნაწილობრივი აღწერა არ უნდა მიუთითებდეს სხვა საბაზისო კლასებზე"
+
+#: mcs/mcs/class.cs:1529
+msgid ""
+"Only one part of a partial type can declare primary constructor parameters"
+msgstr ""
+"ძირითადი კონსტრუქტორი პარამეტრების აღწერა ნაწილობრივი ტიპის, მხოლოდ, ერთ "
+"ნაწილს შეუძლია"
+
+#: mcs/mcs/class.cs:1546
+#, csharp-format
+msgid ""
+"Inherited interface `{0}' causes a cycle in the interface hierarchy of `{1}'"
+msgstr ""
+"მემკვიდრეობით მიღებული ინტერფეისი '{0}' იწვევს ჩაციკვლას '{1}'-ის "
+"ინტერფეისის იერარქიაში"
+
+#: mcs/mcs/class.cs:1553
+#, csharp-format
+msgid "Circular base class dependency involving `{0}' and `{1}'"
+msgstr ""
+"წრიული საბაზისო კლასის დამოკიდებულება, რომელიც '{0}'-სა და '{1}'-ს ეხება"
+
+#: mcs/mcs/class.cs:1865
+#, csharp-format
+msgid "`{0}': cannot implement a dynamic interface `{1}'"
+msgstr "`{0}': ვერ განვახორციელე დინამიკური ინტერფეისი `{1}'"
+
+#: mcs/mcs/class.cs:1880
+#, csharp-format
+msgid ""
+"`{0}' cannot implement both `{1}' and `{2}' because they may unify for some "
+"type parameter substitutions"
+msgstr ""
+"`{0}' ორივეს, `{1}' და `{2}' განხორცელება შეუძლებელია, რადგან ისინი, "
+"შეიძლება გაერთოანდნენ რომელიმე ტიპის პარამეტრის ჩასანაცვლებლად"
+
+#: mcs/mcs/class.cs:1904
+#, csharp-format
+msgid ""
+"A generic type cannot derive from `{0}' because it is an attribute class"
+msgstr "ზოგად ტიპს ვერ მიიღებთ '{0}'-დან, რადგან ის ატრიბუტის კლასია"
+
+#: mcs/mcs/class.cs:2008
+msgid ""
+"Two indexers have different names; the IndexerName attribute must be used "
+"with the same name on every indexer within a type"
+msgstr ""
+"ორ ინდექსერს სხვადასხვა სახელები აქვთ. ტიპის შიგნით ატრიბუტი IndexerName "
+"იგივე სახელით უნდა გამოიყენოთ"
+
+#: mcs/mcs/class.cs:2263
+#, csharp-format
+msgid "A static member `{0}' cannot be marked as override, virtual or abstract"
+msgstr ""
+"სტატიკური წევრი '{0}' ვერ იქნება მონიშნული როგორც override, virtual ან "
+"abstract"
+
+#: mcs/mcs/class.cs:2270
+#, csharp-format
+msgid "A member `{0}' marked as override cannot be marked as new or virtual"
+msgstr ""
+"წევრი '{0}', მონიშნული, როგორც override, ვერ იქნება მონიშნული როგორც new ან "
+"virtual"
+
+#: mcs/mcs/class.cs:2282
+#, csharp-format
+msgid "`{0}' cannot be both extern and abstract"
+msgstr "`{0}' ორივე, extern და abstract ვერ იქნება"
+
+#: mcs/mcs/class.cs:2287
+#, csharp-format
+msgid "`{0}' cannot be both abstract and sealed"
+msgstr "`{0}' ორივე abstract და sealed ვერ იქნება"
+
+#: mcs/mcs/class.cs:2292
+#, csharp-format
+msgid "The abstract method `{0}' cannot be marked virtual"
+msgstr "აბსტრაქტულ მეთოდს '{0}' ვირტუალურად ვერ დანიშნავთ"
+
+#: mcs/mcs/class.cs:2298
+#, csharp-format
+msgid "`{0}' is abstract but it is declared in the non-abstract class `{1}'"
+msgstr "'{0}' აბსტრაქტულია, მაგრამ აღწერილია არააბსტრაქტულ კლასში '{1}'"
+
+#: mcs/mcs/class.cs:2306
+#, csharp-format
+msgid "`{0}': virtual or abstract members cannot be private"
+msgstr "`{0}': ვირტუალური ან აბსტრაქტული წევრები პირადი ვერ იქნება"
+
+#: mcs/mcs/class.cs:2313
+#, csharp-format
+msgid "`{0}' cannot be sealed because it is not an override"
+msgstr "`{0}' დაბეჭდილი ვერ იქნება, რადგან ის გადაფარვა არაა"
+
+#: mcs/mcs/class.cs:2362
+#, csharp-format
+msgid "`{0}': containing type does not implement interface `{1}'"
+msgstr "`{0}': შემცველი ტიპი არ ახორციელებს ინტერფეისს `{1}'"
+
+#: mcs/mcs/class.cs:2559
+#, csharp-format
+msgid "Type parameter `{0}' has same name as containing type, or method"
+msgstr ""
+"ტიპის პარამეტრს '{0}' გააჩნია იგივე სახელი, რაც შემცველ ტიპს, ან მეთოდს"
+
+#: mcs/mcs/class.cs:2565
+#, csharp-format
+msgid ""
+"Primary constructor of type `{0}' has parameter of same name as containing "
+"type"
+msgstr ""
+"ტიპის '{0}' ძირითად კონსტრუქტორს აქვს იგივე სახელი, რაც ტიპს, რომელსაც ის "
+"შეიცავს"
+
+#: mcs/mcs/class.cs:2573
+#, csharp-format
+msgid "`{0}': member names cannot be the same as their enclosing type"
+msgstr ""
+"`{0}': წევრის სახელები ვერ იქნება იგივე, რაც ტიპი, რომელშიც ისინია ჩასმული"
+
+#: mcs/mcs/class.cs:2709
+msgid ""
+"The class System.Object cannot have a base class or implement an interface."
+msgstr ""
+"კლასს System.Object საბაზისო კლასი ვერ ექნება და ინტერფეისს ვერ "
+"განახორციელებს."
+
+#: mcs/mcs/class.cs:2718
+#, csharp-format
+msgid "Attribute `{0}' is only valid on classes derived from System.Attribute"
+msgstr "ატრიბუტი '{0}', მხოლოდ, System.Attribute-დან მიღებულ კლასებზეა სწორი"
+
+#: mcs/mcs/class.cs:2723
+msgid ""
+"Attribute `System.Diagnostics.ConditionalAttribute' is only valid on methods "
+"or attribute classes"
+msgstr ""
+"ატრიბუტი `System.Diagnostics.ConditionalAttribute', მხოლოდ, მეთოდებზე ან "
+"ატრიბუტის კლასებზეა სწორი"
+
+#: mcs/mcs/class.cs:2752
+#, csharp-format
+msgid "`{0}': an abstract class cannot be sealed or static"
+msgstr "`{0}': აბსტრაქტული კლასი ბეჭდის მქონე ან სტატიკური ვერ იქნება"
+
+#: mcs/mcs/class.cs:2756
+#, csharp-format
+msgid "`{0}': a class cannot be both static and sealed"
+msgstr "`{0}': კლასი ორივე, სტატიკური და ბეჭდის მქონე ვერ იქნება"
+
+#: mcs/mcs/class.cs:2761
+#, csharp-format
+msgid "`{0}': Static classes cannot have primary constructor"
+msgstr "`{0}': სტატიკურ კლასებს ძირითადი კონსტრუქტორი ვერ ექნება"
+
+#: mcs/mcs/class.cs:2767
+#, csharp-format
+msgid "`{0}': Static classes cannot contain user-defined operators"
+msgstr ""
+"`{0}': სტატიკურ კლასები არ შეიძლება, მომხმარებლის მიერ აღწერილ ოპერატორებს "
+"შეიცავნენ"
+
+#: mcs/mcs/class.cs:2772
+#, csharp-format
+msgid "`{0}': Static classes cannot contain destructor"
+msgstr "`{0}': სტატიკურ კლასები არ შეიძლება, დესტრუქტორს სეიცავდეს"
+
+#: mcs/mcs/class.cs:2777
+#, csharp-format
+msgid "`{0}': cannot declare indexers in a static class"
+msgstr "`{0}': სტატიკურ კლასში ინდექსერებს ვერ აღწერთ"
+
+#: mcs/mcs/class.cs:2785
+#, csharp-format
+msgid "`{0}': Static classes cannot have instance constructors"
+msgstr ""
+"`{0}': სტატიკურ კლასებს არ შეიძლება, გაშვებული ასლის კონსტრუქტორები ჰქონდეს"
+
+#: mcs/mcs/class.cs:2789
+#, csharp-format
+msgid "`{0}': cannot declare instance members in a static class"
+msgstr "`{0}': გაშვებულ ასლის წევრებს სტატიკურ კლასში ვერ აღწერთ"
+
+#: mcs/mcs/class.cs:2831
+#, csharp-format
+msgid "`{0}': Cannot derive from type parameter `{1}'"
+msgstr "`{0}': ვერ მივიღე ტიპის პარამეტრიდან `{1}'"
+
+#: mcs/mcs/class.cs:2835
+#, csharp-format
+msgid "`{0}': Cannot derive from static class `{1}'"
+msgstr "`{0}': ვერ მივიღე სტატიკური კლასიდან `{1}'"
+
+#: mcs/mcs/class.cs:2839
+#, csharp-format
+msgid "`{0}': cannot derive from sealed type `{1}'"
+msgstr "`{0}': ვერ მივიღე ბეჭდის მქონე ტიპიდან `{1}'"
+
+#: mcs/mcs/class.cs:2842
+#, csharp-format
+msgid ""
+"Static class `{0}' cannot derive from type `{1}'. Static classes must derive "
+"from object"
+msgstr ""
+"სტატიკურ კლასს '{0}' ტიპიდან '{1}' ვერ მიიღებთ. სტატიკური კლასები ობიექტიდან "
+"უნდა მიიღოთ"
+
+#: mcs/mcs/class.cs:2853
+#, csharp-format
+msgid "`{0}' cannot derive from special class `{1}'"
+msgstr "`{0}' ვერ მივიღე სპეციალური კლასიდან `{1}'"
+
+#: mcs/mcs/class.cs:2863
+#, csharp-format
+msgid ""
+"Inconsistent accessibility: base class `{0}' is less accessible than class "
+"`{1}'"
+msgstr ""
+"არამდგრადი წვდომადობა: საბაზისო კლასი '{0}' ნაკლებად წვდომადია, ვიდრე კლასი "
+"'{1}'"
+
+#: mcs/mcs/class.cs:2871
+#, csharp-format
+msgid "Static class `{0}' cannot implement interfaces"
+msgstr "სტატიკურ კლასს '{0}' ინტერფეისების განხორციელება არ შეუძლია"
+
+#: mcs/mcs/class.cs:2982 mcs/mcs/class.cs:2996
+#, csharp-format
+msgid "Struct member `{0}' of type `{1}' causes a cycle in the struct layout"
+msgstr ""
+"სტრუქტურის წევრი '{0}' ტიპით '{1}' სტრუქტურის განლაგებაში ციკლურობას იწვევს"
+
+#: mcs/mcs/class.cs:3086
+#, csharp-format
+msgid "`{0}': Structs cannot have instance field initializers"
+msgstr ""
+"`{0}': სტრუქტურებს არ შეიძლება, გაშვებული ასლის ველის ინიციალიზატორებს "
+"შეიცავდეს"
+
+#: mcs/mcs/class.cs:3274
+#, csharp-format
+msgid "Do not override `{0}'. Use destructor syntax instead"
+msgstr ""
+"არ გადაფარო '{0}'. სამაგიეროდ დესტრუქტორის სინტაქსის გამოყენება შეგიძლიათ"
+
+#: mcs/mcs/class.cs:3277
+#, csharp-format
+msgid "`{0}' is marked as an override but no suitable {1} found to override"
+msgstr ""
+"'{0}' გადაფარვადაა მონიშნული, მაგრამ შესაბამისი {1} გადასაფარად ვერ ვიპოვე"
+
+#: mcs/mcs/class.cs:3283
+#, csharp-format
+msgid "`{0}': cannot override because `{1}' is not an event"
+msgstr "`{0}': `{1}'-ის გადაფარვა შეუძლებელია, რადგან ის მოვლენა არაა"
+
+#: mcs/mcs/class.cs:3286
+#, csharp-format
+msgid "`{0}': cannot override because `{1}' is not a property"
+msgstr "`{0}': `{1}'-ის გადაფარვა შეუძლებელია, რადგან ის თვისება არაა"
+
+#: mcs/mcs/class.cs:3289
+#, csharp-format
+msgid "`{0}': cannot override because `{1}' is not a method"
+msgstr "`{0}': `{1}'-ის გადაფარვა შეუძლებელია, რადგან ის მეთოდი არაა"
+
+#: mcs/mcs/class.cs:3308
+#, csharp-format
+msgid ""
+"`{0}' cannot override inherited members `{1}' and `{2}' because they have "
+"the same signature when used in type `{3}'"
+msgstr ""
+"`{0}' ვერ გადაფარავთ მემკვიდრეობით წევრებს `{1}' და `{2}', რადგან მათ იგივე "
+"ხელმოწერა აქვთ, როცა იყენებენ ტიპში `{3}'"
+
+#: mcs/mcs/class.cs:3361 mcs/mcs/field.cs:203
+#, csharp-format
+msgid "`{0}' hides inherited abstract member `{1}'"
+msgstr "`{0}' მალავს მემკვიდრეობით მიღებულ აბსტრაქტულ წევრს `{1}'"
+
+#: mcs/mcs/class.cs:3385
+#, csharp-format
+msgid ""
+"`{0}': cannot override inherited member `{1}' because it is not marked "
+"virtual, abstract or override"
+msgstr ""
+"`{0}': ვერ გადაფარავთ მემკვიდრეობით წევრს `{1}', რადგან ის დანიშნული არაა "
+"საკვანძო სიტყვებით virtual, abstract, ან override"
+
+#: mcs/mcs/class.cs:3393
+#, csharp-format
+msgid "`{0}': cannot override inherited member `{1}' because it is sealed"
+msgstr "`{0}': ვერ გადავფარავ მემკვიდრეობით წევრს `{1}', რადგან ს დაბეჭდილია"
+
+#: mcs/mcs/class.cs:3402
+#, csharp-format
+msgid "`{0}': type must be `{1}' to match overridden member `{2}'"
+msgstr "`{0}': ტიპი უნდა იყოს `{1}' რომ ემთხვეოდეს გადაფარულ წევრს `{2}'"
+
+#: mcs/mcs/class.cs:3405
+#, csharp-format
+msgid "`{0}': return type must be `{1}' to match overridden member `{2}'"
+msgstr ""
+"`{0}': დაბრუნების ტიპი უნდა იყოს `{1}' რომ ემთხვეოდეს გადაფარულ წევრს `{2}'"
+
+#: mcs/mcs/class.cs:3473
+#, csharp-format
+msgid "A partial method `{0}' cannot explicitly implement an interface"
+msgstr "ნაწილობრივ მეთოდს '{0}' აშკრად ინტერფეისის განხორციელება არ შეუძლია"
+
+#: mcs/mcs/class.cs:3479
+#, csharp-format
+msgid "The type `{0}' in explicit interface declaration is not an interface"
+msgstr "ტიპი '{0}' აშკარა ინტერფეისის აღწერაში ინტერფეისი არაა"
+
+#: mcs/mcs/class.cs:3514
+#, csharp-format
+msgid ""
+"Inconsistent accessibility: parameter type `{0}' is less accessible than "
+"indexer `{1}'"
+msgstr ""
+"არამდგრადი წვდომადობა: პარამეტრის ტიპი '{0}' ნაკლებად წვდომადია, ვიდრე "
+"ინდექსერი '{1}'"
+
+#: mcs/mcs/class.cs:3518
+#, csharp-format
+msgid ""
+"Inconsistent accessibility: parameter type `{0}' is less accessible than "
+"operator `{1}'"
+msgstr ""
+"არამდგრადი წვდომადობა: პარამეტრის ტიპი '{0}' ნაკლებად წვდომადია, ვიდრე "
+"ოპერატორი '{1}'"
+
+#: mcs/mcs/class.cs:3522
+#, csharp-format
+msgid ""
+"Inconsistent accessibility: parameter type `{0}' is less accessible than "
+"method `{1}'"
+msgstr ""
+"არამდგრადი წვდომადობა: პარამეტრის ტიპი '{0}' ნაკლებად წვდომადია, ვიდრე "
+"მეთოდი '{1}'"
+
+#: mcs/mcs/class.cs:3582
+#, csharp-format
+msgid ""
+"`{0}': cannot change access modifiers when overriding `{1}' inherited member "
+"`{2}'"
+msgstr ""
+"`{0}': შეუძლებელია წვდომის მოდიფიკატორების შეცვლა, როცა გადაფარავთ `{1}', "
+"მემკვიდრეობით წევრს `{2}'"
+
+#: mcs/mcs/class.cs:3591
+#, csharp-format
+msgid "`{0}': static types cannot be used as return types"
+msgstr "`{0}': სტატიკურ ტიპებს დაბრუნები ტიპებში ვერ გამოიყენებთ"
+
+#: mcs/mcs/class.cs:3652
+#, csharp-format
+msgid ""
+"`{0}': Cannot specify constraints for overrides and explicit interface "
+"implementation methods"
+msgstr ""
+"`{0}': გადაფარვებს და აშკარა ინტერფეისის განხორციელების მეთოდებს შეზღუდვებს "
+"ვერ მიუთითებთ"
+
+#: mcs/mcs/class.cs:3716
+#, csharp-format
+msgid "New virtual member `{0}' is declared in a sealed class `{1}'"
+msgstr "ახალი ვირტუალური წევრი '{0}' აღწერილია დაბეჭდილ კლასში '{1}'"
+
+#: mcs/mcs/class.cs:3731
+msgid "Inconsistent accessibility: property type `"
+msgstr "არამდგრადი წვდომადობა: ნაკვეთის ტიპი"
+
+#: mcs/mcs/class.cs:3736
+msgid "Inconsistent accessibility: indexer return type `"
+msgstr "არამდგრადი წვდომადობა: ინდექსერის დაბრუნების ტიპი"
+
+#: mcs/mcs/class.cs:3742 mcs/mcs/class.cs:3747 mcs/mcs/delegate.cs:171
+msgid "Inconsistent accessibility: return type `"
+msgstr "არამდგრადი წვდომადობა: დაბრუნების ტიპი"
+
+#: mcs/mcs/class.cs:3752
+msgid "Inconsistent accessibility: field type `"
+msgstr "არამდგრადი წვდომადობა: ველის ტიპი"
+
+#: mcs/mcs/class.cs:3764
+#, csharp-format
+msgid ""
+"Parameters or local variables of type `{0}' cannot be declared in async "
+"methods or iterators"
+msgstr ""
+"მარამეტრებს ან ლოკალურ ცვლადებს ტიპით '{0}' ვერ გამოაცხადებთ ასინქრონულ "
+"მეთოდებში ან იტერატორებში"
+
+#: mcs/mcs/class.cs:3768
+#, csharp-format
+msgid ""
+"Local variables of type `{0}' cannot be used inside anonymous methods, "
+"lambda expressions or query expressions"
+msgstr ""
+"ლოკალურ ცვლადებს ტიპით '{0}' ვერ გამოიყენებთ ანონიმური მეთოდების, ლამბდა "
+"გამოსახულებების ან მოთხოვნის გამოსახულებების შიგნით"
+
+#: mcs/mcs/class.cs:3772
+#, csharp-format
+msgid "Field or property cannot be of type `{0}'"
+msgstr "ველს ან ნაკვეთს ვერ აღწერთ ტიპით '{0}'"
+
+#: mcs/mcs/const.cs:103
+#, csharp-format
+msgid "Type parameter `{0}' cannot be declared const"
+msgstr "ტიპის პარამეტრს '{0}' მუდმივად ვერ აღწერთ"
+
+#: mcs/mcs/const.cs:106
+#, csharp-format
+msgid "The type `{0}' cannot be declared const"
+msgstr "ტიპს '{0}' მუდმივად ვერ აღწერთ"
+
+#: mcs/mcs/const.cs:186
+#, csharp-format
+msgid ""
+"The evaluation of the constant value for `{0}' involves a circular definition"
+msgstr "კონსტანტის მნიშვნელობის შემოწმება '{0}'-სთვის წრიულ აღწერას შეიცავს"
+
+#: mcs/mcs/constant.cs:66 mcs/mcs/constant.cs:480
+#, csharp-format
+msgid "Constant value `{0}' cannot be converted to a `{1}'"
+msgstr "მუდმივ მნიშვნელობას '{0}' '{1}'-ში ვერ გადაიყვანეთ"
+
+#: mcs/mcs/constant.cs:343
+#, csharp-format
+msgid ""
+"Constant value `{0}' cannot be converted to a `{1}' (use `unchecked' syntax "
+"to override)"
+msgstr ""
+"მუდმივ მნიშვნელობას '{0}' '{1}'-ში ვერ გადაიყვანეთ (გადასაფარად გამოიყენეთ "
+"სინტაქსი 'unchecked')"
+
+#: mcs/mcs/convert.cs:1200
+#, csharp-format
+msgid ""
+"Ambiguous user defined operators `{0}' and `{1}' when converting from `{2}' "
+"to `{3}'"
+msgstr ""
+"ბუნდოვანი მომხმარებლის მიერ აღწერილი ოპერატორები `{0}' და `{1}' როცა `{2}'-"
+"დან `{3}'-ში გადაგყავთ"
+
+#: mcs/mcs/decl.cs:331
+#, csharp-format
+msgid "`{0}' cannot declare a body because it is marked extern"
+msgstr "'{0}' სხეულს ვერ აღწერს, რადგან მონიშნულია, როგორც extern"
+
+#: mcs/mcs/decl.cs:337
+#, csharp-format
+msgid "`{0}' cannot declare a body because it is marked abstract"
+msgstr "'{0}' სხეულს ვერ აღწერს, რადგან მონიშნულია, როგორც abstract"
+
+#: mcs/mcs/decl.cs:350
+#, csharp-format
+msgid ""
+"`{0}' must have a body because it is not marked abstract or extern. The "
+"property can be automatically implemented when you define both accessors"
+msgstr ""
+"'{0}'-ს სხეული უნდა ჰქონდეს, რადგან ის არაა დანიშნული საკვანძო სიტყვებით "
+"abstract ან extern. თვისება, შეიძლება, ავტომატურად განხორციელდეს, როცა ორივე "
+"აქსესორებს განსაზღვრავთ"
+
+#: mcs/mcs/decl.cs:356
+#, csharp-format
+msgid ""
+"`{0}' must have a body because it is not marked abstract, extern, or partial"
+msgstr ""
+"'{0}'-ს სხეული უნდა ჰქონდეს, რადგან ის არაა განსაზღვრული საკვანძო სიტყვებით "
+"abstract, extern ან partial"
+
+#: mcs/mcs/decl.cs:371
+#, csharp-format
+msgid "`{0}': Structs cannot contain protected members"
+msgstr "'{0}': სტრუქტურები არ შეიძლება, დაცულ წევრებს შეიცავდეს"
+
+#: mcs/mcs/decl.cs:377
+#, csharp-format
+msgid "`{0}': Static classes cannot contain protected members"
+msgstr "'{0}': სტატიკური კლასები, არ შეიძლება, დაცულ წევრებს შეიცავდეს"
+
+#: mcs/mcs/decl.cs:474
+msgid "Constraints are not allowed on non-generic declarations"
+msgstr "შეზღუდვები დაუშვებელია არა-ზოგადი აღწერებისთვის"
+
+#: mcs/mcs/decl.cs:481
+#, csharp-format
+msgid "`{0}': A constraint references nonexistent type parameter `{1}'"
+msgstr "`{0}': შეზღუდვა მიმართავს არარსებული ტიპის პარამეტრს `{1}'"
+
+#: mcs/mcs/delegate.cs:155
+#, csharp-format
+msgid ""
+"Inconsistent accessibility: parameter type `{0}' is less accessible than "
+"delegate `{1}'"
+msgstr ""
+"არამდგრადი წვდომადობა: პარამეტრის ტიპი '{0}' ნაკლებად წვდომადია, ვიდრე "
+"დელეგატი '{1}'"
+
+#: mcs/mcs/delegate.cs:517
+#, csharp-format
+msgid ""
+"Cannot create delegate from method `{0}' because it is a member of System."
+"Nullable<T> type"
+msgstr ""
+"ვერ შევქმენი დელეგატი მეთოდიდან '{0}', რადგან ის System.Nullable<T> ტიპის "
+"წევრია"
+
+#: mcs/mcs/delegate.cs:530
+#, csharp-format
+msgid ""
+"Extension method `{0}' of value type `{1}' cannot be used to create delegates"
+msgstr ""
+"გაფართოების მეთოდს '{0}' მნიშვნელობის ტიპისთვის '{1}' დელეგატების "
+"შესაქმნელად ვერ გამოიყენებთ"
+
+#: mcs/mcs/delegate.cs:548
+#, csharp-format
+msgid "Cannot create delegate from partial method declaration `{0}'"
+msgstr "ნაწილობრივი მეთოდის აღწერიდან '{0}' დელეგატს ვერ შექმნით"
+
+#: mcs/mcs/delegate.cs:551
+#, csharp-format
+msgid ""
+"Cannot create delegate with `{0}' because it has a Conditional attribute"
+msgstr "ვერ შევქმენი დელეგატი '{0}'-ით, რადგან მას აქვს ატრიბუტი Conditional"
+
+#: mcs/mcs/delegate.cs:599
+#, csharp-format
+msgid ""
+"A method or delegate `{0} {1}' parameters and return type must be same as "
+"delegate `{2} {3}' parameters and return type"
+msgstr ""
+"მეთოდის ან დელეგატის `{0} {1}' პარამეტრები და დაბრუნების ტიპი იგივე უნდა "
+"იყოს, რაც დელეგატის `{2} {3}' პარამეტრები და დაბრუნების ტიპი"
+
+#: mcs/mcs/delegate.cs:606
+#, csharp-format
+msgid ""
+"A method or delegate `{0}' parameters do not match delegate `{1}' parameters"
+msgstr ""
+"მეთოდის ან დელეგატის `{0}' პარამეტრები არ ემთხვევა დელეგატის `{1}' "
+"პარამეტრებს"
+
+#: mcs/mcs/delegate.cs:611
+#, csharp-format
+msgid ""
+"A method or delegate `{0} {1}' return type does not match delegate `{2} {3}' "
+"return type"
+msgstr ""
+"მეთოდის ან დელეგატის `{0} {1}' დაბრუნების ტიპი არ ემთხვევა დელეგატის `{2} "
+"{3}' დაბრუნების ტიპს"
+
+#: mcs/mcs/delegate.cs:787
+msgid "Method name expected"
+msgstr "მოველოდი მეთოდის სახელს"
+
+#: mcs/mcs/doc.cs:627
+#, csharp-format
+msgid "Error generating XML documentation file `{0}' (`{1}')"
+msgstr "გენერაციის შეცდომა XML დოკუმენტაციის ფაილისთვის `{0}' (`{1}')"
+
+#: mcs/mcs/driver.cs:52
+msgid "Source file `"
+msgstr "წყარო ფაილი"
+
+#: mcs/mcs/driver.cs:258
+msgid "No files to compile were specified"
+msgstr "დასაკომპილებელი ფაილები მითითებული არაა"
+
+#: mcs/mcs/driver.cs:263
+msgid "Platform option `anycpu32bitpreferred' is valid only for executables"
+msgstr ""
+"პლატფორმის პარამეტრი `anycpu32bitpreferred', მხოლოდ, გამშვები ფაილებისთვისაა "
+"სწორი"
+
+#: mcs/mcs/driver.cs:293
+msgid ""
+"If no source files are specified you must specify the output file with -out:"
+msgstr ""
+"თუ წყარო ფაილები მითითებული არაა, შეგიძლიათ, გამოტანის ფაილი მიუთითოთ "
+"პარამეტრით -out:"
+
+#: mcs/mcs/driver.cs:310
+msgid "Output file name is not valid"
+msgstr "გამოტანის ფაილის სახელი არასწორია"
+
+#: mcs/mcs/dynamic.cs:278
+msgid "An expression tree cannot contain a dynamic operation"
+msgstr "გამოსახულების ხე არ შეიძლება, დინამიკურ ოპერაციას შეიცავდეს"
+
+#: mcs/mcs/dynamic.cs:311
+msgid ""
+"Dynamic operation cannot be compiled without `Microsoft.CSharp.dll' assembly "
+"reference"
+msgstr ""
+"დინამიკური ოპერაციების კომპილაცია შეუძლებელია `Microsoft.CSharp.dll' "
+"ანაწყობის მიმართვის გარეშე"
+
+#: mcs/mcs/ecore.cs:243
+#, csharp-format
+msgid "`{0}' is inaccessible due to its protection level"
+msgstr "`{0}' მიუწვდომელია მისი უსაფრთხოების დონის გამო"
+
+#: mcs/mcs/ecore.cs:248
+#, csharp-format
+msgid "The expression being assigned to `{0}' must be constant"
+msgstr "გამოსახულება, რომლის '{0}'-ზე მინიჭებასასც აპირებთ, მუდმივა უნდა იყოს"
+
+#: mcs/mcs/ecore.cs:253
+#, csharp-format
+msgid ""
+"A constant `{0}' of reference type `{1}' can only be initialized with null"
+msgstr ""
+"მუდმივა `{0}' მიმართვის ტიპისთვის `{1}' მხოლოდ, ნულით შეგიძლიათ, "
+"ინიციალიზაცია გააკეთოთ"
+
+#: mcs/mcs/ecore.cs:274
+msgid "Keyword `void' cannot be used in this context"
+msgstr "საკვანძო სიტყვას 'vod' ამ კონტექსტში ვერ გამოიყენებთ"
+
+#: mcs/mcs/ecore.cs:299
+#, csharp-format
+msgid "Cannot convert type `{0}' to `{1}'"
+msgstr "ტიპის '{0}' გადაყვანა '{1}'-ში შეუძლებელია"
+
+#: mcs/mcs/ecore.cs:310
+#, csharp-format
+msgid ""
+"Cannot implicitly convert type `{0}' to `{1}'. An explicit conversion exists "
+"(are you missing a cast?)"
+msgstr ""
+"არაცხადი გადაყვანა ტიპისთვის '{0}' ტიპში '{1}' შეუძლებელია. არსებობს ცხადი "
+"გადაყვანა (გაკლიათ დაკასტვა?)"
+
+#: mcs/mcs/ecore.cs:313
+#, csharp-format
+msgid "Cannot implicitly convert type `{0}' to `{1}'"
+msgstr "'{0}'-ის '{1}'-ში არაცხადად გადაყვანა შეუძლებელია"
+
+#: mcs/mcs/ecore.cs:344
+#, csharp-format
+msgid "The {0} `{1}' cannot be used with type arguments"
+msgstr "{0} '{1}' არ შეიძლება, ტიპის არგუმენტებთან ერთად იქნეს გამოყენებული"
+
+#: mcs/mcs/ecore.cs:356
+#, csharp-format
+msgid "`{0}' does not contain a definition for `{1}'"
+msgstr "`{0}' არ შეიცავს აღწერას `{1}'-სთვის"
+
+#: mcs/mcs/ecore.cs:365
+msgid "A ref or out argument must be an assignable variable"
+msgstr "არგუმენტები ref ან out მინიჭებადი ცვლადები უნდა იყოს"
+
+#: mcs/mcs/ecore.cs:367
+msgid ""
+"The left-hand side of an assignment must be a variable, a property or an "
+"indexer"
+msgstr "მინიჭების მარცხენა მხარე ცვლადი, თვისება, ან ინდექსერი უნდა იყოს"
+
+#: mcs/mcs/ecore.cs:373
+msgid "The operation in question is undefined on void pointers"
+msgstr "საინტერესო ოპერაცია აღუწერელია ცარიელ მაჩვენებლებზე"
+
+#: mcs/mcs/ecore.cs:473 mcs/mcs/statement.cs:3810 mcs/mcs/statement.cs:3812
+#, csharp-format
+msgid "Internal compiler error: {0}"
+msgstr "შიდა კომპლატორის შეცდომა: {0}"
+
+#: mcs/mcs/ecore.cs:535 mcs/mcs/expression.cs:7041 mcs/mcs/expression.cs:7049
+msgid "A constant value is expected"
+msgstr "მოველოდი მუდმივას მნიშვნელობას"
+
+#: mcs/mcs/ecore.cs:546
+msgid ""
+"An attribute argument must be a constant expression, typeof expression or "
+"array creation expression"
+msgstr ""
+"ატრიბუტის არგუმენტი გამოსახულება constant, typeoff ან მასივის შექმნა უნდა "
+"იყოს"
+
+#: mcs/mcs/ecore.cs:726
+#, csharp-format
+msgid "The class `{0}' has no constructors defined"
+msgstr "კლასს '{0}' კონსტრუქტორები განსაზღვრული არ აქვს"
+
+#: mcs/mcs/ecore.cs:924
+#, csharp-format
+msgid "The `{0}' operator cannot be applied to operand of type `{1}'"
+msgstr "ოპერატორს '{0}' ოპერანდის ტიპზე '{1}' ვერ გადაატარებთ"
+
+#: mcs/mcs/ecore.cs:930
+msgid "An expression tree cannot contain an unsafe pointer operation"
+msgstr ""
+"გამოსახულების ხე, არ შეიძლება, არაუსაფრთხო მაჩვენებლის ოპერაციას შეიცავდეს"
+
+#: mcs/mcs/ecore.cs:1012
+#, csharp-format
+msgid "`{0}' is a `{1}' but a `{2}' was expected"
+msgstr "`{0}' `{1}'-ია, მაგრამ მოველოდ `{2}'-ს"
+
+#: mcs/mcs/ecore.cs:1045
+#, csharp-format
+msgid "Expression denotes a `{0}', where a `{1}' was expected"
+msgstr "გამოსახულება მიუთითებს `{0}'-ზე მაშინ, როცა მოველოდი: `{1}'"
+
+#: mcs/mcs/ecore.cs:1055
+msgid "Pointers and fixed size buffers may only be used in an unsafe context"
+msgstr ""
+"მაჩვენებლები და ფიქსირებული ზომის ბუფერები, მხოლოდ, სახიფათო კონტექსტში "
+"შეგიძლიათ, გამოიყენოთ"
+
+#: mcs/mcs/ecore.cs:2616
+#, csharp-format
+msgid ""
+"Dynamic keyword requires `{0}' to be defined. Are you missing System.Core."
+"dll assembly reference?"
+msgstr ""
+"დინამიკურ საკვანძო სიტყვას '{0}'-ის აღწერა სჭირდება. აკლია მიმართვა "
+"ანაწყობთან System.Core.dll?"
+
+#: mcs/mcs/ecore.cs:2692
+#, csharp-format
+msgid ""
+"A local variable `{0}' cannot be used before it is declared. Consider "
+"renaming the local variable when it hides the member `{1}'"
+msgstr ""
+"ლოკალურ ცვლადს '{0}' ვერ გამოიყენებთ, სანამ არ აღწერთ. გადაარქვით ლოკალურ "
+"ცვლადს სახელი, როცა ის მალავს წევრს '{1}'"
+
+#: mcs/mcs/ecore.cs:2707 mcs/mcs/ecore.cs:2750
+#, csharp-format
+msgid "`{0}' conflicts with a declaration in a child block"
+msgstr "`{0}' ხელს უშლის აღწერას შვილის ბლოკში"
+
+#: mcs/mcs/ecore.cs:2759
+#, csharp-format
+msgid "A local variable `{0}' cannot be used before it is declared"
+msgstr "ლოკალურ ცვლადს '{0}' აღწერამდე ვერ გამოიყენებთ"
+
+#: mcs/mcs/ecore.cs:2788
+#, csharp-format
+msgid ""
+"Primary constructor parameter `{0}' is not available in this context when "
+"using ref or out modifier"
+msgstr ""
+"ძირითადი კონსტრუქტორის პარამეტრი '{0}' ხელმიუწვდომელია ამ კონტექსტში, როცა "
+"ref ან out მოდიფიკატორს იყენებთ"
+
+#: mcs/mcs/ecore.cs:2827
+#, csharp-format
+msgid "The name `{0}' does not exist in the current context"
+msgstr "სახელი '{0}' მიმდინარე კონტექსტში არ არსებობს"
+
+#: mcs/mcs/ecore.cs:2923
+msgid "System.Void cannot be used from C#. Consider using `void'"
+msgstr "System.Void-ს C#-დან ვერ გამოიყენებთ. სჯობს, გამოიყენოთ `void'"
+
+#: mcs/mcs/ecore.cs:3086
+#, csharp-format
+msgid ""
+"The type or namespace name `{0}' could not be found in the global namespace. "
+"Are you missing {1} assembly reference?"
+msgstr ""
+"ტიპის ან სახელების სივრცის სახელი '{0}' აღმოჩენილი არაა გლობალურ სახელების "
+"სივრცეში. {1} ანაწყობთან მიმართვა ხომ არ გაკლიათ?"
+
+#: mcs/mcs/ecore.cs:3090
+#, csharp-format
+msgid ""
+"The type or namespace name `{0}' does not exist in the namespace `{1}'. Are "
+"you missing {2} assembly reference?"
+msgstr ""
+"ტიპი ან სახელების სივრცის სახელი '{0}' არ არსებობს სახელების სივრცეში '{1}'. "
+"{2} ანაწყობთან მიმართვა ხომ არ გაკლიათ?"
+
+#: mcs/mcs/ecore.cs:3330
+#, csharp-format
+msgid "Cannot call an abstract base member `{0}'"
+msgstr "ვერ გამოიძახებთ აბსტრაქტულ საბაზისო წევრს '{0}'"
+
+#: mcs/mcs/ecore.cs:3337
+#, csharp-format
+msgid ""
+"Cannot access protected member `{0}' via a qualifier of type `{1}'. The "
+"qualifier must be of type `{2}' or derived from it"
+msgstr ""
+"დაცულ წევრთან '{0}' წვდომა შეუძლებელია კვალიფიკატორის ტიპით '{1}'. "
+"კვალიფიკატორი ტიპით '{2}' ან მისგან მიღებული უნდა იყოს"
+
+#: mcs/mcs/ecore.cs:3362
+#, csharp-format
+msgid ""
+"Fields of static readonly field `{0}' cannot be assigned to (except in a "
+"static constructor or a variable initializer)"
+msgstr ""
+"სტატიკური მხოლოდ-წაკითხვადი ველის '{0}' ველები ვერ იქნება მინიჭებული "
+"(სტატიკური კონსტრუქტორის ან ცვლადი ინიციალიზატორის გარდა)"
+
+#: mcs/mcs/ecore.cs:3365
+#, csharp-format
+msgid ""
+"Members of readonly field `{0}' cannot be modified (except in a constructor "
+"or a variable initializer)"
+msgstr ""
+"სტატიკური მხოლოდ-წაკითხვადი ველის '{0}' ველები ვერ შეიცვლება (სტატიკური "
+"კონსტრუქტორის ან ცვლადი ინიციალიზატორის გარდა)"
+
+#: mcs/mcs/ecore.cs:3374
+#, csharp-format
+msgid ""
+"Members of value type `{0}' cannot be assigned using a property `{1}' object "
+"initializer"
+msgstr ""
+"მნიშვნელობის ტიპის '{0}' წევრებს ვერ მიანიჭებთ თვისების '{1}' ობიექტის "
+"ინიციალიზატორის გამოყენებით"
+
+#: mcs/mcs/ecore.cs:3378
+#, csharp-format
+msgid ""
+"Cannot modify a value type return value of `{0}'. Consider storing the value "
+"in a temporary variable"
+msgstr ""
+"'{0}'-ის დაბრუნების მნიშვნელობის ტიპის შეცვლა შეუძლებელია. იფიქრეთ, "
+"მნიშვნელობა დროებით ცვლადში შეინახოთ"
+
+#: mcs/mcs/ecore.cs:3391
+#, csharp-format
+msgid "Cannot assign to members of `{0}' because it is a `{1}'"
+msgstr "'{0}'-ის წევრებზე მინიჭება შეუძლებელია, რადგან ის '{1}'-ია"
+
+#: mcs/mcs/ecore.cs:3417
+#, csharp-format
+msgid ""
+"Static member `{0}' cannot be accessed with an instance reference, qualify "
+"it with a type name instead"
+msgstr ""
+"სტატიკურ წევრთან '{0}' წვდომა შეუძლებელია გაშვებულ ასლთან მიმართვით. "
+"უკეთესია, თუ მას კვალიფიკაციას ტიპის სახელით მიანიჭებთ"
+
+#: mcs/mcs/ecore.cs:3432
+#, csharp-format
+msgid ""
+"A field initializer cannot reference the nonstatic field, method, or "
+"property `{0}'"
+msgstr ""
+"ველის ინიციალიზატორი ვერ მიმართავს არასტატიკურ ველს, მეთოდს ან თვისებას '{0}'"
+
+#: mcs/mcs/ecore.cs:3438
+msgid "Constructor initializer cannot access primary constructor parameters"
+msgstr ""
+"კონსტრუქტორის ინიციალიზატორს ძირითადი კონსტრუქტორის პარამეტრებთან წვდომა არ "
+"აქვს"
+
+#: mcs/mcs/ecore.cs:3440
+#, csharp-format
+msgid ""
+"An object reference is required to access primary constructor parameter `{0}'"
+msgstr ""
+"ობიექტის მიმართვა აუცილებელია ძირითადი კონსტრუქტორის პარამეტრთან '{0}' "
+"წვდომისთვის"
+
+#: mcs/mcs/ecore.cs:3445
+#, csharp-format
+msgid "An object reference is required to access non-static member `{0}'"
+msgstr "ობიექტის მიმართვა აუცილებელი არასტატიკურ წევრთან '{0}' წვდომისთვის"
+
+#: mcs/mcs/ecore.cs:3456
+#, csharp-format
+msgid ""
+"Cannot access a nonstatic member of outer type `{0}' via nested type `{1}'"
+msgstr ""
+"გარე ტიპის '{0}' არასტატიკურ წევრთან წვდომა შეუძლებელია ერთმანეთში ჩადგმული "
+"ტიპით '{1}'"
+
+#: mcs/mcs/ecore.cs:3484
+msgid "Cannot modify the result of an unboxing conversion"
+msgstr "ყუთიდან ამოღების გადაყვანის შედეგის შეცვლა შეუძლებელია"
+
+#: mcs/mcs/ecore.cs:3662
+#, csharp-format
+msgid ""
+"Type `{0}' does not contain a member `{1}' and the best extension method "
+"overload `{2}' has some invalid arguments"
+msgstr ""
+"ტიპი '{0}' არ შეიცავს წევრს '{1}' და საუკეთესო გაფართოების მეთოდის "
+"გადამეტტვირთვას '{2}' არასწორი არგუმენტები აქვს"
+
+#: mcs/mcs/ecore.cs:3667
+#, csharp-format
+msgid "Extension method instance type `{0}' cannot be converted to `{1}'"
+msgstr "გაფართოების მეთოდის გაშვებული ასლის ტიპს '{0}' '{1}'-ში ვერ გადაიყვანთ"
+
+#: mcs/mcs/ecore.cs:3815
+msgid "An expression tree cannot contain an expression with method group"
+msgstr ""
+"გამოსახულებების ხე არ შეიძლება, მეთოდების ჯგუფის შემცველ გამოსახულებას "
+"შეიცავდეს"
+
+#: mcs/mcs/ecore.cs:3821
+msgid ""
+"Partial methods with only a defining declaration or removed conditional "
+"methods cannot be used in an expression tree"
+msgstr ""
+"ნაწილობრივი მეთოდები, რომლებსაც, მხოლოდ, აღმწერი გამოცხადება ან წაშლილი "
+"პირობითი მეთოდები აქვთ, გამოსახულებების ხეში ვერ გამოიყენება"
+
+#: mcs/mcs/ecore.cs:3853
+#, csharp-format
+msgid ""
+"Cannot convert method group `{0}' to non-delegate type `{1}'. Consider using "
+"parentheses to invoke the method"
+msgstr ""
+"მეთოდის ჯგუფის '{0}' გადაყვანა შეუძლებელია არადელეგადის ტიპში '{1}'. მეთოდის "
+"ჩასაწოდებლად ფრჩხილები გამოიყენეთ"
+
+#: mcs/mcs/ecore.cs:4577
+#, csharp-format
+msgid ""
+"The type `{0}' does not contain a constructor that takes `{1}' arguments"
+msgstr "ტიპი '{0}' არ შეიცავს კონსტრუქტორს, რომელიც '{1}' არგუმენტს იღებს"
+
+#: mcs/mcs/ecore.cs:5264
+#, csharp-format
+msgid ""
+"Type `{0}' does not contain a member `{1}' and the best extension method "
+"overload `{2}' cannot be dynamically dispatched. Consider calling the method "
+"without the extension method syntax"
+msgstr ""
+"ტიპი '{0}' არ შეიცავს წევრს '{1}' და საუკეთესო გაფართოების მეთოდის "
+"გადამეტტვირთვის '{2}' დინამიკური მართვა შეუძლებელია. იფიქრეთ, მეთოდი "
+"გაფართოების მეთოდის სინტაქსის გარეშე გამოიძახოთ"
+
+#: mcs/mcs/ecore.cs:5303
+#, csharp-format
+msgid ""
+"The call is ambiguous between the following methods or properties: `{0}' and "
+"`{1}'"
+msgstr "გამოძახება ბუნდოვანია შემდეგ ორ ტიპს ან თვისებას შორის: '{0}' და '{1}'"
+
+#: mcs/mcs/ecore.cs:5366
+#, csharp-format
+msgid ""
+"The best overloaded collection initalizer method `{0}' cannot have `ref' or "
+"`out' modifier"
+msgstr ""
+"საუკეთესო გადამეტტვირთული კოლექცის ინიციალიზატორის მეთოდს '{0}' "
+"მოდიფიკატორები 'ref' ან 'out' ვერ ექნება"
+
+#: mcs/mcs/ecore.cs:5370
+#, csharp-format
+msgid ""
+"The best overloaded collection initalizer method `{0}' has some invalid "
+"arguments"
+msgstr ""
+"საუკეთესო გადამეტტვირთული კოლექცის ინიციალიზატორის მეთოდს '{0}' არასწორი "
+"არგუმენტები აქვს"
+
+#: mcs/mcs/ecore.cs:5373
+#, csharp-format
+msgid "Delegate `{0}' has some invalid arguments"
+msgstr "დელეტაგის '{0}' ზოგიერთი არგუმენტი არასწორია"
+
+#: mcs/mcs/ecore.cs:5377
+#, csharp-format
+msgid "The best overloaded method match for `{0}' has some invalid arguments"
+msgstr ""
+"საუკეთესო გადამეტტვირთული მეთოდის დამთხვევას '{0}' რამდენიმე არასწორი "
+"არგუმენტი აქვს"
+
+#: mcs/mcs/ecore.cs:5386
+#, csharp-format
+msgid ""
+"Argument `#{0}' does not require `{1}' modifier. Consider removing `{1}' "
+"modifier"
+msgstr ""
+"არგუმენტი `#{0}'-ს არ სჭირდება მოდიფიკატორი `{1}'. უკეთესია, თუ წაშლით`{1}' "
+"მოდიფიკატორს"
+
+#: mcs/mcs/ecore.cs:5389
+#, csharp-format
+msgid "Argument `#{0}' is missing `{1}' modifier"
+msgstr "არგუმენტს `#{0}' აკლია მოდიფიკატორი `{1}'"
+
+#: mcs/mcs/ecore.cs:5406
+#, csharp-format
+msgid "Argument `#{0}' cannot convert `{1}' expression to type `{2}'"
+msgstr "არგუმენტი `#{0}' ვერ გადავიყვანე `{1}' გამოსახულება ტიპში `{2}'"
+
+#: mcs/mcs/ecore.cs:5459
+#, csharp-format
+msgid ""
+"The type arguments for method `{0}' cannot be inferred from the usage. Try "
+"specifying the type arguments explicitly"
+msgstr ""
+"ტიპის არგუმენტები მეთოდისთვის '{0}' ვერ გამოვიცანი მისი გამოყენებიდან. "
+"სცადეთ, ტიპის არგუმენტები აშკარად მიუთითოთ"
+
+#: mcs/mcs/ecore.cs:5488
+#, csharp-format
+msgid "No overload for method `{0}' takes `{1}' arguments"
+msgstr "გადამეტტვირთვა მეთოდისთვის '{0}' '{1}' არგუმენტით არ არსებობს"
+
+#: mcs/mcs/ecore.cs:5544
+#, csharp-format
+msgid "The delegate `{0}' does not contain a parameter named `{1}'"
+msgstr "დელეგატი '{0}' არ შეიცავს პარამეტრს სახელით '{1}'"
+
+#: mcs/mcs/ecore.cs:5549
+#, csharp-format
+msgid ""
+"The best overloaded method match for `{0}' does not contain a parameter "
+"named `{1}'"
+msgstr ""
+"საუკეთესო გადამეტტვირთული მეთოდის დამთხვევა '{0}'-სთვის არ შეიცავს პარამეტრს "
+"სახელად '{1}'"
+
+#: mcs/mcs/ecore.cs:5559
+#, csharp-format
+msgid ""
+"Named argument `{0}' cannot be used for a parameter which has positional "
+"argument specified"
+msgstr ""
+"სახელიან არგუმენტს '{0}' ვერ გამოიყენებთ პარამეტრისთვის, რომელსაც პოზიციური "
+"არგუმენტი აქვს მითითებული"
+
+#: mcs/mcs/ecore.cs:5898
+msgid ""
+"You cannot use fixed size buffers contained in unfixed expressions. Try "
+"using the fixed statement"
+msgstr ""
+"დაუფიქსირებელ გამოსახულებებში არსებულ ფიქსირებული ზომის ბუფერებს ვერ "
+"გამოიყენეთ. სცადეთ, ფიქსირებული პროცედურა გამოიყენოთ"
+
+#: mcs/mcs/ecore.cs:5903
+#, csharp-format
+msgid "`{0}': Fixed size buffers can only be accessed through locals or fields"
+msgstr ""
+"`{0}': ფიქსირებული ზომის ბუფერებთან წვდომა, მხოლოდ, ლოკალურებით ან ველებით "
+"შეგიძლიათ"
+
+#: mcs/mcs/ecore.cs:5977
+#, csharp-format
+msgid ""
+"A static readonly field `{0}' cannot be passed ref or out (except in a "
+"static constructor)"
+msgstr ""
+"სტატიკური მხოლოდ-კითხვადი ველი '{0}' არ შეძლება, ref-ს ან out-ს გადაეცეს "
+"(სტატიკური კონსტრუქტორის გარდა)"
+
+#: mcs/mcs/ecore.cs:5980
+#, csharp-format
+msgid ""
+"A readonly field `{0}' cannot be passed ref or out (except in a constructor)"
+msgstr ""
+"მხოლოდ-კითხვადი ველი '{0}' არ შეძლება, ref-ს ან out-ს გადაეცეს "
+"(კონსტრუქტორის გარდა)"
+
+#: mcs/mcs/ecore.cs:5994
+#, csharp-format
+msgid ""
+"Fields of static readonly field `{0}' cannot be passed ref or out (except in "
+"a static constructor)"
+msgstr ""
+"სტატიკური მხოლოდ-კითხვადი ველის '{0}' ველები არ შეძლება, ref-ს ან out-ს "
+"გადაეცეს (სტატიკური კონსტრუქტორის გარდა)"
+
+#: mcs/mcs/ecore.cs:5997
+#, csharp-format
+msgid ""
+"Members of readonly field `{0}' cannot be passed ref or out (except in a "
+"constructor)"
+msgstr ""
+"მხოლოდ-კითხვადი ველის '{0}' წევრები, არ შეძლება, ref-ს ან out-ს გადაეცეს "
+"(კონსტრუქტორის გარდა)"
+
+#: mcs/mcs/ecore.cs:6004
+#, csharp-format
+msgid ""
+"A static readonly field `{0}' cannot be assigned to (except in a static "
+"constructor or a variable initializer)"
+msgstr ""
+"სტატიკური მხოლოდ-წაკითხვადი ველი '{0}' ვერ იქნება მინიჭებული (სტატიკური "
+"კონსტრუქტორის ან ცვლადი ინიციალიზატორის გარდა)"
+
+#: mcs/mcs/ecore.cs:6007
+#, csharp-format
+msgid ""
+"A readonly field `{0}' cannot be assigned to (except in a constructor or a "
+"variable initializer)"
+msgstr ""
+"მხოლოდ-წაკითხვადი ველი '{0}' ვერ იქნება მინიჭებული (მხოლოდ კონსტრუქტორში, ან "
+"ცვლად ინიციალიზატორში)"
+
+#: mcs/mcs/ecore.cs:6071
+#, csharp-format
+msgid "Use of possibly unassigned field `{0}'"
+msgstr "გამოიყენება ალბათ მიუნიჭებელი ველი `{0}'"
+
+#: mcs/mcs/ecore.cs:6429
+#, csharp-format
+msgid "Property or event `{0}' is not supported by the C# language"
+msgstr "თვისება ან მოვლენა '{0}' C# ენის მიერ მხარდაჭერილი არაა"
+
+#: mcs/mcs/ecore.cs:6625
+#, csharp-format
+msgid "A range variable `{0}' may not be passes as `ref' or `out' parameter"
+msgstr ""
+"შუალედი ცვლადი `{0}' არ შეიძლება გადაიცეს, როგორც 'ref' ან 'out' პარამეტრი"
+
+#: mcs/mcs/ecore.cs:6700
+#, csharp-format
+msgid ""
+"The property or indexer `{0}' cannot be used in this context because it "
+"lacks the `get' accessor"
+msgstr ""
+"ინდექსერის '{0}' თვისებას ამ კონტექსტში ვერ გამოიყენებთ, რადგან მას 'get' "
+"აქსესორი არ აქვს"
+
+#: mcs/mcs/ecore.cs:6707
+#, csharp-format
+msgid ""
+"The property or indexer `{0}' cannot be used in this context because the get "
+"accessor is inaccessible"
+msgstr ""
+"ინდექსერის '{0}' თვისებას ამ კონტექსტში ვერ გამოიყენებთ, რადგან აქსესორი "
+"'get' ხელმიუწვდომელია"
+
+#: mcs/mcs/ecore.cs:6726
+#, csharp-format
+msgid "Property or indexer `{0}' cannot be assigned to (it is read-only)"
+msgstr "ინდექსერის '{0}' თვისებას ვერაფერს მიანიჭებთ (ის მხოლოდ-წაკთხვადია)"
+
+#: mcs/mcs/ecore.cs:6734
+#, csharp-format
+msgid ""
+"The property or indexer `{0}' cannot be used in this context because the set "
+"accessor is inaccessible"
+msgstr ""
+"ინდექსერის '{0}' თვისებას ამ კონტექსტში ვერ გამოიყენებთ, რადგან აქსესორი "
+"'set' ხელმიუწვდომელია"
+
+#: mcs/mcs/ecore.cs:6902
+#, csharp-format
+msgid ""
+"The event `{0}' can only appear on the left hand side of `+=' or `-=' "
+"operator"
+msgstr ""
+"მოვლენა '{0}', ოპერატორების '+=' ან '-=', მხოლოდ, მარცხენა მხარეს შეიძლება, "
+"გამოჩნდნენ"
+
+#: mcs/mcs/ecore.cs:6906
+#, csharp-format
+msgid ""
+"The event `{0}' can only appear on the left hand side of += or -= when used "
+"outside of the type `{1}'"
+msgstr ""
+"მოვლენა '{0}', ოპერატორების '+=' ან '-=', მხოლოდ, მარცხენა მხარეს შეიძლება, "
+"გამოჩნდნენ, როცა გამოიყენება ტიპის '{1}' გარეთ"
+
+#: mcs/mcs/ecore.cs:7078
+#, csharp-format
+msgid ""
+"An implicitly typed local variable declaration cannot be initialized with "
+"`{0}'"
+msgstr ""
+"არაცხადად შეყვანილი ლოკალური ცვლადის აღწერის ინიციალიზაცია შეუძლებელია '{0}'-"
+"ით"
+
+#: mcs/mcs/ecore.cs:7092
+msgid ""
+"The contextual keyword `var' may only appear within a local variable "
+"declaration"
+msgstr ""
+"კონტექსტური საკვანძო სიტყვა 'var', მხოლოდ, ლოკალური ცვლადის გამოცხადებაში "
+"შეიძლება, გამოჩნდეს"
+
+#: mcs/mcs/enum.cs:143
+#, csharp-format
+msgid ""
+"The enumerator value `{0}' is outside the range of enumerator underlying "
+"type `{1}'"
+msgstr ""
+"ჩამოთვლის მნიშვნელობა '{0}' მისი ქვედა დონის ჩამონათვლის ტიპის '{1}' "
+"დაშვებულ შუალედს გარეთაა"
+
+#: mcs/mcs/enum.cs:212
+#, csharp-format
+msgid "An item in an enumeration cannot have an identifier `{0}'"
+msgstr "ელემენტს ჩამონათვალში ვერ ექნება იდენტიფიკატორი '{0}'"
+
+#: mcs/mcs/enum.cs:223
+msgid "Type byte, sbyte, short, ushort, int, uint, long or ulong expected"
+msgstr "მოველოდი ტიპს byte, sbyte, short, ushort, int, uint, long, ან ulong"
+
+#: mcs/mcs/eval.cs:587
+msgid "Detection Parsing Error"
+msgstr "დამუშავების შეცდომის აღმოჩენა"
+
+#: mcs/mcs/expression.cs:582
+#, csharp-format
+msgid "Operator `{0}' is ambiguous on an operand of type `{1}'"
+msgstr "ოპერატორი '{0}' ბუნდოვანია ოპერანდზე ტიპისთვის '{1}'"
+
+#: mcs/mcs/expression.cs:676
+msgid "Cannot take the address of the given expression"
+msgstr "მითითებული გამოსახულების მისამართის აღება შეუძლებელია"
+
+#: mcs/mcs/expression.cs:699
+msgid ""
+"You can only take the address of unfixed expression inside of a fixed "
+"statement initializer"
+msgstr ""
+"დაუფიქსირებელი გამოსახულებების მისამართის აღება, მხოლოდ, ფიქსირებული "
+"პროცედურის ინიციალიზატორის შინიდან შეგიძლიათ"
+
+#: mcs/mcs/expression.cs:943
+msgid "The * or -> operator must be applied to a pointer"
+msgstr "მაჩვენებელზე * ან -> ოპერატორის გადატარება აუცილებელია"
+
+#: mcs/mcs/expression.cs:1166
+msgid ""
+"The operand of an increment or decrement operator must be a variable, "
+"property or indexer"
+msgstr ""
+"ინკრემენტის ოპერანდი ან დეკრემენტის ოპერატორი ცვლადი, თვისება, ან ინდექსერი "
+"უნდა იყოს"
+
+#: mcs/mcs/expression.cs:1409
+#, csharp-format
+msgid "The `{0}' operator cannot be applied to an operand of a static type"
+msgstr "ოპერატორს '{0}' ვერ გადაატარებთ სტატიკური ტიპის ოპერანდზე"
+
+#: mcs/mcs/expression.cs:1414
+#, csharp-format
+msgid "The `{0}' operator cannot be applied to an operand of pointer type"
+msgstr "ოპერატორს '{0}' ვერ გადაატარებთ მაჩვენებლის ტიპის ოპერანდზე"
+
+#: mcs/mcs/expression.cs:1420
+#, csharp-format
+msgid ""
+"The `{0}' operator cannot be applied to a lambda expression or anonymous "
+"method"
+msgstr ""
+"ოპერატორს '{0}' ვერ გადაატარებთ ლამბდა გამოსახულებაზე ან ანონიმურ მეთოდზე"
+
+#: mcs/mcs/expression.cs:1709
+#, csharp-format
+msgid ""
+"The `as' operator cannot be used with a non-reference type parameter `{0}'. "
+"Consider adding `class' or a reference type constraint"
+msgstr ""
+"ოპერატორს 'as' ვერ გამოიყენებთ არა-მიმართვის ტიპის პარამეტრთან '{0}' ერთად. "
+"იფიქრეთ, დაამატოთ 'class' ან მიმართვის ტიპის შეზღუდვა"
+
+#: mcs/mcs/expression.cs:1713
+#, csharp-format
+msgid "The `as' operator cannot be used with a non-nullable value type `{0}'"
+msgstr ""
+"ოპერატორს 'as' ვერ გამოიყენებთ არაგანულებადი მნიშვნელობის ტიპთან '{0}' ერთად"
+
+#: mcs/mcs/expression.cs:1747
+#, csharp-format
+msgid "Cannot convert type `{0}' to `{1}' via a built-in conversion"
+msgstr "ჩაშენებული გადაყვანით ტიპს '{0}' '{1}'-ში ვერ გადავიყვან"
+
+#: mcs/mcs/expression.cs:1788
+#, csharp-format
+msgid "Cannot convert to static type `{0}'"
+msgstr "სტატიკურ ტიპში '{0}' გადაყვანა შეუძლებელია"
+
+#: mcs/mcs/expression.cs:1898
+msgid ""
+"The `default value' operator cannot be applied to an operand of a static type"
+msgstr "ოპერატორს 'default value' ვერ გადაატარებთ სტატიკური ტიპის ოპერანდზე"
+
+#: mcs/mcs/expression.cs:2575
+#, csharp-format
+msgid "Operator `{0}' cannot be applied to operands of type `{1}' and `{2}'"
+msgstr "ოპერატორს '{0}' ვერ გადაატარებთ ოპერანდებზე ტიპით '{1}' და '{2}'"
+
+#: mcs/mcs/expression.cs:3363
+msgid "To cast a negative value, you must enclose the value in parentheses"
+msgstr ""
+"უარყოფითი მნიშვნელობის დაკასტვისთვის მნიშვნელობა ფრჩხილებში უნდა ჩასვათ"
+
+#: mcs/mcs/expression.cs:5034
+#, csharp-format
+msgid ""
+"A user-defined operator `{0}' must have each parameter type and return type "
+"of the same type in order to be applicable as a short circuit operator"
+msgstr ""
+"მომხმარებლის აღწერილ ოპერატორს '{0}' თითოეული პარამეტრის ტიპი და დაბრუნების "
+"ტიპი იგივე უნდა ჰქონდეს, რომ გამოყენებადი იყოს, როგორც მოკლე წრედის ოპერატორი"
+
+#: mcs/mcs/expression.cs:5044
+#, csharp-format
+msgid ""
+"The type `{0}' must have operator `true' and operator `false' defined when "
+"`{1}' is used as a short circuit operator"
+msgstr ""
+"ტიპს '{0}' უნდა ჰქონდეს ოპერატორი 'true' და ოპერატორი 'false' აღწერილი, როცა "
+"'{1}' მოკლე წრედის ოპერატორად გამოიყენება"
+
+#: mcs/mcs/expression.cs:5419
+#, csharp-format
+msgid ""
+"Type of conditional expression cannot be determined as `{0}' and `{1}' "
+"convert implicitly to each other"
+msgstr ""
+"პირობითი გამოსახულების ტიპის დადგენა შეუძლებელია, რადგან '{0}'-ისა და '{1}'-"
+"ის ერთმანეთში გადაყვანა არაცხადად ხდება"
+
+#: mcs/mcs/expression.cs:5431
+#, csharp-format
+msgid ""
+"Type of conditional expression cannot be determined because there is no "
+"implicit conversion between `{0}' and `{1}'"
+msgstr ""
+"პირობით გამოსახულების ტიპის დადგენა შეუძლებელია, რადგან არ არსებობს არაცხადი "
+"გადაყვანა '{0}'-სა და '{1}'-ს შორის"
+
+#: mcs/mcs/expression.cs:5763
+#, csharp-format
+msgid "Use of unassigned local variable `{0}'"
+msgstr "მიუნიჭებელი ლოკალური ცვლადის '{0}' გამოყენება"
+
+#: mcs/mcs/expression.cs:5783
+#, csharp-format
+msgid ""
+"Cannot use fixed local `{0}' inside an anonymous method, lambda expression "
+"or query expression"
+msgstr ""
+"ფიქსირებულ ლოკალურ '{0}'-ს ვერ გამოიყენებთ ანონიმური მეთოდის, ლამბდა "
+"გამოსახულების ან მოთხოვნის გამოსახულების შიგნით"
+
+#: mcs/mcs/expression.cs:5968
+#, csharp-format
+msgid ""
+"Parameter `{0}' cannot be used inside `{1}' when using `ref' or `out' "
+"modifier"
+msgstr ""
+"პარამეტრს '{0}' ვერ გამოიყენებთ '{1}'-ის შიგნით, როცა 'ref' ან 'out' "
+"მოდიფიკატორების იყენებთ"
+
+#: mcs/mcs/expression.cs:6038
+#, csharp-format
+msgid "Use of unassigned out parameter `{0}'"
+msgstr "გამოიყენება მიუნიჭებელი გამავალი პარამეტრი '{0}'"
+
+#: mcs/mcs/expression.cs:6200
+#, csharp-format
+msgid "Cannot invoke a non-delegate type `{0}'"
+msgstr "არა-დელეგატი ტიპის '{0}' ჩაწოდება შეუძლებელია"
+
+#: mcs/mcs/expression.cs:6211
+#, csharp-format
+msgid "The member `{0}' cannot be used as method or delegate"
+msgstr "წევრს '{0}' დელეგატის მეთოდად ვერ გამოიყენებთ"
+
+#: mcs/mcs/expression.cs:6231
+msgid ""
+"Do not directly call your base class Finalize method. It is called "
+"automatically from your destructor"
+msgstr ""
+"არ გამოიძახოთ თქვენი საბაზისო კლასის მეთოდი Finalize. მას თქვენი "
+"დესტრუქტორიდან ავტომატურად ვიძახებთ"
+
+#: mcs/mcs/expression.cs:6233
+msgid ""
+"Destructors and object.Finalize cannot be called directly. Consider calling "
+"IDisposable.Dispose if available"
+msgstr ""
+"დესტრუქტორებს და object.Finalize-ს პირდაპირ ვერ გამოიძახეთ. სცადეთ, "
+"გამოიძახოთ IDisposable.Dispose თუ ის ხელმისაწვდომია"
+
+#: mcs/mcs/expression.cs:6262
+#, csharp-format
+msgid ""
+"The base call to method `{0}' cannot be dynamically dispatched. Consider "
+"casting the dynamic arguments or eliminating the base access"
+msgstr ""
+"საბაზისო გამოძახება მეთოდამდე '{0}' დინამიკურად ვერ გაეშვება. იფიქრეთ "
+"დინამიკური არგუმენტების დაკასტვაზე ან საბაზისო წვდომის მოცილებაზე"
+
+#: mcs/mcs/expression.cs:6346
+#, csharp-format
+msgid "`{0}': cannot explicitly call operator or accessor"
+msgstr "`{0}': აშკარად ოპერატორს ან აქსესორს ვერ გამოიძახებთ"
+
+#: mcs/mcs/expression.cs:6533
+#, csharp-format
+msgid "Unsafe type `{0}' cannot be used in an object creation expression"
+msgstr "სახიფათო ტიპს '{0}' ობიექტის შექმნის გამოსახულებაში ვერ გამოიყენებთ"
+
+#: mcs/mcs/expression.cs:6556
+#, csharp-format
+msgid ""
+"Cannot create an instance of the variable type `{0}' because it does not "
+"have the new() constraint"
+msgstr ""
+"ცვლადი ტიპის '{0}' გაშვებული ასლის შექმნა შეუძლებელია, რადგან მას შეზღუდვა "
+"new() არ აქვს"
+
+#: mcs/mcs/expression.cs:6562
+#, csharp-format
+msgid ""
+"`{0}': cannot provide arguments when creating an instance of a variable type"
+msgstr ""
+"`{0}': ვერ მივაწვდით არგუმენტებს, როცა ცვლადი ტიპის გაშვებული ასლი იქმნება"
+
+#: mcs/mcs/expression.cs:6571
+#, csharp-format
+msgid "Cannot create an instance of the static class `{0}'"
+msgstr "ვერ შევქმენი გაშვებული ასლი სტატიკური კლასისთვის '{0}'"
+
+#: mcs/mcs/expression.cs:6583
+#, csharp-format
+msgid "Cannot create an instance of the abstract class or interface `{0}'"
+msgstr ""
+"ვერ შევქმენი გაშვებული ასლი აბსტრაქტული კლასისთვის ან ინტერფეისისთვის '{0}'"
+
+#: mcs/mcs/expression.cs:6892
+msgid ""
+"An implicitly typed local variable declarator cannot use an array initializer"
+msgstr ""
+"არაცხადად შეყვანილი ლოკალური ცვლადის გამომცხადებელი მასივის ინიციალიზატორს "
+"ვერ გამოიყენებს"
+
+#: mcs/mcs/expression.cs:7055 mcs/mcs/expression.cs:7080
+#, csharp-format
+msgid "An array initializer of length `{0}' was expected"
+msgstr "მოველოდი მასივის ინიციალიზატორს სიგრძით '{0}'"
+
+#: mcs/mcs/expression.cs:7071
+msgid ""
+"Array initializers can only be used in a variable or field initializer. Try "
+"using a new expression instead"
+msgstr ""
+"მასივის ინიციალიზატორები, მხოლოდ, ცვლადის ან ველის ინიციალიზატორში "
+"შეგიძლიათ, გამოიყენოთ. იფიქრეთ, ახალი გამოსახულება გამოიყენოთ"
+
+#: mcs/mcs/expression.cs:7088
+msgid "A nested array initializer was expected"
+msgstr "მოველოდი ერთმანეთში ჩალაგებულ მასივის ინიციალიზატორს"
+
+#: mcs/mcs/expression.cs:7135
+msgid "An expression tree cannot contain a multidimensional array initializer"
+msgstr ""
+"გამოსახულებების ხე არ შეიძლება, მრავალგანზომილებიანი მასივის ინიციალიზატორს "
+"შეიცავდეს"
+
+#: mcs/mcs/expression.cs:7171
+msgid "Cannot create an array with a negative size"
+msgstr "უარყოფითი ზომის მქონე მასივის შექმნა შეუძლებელია"
+
+#: mcs/mcs/expression.cs:7263
+msgid ""
+"Can only use array initializer expressions to assign to array types. Try "
+"using a new expression instead"
+msgstr ""
+"მასივის ინიციალიზატორის გამოსახულებებს მასივის ტიპებზე მისანიჭებლად ვერ "
+"გამოიყენებთ. სჯობ, ახალი გამოსახულება სცადოთ"
+
+#: mcs/mcs/expression.cs:7685
+msgid ""
+"The type of an implicitly typed array cannot be inferred from the "
+"initializer. Try specifying array type explicitly"
+msgstr ""
+"არაცხადად შეყვანილი მასივის ტიპს ინიციალიზატორიდან ვერ მოაცილებთ. სცადეთ, "
+"მასივის ტიპი აშკარად მიუთითოთ"
+
+#: mcs/mcs/expression.cs:7826
+msgid ""
+"The `this' object cannot be used before all of its fields are assigned to"
+msgstr ""
+"'this' ობიექტის გამოყენება შეუძლებელია, სანამ მის ყველა ველს არ მანიჭებთ"
+
+#: mcs/mcs/expression.cs:7832
+msgid ""
+"Keyword `this' is not valid in a static property, static method, or static "
+"field initializer"
+msgstr ""
+"საკვანძო სიტყვა 'this' არასწორია სტატიკური თვისებისთვის, სტატიკური "
+"ველისთვის, ან სტატიკური ველის ინიციალიზატორისთვის"
+
+#: mcs/mcs/expression.cs:7835
+msgid ""
+"Anonymous methods inside structs cannot access instance members of `this'. "
+"Consider copying `this' to a local variable outside the anonymous method and "
+"using the local instead"
+msgstr ""
+"ანონიმურ მეთოდებს სტრუქტურების 'this'-ის გაშვებული ასლის წევრებთან წვდომა არ "
+"აქვთ. იფიქრეთ, დააკოპიროთ 'this' ლოკალურ ცვლადში ანონიმური მეთოდის გარეთ, ან "
+"გამოიყენეთ ლოკალური"
+
+#: mcs/mcs/expression.cs:7838
+msgid "Keyword `this' is not available in the current context"
+msgstr "საკვანძო სიტყვა 'this' ხელმიუწვდომელია მიმდინარე კონტექსტში"
+
+#: mcs/mcs/expression.cs:7914
+msgid "Cannot take the address of `this' because it is read-only"
+msgstr "'this'-ის მისამართის აღება შეუძლებელია, რადგან ის მხოლოდ-წაკითხვადია"
+
+#: mcs/mcs/expression.cs:7916
+msgid "Cannot pass `this' as a ref or out argument because it is read-only"
+msgstr ""
+"'this'-ს ვერ გადასცემთ ref ან out არგუმენტით, რადგან ის მხოლოდ-კითხვადია"
+
+#: mcs/mcs/expression.cs:7918
+msgid "Cannot assign to `this' because it is read-only"
+msgstr "ვერ მივანიჭე 'this'-ს, რადგან ის მხოლოდ-წაკითხვადია"
+
+#: mcs/mcs/expression.cs:7986
+msgid "The __arglist construct is valid only within a variable argument method"
+msgstr "კონსტრუქტი __arglist, მხოლოდ, ცვლადი არგუმენტის მეთოდშია სწორი"
+
+#: mcs/mcs/expression.cs:8047
+msgid "An expression tree cannot contain a method with variable arguments"
+msgstr ""
+"გამოსახულებების ხე არ შეიძლება, ცვლადი არგუმენტების მქონე მეთოდს შეიცავდეს"
+
+#: mcs/mcs/expression.cs:8315
+msgid "The typeof operator cannot be used on the dynamic type"
+msgstr "ოპერატორს typeof დინამიკურ ტიპზე ვერ გამოიყენებთ"
+
+#: mcs/mcs/expression.cs:8356
+#, csharp-format
+msgid "`{0}': an attribute argument cannot use type parameters"
+msgstr "`{0}': ატრიბუტის არგუმენტი ტიპის პარამეტრებს ვერ გამოიყენებს"
+
+#: mcs/mcs/expression.cs:8571
+#, csharp-format
+msgid ""
+"`{0}' does not have a predefined size, therefore sizeof can only be used in "
+"an unsafe context (consider using System.Runtime.InteropServices.Marshal."
+"SizeOf)"
+msgstr ""
+"'{0}'-ს წინასწარ აღწერილი ზომა ვერ ექნება, ამიტომ, sizeof()-ს, მხოლოდ, "
+"სახიფათო კონტექსტის შიგნით თუ გამოიყენებთ (იფიქრეთ System.Runtime."
+"InteropServices.Marshal.SizeOf-ის გამოყენებაზე)"
+
+#: mcs/mcs/expression.cs:8638
+#, csharp-format
+msgid "Alias `{0}' not found"
+msgstr "ფსევდონიმი `{0}' აღმოჩენილი არაა"
+
+#: mcs/mcs/expression.cs:8664
+msgid ""
+"The namespace alias qualifier `::' cannot be used to invoke a method. "
+"Consider using `.' instead"
+msgstr ""
+"სახელების სივრცის ფსევდონიმის კვალიფიკატორს '::' მეთოდის ჩასაწოდებლად ვერ "
+"გამოიყენებთ. იფიქრეთ, სამაგიეროდ '.' გამოიყენოთ"
+
+#: mcs/mcs/expression.cs:8754
+msgid "Cannot perform member binding on `null' value"
+msgstr "წევრის მიმაგრების ჩატარება შეუძლებელია მნიშვნელობაზე 'null'"
+
+#: mcs/mcs/expression.cs:8885
+#, csharp-format
+msgid ""
+"`{0}': cannot reference a type through an expression. Consider using `{1}' "
+"instead"
+msgstr ""
+"`{0}': ტიპთან მიმართვა შეუძლებელია გამოსახულების გავლით. იფიქრეთ, "
+"სამაგიეროდ, `{1}' გამოიყენოთ"
+
+#: mcs/mcs/expression.cs:8954
+#, csharp-format
+msgid "A nested type cannot be specified through a type parameter `{0}'"
+msgstr "ერთმანეთში ჩალაგებულ ტიპს ვერ მიუთითებთ ტიპის პარამეტრით '{0}'"
+
+#: mcs/mcs/expression.cs:8962
+#, csharp-format
+msgid ""
+"Alias `{0}' cannot be used with `::' since it denotes a type. Consider "
+"replacing `::' with `.'"
+msgstr ""
+"ფსევდონიმს '{0}' ვერ გამოიყენებთ '::'-სთან ერთად, რადგან ის ტიპს გამოხატავს. "
+"იფიქრეთ '::'-ის '.'-ით ჩანაცვლებაზე"
+
+#: mcs/mcs/expression.cs:9027
+#, csharp-format
+msgid "The nested type `{0}' does not exist in the type `{1}'"
+msgstr "ერთმანეთში ჩაშენებული ტიპი '{0}' არ არსებობს ტიპში '{1}'"
+
+#: mcs/mcs/expression.cs:9051
+#, csharp-format
+msgid ""
+"Type `{0}' does not contain a definition for `{1}' and no extension method "
+"`{1}' of type `{0}' could be found. Are you missing {2}?"
+msgstr ""
+"ტიპი '{0}' არ შეიცავს აღწერას '{1}'-სთვის და გაფართოების მეთოდი '{1}' ტიპით "
+"'{0}' აღმოჩენილი არაა. {2} ხომ არ გაკლიათ?"
+
+#: mcs/mcs/expression.cs:9279
+#, csharp-format
+msgid "Cannot apply indexing with [] to an expression of type `{0}'"
+msgstr "[]-ის მქონე დაინდექსებას ვერ გადაატარებთ გამოსახულებაზე ტიპით '{0}'"
+
+#: mcs/mcs/expression.cs:9297
+msgid "A pointer must be indexed by only one value"
+msgstr "მაჩვენებელი, მხოლოდ, ერთი მნიშვნელობით უნდა იყოს დაინდექსებული"
+
+#: mcs/mcs/expression.cs:9353
+msgid "An element access expression cannot use named argument"
+msgstr "ელემენტის წვდომის გამოსახულება სახელიან არგუმენტს ვერ გამოიყენებს"
+
+#: mcs/mcs/expression.cs:9437
+#, csharp-format
+msgid "Wrong number of indexes `{0}' inside [], expected `{1}'"
+msgstr "არასწორი ინდექსების რაოდენობა '{0} []-ის შიგნით. მოველოდი: '{1}'"
+
+#: mcs/mcs/expression.cs:9837
+msgid ""
+"The indexer base access cannot be dynamically dispatched. Consider casting "
+"the dynamic arguments or eliminating the base access"
+msgstr ""
+"ინდექსერის საბაზისო წვდომის დინამიკური გაშვება შეუძლებელია. იფიქრეთ "
+"დინამიკური არგუმენტების დაკასტვაზე ან საბაზისო წვდომის მოცილებაზე"
+
+#: mcs/mcs/expression.cs:9922
+msgid "An expression tree may not contain a base access"
+msgstr "გამოსახულებების ხე არ შეიძლება, საბაზისო წვდომას არ შეიცავდეს"
+
+#: mcs/mcs/expression.cs:9940
+msgid "Keyword `base' is not available in a static method"
+msgstr "საკვანძო სიტყვა 'base' ხელმიუწვდომელია სტატიკურ მეთოდში"
+
+#: mcs/mcs/expression.cs:9942
+msgid "Keyword `base' is not available in the current context"
+msgstr "საკვანძო სიტყვა 'base' ხელმიუწვდომელია მიმდინარე კონტექსტში"
+
+#: mcs/mcs/expression.cs:9980
+msgid ""
+"A property, indexer or dynamic member access may not be passed as `ref' or "
+"`out' parameter"
+msgstr ""
+"თვისებას, ინდექსერს ან დინამიკური წევრის წვდომას 'ref' ან 'out' პარამეტრით "
+"ვერ გადასცემთ"
+
+#: mcs/mcs/expression.cs:10318
+#, csharp-format
+msgid "Array elements cannot be of type `{0}'"
+msgstr "მასივი ელემენტები ვერ იქნება ტიპით '{0}'"
+
+#: mcs/mcs/expression.cs:10321
+#, csharp-format
+msgid "Array elements cannot be of static type `{0}'"
+msgstr "მასივი ელემენტები ვერ იქნება სტატიკური ტიპით '{0}'"
+
+#: mcs/mcs/expression.cs:10497
+msgid "Cannot use a negative size with stackalloc"
+msgstr "უარყოფით ზომას stackalloc-თან ვერ გამოყენებთ"
+
+#: mcs/mcs/expression.cs:10501
+msgid "Cannot use stackalloc in finally or catch"
+msgstr "'stackalloc'-ს 'finally'-სთან ან 'catch'-თან ერთად ვერ გამოიყენებთ"
+
+#: mcs/mcs/expression.cs:10618
+#, csharp-format
+msgid ""
+"Member `{0}' cannot be initialized. An object initializer may only be used "
+"for fields, or properties"
+msgstr ""
+"წევრის '{0}' ინიციალიზაცია შეუძლებელია ობიექტი ინიციალიზატორები, მხოლოდ, "
+"ველებისთვის ან თვისებებისთვის შეგიძლიათ, გამოიყენოთ"
+
+#: mcs/mcs/expression.cs:10627
+#, csharp-format
+msgid ""
+"Static field or property `{0}' cannot be assigned in an object initializer"
+msgstr "სტატიკურ ველს ან თვისებას '{0}' ობიექტის ინიციალიზატორში ვერ მიანიჭებთ"
+
+#: mcs/mcs/expression.cs:10834
+#, csharp-format
+msgid ""
+"A field or property `{0}' cannot be initialized with a collection object "
+"initializer because type `{1}' does not implement `{2}' interface"
+msgstr ""
+"ველის ან თვისების '{0}' ინიციალიზაცია შეუძლებელია კოლექციის ობიექტის "
+"ინიციალიზატორით, რადგან ტიპი '{1}' არ ახორციელებს ინტერფეისს '{2}'"
+
+#: mcs/mcs/expression.cs:10845
+#, csharp-format
+msgid "Inconsistent `{0}' member declaration"
+msgstr "არამდგრადი '{0}'-ის აღწერა"
+
+#: mcs/mcs/expression.cs:10853
+#, csharp-format
+msgid ""
+"An object initializer includes more than one member `{0}' initialization"
+msgstr "ობიექტის ინიციალიზატორი ერთ წევრზე მეტ '{0}' ინიციალიზაციას შეიცავს"
+
+#: mcs/mcs/expression.cs:10871
+#, csharp-format
+msgid "Cannot initialize object of type `{0}' with a collection initializer"
+msgstr ""
+"'{0}' ტიპის მქონე ობიექტს კოლექციის ინიციალიზატორით ინიციალიზაციას ვერ უზამთ"
+
+#: mcs/mcs/expression.cs:11014
+msgid ""
+"Object and collection initializers cannot be used to instantiate a delegate"
+msgstr ""
+"ობიექტის და კოლექციის ინიციალიზატორებს დელეგატის ინსტანცირებაში ვერ "
+"გამოიყენებთ"
+
+#: mcs/mcs/expression.cs:11185
+msgid "Anonymous types cannot be used in this expression"
+msgstr "ამ გამოსახულებაში ანონიმურ ტიპებს ვერ გამოიყენებთ"
+
+#: mcs/mcs/expression.cs:11279
+#, csharp-format
+msgid "An anonymous type property `{0}' cannot be initialized with `{1}'"
+msgstr "ანონიმური ტიპის თვისებას '{0}' ვერ უზამთ ინიციალიზაციას '{1}'-ით"
+
+#: mcs/mcs/field.cs:74
+msgid ""
+"The modifier 'abstract' is not valid on fields. Try using a property instead"
+msgstr "მოდიფიკატორი 'abstract' არასწორია ველებზე. სცადეთ, property გამოიყენოთ"
+
+#: mcs/mcs/field.cs:136
+msgid ""
+"The FieldOffset attribute can only be placed on members of types marked with "
+"the StructLayout(LayoutKind.Explicit)"
+msgstr ""
+"ატრიბუტი FieldOffset, მხოლოდ, იმ ტიპის წევრებზე შეგიძლიათ დასვათ, რომელსაც "
+"StructLayout(LayoutKind.Explicit) აქვს მითითებული"
+
+#: mcs/mcs/field.cs:141
+msgid "The FieldOffset attribute is not allowed on static or const fields"
+msgstr "ატრიბუტი 'FieldOffset' დაუშვებელია სტატიკურ ან მუდმივ ველებზე"
+
+#: mcs/mcs/field.cs:147
+msgid ""
+"Do not use 'System.Runtime.CompilerServices.FixedBuffer' attribute. Use the "
+"'fixed' field modifier instead"
+msgstr ""
+"არ გამოიყენოთ ატრიბუტი 'System.Runtime.CompilerServices.FixedBuffer'. "
+"სამაგიეროდ გამოიყენეთ ველის მოდიფიკატორი 'fixed'"
+
+#: mcs/mcs/field.cs:255
+#, csharp-format
+msgid ""
+"`{0}': Instance field types marked with StructLayout(LayoutKind.Explicit) "
+"must have a FieldOffset attribute"
+msgstr ""
+"`{0}': გაშვებული ასლის ველის ტიპი,რომლებიც მონიშნულია "
+"StructLayout(LayoutKind.Explicit)-ით, ატრიბუტი FieldOffset უნდა ჰქონდეს"
+
+#: mcs/mcs/field.cs:266
+#, csharp-format
+msgid "`{0}': cannot declare variables of static types"
+msgstr "`{0}': სტატიკური ტიპის ცვლადების აღწერა შეუძლებელია"
+
+#: mcs/mcs/field.cs:413
+#, csharp-format
+msgid ""
+"`{0}': Fixed size buffers type must be one of the following: bool, byte, "
+"short, int, long, char, sbyte, ushort, uint, ulong, float or double"
+msgstr ""
+"`{0}': ფიქსირებული ზომის ბუფერების ტიპი შეიძლება, იყოს ერთთ-ერთი: bool, "
+"byte, short, int, long, char, sbyte, ushort, uint, ulong, float, ან double"
+
+#: mcs/mcs/field.cs:450
+#, csharp-format
+msgid "`{0}': Fixed size buffer fields may only be members of structs"
+msgstr ""
+"`{0}': ფიქსირებული ზომის ბუფერის ველები, მხოლოდ, სტრუქტურების წევრი "
+"შეიძლება, იყოს"
+
+#: mcs/mcs/field.cs:465
+#, csharp-format
+msgid "`{0}': Fixed size buffers must have a length greater than zero"
+msgstr "`{0}': ფიქსირებული ზომის ბუფერების ზომა 0-ზე მეტი უნდა იყოს"
+
+#: mcs/mcs/field.cs:488
+#, csharp-format
+msgid ""
+"Fixed size buffer `{0}' of length `{1}' and type `{2}' exceeded 2^31 limit"
+msgstr ""
+"ფიქსირებული ზომის ბუფერი `{0}' სიგრძით `{1}' და ტიპით `{2}' სცილდება ზღვარს "
+"2^31"
+
+#: mcs/mcs/field.cs:669
+#, csharp-format
+msgid "`{0}': A volatile field cannot be of the type `{1}'"
+msgstr "'{0}': აქროლადი ველი ვერ იქნება ტიპით '{1}'"
+
+#: mcs/mcs/field.cs:674
+#, csharp-format
+msgid "`{0}': A field cannot be both volatile and readonly"
+msgstr "'{0}': ველი ერთდროულად აქროლად და მხოლოდ-წაკითხვადი ვერ იქნება"
+
+#: mcs/mcs/flowanalysis.cs:144
+#, csharp-format
+msgid ""
+"An automatically implemented property `{0}' must be fully assigned before "
+"control leaves the constructor. Consider calling the default struct "
+"contructor from a constructor initializer"
+msgstr ""
+"ავტომატურად განხორციელებული თვისება '{0}' სრულად მინიჭებული უნდა იყოს, სანამ "
+"კონტროლი კონსტრუქტორს დატოვებს. იფიქრეთ ნაგულისხმევი სტრუქტურის გამოძახებაზე "
+"კონსტრუქტორის ინიციალიზატორიდან"
+
+#: mcs/mcs/flowanalysis.cs:148
+#, csharp-format
+msgid ""
+"Field `{0}' must be fully assigned before control leaves the constructor"
+msgstr ""
+"ველი '{0}' ბოლომდე უნდა იყოს მინიჭებული, სანამ კონტროლი კონსტრუქტორს დატოვებს"
+
+#: mcs/mcs/generic.cs:159 mcs/mcs/generic.cs:183
+#, csharp-format
+msgid "Type parameter `{0}' inherits conflicting constraints `{1}' and `{2}'"
+msgstr ""
+"ტიპის პარამეტრი `{0}' მემკვიდრეობით ურთიერთგამომრიცხავ შეზღუდვებს, `{1}'-ს "
+"და `{2}'-ს იღებს"
+
+#: mcs/mcs/generic.cs:245
+#, csharp-format
+msgid "A constraint cannot be the dynamic type `{0}'"
+msgstr "შეზღუდვა ვერ იქნება დინამიკური ტიპი '{0}'"
+
+#: mcs/mcs/generic.cs:252
+#, csharp-format
+msgid ""
+"Inconsistent accessibility: constraint type `{0}' is less accessible than "
+"`{1}'"
+msgstr ""
+"არამდგრადი წვდომადობა: შეზღუდვა ტიპით '{0}' ნაკლებად წვდომადია, ვიდრე '{1}'"
+
+#: mcs/mcs/generic.cs:259 mcs/mcs/generic.cs:273
+#, csharp-format
+msgid "Duplicate constraint `{0}' for type parameter `{1}'"
+msgstr "ორმაგი შეზღუდვა '{0}' ტიპის პარამეტრისთვის '{1}'"
+
+#: mcs/mcs/generic.cs:288
+#, csharp-format
+msgid "Circular constraint dependency involving `{0}' and `{1}'"
+msgstr "წრიული შეზღუდვის დამოკიდებულება, რომელიც '{0}'-სა და '{1}'-ს ეხება"
+
+#: mcs/mcs/generic.cs:319
+#, csharp-format
+msgid ""
+"Type parameter `{0}' has the `struct' constraint, so it cannot be used as a "
+"constraint for `{1}'"
+msgstr ""
+"ტიპის პარამეტრს `{0}' აქვს შეზღუდვა `struct', ასე რომ, მას `{1}'-ის "
+"შეზღუდვად ვერ გამოიყენებთ"
+
+#: mcs/mcs/generic.cs:330
+#, csharp-format
+msgid ""
+"The class type constraint `{0}' must be listed before any other constraints. "
+"Consider moving type constraint to the beginning of the constraint list"
+msgstr ""
+"კლასის ტიპის შეზღუდვა '{0}' ყველა დანარჩენ შეზღუდვამდე უნდა იყოს ჩამოთვლილი. "
+"ფიქრეთ ტიპის შეზღუდვის შეზღუდვების სიის დასაწყისში გადატანაზე"
+
+#: mcs/mcs/generic.cs:336
+#, csharp-format
+msgid ""
+"`{0}': cannot specify both a constraint class and the `class' or `struct' "
+"constraint"
+msgstr ""
+"`{0}': ორივეს, შეზღუდვის კლასს და `class' ან `struct' შეზღუდვას, ვერ "
+"მიუთითებთ"
+
+#: mcs/mcs/generic.cs:348
+#, csharp-format
+msgid "A constraint cannot be special class `{0}'"
+msgstr "შეზღუდვა სპეციალური კლასი '{0}' ვერ იქნება"
+
+#: mcs/mcs/generic.cs:352
+msgid "A constraint cannot be the dynamic type"
+msgstr "შეზღუდვა დინამიკური ტიპის ვერ იქნება"
+
+#: mcs/mcs/generic.cs:358
+#, csharp-format
+msgid ""
+"`{0}' is not a valid constraint. A constraint must be an interface, a non-"
+"sealed class or a type parameter"
+msgstr ""
+"'{0}' სწორი შეზღუდვა არაა. შეზღუდვა უნდა იყოს ინტერფეისი, არადაბეჭდილი კლასი "
+"ან ტიპის პარამეტრი"
+
+#: mcs/mcs/generic.cs:365
+#, csharp-format
+msgid ""
+"`{0}' is not a valid constraint. Static classes cannot be used as constraints"
+msgstr ""
+"'{0}' სწორი შეზღუდვა არაა. სტატიკურ კლასებს შეზღუდვებად ვერ გამოიყენებთ"
+
+#: mcs/mcs/generic.cs:684
+#, csharp-format
+msgid "The {2} type parameter `{0}' must be {3} valid on `{1}{4}'"
+msgstr "{2} ტიპის პარამეტრი `{0}' უნდა იყოს {3} სწორი `{1}{4}-ზე'"
+
+#: mcs/mcs/generic.cs:2166
+#, csharp-format
+msgid "`{0}': static classes cannot be used as generic arguments"
+msgstr "`{0}': სტატიკურ კლასებს ზოგად არგუმენტებად ვერ გამოიყენებთ"
+
+#: mcs/mcs/generic.cs:2173
+#, csharp-format
+msgid "The type `{0}' may not be used as a type argument"
+msgstr "ტიპს '{0}' ტიპის არგუმენტად ვერ გამოიყენებთ"
+
+#: mcs/mcs/generic.cs:2267
+msgid "Variant type parameters can only be used with interfaces and delegates"
+msgstr ""
+"ვარიანტის ტიპის პარამეტრები, მხოლოდ, ინტერფესებთან და დელეგატებთან ერთად "
+"შეგიძლიათ, გამოიყენოთ"
+
+#: mcs/mcs/generic.cs:2336
+#, csharp-format
+msgid ""
+"Partial method declarations of `{0}' have inconsistent constraints for type "
+"parameter `{1}'"
+msgstr ""
+"'{0}'-ის ნაწილობრივი მეთოდის აღწერას არამდგრადი შეზღუდვები აქვს ტიპის "
+"პარამეტრისთვის '{1}'"
+
+#: mcs/mcs/generic.cs:2352
+#, csharp-format
+msgid ""
+"Partial declarations of `{0}' have inconsistent constraints for type "
+"parameter `{1}'"
+msgstr ""
+"'{0}'-ის ნაწილობრივ აღწერას არამდგრადი შეზღუდვები აქვს ტიპის პარამეტრისთვის "
+"'{1}'"
+
+#: mcs/mcs/generic.cs:2534
+#, csharp-format
+msgid ""
+"The type `{0}' must be a reference type in order to use it as type parameter "
+"`{1}' in the generic type or method `{2}'"
+msgstr ""
+"ტიპი '{0}' მიმართვის ტიპის უნდა იყოს, რომ გამოიყენოთ, როგორც ტიპის პარამეტრი "
+"'{1}' ზოგად ტიპში ან მეთოდში '{2}'"
+
+#: mcs/mcs/generic.cs:2544
+#, csharp-format
+msgid ""
+"The type `{0}' must be a non-nullable value type in order to use it as type "
+"parameter `{1}' in the generic type or method `{2}'"
+msgstr ""
+"ტიპი '{0}' არაგანულებადი მნიშვნელობის ტიპის უნდა იყოს, რომ გამოიყენოთ, "
+"როგორც ტიპის პარამეტრი '{1}' ზოგად ტიპში ან მეთოდში '{2}'"
+
+#: mcs/mcs/generic.cs:2605
+#, csharp-format
+msgid ""
+"The type `{0}' must have a public parameterless constructor in order to use "
+"it as parameter `{1}' in the generic type or method `{2}'"
+msgstr ""
+"ტიპს '{0}' უნდა ჰქონდეს საჯარო უპარამეტრო კონსტრუქტორი, რომ გამოიყენოს ის, "
+"როგორც პარამეტრი '{1}' ზოგად ტიპში ან მეთოდში '{2}'"
+
+#: mcs/mcs/generic.cs:2661
+#, csharp-format
+msgid ""
+"The type `{0}' cannot be used as type parameter `{1}' in the generic type or "
+"method `{2}'. There is no boxing or type parameter conversion from `{0}' to "
+"`{3}'"
+msgstr ""
+
+#: mcs/mcs/generic.cs:2667
+#, csharp-format
+msgid ""
+"The type `{0}' cannot be used as type parameter `{1}' in the generic type or "
+"method `{2}'. The nullable type `{0}' never satisfies interface constraint "
+"`{3}'"
+msgstr ""
+"ტიპს '{0}' ვერ გამოიყენებთ ტიპის პარამეტრად '{1}' ზოგად ტიპში ან მეთოდში "
+"'{2}'. განულებადი ტიპი '{0}' არასდროს აკმაყოფილებს ინტერფეისის შეზღუდვას "
+"'{3}'"
+
+#: mcs/mcs/generic.cs:2671
+#, csharp-format
+msgid ""
+"The type `{0}' cannot be used as type parameter `{1}' in the generic type or "
+"method `{2}'. The nullable type `{0}' does not satisfy constraint `{3}'"
+msgstr ""
+"ტიპს '{0}' ვერ გამოიყენებთ ტიპის პარამეტრად '{1}' ზოგად ტიპში ან მეთოდში "
+"'{2}'. განულებადი ტიპი '{0}' არ აკმაყოფილებს შეზღუდვას '{3}'"
+
+#: mcs/mcs/generic.cs:2676
+#, csharp-format
+msgid ""
+"The type `{0}' cannot be used as type parameter `{1}' in the generic type or "
+"method `{2}'. There is no boxing conversion from `{0}' to `{3}'"
+msgstr ""
+
+#: mcs/mcs/generic.cs:2681
+#, csharp-format
+msgid ""
+"The type `{0}' cannot be used as type parameter `{1}' in the generic type or "
+"method `{2}'. There is no implicit reference conversion from `{0}' to `{3}'"
+msgstr ""
+"ტიპს '{0}' ვერ გამოიყენებთ ტიპის პარამეტრად '{1}' ზოგად ტიპში ან მეთოდში "
+"'{2}'. არ არსებობს არაცხადი მიმართვის გადაყვანა '{0}'-დან '{3}'-ში"
+
+#: mcs/mcs/iterators.cs:98
+msgid "The yield statement cannot be used inside anonymous method blocks"
+msgstr ""
+"გამოსავლის პროცედურას ანონიმური მეთოდის ბლოკების შიგნით ვერ გამოიყენებთ"
+
+#: mcs/mcs/iterators.cs:103
+msgid "Cannot yield in the body of a finally clause"
+msgstr "საბოლოო პირობის ტანში გამოსავალი შეუძლებელია"
+
+#: mcs/mcs/iterators.cs:116
+msgid "Cannot yield a value in the body of a try block with a catch clause"
+msgstr ""
+"დაჭერის პირობის მქონე ცდის ბლოკის სხეულში მნიშვნელობის გამოსავალი შეუძლებელია"
+
+#: mcs/mcs/iterators.cs:120
+msgid "Cannot yield a value in the body of a catch clause"
+msgstr "დაჭერის პირობის სხეულში მნიშვნელობის გამოსავალი შეუძლებელია"
+
+#: mcs/mcs/iterators.cs:1185
+#, csharp-format
+msgid ""
+"The body of `{0}' cannot be an iterator block because `{1}' is not an "
+"iterator interface type"
+msgstr ""
+"'{0}'-ის სხეული იტერატორის ბლოკი ვერ იქნება, რადგან '{1}' იტერატორის "
+"ინტერფეისის ტიპი არაა"
+
+#: mcs/mcs/iterators.cs:1198
+msgid "Iterators cannot have ref or out parameters"
+msgstr "იტერატორებს ref ან out პარამეტრები ვერ ექნება"
+
+#: mcs/mcs/iterators.cs:1204
+msgid "__arglist is not allowed in parameter list of iterators"
+msgstr "__arglist დაუშვებელია იტერატორის პარამეტრების სიაში"
+
+#: mcs/mcs/iterators.cs:1210
+msgid "Iterators cannot have unsafe parameters or yield types"
+msgstr "იტერატორებს სახიფათო პარამეტრები ან შედეგის ტიპები ვერ ექნება"
+
+#: mcs/mcs/iterators.cs:1216 mcs/mcs/statement.cs:5917
+msgid "Unsafe code may not appear in iterators"
+msgstr "სახიფათო კოდი, არ შეიძლება, იტერატორებში გამოჩნდეს"
+
+#: mcs/mcs/ikvm.cs:274
+msgid "SDK path could not be resolved"
+msgstr "SDK-ის ბილიკის ამოხსნა შეუძლებელია"
+
+#: mcs/mcs/ikvm.cs:354
+#, csharp-format
+msgid ""
+"Assembly `{0}' references `{1}' which has a higher version number than "
+"imported assembly `{2}'"
+msgstr ""
+"ანაწყობი '{0}' მიმართავს '{1}'-ს, რომელსაც უფრო მაღალი ვერსიის ნომერი აქვს, "
+"ვიდრე შემოტანილ ანაწყობს '{2}'"
+
+#: mcs/mcs/ikvm.cs:363 mcs/mcs/ikvm.cs:367
+#, csharp-format
+msgid ""
+"Assuming assembly reference `{0}' matches assembly `{1}'. You may need to "
+"supply runtime policy"
+msgstr ""
+"ითვლება, რომ ანაწყობზე მიმართვა '{0}' ემთხვევა ანაწყობს '{1}'. შეიძლება, "
+"გაშვების გარემოს პოლიტიკის მითითება გჭირდებათ"
+
+#: mcs/mcs/ikvm.cs:462
+#, csharp-format
+msgid ""
+"An assembly with the same name `{0}' has already been imported. Consider "
+"removing one of the references or sign the assembly"
+msgstr ""
+"ანაწყობი იგივე სახელით '{0}' უკვე შემოტანილია. ჯერ წაშალეთ ერთ-ერთი მიმართვა "
+"ან ხელი მოაწერეთ ანაწყობს"
+
+#: mcs/mcs/ikvm.cs:471
+#, csharp-format
+msgid ""
+"An assembly `{0}' with the same identity has already been imported. Consider "
+"removing one of the references"
+msgstr ""
+"ანაწყობი იგივე სახელით '{0}' უკვე შემოტანილია. ჯერ წაშალეთ ერთ-ერთი მიმართვა"
+
+#: mcs/mcs/linq.cs:69
+#, csharp-format
+msgid ""
+"An implementation of `{0}' query expression pattern could not be found. Are "
+"you missing `System.Linq' using directive or `System.Core.dll' assembly "
+"reference?"
+msgstr ""
+"'{0}' მოთხოვნის გამოსახულების ნიმუშის განხორციელება აღმოჩენილი არაა. "
+"შეამოწმეთ, ხომ არ გაკლიათ დირექტივა 'System.Linq'-ის გამოსაყენებლად ან "
+"მიმართვა ანაწყობზე 'System.Core.dll'?"
+
+#: mcs/mcs/linq.cs:91
+msgid ""
+"Query expressions with a source or join sequence of type `dynamic' are not "
+"allowed"
+msgstr ""
+"მოთხოვნის გამოსახულებები წყაროს ან შეერთების მიმდევრობით, ტიპით 'dynamic' "
+"დაშვებული არაა"
+
+#: mcs/mcs/linq.cs:101
+#, csharp-format
+msgid ""
+"Ambiguous implementation of the query pattern `{0}' for source type `{1}'"
+msgstr "ბუნდოვანი განხორციელება მოთხოვნის ნიმუშის '{0}' წყაროს ტიპისთვის '{1}'"
+
+#: mcs/mcs/linq.cs:132
+#, csharp-format
+msgid ""
+"An implementation of `{0}' query expression pattern for source type `{1}' "
+"could not be found"
+msgstr ""
+"'{0}' მოთხოვნის გამოსახულების ნიმუშის განხორციელება წყარო ტიპისთვის '{1}' "
+"აღმოჩენილი არაა"
+
+#: mcs/mcs/linq.cs:140
+#, csharp-format
+msgid ""
+"An expression type is incorrect in a subsequent `from' clause in a query "
+"expression with source type `{0}'"
+msgstr ""
+"გამოსახულების ტიპი არასწორია მომდევნო 'from' პირობაში მოთხოვნის "
+"გამოსახულებაში წყაროს ტიპით '{0}'"
+
+#: mcs/mcs/linq.cs:144
+#, csharp-format
+msgid ""
+"An expression type in `{0}' clause is incorrect. Type inference failed in "
+"the call to `{1}'"
+msgstr ""
+"გამოსახულების ტიპი '{0}' პირობაში არასწორია. ტიპის დასკვნა ჩავარდა '{1}'-ის "
+"გამოძახებაში"
+
+#: mcs/mcs/linq.cs:256
+#, csharp-format
+msgid "A range variable `{0}' cannot be initialized with `{1}'"
+msgstr "შუალედის ცვლადის '{0}' ინიციალიზაცია შეუძლებელია '{1}'-ით"
+
+#: mcs/mcs/linq.cs:827
+#, csharp-format
+msgid "A range variable `{0}' conflicts with a previous declaration of `{0}'"
+msgstr "შუალედის ცვლადი '{0}' კონფლიქტშია '{0}'-ის წინა აღწერასთან"
+
+#: mcs/mcs/linq.cs:834
+#, csharp-format
+msgid "A range variable `{0}' has already been declared in this scope"
+msgstr "შუალედის ცვლადი '{0}' უკვე აღწერილია ამ საზღვრებში"
+
+#: mcs/mcs/linq.cs:841
+#, csharp-format
+msgid "A range variable `{0}' conflicts with a method type parameter"
+msgstr "შუალედის ცვლადი '{0}' გამორიცხავს მეთოდის ტიპის პარამეტრს"
+
+#: mcs/mcs/linq.cs:873
+#, csharp-format
+msgid ""
+"A range variable `{0}' cannot be assigned to. Consider using `let' clause to "
+"store the value"
+msgstr ""
+"შუალედის ცვლადს '{0}' ვერაფერს მიანიჭებთ. იფიქრეთ 'let' ბრძანების "
+"გამოყენებაზე, თუ მნიშვნელობის დამახსოვრება გნებავთ"
+
+#: mcs/mcs/literal.cs:57
+#, csharp-format
+msgid ""
+"Cannot convert null to the type parameter `{0}' because it could be a value "
+"type. Consider using `default ({0})' instead"
+msgstr ""
+"ნულს ტიპის პარამეტრში '{0}' გადაყვანა შეუძლებელია, რადგან ის, შეიძლება, "
+"მნიშვნელობის ტიპი იყოს. იფიქრეთ, გამოიყენოთ 'default ({0})'"
+
+#: mcs/mcs/literal.cs:63
+#, csharp-format
+msgid "Cannot convert null to `{0}' because it is a value type"
+msgstr "ნულს '{0}'-შ ვერ გადაიყვანთ, რადგან ის მნიშვნელობის ტიპია"
+
+#: mcs/mcs/literal.cs:274
+#, csharp-format
+msgid ""
+"Literal of type double cannot be implicitly converted to type `{0}'. Add "
+"suffix `{1}' to create a literal of this type"
+msgstr ""
+"ლიტერალს ტიპით double არაცხადად ტიპში '{0}' ვერ გადაიყვანთ. დაამატეთ სუფიქსი "
+"'{1}' რომ ამ ტიპის ლიტერალი შექმნათ"
+
+#: mcs/mcs/membercache.cs:1405
+msgid ""
+"A partial method declaration and partial method implementation cannot differ "
+"on use of `params' modifier"
+msgstr ""
+"ნაწილობრვი მეთოდის გამოცხადებასა და ნაწილობრივი მეთოდის განხორციელებას, არ "
+"შეიძლება, განსხვავებული 'params' მოდიფიკატორს იყენებდნენ"
+
+#: mcs/mcs/membercache.cs:1408
+msgid ""
+"A partial method declaration and partial method implementation must be both "
+"an extension method or neither"
+msgstr ""
+"ნაწილობრივი მეთოდის გამოცხადება და ნაწილობრივი მეთოდის განხორციელება ან "
+"ორივე გაფართოების მეთოდი უნდა იყოს, ან არცერთი"
+
+#: mcs/mcs/membercache.cs:1412
+#, csharp-format
+msgid ""
+"Overloaded contructor `{0}' cannot differ on use of parameter modifiers only"
+msgstr ""
+"გადამეტტვირთული კონტრუქტორი '{0}' არ შეიძლება განსხვავდებოდეს მხოლოდ, "
+"პარამეტრების შემცვლელებით"
+
+#: mcs/mcs/membercache.cs:1416
+#, csharp-format
+msgid ""
+"Overloaded method `{0}' cannot differ on use of parameter modifiers only"
+msgstr ""
+"გადამეტტვირთული მეთოდი '{0}' არ შეიძლება განსხვავდებოდეს მხოლოდ, "
+"პარამეტრების შემცვლელებით"
+
+#: mcs/mcs/membercache.cs:1448
+msgid ""
+"A partial method declaration and partial method implementation must be both "
+"`static' or neither"
+msgstr ""
+"ნაწილობრივი მეთოდის გამოცხადება და ნაწილობრივი მეთოდის განხორციელება ან "
+"ორივე 'static' უნდა იყოს, ან არცერთი"
+
+#: mcs/mcs/membercache.cs:1454
+msgid ""
+"A partial method declaration and partial method implementation must be both "
+"`unsafe' or neither"
+msgstr ""
+"ნაწილობრივი მეთოდის გამოცხადება და ნაწილობრივი მეთოდის განხორციელება ან "
+"ორივე 'unsafe' უნდა იყოს, ან არცერთი"
+
+#: mcs/mcs/membercache.cs:1462
+#, csharp-format
+msgid "A partial method `{0}' declaration is already defined"
+msgstr "ნაწილობრივი მეთოდის '{0}' გამოცხადება უკვე აღწერილია"
+
+#: mcs/mcs/membercache.cs:1466
+#, csharp-format
+msgid "A partial method `{0}' implementation is already defined"
+msgstr "ნაწილობრივი მეთოდის '{0}' განხორციელება უკვე აღწერილია"
+
+#: mcs/mcs/membercache.cs:1477 mcs/mcs/property.cs:81
+#, csharp-format
+msgid "A member `{0}' is already reserved"
+msgstr "წევრი '{0}' უკვე დარეზერვებულია"
+
+#: mcs/mcs/membercache.cs:1488
+#, csharp-format
+msgid "Duplicate user-defined conversion in type `{0}'"
+msgstr "გამეორებული მომხმარებლის აღწერილი გადაყვანა ტიპში '{0}'"
+
+#: mcs/mcs/membercache.cs:1494
+#, csharp-format
+msgid ""
+"A member `{0}' is already defined. Rename this member or use different "
+"parameter types"
+msgstr ""
+"წევრი '{0}' უკვე აღწერილია, გადაარქვით სახელი ამ წევრს, ან გამოიყენეთ "
+"განსხვავებული პარამეტრის ტიპები"
+
+#: mcs/mcs/method.cs:556
+#, csharp-format
+msgid "`{0}': Async methods cannot use `MethodImplOptions.Synchronized'"
+msgstr ""
+"`{0}': ასინქრონული მეთოდები `MethodImplOptions.Synchronized'-ს ვერ იყენებენ"
+
+#: mcs/mcs/method.cs:564
+msgid ""
+"The DllImport attribute must be specified on a method marked `static' and "
+"`extern'"
+msgstr ""
+"ატრიბუტი DllImport მითითებული უნდა იყოს მეთოდზე, რომელიც დანიშნულია, როგორც "
+"'static' ან 'extern'"
+
+#: mcs/mcs/method.cs:665
+#, csharp-format
+msgid "`{0}': A partial method parameters cannot use `out' modifier"
+msgstr "`{0}': ნაწილობრივი მეთოდის პარამეტრები მოდიფიკატორს 'out' ვერ იყენებენ"
+
+#: mcs/mcs/method.cs:729
+#, csharp-format
+msgid ""
+"Conditional not valid on `{0}' because it is a constructor, destructor, "
+"operator or explicit interface implementation"
+msgstr ""
+"Conditional არასწორია `{0}'-ზე, რადგან ის კონსტრუქტორი, დესტრუქტორია, "
+"ოპერატორი, ან აშკარა ინტერფეისის განხორციელებაა"
+
+#: mcs/mcs/method.cs:899
+msgid ""
+"A partial method cannot define access modifier or any of abstract, extern, "
+"new, override, sealed, or virtual modifiers"
+msgstr ""
+"ნაწილობრივი მეთოდი ვერ აღწერს წვდომი მოდიფიკატორს ან მოდფიკატორებით "
+"abstract, extern, new, override, sealed ან virtual"
+
+#: mcs/mcs/method.cs:905
+msgid ""
+"A partial method must be declared within a partial class or partial struct"
+msgstr ""
+"ნაწილობრივი მეთოდი ნაწილობრივ კლასში ან ნაწილობრივ სტრუქტურაში უნდა იყოს "
+"აღწერილი"
+
+#: mcs/mcs/method.cs:910
+#, csharp-format
+msgid "`{0}': Extension methods must be declared static"
+msgstr "`{0}': გაფართოების მეთოდები სტატიკურად უნდა აღწეროთ"
+
+#: mcs/mcs/method.cs:926
+#, csharp-format
+msgid "Program `{0}' has more than one entry point defined: `{1}'"
+msgstr "პროგრამას '{0}' ერთზე მეტი შესვლის წერტილი აქვს აღწერილი: '{1}'"
+
+#: mcs/mcs/method.cs:969
+#, csharp-format
+msgid "Conditional not valid on `{0}' because it is an override method"
+msgstr "Conditional არასწორია `{0}'-ზე, რადგან ის გადამეტტვირთვის მეთოდია"
+
+#: mcs/mcs/method.cs:974
+#, csharp-format
+msgid "Conditional not valid on `{0}' because its return type is not void"
+msgstr ""
+"Conditional არასწორია `{0}'-ზე, რადგან მისი დაბრუნების ტიპი ცარიელი არაა"
+
+#: mcs/mcs/method.cs:979
+msgid "Conditional not valid on interface members"
+msgstr "პირობა არასწორია ინტერფეისის წევრებზე"
+
+#: mcs/mcs/method.cs:985
+#, csharp-format
+msgid "Conditional member `{0}' cannot implement interface member `{1}'"
+msgstr ""
+"Conditional-ის წევრს `{0}' არ შეუძლია განახორციელოს ინტერფეისის წევრი `{1}'"
+
+#: mcs/mcs/method.cs:992
+#, csharp-format
+msgid "Conditional method `{0}' cannot have an out parameter"
+msgstr "პირობით მეთოდს '{0}' პარამეტრი 'out' ვერ ექნება"
+
+#: mcs/mcs/method.cs:1180
+#, csharp-format
+msgid ""
+"The constraints for type parameter `{0}' of method `{1}' must match the "
+"constraints for type parameter `{2}' of interface method `{3}'. Consider "
+"using an explicit interface implementation instead"
+msgstr ""
+"შეზღუდვები ტიპის პარამეტრისთვის '{0}' მეთოდისთვის '{1}' უნდა ემთხვეოდეს "
+"შეზღუდვებს ტიპის პარამეტრისთვის '{2}' ინტერფეისის მეთოდისთვის '{3}'. იფიქრეთ "
+"ამის მაგიერ აშკარა ინტერფეისის განხორციელებაზე"
+
+#: mcs/mcs/method.cs:1235
+msgid "The return type of an async method must be void, Task, or Task<T>"
+msgstr "ასინქრონული მეთოდის დაბრუნების ტიპი უნდა იყოს void, Task, ან Task<T>"
+
+#: mcs/mcs/method.cs:1252
+#, csharp-format
+msgid "`{0}': Extension methods cannot be defined in a nested class"
+msgstr "`{0}': გაფართოებულ მეთოდებს ერთმანეთში ჩადგმულ კლასში ვერ აღწერთ"
+
+#: mcs/mcs/method.cs:1258
+#, csharp-format
+msgid ""
+"`{0}': Extension methods require `System.Runtime.CompilerServices."
+"ExtensionAttribute' type to be available. Are you missing an assembly "
+"reference?"
+msgstr ""
+"`{0}': გაფართოები მეთოდებს ხელმისაწვდომობისთვის ტიპი `System.Runtime."
+"CompilerServices.ExtensionAttribute' სჭირდებათ. გამოგრჩათ მიმართვა ანაწყობზე?"
+
+#: mcs/mcs/method.cs:1267
+#, csharp-format
+msgid "`{0}': Extension methods must be defined in a non-generic static class"
+msgstr "`{0}': გაფართოებები არა-ზოგად სტატიკურ კლასში უნდა იყოს აღწერილი"
+
+#: mcs/mcs/method.cs:1283
+#, csharp-format
+msgid "`{0}': an entry point cannot be async method"
+msgstr "`{0}': შესვლის წერტილი ასინქრონული მეთოდი ვერ იქნება"
+
+#: mcs/mcs/method.cs:1333
+#, csharp-format
+msgid ""
+"A partial method `{0}' implementation is missing a partial method declaration"
+msgstr ""
+"ნაწილობრივი მეთოდის '{0}' განხორციელებას ნაწილობრივი მეთოდის გამოცხადება "
+"აკლია"
+
+#: mcs/mcs/method.cs:1371
+#, csharp-format
+msgid "Method or delegate cannot return type `{0}'"
+msgstr "მეთოდი ან დელეგატი ვერ დააბრუნებენ ტიპს '{0}'"
+
+#: mcs/mcs/method.cs:1449
+msgid ""
+"The constructor call cannot be dynamically dispatched within constructor "
+"initializer"
+msgstr ""
+"კონსტრუქტორის გამოძახება შეუძლებელია დინამიკურად გაეშვას კონსტრუქტორის "
+"ინიციალიზატორში"
+
+#: mcs/mcs/method.cs:1463
+#, csharp-format
+msgid "`{0}': Struct constructors cannot call base constructors"
+msgstr "`{0}': სტრუქტურის კონსტრუქტორი საბაზისო კონსტრუქტორებს ვერ გამოიძახებს"
+
+#: mcs/mcs/method.cs:1481
+#, csharp-format
+msgid "Constructor `{0}' cannot call itself"
+msgstr "კონსტრუქტორი '{0}' თავის თავს ვერ გამოიძახებს"
+
+#: mcs/mcs/method.cs:1633
+#, csharp-format
+msgid "`{0}': The static constructor must be parameterless"
+msgstr "`{0}': სტატიკურ კონსტრუქტორს მშობელი არ უნდა ჰყავდეს"
+
+#: mcs/mcs/method.cs:1654
+msgid "Structs cannot contain explicit parameterless constructors"
+msgstr "სტრუქტურები, არ შეიძლება, აშკარა უმშობლო კონსტრუქტორებს შეიცავდეს"
+
+#: mcs/mcs/method.cs:1680
+#, csharp-format
+msgid ""
+"`{0}': Structs with primary constructor cannot have explicit constructor"
+msgstr ""
+"`{0}': ძირითადი კონსტრუქტორის მქონე სტრუქტურებს არ შეიძლება, აშკარა "
+"კონსტრუქტორი ჰქონდეთ"
+
+#: mcs/mcs/method.cs:1683
+#, csharp-format
+msgid ""
+"`{0}': Instance constructor of type with primary constructor must specify "
+"`this' constructor initializer"
+msgstr ""
+"'{0}': ძირითადი კონსტრუქტორის მქონე ტიპის გაშვებული ასლის კონსტრუქტორს "
+"'this' კონსტრუქტორის ინიციალიზატორი უნდა ჰქონდეს"
+
+#: mcs/mcs/method.cs:1719
+#, csharp-format
+msgid ""
+"`{0}': A class with the ComImport attribute cannot have a user-defined "
+"constructor"
+msgstr ""
+"'{0}': ComImport ატრიბუტის მქონე კლასს მომხმარებლის მიერ აღწერილი "
+"კონსტრუქტორი ვერ ექნება"
+
+#: mcs/mcs/method.cs:1971
+#, csharp-format
+msgid "`{0}' is an accessor not found in interface member `{1}{2}'"
+msgstr "`{0}' აქსესორია, რომელიც აღმოჩენილი არაა ინტერფეისის წევრში `{1}{2}'"
+
+#: mcs/mcs/method.cs:1977
+#, csharp-format
+msgid ""
+"`{0}.{1}' in explicit interface declaration is not a member of interface"
+msgstr "`{0}.{1}' აშკარა ინტერფეისის გამოცხადებაში ინტერფეისის წევრი არაა"
+
+#: mcs/mcs/method.cs:1985
+#, csharp-format
+msgid ""
+"`{0}' explicit method implementation cannot implement `{1}' because it is an "
+"accessor"
+msgstr ""
+"'{0}' აშკარა მეთოდის განხორციელებას '{1}'-ის განხორციელება არ შეუძლია, "
+"რადგან ის აქსესორია"
+
+#: mcs/mcs/method.cs:1995
+#, csharp-format
+msgid "Method `{0}' cannot implement interface accessor `{1}'"
+msgstr "მეთოდს `{0}' არ შეუძლია განახორციელოს ინტერფეისის აქსესორი `{1}'"
+
+#: mcs/mcs/method.cs:2002
+#, csharp-format
+msgid ""
+"Accessor `{0}' cannot implement interface member `{1}' for type `{2}'. Use "
+"an explicit interface implementation"
+msgstr ""
+"აქსესორს '{0}' არ შეუძლია, განახორციელოს ინტერფეისის წევრი '{1}' ტიპისთვის "
+"'{2}'. გამოიყენეთ აშკარა ინტერფეისის განხორციელება"
+
+#: mcs/mcs/method.cs:2009
+#, csharp-format
+msgid ""
+"Accessor `{0}' must be declared public to implement interface member `{1}'"
+msgstr ""
+"აქსესორი '{0}' საჯაროდ უნდა იყოს გამოცხადებული, რომ განახორციელოს "
+"ინტერფეისის წევრი '{1}'"
+
+#: mcs/mcs/method.cs:2029
+#, csharp-format
+msgid ""
+"`{0}': the explicit interface implementation cannot introduce the params "
+"modifier"
+msgstr ""
+"'{0}': ინტერფეისის აშკარა განხორციელება პარამეტრების მოდიფიკატორს ვერ "
+"დაამატებს"
+
+#: mcs/mcs/method.cs:2370
+#, csharp-format
+msgid ""
+"Attribute `{0}' is not valid on property or event accessors. It is valid on "
+"`{1}' declarations only"
+msgstr ""
+"ატრიბუტი '{0}' არასწორია თვისებაზე ან მოვლენის აქსესორებზე. ის, მხოლოდ, "
+"'{1}'-ის გამოცხადებებზეა სწორი"
+
+#: mcs/mcs/method.cs:2598
+#, csharp-format
+msgid "User-defined operator `{0}' must be declared static and public"
+msgstr ""
+"მომხმარებლის აღწერილი ოპერატორი '{0}' უნდა იყოს გამოცხადებული, როგორც "
+"სტატიკური და საჯარო"
+
+#: mcs/mcs/method.cs:2642
+msgid ""
+"User-defined operator cannot take an object of the enclosing type and "
+"convert to an object of the enclosing type"
+msgstr ""
+"მომხმარებლის აღწერილ ოპერატორს არ შეუძლია ობიექტი, რომელიც შემცველი ტიპისაა "
+"და გადააკეთოს ის შემცველი ტიპის ობიექტად"
+
+#: mcs/mcs/method.cs:2653
+msgid "User-defined conversion must convert to or from the enclosing type"
+msgstr ""
+"მომხმარებლის აღწერილმა გადაყვანამ ჩასმული ტიპიდან ან ტიპში უნდა გადაიყვანონ"
+
+#: mcs/mcs/method.cs:2659
+#, csharp-format
+msgid ""
+"User-defined conversion `{0}' cannot convert to or from the dynamic type"
+msgstr ""
+"მომხმარებლის მიერ აღწერილ გადაყვანას '{0}' დინამიკურ ტიპში ან ტიპიდან "
+"გადაყვანა არ შეუძლია"
+
+#: mcs/mcs/method.cs:2666
+#, csharp-format
+msgid ""
+"User-defined conversion `{0}' cannot convert to or from an interface type"
+msgstr ""
+"მომხმარებლის მიერ აღწერილ გადაყვანას '{0}' ინტერფეისის ტიპში ან ტიპიდან "
+"გადაყვანა არ შეუძლია"
+
+#: mcs/mcs/method.cs:2673
+#, csharp-format
+msgid "User-defined conversion `{0}' cannot convert to or from a base class"
+msgstr ""
+"მომხმარებლის მიერ აღწერილ გადაყვანას '{0}' საბაზისო კლასში ან კლასიდან "
+"გადაყვანა არ შეუძლია"
+
+#: mcs/mcs/method.cs:2679
+#, csharp-format
+msgid "User-defined conversion `{0}' cannot convert to or from a derived class"
+msgstr ""
+"მომხმარებლის მიერ აღწერილ გადაყვანას '{0}' მიღებულ კლასში ან კლასიდან "
+"გადაყვანა არ შეუძლია"
+
+#: mcs/mcs/method.cs:2686
+msgid ""
+"Overloaded shift operator must have the type of the first operand be the "
+"containing type, and the type of the second operand must be int"
+msgstr ""
+
+#: mcs/mcs/method.cs:2695
+msgid ""
+"The return type for ++ or -- operator must be the containing type or derived "
+"from the containing type"
+msgstr ""
+"++ ან -- ოპერატორის დაბრუნების ტიპი შემცველი ტიპი უნდა იყოს, ან მიღებული "
+"უნდა იყოს შემცველი ტიპიდან"
+
+#: mcs/mcs/method.cs:2700
+msgid "The parameter type for ++ or -- operator must be the containing type"
+msgstr "პარამეტრის ტიპი ოპერატორისთვის ++ ან -- შემცველი ტიპი უნდა იყოს"
+
+#: mcs/mcs/method.cs:2707
+msgid "The parameter type of a unary operator must be the containing type"
+msgstr "უნარული ოპერატორის პარამეტრის ტიპი შემცველი ტიპი უნდა იყოს"
+
+#: mcs/mcs/method.cs:2715
+msgid "The return type of operator True or False must be bool"
+msgstr "ოპერატორის True ან False დაბრუნების ტიპი bool უნდა იყოს"
+
+#: mcs/mcs/method.cs:2730
+msgid "One of the parameters of a binary operator must be the containing type"
+msgstr "ბინარული ოპერატორის ერთი პარამეტრი შემცველი ტიპის უნდა იყოს"
+
+#: mcs/mcs/modifiers.cs:278
+#, csharp-format
+msgid "The modifier `{0}' is not valid for this item"
+msgstr "მოდიფიკატორი '{0}' არასწორია ამ ელემენტისთვის"
+
+#: mcs/mcs/namespace.cs:273
+#, csharp-format
+msgid "The imported type `{0}' is defined multiple times"
+msgstr "შემოტანილი ტიპი '{0}' ერთზე მეტჯერაა აღწერილი"
+
+#: mcs/mcs/namespace.cs:741 mcs/mcs/namespace.cs:753
+msgid ""
+"A using clause must precede all other namespace elements except extern alias "
+"declarations"
+msgstr ""
+"გამოყენების პირობა გარე ფსევდონიმების აღწერის გარდა ყველა სხვა სახელების "
+"სივრცის ელემენტს უნდა უსწრებდეს"
+
+#: mcs/mcs/namespace.cs:769
+#, csharp-format
+msgid "The using alias `{0}' appeared previously in this namespace"
+msgstr ""
+"გამოყენების ფსევდონიმი '{0}' ამ სახელების სივრცეში ადრე უკვე გამოჩენილა"
+
+#: mcs/mcs/namespace.cs:807 mcs/mcs/namespace.cs:830
+#, csharp-format
+msgid "The namespace `{0}' already contains a definition for `{1}'"
+msgstr "სახელების სივრცე '{0}' უკვე შეიცავს აღწერას '{1}'-სთვის"
+
+#: mcs/mcs/namespace.cs:1052
+#, csharp-format
+msgid "Namespace `{0}' contains a definition with same name as alias `{1}'"
+msgstr ""
+"სახელების სივრცე '{0}' შეიცავს აღწერს იგივე სახელით, როგორც ფსევდონიმს '{1}'"
+
+#: mcs/mcs/namespace.cs:1105
+#, csharp-format
+msgid "`{0}' is an ambiguous reference between `{1}' and `{2}'"
+msgstr "`{0}' ბუნდოვანი მიმართვაა `{1}'-სა და `{2}'-ს შორის"
+
+#: mcs/mcs/namespace.cs:1301
+#, csharp-format
+msgid ""
+"`{0}' is a type not a namespace. A using namespace directive can only be "
+"applied to namespaces"
+msgstr ""
+"'{0}' ტიპია და არა სახელების სივრცე. სახელების სივრცის გამოყენების "
+"დირექტივა, მხოლოდ, სახელების სივრცეში შეიძლება, გამოიყენოთ"
+
+#: mcs/mcs/namespace.cs:1325
+#, csharp-format
+msgid "The extern alias `{0}' was not specified in -reference option"
+msgstr "გარე ფსევდონიმი `{0}' მითითებული არ იყო პარამეტრში -reference"
+
+#: mcs/mcs/nullable.cs:1077
+msgid ""
+"An expression tree cannot contain a coalescing operator with null left side"
+msgstr ""
+"გამოსახულებების ხე არ შეიძლება, მინიჭების ოპერატორს შეიცავდეს ნულით მარცხენა "
+"მხარეს"
+
+#: mcs/mcs/parameter.cs:157
+msgid "The params parameter must be a single dimensional array"
+msgstr "პარამეტრი params ერთგანზომილებიანი მასივი უნდა იყოს"
+
+#: mcs/mcs/parameter.cs:327
+msgid "An out parameter cannot have the `In' attribute"
+msgstr "პარამეტრს out არ შეიძლება, 'In' ატრიბუტი ჰქონდეს"
+
+#: mcs/mcs/parameter.cs:332
+msgid ""
+"Do not use `System.ParamArrayAttribute'. Use the `params' keyword instead"
+msgstr ""
+"არ გამოიყენოთ 'System.ParamArrayAttribute'. მის მაგიერ გამოიყენეთ საკვანძო "
+"სიტყვა 'params'"
+
+#: mcs/mcs/parameter.cs:339
+msgid ""
+"Cannot specify only `Out' attribute on a ref parameter. Use both `In' and "
+"`Out' attributes or neither"
+msgstr ""
+"პარამეტრზე 'ref', მხოლოდ, 'Out' ატრიბუტს ვერ მიუთითებთ. გამოიყენეთ ან ორივე "
+"ატრიბუტი 'In' და 'Out', ან არც ერთი"
+
+#: mcs/mcs/parameter.cs:348
+#, csharp-format
+msgid "Cannot specify `{0}' attribute on optional parameter `{1}'"
+msgstr "ატრიბუტის '{0}' მითითება შეუძლებელია არასავალდებულო პარამეტრზე '{1}'"
+
+#: mcs/mcs/parameter.cs:357
+msgid ""
+"The CallerMemberName attribute can only be applied to parameters with "
+"default value"
+msgstr ""
+"ატრიბუტი CallerMemberName, მხოლოდ, ნაგულისხმევი მნიშვნელობის მქონე "
+"პარამეტრებზე შეგიძლიათ, გამოიყენოთ"
+
+#: mcs/mcs/parameter.cs:362
+msgid ""
+"The CallerLineNumber attribute can only be applied to parameters with "
+"default value"
+msgstr ""
+"ატრიბუტი CallerLineNumber, მხოლოდ, ნაგულისხმევი მნიშვნელობის მქონე "
+"პარამეტრებზე შეგიძლიათ, გამოიყენოთ"
+
+#: mcs/mcs/parameter.cs:367
+msgid ""
+"The CallerFilePath attribute can only be applied to parameters with default "
+"value"
+msgstr ""
+"ატრიბუტი CallerFilePath, მხოლოდ, ნაგულისხმევი მნიშვნელობის მქონე "
+"პარამეტრებზე შეგიძლიათ, გამოიყენოთ"
+
+#: mcs/mcs/parameter.cs:404
+#, csharp-format
+msgid "Method or delegate parameter cannot be of type `{0}'"
+msgstr "მეთოდი ან დელეგატის პარამეტრი ვერ იქნება ტიპით '{0}'"
+
+#: mcs/mcs/parameter.cs:414
+#, csharp-format
+msgid "`{0}': static types cannot be used as parameters"
+msgstr "`{0}': სტატიკურ ტიპებს პარამეტრებად ვერ გამოიყენებთ"
+
+#: mcs/mcs/parameter.cs:420
+#, csharp-format
+msgid "The extension method cannot be of type `{0}'"
+msgstr "გაფართოების მეთოდი ვერ იქნება ტიპით '{0}'"
+
+#: mcs/mcs/parameter.cs:441 mcs/mcs/parameter.cs:453
+#, csharp-format
+msgid ""
+"The CallerMemberName attribute cannot be applied because there is no "
+"standard conversion from `{0}' to `{1}'"
+msgstr ""
+"ატრიბუტს CallerMemberName ვერ გადაატარებთ, რადგან '{0}'-დან '{1}'-ში "
+"სტანდარტული გადაყვანა არ არსებობს"
+
+#: mcs/mcs/parameter.cs:465
+#, csharp-format
+msgid ""
+"The CallerFilePath attribute cannot be applied because there is no standard "
+"conversion from `{0}' to `{1}'"
+msgstr ""
+"ატრიბუტს CallerFilePath ვერ გადაატარებთ, რადგან '{0}'-დან '{1}'-ში "
+"სტანდარტული გადაყვანა არ არსებობს"
+
+#: mcs/mcs/parameter.cs:511
+#, csharp-format
+msgid ""
+"Argument of type `{0}' is not applicable for the DefaultParameterValue "
+"attribute"
+msgstr ""
+"'{0}' ტიპის არგუმენტი გამოუსადეგარია DefaultParameterValue ატრიბუტისთვის"
+
+#: mcs/mcs/parameter.cs:515
+#, csharp-format
+msgid ""
+"The DefaultParameterValue attribute is not applicable on parameters of type "
+"`{0}'"
+msgstr "ატრიბუტი DefaultParameterValue გამოუსადეგარია '{0}' ტიპის პარამეტრებზე"
+
+#: mcs/mcs/parameter.cs:543
+msgid "The type of the default value should match the type of the parameter"
+msgstr "ნაგულისხმევი მნიშვნელობის ტიპი პარამეტრის ტიპს უნდა ემთხვეოდეს"
+
+#: mcs/mcs/parameter.cs:694
+msgid "An expression tree parameter cannot use `ref' or `out' modifier"
+msgstr ""
+"გამოსახულების ხის პარამეტრი 'ref' ან 'out' მოდიფიკატორს ვერ გამოიყენებს"
+
+#: mcs/mcs/parameter.cs:1203
+#, csharp-format
+msgid "The parameter name `{0}' conflicts with a compiler generated name"
+msgstr ""
+"პარამეტრის სახელი '{0}' კონფლიქტშია კომპილატორის დაგენერირებულ სახელთან"
+
+#: mcs/mcs/parameter.cs:1360
+#, csharp-format
+msgid ""
+"The expression being assigned to optional parameter `{0}' must be a constant "
+"or default value"
+msgstr ""
+"გამოსახულებას, რომელსაც არასავალდებულო პარამეტრს '{0}' ანიჭებთ, მუდმივა ან "
+"ნაგულისხმევი მნიშვნელობა უნდა იყოს"
+
+#: mcs/mcs/parameter.cs:1377
+#, csharp-format
+msgid ""
+"The expression being assigned to nullable optional parameter `{0}' must be "
+"default value"
+msgstr ""
+"გამოსახულება, რომელსაც განულებად არასავალდებულო პარამეტრს '{0}' ანიჭებთ, "
+"ნაგულისხმევი მნიშვნელობა უნდა იყოს"
+
+#: mcs/mcs/parameter.cs:1385
+#, csharp-format
+msgid ""
+"Optional parameter `{0}' of type `{1}' can only be initialized with `null'"
+msgstr ""
+"არასავალდებულო პარამეტრის '{0}' ტიპით '{1}' ინიციალიზაცია, მხოლოდ, 'null'-ით "
+"შეგიძლიათ"
+
+#: mcs/mcs/parameter.cs:1396
+#, csharp-format
+msgid ""
+"Optional parameter expression of type `{0}' cannot be converted to parameter "
+"type `{1}'"
+msgstr ""
+"არასავალდებული პარამეტრის გამოსახულებას ტიპით '{0}' ვერ გადაიყვანთ "
+"პარამეტრის ტიპში '{1}'"
+
+#: mcs/mcs/pending.cs:326
+#, csharp-format
+msgid ""
+"Cannot implement interface `{0}' with the specified type parameters because "
+"it causes method `{1}' to differ on parameter modifiers only"
+msgstr ""
+"შეუძლებელია ინტერფეისის '{0}' განხორციელება მითითებული ტიპის პარამეტრებით, "
+"რადგან ის აიძულებს მეთოდს '{1}', რომ, მხოლოდ, პარამეტრის მოდიფიკატორებით "
+"განსხვავდებოდეს"
+
+#: mcs/mcs/pending.cs:707
+#, csharp-format
+msgid ""
+"`{0}' does not implement interface member `{1}' and the best implementing "
+"candidate `{2}' is static"
+msgstr ""
+"'{0}' არ ახორციელებს ინტერფეისის წევრს '{1}' და საუკეთესო განმახორციელებელი "
+"კანდიდატი '{2}' სტატიკურია"
+
+#: mcs/mcs/pending.cs:711
+#, csharp-format
+msgid ""
+"`{0}' does not implement interface member `{1}' and the best implementing "
+"candidate `{2}' is not public"
+msgstr ""
+"'{0}' არ ახორციელებს ინტერფეისის წევრს '{1}' და საუკეთესო განმახორციელებელი "
+"კანდიდატი '{2}' საჯარო არაა"
+
+#: mcs/mcs/pending.cs:715
+#, csharp-format
+msgid ""
+"`{0}' does not implement interface member `{1}' and the best implementing "
+"candidate `{2}' return type `{3}' does not match interface member return "
+"type `{4}'"
+msgstr ""
+"'{0}' არ ახორციელებს ინტერფეისის წევრს '{1}' და საუკეთესო განმახორციელებელი "
+"კანდიდატის '{2}' დაბრუნების ტიპი '{3}' არ ემთხვევა ინტერფეისის წევრის "
+"დაბრუნების ტიპს '{4}'"
+
+#: mcs/mcs/pending.cs:720
+#, csharp-format
+msgid "`{0}' does not implement interface member `{1}'"
+msgstr "`{0}' არ ახორციელებს ინტერფეისის წევრს `{1}'"
+
+#: mcs/mcs/pending.cs:725
+#, csharp-format
+msgid "`{0}' does not implement inherited abstract member `{1}'"
+msgstr "`{0}' არ ახორციელებს მემკვიდრეობით მიღებულ აბსტრაქტულ წევრს `{1}'"
+
+#: mcs/mcs/property.cs:349
+#, csharp-format
+msgid ""
+"`{0}': accessibility modifiers may not be used on accessors in an interface"
+msgstr ""
+"'{0}': წვდომადობის მოდიფიკატორების ინტერფეისში აქსესორებზე ვერ გამოიყენებთ"
+
+#: mcs/mcs/property.cs:352
+#, csharp-format
+msgid "`{0}': abstract properties cannot have private accessors"
+msgstr "`{0}': აბსტრაქტულ თვისებებს არ შეიძლება, პირადი აქსესორები ჰქონდეთ"
+
+#: mcs/mcs/property.cs:402
+#, csharp-format
+msgid ""
+"The accessibility modifier of the `{0}' accessor must be more restrictive "
+"than the modifier of the property or indexer `{1}'"
+msgstr ""
+"'{0}' აქსესორის წვდომადობის მოდიფიკატორი უფრო მკაცრი უნდა იყოს, ვიდრე "
+"მოდიფიკატორი თვისებისთვის ან ინდექსერისთვის '{1}'"
+
+#: mcs/mcs/property.cs:511
+#, csharp-format
+msgid "Explicit interface implementation `{0}' is missing accessor `{1}'"
+msgstr "აშკარა ინტერფეისის განხორციელებას '{0}' აკლია აქსესორი '{1}'"
+
+#: mcs/mcs/property.cs:530
+#, csharp-format
+msgid ""
+"`{0}': cannot override because `{1}' does not have an overridable get "
+"accessor"
+msgstr ""
+"`{0}': გადაფარვა შეუძლებელია, რადგან `{1}'-ს გადაფარვადი get აქსესორი არ "
+"გააჩნია"
+
+#: mcs/mcs/property.cs:547
+#, csharp-format
+msgid ""
+"`{0}': cannot override because `{1}' does not have an overridable set "
+"accessor"
+msgstr ""
+"`{0}': გადაფარვა შეუძლებელია, რადგან `{1}'-ს გადაფარვადი set აქსესორი არ "
+"გააჩნია"
+
+#: mcs/mcs/property.cs:588
+#, csharp-format
+msgid ""
+"`{0}': Cannot specify accessibility modifiers for both accessors of the "
+"property or indexer"
+msgstr ""
+"'{0}': წვდომადობის მოდიფიკატორების ვერ მიუთითებთ თვისების ან ინდექსერის "
+"ორივე აქსესორისთვის"
+
+#: mcs/mcs/property.cs:595
+#, csharp-format
+msgid ""
+"`{0}': accessibility modifiers on accessors may only be used if the property "
+"or indexer has both a get and a set accessor"
+msgstr ""
+"'{0}': წვდომადობის მოდიფიკატორების აქსესორებზე, მხოლოდ, მაშინ შეიძლება იყოს "
+"გამოყენებული, თუ თვისებას ან ინდექსერს ორივე, set და get აქსესორი გააჩნია"
+
+#: mcs/mcs/property.cs:836
+#, csharp-format
+msgid ""
+"Automatically implemented property `{0}' cannot be used inside a type with "
+"an explicit StructLayout attribute"
+msgstr ""
+"ავტომატურად განხორციელებული თვისება '{0}' არ შეიძლება, აშკარა StructLayout "
+"ატრიბუტის მქონე ტიპის შიგნით იქნეს გამოყენებული"
+
+#: mcs/mcs/property.cs:1332
+#, csharp-format
+msgid "`{0}': event must be of a delegate type"
+msgstr "`{0}': მოვლენის ტიპი დელეგატის ტიპი უნდა იყოს"
+
+#: mcs/mcs/property.cs:1608
+#, csharp-format
+msgid ""
+"The `{0}' attribute is valid only on an indexer that is not an explicit "
+"interface member declaration"
+msgstr ""
+"ატრიბუტი '{0}' სწორია მხოლოდ ინდექსერზე, რომელიც აშკარა ინტერფეისის წევრის "
+"გამოცხადება არაა"
+
+#: mcs/mcs/property.cs:1612
+msgid "Cannot set the `IndexerName' attribute on an indexer marked override"
+msgstr ""
+"ატრიბუტის 'IndexerName' დაყენება შეუძლებელია ინდექსერზე, რომელიც მონიშნულია, "
+"როგორც გადამეტტვირთული"
+
+#: mcs/mcs/module.cs:338
+#, csharp-format
+msgid "Value specified for the argument to `{0}' is not valid"
+msgstr "'{0}'-სთვის არგუმენტად გადაცემული მნიშვნელობა არასწორია"
+
+#: mcs/mcs/statement.cs:74
+msgid ""
+"A lambda expression with statement body cannot be converted to an expresion "
+"tree"
+msgstr ""
+"ლამბდა გამოსახულებას პროცედურის ტანით გამოსახულებების ხეში ვერ გადაიყვანთ"
+
+#: mcs/mcs/statement.cs:126
+msgid "Control cannot leave the body of an anonymous method"
+msgstr "კონტროლს არ შუძლია, ანონიმური მეთოდის სხეული დატოვოს"
+
+#: mcs/mcs/statement.cs:140
+msgid "Control cannot leave the body of a finally clause"
+msgstr "კონტროლს არ შეუძლია, საბოლოო პირობის სხეული დატოვოს"
+
+#: mcs/mcs/statement.cs:1174
+#, csharp-format
+msgid ""
+"An object of a type convertible to `{0}' is required for the return statement"
+msgstr "დაბრუნების პროცედურისთვის '{0}'-ში გადაყვანადი ტიპის ობიექტია საჭირო"
+
+#: mcs/mcs/statement.cs:1187 mcs/mcs/statement.cs:1211
+#, csharp-format
+msgid ""
+"`{0}': A return keyword must not be followed by any expression when method "
+"returns void"
+msgstr ""
+"'{0}': დაბრუნების საკვანძო სიტყვას გამოსახულება არ უნდა მოსდევდეს, როცა "
+"მეთოდი სიცარიელეს აბრუნებს"
+
+#: mcs/mcs/statement.cs:1224
+#, csharp-format
+msgid ""
+"`{0}': A return keyword must not be followed by an expression when async "
+"delegate returns `Task'. Consider using `Task<T>' return type"
+msgstr ""
+"'{0}': საკვანძო სიტყვას return არ უნდა მოჰყვებოდეს გამოსახულება, როცა "
+"ასინქრონული დელეგატი აბრუნებს მნიშვნელობას 'Task'. სცადეთ, დაბრუნების ტიპად "
+"'Task<T>' გამოიყენოთ"
+
+#: mcs/mcs/statement.cs:1228
+#, csharp-format
+msgid ""
+"`{0}': A return keyword must not be followed by an expression when async "
+"method returns `Task'. Consider using `Task<T>' return type"
+msgstr ""
+"'{0}': საკვანძო სიტყვას return არ უნდა მოჰყვებოდეს გამოსახულება, როცა "
+"ასინქრონული მეთოდი აბრუნებს მნიშვნელობას 'Task'. სცადეთ, დაბრუნების ტიპად "
+"'Task<T>' გამოიყენოთ"
+
+#: mcs/mcs/statement.cs:1241
+#, csharp-format
+msgid ""
+"`{0}': The return expression type of async method must be `{1}' rather than "
+"`Task<{1}>'"
+msgstr ""
+"'{0}': ასინქრონული მეთოდის დაბრუნების გამოსახულების ტიპი '{1}' უნდა იყოს და "
+"არა 'Task<{1}>'"
+
+#: mcs/mcs/statement.cs:1251
+#, csharp-format
+msgid ""
+"`{0}': A return keyword must not be followed by any expression when delegate "
+"returns void"
+msgstr ""
+"'{0}': დაბრუნების საკვანძო სიტყვას გამოსახულება არ უნდა მოსდევდეს, როცა "
+"დელეგატი სიცარიელეს აბრუნებს"
+
+#: mcs/mcs/statement.cs:1284
+#, csharp-format
+msgid ""
+"Cannot convert `{0}' to delegate type `{1}' because some of the return types "
+"in the block are not implicitly convertible to the delegate return type"
+msgstr ""
+"'{0}'-ის გადაყვანა დელეგატის ტიპში '{1}' შეუძლებელია, რადგან რამდენიმე "
+"დაბრუნების ტიპი ბლოკში არაცხადად არაა გადაყვანადი დელეგატის დაბრუნების ტიპში"
+
+#: mcs/mcs/statement.cs:1341
+msgid ""
+"Cannot return a value from iterators. Use the yield return statement to "
+"return a value, or yield break to end the iteration"
+msgstr ""
+"იტერატორებიდან მნიშვნელობას ვერ დააბრუნებთ. მნიშვნელობის დასაბრუნებლად "
+"გამოიყენეთ გამოსავლის დაბრუნების პროცედურა, ან გამოსავლის შეწყვეტა, "
+"იტერაციის დასარულებლად"
+
+#: mcs/mcs/statement.cs:1403
+#, csharp-format
+msgid ""
+"The label `{0}:' could not be found within the scope of the goto statement"
+msgstr "ჭდე '{0}': აღმოჩენილი არაა goto პროცედურის საზღვრებში"
+
+#: mcs/mcs/statement.cs:1741
+msgid "A goto case is only valid inside a switch statement"
+msgstr "ვარიანტი goto, მხოლოდ, switch პროცედურის შიგნითაა სწორი"
+
+#: mcs/mcs/statement.cs:1764
+msgid ""
+"A throw statement with no arguments is not allowed outside of a catch clause"
+msgstr "პროცედურა throw არგუმენტების გარეშე დაუშვებელია catch პირობის გარეთ"
+
+#: mcs/mcs/statement.cs:1769
+msgid ""
+"A throw statement with no arguments is not allowed inside of a finally "
+"clause nested inside of the innermost catch clause"
+msgstr ""
+"პროცედურა throw არგუმენტების გარეშე დაუშვებელია საბოლოო პირობაში, რომელიც "
+"ყველაზე შიდა ჩაჭერის პირობაშია ჩასმული"
+
+#: mcs/mcs/statement.cs:1787 mcs/mcs/statement.cs:6421
+msgid "The type caught or thrown must be derived from System.Exception"
+msgstr "დაჭერილი ან გადაგდებული ტიპები System.Exception-დან უნდა იყოს მიღებული"
+
+#: mcs/mcs/statement.cs:1929
+msgid "No enclosing loop out of which to break or continue"
+msgstr "არ არსებობს დახურული მარყუჟი, რომელიც უნდა შევწყვიტო ან გავაგრძელო"
+
+#: mcs/mcs/statement.cs:2098
+msgid "A fixed statement cannot use an implicitly typed local variable"
+msgstr ""
+"ფიქსირებული პროცედურა არაცხადად შეყვანილ ლოკალურ ცვლადს ვერ გამოიყენებს"
+
+#: mcs/mcs/statement.cs:2103
+msgid "An implicitly typed local variable cannot be a constant"
+msgstr "არაცხადად შეყვანილი ლოკალური ცვლადი არ შეიძლება, მუდმივა იყოს"
+
+#: mcs/mcs/statement.cs:2108
+msgid ""
+"An implicitly typed local variable declarator must include an initializer"
+msgstr ""
+"არაცხადად შეყვანილი ლოკალრი ცვლადის გამომცხადებელი ინიციალიზატორს უნდა "
+"შეიცავდეს"
+
+#: mcs/mcs/statement.cs:2113
+msgid ""
+"An implicitly typed local variable declaration cannot include multiple "
+"declarators"
+msgstr ""
+"არაცხადად შეყვანილი ლოკალური ცვლადის გამოცხადება, არ შეიძლება, ერთზე მეტ "
+"გამოცხადებას შეიცავდეს"
+
+#: mcs/mcs/statement.cs:2754
+#, csharp-format
+msgid ""
+"A local variable named `{0}' cannot be declared in this scope because it "
+"would give a different meaning to `{0}', which is already used in a `{1}' "
+"scope to denote something else"
+msgstr ""
+"ლოკალურ ცვლადს სახელით '{0}' ამ საზღვრებში ვერ გამოაცხადებთ, რადგან სხვა "
+"მნიშვნელობას მისცემდა ის '{0}'-ს, რომელიც უკვე გამოიყენება '{1}'-ში რაღაც "
+"სხვის გამოსახატად"
+
+#: mcs/mcs/statement.cs:2766
+#, csharp-format
+msgid "A local variable named `{0}' is already defined in this scope"
+msgstr "ლოკალური ცვლადი სახელით '{0}' უკვე აღწერილია ამ საზღვრებში"
+
+#: mcs/mcs/statement.cs:2773
+#, csharp-format
+msgid ""
+"The type parameter name `{0}' is the same as local variable or parameter name"
+msgstr ""
+"ტიპის პარამეტრის სახელი '{0}' იგივეა, რაც ლოკალური ცვლადის ან პარამეტრის "
+"სახელი"
+
+#: mcs/mcs/statement.cs:3612
+#, csharp-format
+msgid ""
+"The out parameter `{0}' must be assigned to before control leaves the "
+"current method"
+msgstr ""
+"გასვლის პარამეტრი '{0}' მანამდე უნდა იყოს მინიჭებული, სანამ კონტროლი "
+"მიმდინარე მეთოდს დატოვებს"
+
+#: mcs/mcs/statement.cs:3866
+msgid "Async methods cannot have ref or out parameters"
+msgstr "ასინქრონულ მეთოდებს ref ან out პარამეტრები ვერ ექნებათ"
+
+#: mcs/mcs/statement.cs:3872
+msgid "__arglist is not allowed in parameter list of async methods"
+msgstr "__arglist ასინქრონული მეთოდების პარამეტრების სიაში დაშვებული არაა"
+
+#: mcs/mcs/statement.cs:3878
+msgid "Async methods cannot have unsafe parameters"
+msgstr "ასინქრონულ მეთოდებს სახიფათო პარამეტრები ვერ ექნებათ"
+
+#: mcs/mcs/statement.cs:4075
+#, csharp-format
+msgid "The label `{0}' is a duplicate"
+msgstr "ჭდე '{0}' გამეორებულია"
+
+#: mcs/mcs/statement.cs:4084 mcs/mcs/statement.cs:4095
+#, csharp-format
+msgid ""
+"The label `{0}' shadows another label by the same name in a contained scope"
+msgstr "ჭდე '{0}' ჩრდილავს ხვა ჭდეს იგივე სახელით მის საზღვრებში"
+
+#: mcs/mcs/statement.cs:4298
+#, csharp-format
+msgid "`{0}': not all code paths return a value"
+msgstr "'{0}': ყველა კოდის ბილიკი მნიშვნელობას არ აბრუნებს"
+
+#: mcs/mcs/statement.cs:4416
+#, csharp-format
+msgid "The label `{0}' already occurs in this switch statement"
+msgstr "ჭდე '{0}' უკვე არსებობს ამ გადართვის პროცედურაში"
+
+#: mcs/mcs/statement.cs:4540
+#, csharp-format
+msgid "Control cannot fall through from one case label `{0}' to another"
+msgstr "კონტროლი ერთი შემთხვევის ჭდიდან '{0}' მეორეზე ვერ გადახტება"
+
+#: mcs/mcs/statement.cs:4919
+#, csharp-format
+msgid ""
+"A switch expression of type `{0}' cannot be converted to an integral type, "
+"bool, char, string, enum or nullable type"
+msgstr ""
+"გადართვის გამოსახულება ტიპისთვის '{0}' შეუძლებელია, გადაიყვანოთ ინტეგრალურ "
+"ტიპში, bool, char, string, enum ან nullable"
+
+#: mcs/mcs/statement.cs:5683
+#, csharp-format
+msgid "`{0}' is not a reference type as required by the lock statement"
+msgstr ""
+"`{0}' არ წარმოადგენს მიმართვის ტიპს, როგორც ამას ჩაკეტვის პროცედურა მოითხოვს"
+
+#: mcs/mcs/statement.cs:6064
+msgid "The type of locals declared in a fixed statement must be a pointer type"
+msgstr ""
+"ფიქსირებულ პროცედურაში გამოცხადებული ლოკალურების ტიპი მაჩვენებლის ტიპის უნდა "
+"იყოს"
+
+#: mcs/mcs/statement.cs:6080
+msgid ""
+"The right hand side of a fixed statement assignment may not be a cast "
+"expression"
+msgstr ""
+"ფიქსირებული პროცედურის მინიჭების მარჯვენა მხარე დაკასტვის გამოსახულება ვერ "
+"იქნება"
+
+#: mcs/mcs/statement.cs:6150
+msgid ""
+"You cannot use the fixed statement to take the address of an already fixed "
+"expression"
+msgstr ""
+"ფიქსირებულ პროცედურას უკვე ფიქსირებული გამოსახულების მისამართის ასაღებად ვერ "
+"გამოიყენებთ"
+
+#: mcs/mcs/statement.cs:6673
+#, csharp-format
+msgid ""
+"A previous catch clause already catches all exceptions of this or a super "
+"type `{0}'"
+msgstr ""
+"წინა ჩაჭერის პირობა უკვე იჭერს ყველა გამონაკლისს ამისთვის ან სუპერტიპისთვის "
+"{0}''"
+
+#: mcs/mcs/statement.cs:6851
+#, csharp-format
+msgid ""
+"`{0}': type used in a using statement must be implicitly convertible to "
+"`System.IDisposable'"
+msgstr ""
+"'{0}' ტიპი, რომელიც პროცედურაში გამოიყენება, არაპირდაპირად გადაყვანადი უნდა "
+"იყოს ტიპში `System.IDisposable'"
+
+#: mcs/mcs/statement.cs:7252
+#, csharp-format
+msgid ""
+"foreach statement requires that the return type `{0}' of `{1}' must have a "
+"suitable public MoveNext method and public Current property"
+msgstr ""
+"პროცედურას foreach ესაჭიროება, რომ '{1}'-ის დაბრუნების ტიპს '{0}' უნდა "
+"ჰქონდეს შესაბამისი MoveNext მეთოდი ან საჯარო თვისება Current"
+
+#: mcs/mcs/statement.cs:7296
+#, csharp-format
+msgid ""
+"foreach statement cannot operate on variables of type `{0}' because it "
+"contains multiple implementation of `{1}'. Try casting to a specific "
+"implementation"
+msgstr ""
+"პროცედურა foreach ვერ მუშაობს ცვლადებზე ტიპით '{0}', რადგან ის '{1}'-ის "
+"ერთზე მეტ განხორციელებას შეიცავს. სცადეთ, მითითებულ განხორციელებაზე დაკასტოთ"
+
+#: mcs/mcs/statement.cs:7318
+#, csharp-format
+msgid ""
+"foreach statement cannot operate on variables of type `{0}' because it does "
+"not contain a definition for `{1}' or is inaccessible"
+msgstr ""
+"პროცედურა foreach ვერ მუშაობს ცვლადებზე ტიპით '{0}', რადგან ის არ შეიცავს "
+"აღწერას '{1}'-სთვის ან ხელმიუწვდომელია"
+
+#: mcs/mcs/statement.cs:7553
+msgid "Use of null is not valid in this context"
+msgstr "ნულის გამოყენება არასწორია ამ კონტექსტში"
+
+#: mcs/mcs/statement.cs:7565
+#, csharp-format
+msgid "Foreach statement cannot operate on a `{0}'"
+msgstr "პროცედურა Foreach ვერ მუშაობს '{0}'-ზე"
+
+#: mcs/mcs/typemanager.cs:796
+#, csharp-format
+msgid "The predefined type `{0}.{1}' is not defined or imported"
+msgstr "წინასწარ აღწერილი ტიპი `{0}.{1}' არც აღწერილია, არც შემოტანილი"
+
+#: mcs/mcs/typemanager.cs:841
+#, csharp-format
+msgid ""
+"The predefined type `{0}.{1}' is defined multiple times. Using definition "
+"from `{2}'"
+msgstr ""
+"წინასწარ აღწერილი ტიპი '{0}.{1}' ერთზე მეტჯერაა აღწერილი. გამოიყენება აღწერა "
+"'{2}'-დან"
+
+#: mcs/mcs/typemanager.cs:852
+#, csharp-format
+msgid ""
+"The predefined type `{0}.{1}' is defined in an assembly that is not "
+"referenced."
+msgstr ""
+"წინასწარ აღწერილი ტიპი `{0}.{1}' აღწერილია ანაწყობში, რომელზეც მიმართვა არ "
+"ხდება."
+
+#: mcs/mcs/typemanager.cs:862
+#, csharp-format
+msgid "The predefined type `{0}.{1}' is not declared correctly"
+msgstr "წინასწარ აღწერილი ტიპი `{0}.{1}' არასწორადაა აღწერილი"
+
+#: mcs/mcs/typemanager.cs:988
+#, csharp-format
+msgid ""
+"The compiler required member `{0}.{1}{2}' could not be found or is "
+"inaccessible"
+msgstr ""
+"კომპილატორს სჭირდება წევრი `{0}.{1}{2}', რომელიც აღმოჩენილი არაა ან "
+"ხელმიუწვდომელია"
+
+#: mcs/mcs/typemanager.cs:1107
+#, csharp-format
+msgid ""
+"Cannot take the address of, get the size of, or declare a pointer to a "
+"managed type `{0}'"
+msgstr ""
+"ვერ აიღებთ მისამართს, მიიღებთ ზომას ან აღწერთ მაჩვენებელს მართული ტიპით '{0}'"

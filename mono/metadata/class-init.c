@@ -726,7 +726,7 @@ struct FoundAttrUD {
 };
 
 static gboolean
-has_wellknown_attribute_func (MonoImage *image, guint32 typeref_scope_token, const char *nspace, const char *name, guint32 method_token, gpointer user_data)
+has_wellknown_attribute_func (MonoImage *image, guint32 typeref_scope_token, const gchar *nspace, const gchar *name, guint32 method_token, guint32 index, guint32 value, gpointer user_data)
 {
 	struct FoundAttrUD *has_attr = (struct FoundAttrUD *)user_data;
 	if (!strcmp (name, has_attr->name) && !strcmp (nspace, has_attr->nspace)) {

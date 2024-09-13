@@ -16,6 +16,9 @@
 #include "mono/utils/mono-hwcap-vars.h"
 #undef MONO_HWCAP_VAR
 
+gboolean
+mono_hwcap_x86_call_cpuidex (int id, int sub_id, int *p_eax, int *p_ebx, int *p_ecx, int *p_edx);
+
 /* Call this function to perform hardware feature detection. Until
  * this function has been called, all feature variables will be
  * FALSE as a default.

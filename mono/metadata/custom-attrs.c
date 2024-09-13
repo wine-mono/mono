@@ -2491,7 +2491,7 @@ mono_assembly_metadata_foreach_custom_attr (MonoAssembly *assembly, MonoAssembly
 
 /**
  * iterate over the custom attributes that belong to the given index and call func, passing the
- *  assembly ref (if any) and the namespace and name of the custom attribute.
+ *  assembly ref (if any), the namespace, name, index and value of the custom attribute.
  *
  * Everything is done using low-level metadata APIs, so it is safe to use
  * during assembly loading and class initialization.
@@ -2499,7 +2499,7 @@ mono_assembly_metadata_foreach_custom_attr (MonoAssembly *assembly, MonoAssembly
 void
 metadata_foreach_custom_attr_from_index (MonoImage *image, guint32 idx, MonoAssemblyMetadataCustomAttrIterFunc func, gpointer user_data)
 {
-	guint32 mtoken, i;
+	guint32 mtoken, i, value;
 	guint32 cols [MONO_CUSTOM_ATTR_SIZE];
 	MonoTableInfo *ca;
 
@@ -2527,6 +2527,7 @@ metadata_foreach_custom_attr_from_index (MonoImage *image, guint32 idx, MonoAsse
 			g_warning ("Unknown table for custom attr type %08x", cols [MONO_CUSTOM_ATTR_TYPE]);
 			continue;
 		}
+		value = cols [MONO_CUSTOM_ATTR_VALUE];
 
 		const char *nspace = NULL;
 		const char *name = NULL;
@@ -2535,7 +2536,8 @@ metadata_foreach_custom_attr_from_index (MonoImage *image, guint32 idx, MonoAsse
 		if (!custom_attr_class_name_from_method_token (image, mtoken, &assembly_token, &nspace, &name))
 			continue;
 
-		stop_iterating = func (image, assembly_token, nspace, name, mtoken, user_data);
+		g_assert(func);
+		stop_iterating = func (image, assembly_token, nspace, name, mtoken, i, value, user_data);
 	}
 }
 

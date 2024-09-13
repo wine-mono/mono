@@ -213,17 +213,13 @@ public class Tests
             return 5;
         }
 
-        /*TODO: Reject Guid.Empty when we support generated class GUIDs*/
-        if (typeof(TestParent).GUID != Guid.Empty &&
-			typeof(TestParent).GUID != new Guid("7dcc27e3-e226-35ca-a942-2286b21f2525"))
+        if (typeof(TestParent).GUID != new Guid("7dcc27e3-e226-35ca-a942-2286b21f2525"))
         {
             Console.Error.WriteLine("Unexpected typeof(TestParent).GUID: {0}", typeof(TestParent).GUID);
             return 6;
         }
 
-        /*TODO: Reject Guid.Empty when we support generated class GUIDs*/
-        if (typeof(int).GUID != Guid.Empty &&
-			typeof(int).GUID != new Guid("a310fadd-7c33-377c-9d6b-599b0317d7f2"))
+        if (typeof(int).GUID != new Guid("a310fadd-7c33-377c-9d6b-599b0317d7f2"))
         {
             Console.Error.WriteLine("Unexpected typeof(int).GUID: {0}", typeof(int).GUID);
             return 7;
@@ -246,6 +242,12 @@ public class Tests
         {
             Console.Error.WriteLine("TestQueryInterface failed: {0}", hr);
             return 10;
+        }
+
+        if (typeof(System.IO.File).GUID != new Guid("2a96793e-4cf3-3976-a893-b66886d89a03"))
+        {
+            Console.WriteLine($"typeGUID System.IO.File {typeof(System.IO.File).GUID}");
+            return 11;
         }
 
         return 0;

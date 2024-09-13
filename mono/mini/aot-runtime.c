@@ -2895,8 +2895,7 @@ mono_aot_get_class_from_name (MonoImage *image, const char *name_space, const ch
 	if (name_space [0] == '\0')
 		full_name = g_strdup_printf ("%s", name);
 	else {
-		if (strlen (name_space) + strlen (name) < 1000) {
-			sprintf (full_name_buf, "%s.%s", name_space, name);
+		if (snprintf (full_name_buf, 1024, "%s.%s", name_space, name) < 1024) {
 			full_name = full_name_buf;
 		} else {
 			full_name = g_strdup_printf ("%s.%s", name_space, name);
@@ -4641,6 +4640,7 @@ add_module_cb (gpointer key, gpointer value, gpointer user_data)
 	g_ptr_array_add ((GPtrArray*)user_data, value);
 }
 
+#ifdef TARGET_WASM
 static gboolean
 inst_is_private (MonoGenericInst *inst)
 {
@@ -4654,6 +4654,7 @@ inst_is_private (MonoGenericInst *inst)
 	}
 	return FALSE;
 }
+#endif
 
 gboolean
 mono_aot_can_dedup (MonoMethod *method)

@@ -7388,6 +7388,7 @@ invalidate_transform (gpointer imethod_)
 	imethod->transformed = FALSE;
 }
 
+#ifdef ENABLE_METADATA_UPDATE
 static void
 copy_imethod_for_frame (MonoDomain *domain, InterpFrame *frame)
 {
@@ -7399,6 +7400,7 @@ copy_imethod_for_frame (MonoDomain *domain, InterpFrame *frame)
 	 * would reclaim its memory when the corresponding InterpFrame is popped.
 	 */
 }
+#endif
 
 static void
 interp_metadata_update_init (MonoError *error)

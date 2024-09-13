@@ -1,9 +1,9 @@
 
 linux-amd64-build:
     stage: build
-    image: $CI_REGISTRY/wine-mono/mono:debian-bookworm-linux-build
+    image: $CI_REGISTRY/mono/mono:debian-bookworm-linux-build
     rules:
-        - if: $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_PROJECT_NAMESPACE == 'wine-mono'
+        - if: $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_PROJECT_NAMESPACE == 'mono'
     interruptible: true
     cache:
         -
@@ -24,5 +24,6 @@ linux-amd64-build:
     artifacts:
         paths:
             - test-bundle/
+            - mcs/class/monolite-*.tar.gz
         expire_in: 1 week
 

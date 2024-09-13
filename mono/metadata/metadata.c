@@ -29,6 +29,7 @@
 #include "class.h"
 #include "marshal.h"
 #include "debug-helpers.h"
+#include "assembly-internals.h"
 #include "abi-details.h"
 #include "cominterop.h"
 #include <mono/metadata/exception-internals.h>
@@ -8292,12 +8293,12 @@ mono_guid_signature_append_method (GString *res, MonoMethodSignature *sig)
 	g_string_append_c (res, ')');
 }
 
+/* COM+ Runtime GUID {69f9cbc9-da05-11d1-9408-0000f8083460} */
+static const guchar guid_name_space[] = {0x69,0xf9,0xcb,0xc9,0xda,0x05,0x11,0xd1,0x94,0x08,0x00,0x00,0xf8,0x08,0x34,0x60};
+
 static void
 mono_generate_v3_guid_for_interface (MonoClass* klass, guint8* guid)
 {
-	/* COM+ Runtime GUID {69f9cbc9-da05-11d1-9408-0000f8083460} */
-	static const guchar guid_name_space[] = {0x69,0xf9,0xcb,0xc9,0xda,0x05,0x11,0xd1,0x94,0x08,0x00,0x00,0xf8,0x08,0x34,0x60};
-
 	MonoMD5Context ctx;
 	MonoMethod *method;
 	gpointer iter = NULL;
@@ -8350,6 +8351,119 @@ mono_generate_v3_guid_for_interface (MonoClass* klass, guint8* guid)
 	*(guint16 *)(guid + 4) = GUINT16_FROM_BE(*(guint16 *)(guid + 4));
 	*(guint16 *)(guid + 6) = GUINT16_FROM_BE(*(guint16 *)(guid + 6));
 }
+
+static void
+mono_generate_v3_guid_for_class (MonoClass* klass, guint8* guid)
+{
+	gunichar2 *unicode_name;
+	glong items_written;
+	MonoMD5Context ctx;
+	GString *name;
+
+	mono_md5_init (&ctx);
+	mono_md5_update (&ctx, guid_name_space, sizeof(guid_name_space));
+
+	/* Hash in the class name */
+	name = g_string_new ("");
+	mono_signature_append_class_name (name, klass);
+	unicode_name = g_utf8_to_utf16 (name->str, name->len, NULL, &items_written, NULL);
+	mono_md5_update (&ctx, (guchar *)unicode_name, items_written * sizeof(gunichar2));
+	g_free (unicode_name);
+	g_string_free (name, TRUE);
+
+	/* Hash in the assembly name */
+	MonoAssembly *assembly = mono_image_get_assembly (klass->image);
+	MonoAssemblyName *aname = &assembly->aname;
+
+	unicode_name = g_utf8_to_utf16 (aname->name, -1, NULL, &items_written, NULL);
+
+	/* CoreCLR replaces all spaces and dots in the assembly name with dashes */
+	for (gunichar2 *c = unicode_name; *c; ++c) {
+		if (*c == '.' || *c == ' ')
+			*c == '_';
+		else
+			/*
+			 * FIXME: Bundeled Glib doesn't have this function...
+			 * if (g_unichar_isupper(*c))
+			 */
+				*c = g_unichar_tolower(*c);
+	}
+
+	mono_md5_update (&ctx, (guchar *)unicode_name, items_written * sizeof(gunichar2));
+	g_free (unicode_name);
+
+	/* Hash in "TypeLib" */
+	static const char typelib_string[] = { "TypeLib" };
+	mono_md5_update (&ctx, (guchar *)typelib_string, sizeof(typelib_string)-1);
+
+	/* Hash in the ComCompatibleVerson or Assembly version */
+	struct
+	{
+		guint16 major;
+		guint16 minor;
+		guint16 build;
+		guint16 revision;
+	} ver;
+
+	ERROR_DECL (attr_error);
+	guint16 ver_minor = 0;
+	guint32 data_len = 0;
+	const char *data;
+
+	if (mono_assembly_get_custom_attribute_data (assembly, attr_error, "ComCompatibleVersionAttribute", "System.Runtime.InteropServices", &data, &data_len)
+			&& data_len >= 2 + 4*sizeof(guint32)) {
+		/* Version numbers in the blob heap are 32bit but 16bit in the GUID string... */
+		/* The minor version is intentionally set to major to match CoreCLR */
+
+		ver.major = ver.minor = (guint16) *(guint32 *)(data + 2);
+		ver.build = (guint16) *(guint32 *)(data + 10);
+		ver.revision = (guint16) *(guint32 *)(data + 14);
+
+		ver_minor = (guint16) *(guint32 *)(data + 6);
+	}
+	else {
+		ver.major = ver.minor = aname->major;
+		ver.build = aname->build;
+		ver.revision = aname->revision;
+
+		ver_minor = aname->minor;
+	}
+
+	mono_md5_update (&ctx, (guchar *)&ver, sizeof(ver));
+
+	/* Hash in minor version */
+	if (ver_minor)
+		mono_md5_update (&ctx, (guchar *)&ver_minor, sizeof(guint16));
+
+	/* Hash in public key, if any */
+	if (aname->public_key) {
+		guint32 pkey_size;
+		const char *pkey;
+
+		pkey_size = mono_metadata_decode_value ((const char *)aname->public_key, &pkey);
+		mono_md5_update (&ctx, (guchar *)pkey, pkey_size);
+	}
+
+	/* Pad to even number of bytes */
+	guchar byte = 0;
+	if (mono_md5_ctx_byte_length (&ctx) & 1)
+		mono_md5_update (&ctx, &byte, 1);
+
+	mono_md5_final (&ctx, (guchar *)guid);
+
+	/* Set version number */
+	guid[6] &= 0x0f;
+	guid[6] |= 0x30; /* v3 (md5) */
+
+	/* Set variant field */
+	guid[8] &= 0x3F;
+	guid[8] |= 0x80;
+
+	/* Convert GUID to little endian */
+	*(guint32 *)(guid + 0) = GUINT32_FROM_BE(*(guint32 *)(guid + 0));
+	*(guint16 *)(guid + 4) = GUINT16_FROM_BE(*(guint16 *)(guid + 4));
+	*(guint16 *)(guid + 6) = GUINT16_FROM_BE(*(guint16 *)(guid + 6));
+}
 #endif
 
 /**
@@ -8392,6 +8506,6 @@ mono_metadata_get_class_guid (MonoClass* klass, guint8* guid, MonoError *error)
 	else if (mono_class_is_interface (klass))
 		mono_generate_v3_guid_for_interface (klass, guid);
 	else
-		g_warning ("Generated GUIDs only implemented for interfaces!");
+		mono_generate_v3_guid_for_class (klass, guid);
 #endif
 }

@@ -22,7 +22,7 @@
 	url = ../reference-assemblies.git
 [submodule "external/nunit-lite"]
 	path = external/nunit-lite
-	url = https://gitlab.winehq.org/wine-mono/NUnitLite.git
+	url = https://gitlab.winehq.org/mono/NUnitLite.git
 [submodule "external/nuget-buildtasks"]
 	path = external/nuget-buildtasks
 	url = https://github.com/mono/NuGet.BuildTasks
@@ -67,4 +67,4 @@
 	branch = release/6.x
 [submodule "external/bdwgc"]
 	path = external/bdwgc
-	url = https://gitlab.winehq.org/wine-mono/bdwgc.git
+	url = https://gitlab.winehq.org/mono/bdwgc.git

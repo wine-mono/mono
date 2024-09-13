@@ -153,4 +153,7 @@ mono_assembly_get_image_internal (MonoAssembly *assembly);
 void
 mono_set_assemblies_path_direct (char **path);
 
+gboolean
+mono_assembly_get_custom_attribute_data (MonoAssembly *assembly, MonoError *error, const char *attr_name, const char *attr_nspace, const char **data, guint32 *data_len);
+
 #endif /* __MONO_METADATA_ASSEMBLY_INTERNALS_H__ */

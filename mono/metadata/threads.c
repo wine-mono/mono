@@ -3935,8 +3935,8 @@ static gboolean is_still_suspending (void)
  */
 gboolean mono_thread_suspend_all_other_threads (void)
 {
+	const gint64 timeout = 1000;
 	gint64 start_time;
-	gint64 timeout = 1000;
 
 	/* 
 	 * First we set a barrier which will be checked by all threads before they
@@ -3959,7 +3959,7 @@ gboolean mono_thread_suspend_all_other_threads (void)
 	 * is give up after certain amount of time and then continue with shutdown.
 	 */
 	start_time = mono_msec_ticks ();
-	while (is_still_suspending() && mono_msec_ticks() - start_time < 1000)
+	while (is_still_suspending() && mono_msec_ticks() - start_time < timeout)
 		mono_thread_info_sleep (50, NULL);
 
 	if (is_still_suspending()) {

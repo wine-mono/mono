@@ -372,13 +372,13 @@ static char* unquote (const char *str);
 static mono_mutex_t assemblies_mutex;
 
 static inline void
-mono_assemblies_lock ()
+mono_assemblies_lock (void)
 {
 	mono_os_mutex_lock (&assemblies_mutex);
 }
 
 static inline void
-mono_assemblies_unlock ()
+mono_assemblies_unlock (void)
 {
 	mono_os_mutex_unlock (&assemblies_mutex);
 }
@@ -2819,7 +2819,7 @@ struct HasReferenceAssemblyAttributeIterData {
 };
 
 static gboolean
-has_reference_assembly_attribute_iterator (MonoImage *image, guint32 typeref_scope_token, const char *nspace, const char *name, guint32 method_token, gpointer user_data)
+has_reference_assembly_attribute_iterator (MonoImage *image, guint32 typeref_scope_token, const gchar *nspace, const gchar *name, guint32 method_token, guint32 index, guint32 value, gpointer user_data)
 {
 	gboolean stop_scanning = FALSE;
 	struct HasReferenceAssemblyAttributeIterData *iter_data = (struct HasReferenceAssemblyAttributeIterData*)user_data;
@@ -2858,6 +2858,64 @@ mono_assembly_has_reference_assembly_attribute (MonoAssembly *assembly, MonoErro
 	struct HasReferenceAssemblyAttributeIterData iter_data = { FALSE };
 
 	mono_assembly_metadata_foreach_custom_attr (assembly, &has_reference_assembly_attribute_iterator, &iter_data);
+
+	return iter_data.has_attr;
+}
+
+struct GetCustomAttributeIterData {
+	gboolean has_attr;
+	const char *attr_name;
+	const char *attr_nspace;
+	guint32 value;
+};
+
+static gboolean
+assembly_get_custom_attribute_data_iterator (MonoImage *image, guint32 typeref_scope_token, const gchar *nspace, const gchar *name, guint32 method_token, guint32 index, guint32 value, gpointer user_data)
+{
+	struct GetCustomAttributeIterData *iter_data = (struct GetCustomAttributeIterData*)user_data;
+	gboolean stop_scanning = FALSE;
+
+	if (!strcmp (name, iter_data->attr_name) && !strcmp (nspace, iter_data->attr_nspace)) {
+		iter_data->has_attr = TRUE;
+		iter_data->value = value;
+		stop_scanning = TRUE;
+	}
+
+	return stop_scanning;
+}
+
+/**
+ * mono_assembly_get_custom_attribute_data:
+ * \param assembly a MonoAssembly
+ * \param error set on error
+ * \param attr_name attribute
+ * \param attr_nspace attribute's namespace
+ * \param data attribute data
+ * \param data_len attribute data length
+ *
+ * \returns TRUE if \p assembly has attribute \p attr_name.
+ * Returns FALSE if attribute wasn't found or an error occured.
+ */
+gboolean
+mono_assembly_get_custom_attribute_data (MonoAssembly *assembly, MonoError *error, const char *attr_name, const char *attr_nspace, const char **data, guint32 *data_len)
+{
+	g_assert (assembly && assembly->image);
+	g_assert (data && data_len);
+	g_assert (!image_is_dynamic (assembly->image));
+	error_init (error);
+
+	/*
+	 * This might be called during assembly loading, so do everything using the low-level
+	 * metadata APIs.
+	 */
+
+	struct GetCustomAttributeIterData iter_data = { .has_attr = FALSE, .attr_name = attr_name, .attr_nspace = attr_nspace };
+	mono_assembly_metadata_foreach_custom_attr (assembly, &assembly_get_custom_attribute_data_iterator, &iter_data);
+
+	const char *blob_data = NULL;
+	if (blob_data = mono_metadata_blob_heap(assembly->image, iter_data.value)) {
+		*data_len = mono_metadata_decode_value(blob_data, data);
+	}
 
 	return iter_data.has_attr;
 }
