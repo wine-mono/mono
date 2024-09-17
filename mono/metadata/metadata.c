@@ -8410,7 +8410,8 @@ mono_generate_v3_guid_for_class (MonoClass* klass, guint8* guid)
 	guint32 data_len = 0;
 	const char *data;
 
-	if (mono_assembly_get_custom_attribute_data (assembly, attr_error, "ComCompatibleVersionAttribute", "System.Runtime.InteropServices", &data, &data_len)
+	if (!image_is_dynamic (assembly->image) && // FIXME: Fall back to mono_custom_attrs_from_assembly_checked here
+			mono_assembly_get_custom_attribute_data (assembly, attr_error, "ComCompatibleVersionAttribute", "System.Runtime.InteropServices", &data, &data_len)
 			&& data_len >= 2 + 4*sizeof(guint32)) {
 		/* Version numbers in the blob heap are 32bit but 16bit in the GUID string... */
 		/* The minor version is intentionally set to major to match CoreCLR */
