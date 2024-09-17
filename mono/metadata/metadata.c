@@ -8380,7 +8380,7 @@ mono_generate_v3_guid_for_class (MonoClass* klass, guint8* guid)
 	/* CoreCLR replaces all spaces and dots in the assembly name with dashes */
 	for (gunichar2 *c = unicode_name; *c; ++c) {
 		if (*c == '.' || *c == ' ')
-			*c == '_';
+			*c = '_';
 		else
 			/*
 			 * FIXME: Bundeled Glib doesn't have this function...
