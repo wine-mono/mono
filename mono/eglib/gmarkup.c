@@ -195,7 +195,8 @@ parse_name (const char *p, const char *end, char **value)
 	*value = g_malloc (l + 1);
 	if (*value == NULL)
 		return end;
-	strncpy (*value, start, l);
+	if (l)
+		strncpy (*value, start, l);
 	(*value) [l] = 0;
 	return p;
 }

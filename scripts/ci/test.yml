@@ -14,3 +14,27 @@ linux-amd64-test:
         expire_in: 1 week
     script:
         - "scripts/ci/test.sh"
+
+linux-amd64-test-monolite:
+    stage: test
+    image: $CI_REGISTRY/mono/mono:debian-bookworm-linux-build
+    rules:
+        - if: $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_PROJECT_NAMESPACE == 'mono'
+    interruptible: true
+    cache:
+        -
+            key: $CI_JOB_NAME-ccache
+            paths:
+                - ccache/
+    before_script:
+        - export BASEDIR="$PWD"
+        - export CCACHE_BASEDIR="$BASEDIR"
+        - export CCACHE_DIR="$BASEDIR/ccache"
+        - export CCACHE_COMPILERCHECK=content
+        - export PATH="/usr/lib/ccache:$PATH"
+        - git config --global --add safe.directory $CI_PROJECT_DIR
+        - rm -fr .git/rebase-merge  # in case a previous CI run failed in git rebase
+    script:
+        - "scripts/ci/update-submodules.sh"
+        - "scripts/ci/test-monolite.sh"
+

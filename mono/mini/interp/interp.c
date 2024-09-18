@@ -3144,15 +3144,6 @@ mono_interp_enum_hasflag (stackval *sp1, stackval *sp2, MonoClass* klass)
 	return (a_val & b_val) == b_val;
 }
 
-// varargs in wasm consumes extra linear stack per call-site.
-// These g_warning/g_error wrappers fix that. It is not the
-// small wasm stack, but conserving it is still desirable.
-static void
-g_warning_d (const char *format, int d)
-{
-	g_warning (format, d);
-}
-
 #if !USE_COMPUTED_GOTO
 static void
 interp_error_xsx (const char *format, int x1, const char *s, int x2)
