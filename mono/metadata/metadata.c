@@ -2094,7 +2094,7 @@ static MonoType*
 mono_metadata_parse_type_internal (MonoImage *m, MonoGenericContainer *container,
 								   short opt_attrs, gboolean transient, const char *ptr, const char **rptr, MonoError *error)
 {
-	MonoType *type, *cached;
+	MonoType *dyn_type=NULL, *type, *cached;
 	MonoType stype;
 	gboolean byref = FALSE;
 	gboolean pinned = FALSE;
@@ -2144,7 +2144,7 @@ mono_metadata_parse_type_internal (MonoImage *m, MonoGenericContainer *container
 		}
 
 		size_t size = mono_sizeof_type_with_mods (count, FALSE);
-		type = transient ? (MonoType *)g_malloc0 (size) : (MonoType *)mono_image_alloc0 (m, size);
+		dyn_type = type = transient ? (MonoType *)g_malloc0 (size) : (MonoType *)mono_image_alloc0 (m, size);
 		type->has_cmods = TRUE;
 
 		cmods = mono_type_get_cmods (type);
@@ -2228,11 +2228,11 @@ mono_metadata_parse_type_internal (MonoImage *m, MonoGenericContainer *container
 	
 	/* printf ("%x %x %c %s\n", type->attrs, type->num_mods, type->pinned ? 'p' : ' ', mono_type_full_name (type)); */
 	
-	if (type == &stype) { // Type was allocated on the stack, so we need to copy it to safety
-		type = transient ? (MonoType *)g_malloc (MONO_SIZEOF_TYPE) : (MonoType *)mono_image_alloc (m, MONO_SIZEOF_TYPE);
-		memcpy (type, &stype, MONO_SIZEOF_TYPE);
+	if (dyn_type == NULL) { // Type was allocated on the stack, so we need to copy it to safety
+		dyn_type = transient ? (MonoType *)g_malloc (MONO_SIZEOF_TYPE) : (MonoType *)mono_image_alloc (m, MONO_SIZEOF_TYPE);
+		memcpy (dyn_type, type, MONO_SIZEOF_TYPE);
 	}
-	return type;
+	return dyn_type;
 }
 
 
