@@ -95,7 +95,11 @@ mono_get_pe_debug_info_full  (MonoImage *image, guint8 *out_guid, gint32 *out_ag
 		
 		if (pdb_checksum_hash_type && pdb_checksum && debug_dir.type == DEBUG_DIR_PDB_CHECKSUM)
 		{
+#ifdef HOST_WIN32
+			data  = (guint8 *) (image->raw_data + debug_dir.address);
+#else
 			data  = (guint8 *) (image->raw_data + debug_dir.pointer);
+#endif
 			char* alg_name = (char*)data;
 			guint8*	checksum = (guint8 *) (data + strlen(alg_name)+ 1);
 			g_array_append_val (pdb_checksum_hash_type, alg_name);
@@ -104,7 +108,11 @@ mono_get_pe_debug_info_full  (MonoImage *image, guint8 *out_guid, gint32 *out_ag
 		if (debug_dir.type == DEBUG_DIR_ENTRY_CODEVIEW && debug_dir.major_version == 0x100 && debug_dir.minor_version == 0x504d) {
 			/* This is a 'CODEVIEW' debug directory */
 			CodeviewDebugDirectory dir;
+#ifdef HOST_WIN32
+			data  = (guint8 *) (image->raw_data + debug_dir.address);
+#else
 			data  = (guint8 *) (image->raw_data + debug_dir.pointer);
+#endif
 			dir.signature = read32(data);
 
 			if (dir.signature == 0x53445352) {
@@ -119,7 +127,11 @@ mono_get_pe_debug_info_full  (MonoImage *image, guint8 *out_guid, gint32 *out_ag
 		if (debug_dir.type == DEBUG_DIR_ENTRY_PPDB && debug_dir.major_version >= 0x100 && debug_dir.minor_version == 0x100) {
 			/* Embedded PPDB blob */
 			/* See src/System.Reflection.Metadata/src/System/Reflection/PortableExecutable/PEReader.EmbeddedPortablePdb.cs in corefx */
+#ifdef HOST_WIN32
+			data = (guint8*)(image->raw_data + debug_dir.address);
+#else
 			data = (guint8*)(image->raw_data + debug_dir.pointer);
+#endif
 			guint32 magic = read32 (data);
 			g_assert (magic == EMBEDDED_PPDB_MAGIC);
 			guint32 size = read32 (data + 4);

@@ -38,7 +38,7 @@
 
 #include "image-writer.h"
 
-#ifndef HOST_WIN32
+#if !defined(_MSC_VER) || defined(__clang__)
 #include <mono/utils/freebsd-elf32.h>
 #include <mono/utils/freebsd-elf64.h>
 #endif
