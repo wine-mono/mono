@@ -302,6 +302,7 @@ static const AssemblyVersionMap framework_assemblies [] = {
 	{"System.ServiceModel.Web", 2},
 	{"System.ServiceProcess", 0},
 	FACADE_ASSEMBLY ("System.ServiceProcess.ServiceController"),
+	{"System.Speech", 0},
 	FACADE_ASSEMBLY ("System.Text.Encoding"),
 	FACADE_ASSEMBLY ("System.Text.Encoding.CodePages"),
 	FACADE_ASSEMBLY ("System.Text.Encoding.Extensions"),
