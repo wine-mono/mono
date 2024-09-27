@@ -114,12 +114,11 @@ namespace MonoTests.System.Reflection.Emit
 		}
 
 		[Test]
-		[Category ("NotWorking")] // Bug:71299
 		public void TestEnumBuilderGUIDComplete ()
 		{
 			EnumBuilder enumBuilder = GenerateEnum ();
 			enumBuilder.CreateType ();
-			Assert.IsTrue (enumBuilder.GUID != Guid.Empty);
+			Assert.AreEqual (new Guid ("71780918-965d-31e4-b24c-cd0a1420d84b"), enumBuilder.GUID);
 		}
 
 		[Test]

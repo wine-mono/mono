@@ -253,12 +253,11 @@ namespace MonoTests.System.Reflection.Emit
 		}
 
 		[Test] // bug #71302
-		[Category ("NotWorking")]
 		public void TestGUIDComplete ()
 		{
-			TypeBuilder tb = module.DefineType (genTypeName ());
+			TypeBuilder tb = module.DefineType ("GuidCompleteTestType");
 			tb.CreateType ();
-			Assert.IsTrue (tb.GUID != Guid.Empty);
+			Assert.AreEqual (new Guid ("c22fd24d-f72c-3b7b-bd22-1ad0b2741ec9"), tb.GUID);
 		}
 
 		[Test]
