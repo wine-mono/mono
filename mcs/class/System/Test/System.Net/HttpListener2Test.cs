@@ -785,6 +785,7 @@ namespace MonoTests.System.Net {
 				wait2.WaitOne ();
 				ns.Close ();
 			});
+			t.IsBackground = true;
 			t.Start ();
 				
 			HttpListener listener = NetworkHelpers.CreateAndStartHttpListener ("http://*:", out port, "/");
