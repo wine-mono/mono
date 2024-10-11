@@ -465,16 +465,11 @@ typedef struct ucontext {
 #include <sys/_types/_ucontext64.h>
 
 	/* mach/arm/_structs.h */
-#if __has_feature(ptrauth_calls)
 	#define UCONTEXT_REG_PC(ctx) (host_mgreg_t)__darwin_arm_thread_state64_get_pc_fptr (((ucontext64_t*)(ctx))->uc_mcontext64->__ss)
 	#define UCONTEXT_REG_SP(ctx) __darwin_arm_thread_state64_get_sp (((ucontext64_t*)(ctx))->uc_mcontext64->__ss)
 	#define UCONTEXT_REG_LR(ctx) __darwin_arm_thread_state64_get_lr (((ucontext64_t*)(ctx))->uc_mcontext64->__ss)
 	#define UCONTEXT_REG_SET_PC(ctx,val) __darwin_arm_thread_state64_set_pc_fptr (((ucontext64_t*)(ctx))->uc_mcontext64->__ss, (val))
 	#define UCONTEXT_REG_SET_SP(ctx, val) __darwin_arm_thread_state64_set_sp (((ucontext64_t*)(ctx))->uc_mcontext64->__ss, (val))
-#else
-	#define UCONTEXT_REG_PC(ctx) (((ucontext64_t*)(ctx))->uc_mcontext64->__ss.__pc)
-	#define UCONTEXT_REG_SP(ctx) (((ucontext64_t*)(ctx))->uc_mcontext64->__ss.__sp)
-#endif
 
 	#define UCONTEXT_REG_R0(ctx) (((ucontext64_t*)(ctx))->uc_mcontext64->__ss.__x [ARMREG_R0])
 	#define UCONTEXT_GREGS(ctx) (&(((ucontext64_t*)(ctx))->uc_mcontext64->__ss.__x))
