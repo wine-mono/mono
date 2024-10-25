@@ -889,7 +889,9 @@ mono_cpu_count (void)
 int
 mono_cpu_limit (void)
 {
+#if HAVE_CGROUP_SUPPORT
 	int count = 0;
+#endif
 	static int limit = -1;	/* Value will be cached for future calls */
 
 	/*

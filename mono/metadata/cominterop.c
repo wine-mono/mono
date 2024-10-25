@@ -4253,6 +4253,7 @@ mono_cominterop_emit_marshal_safearray (EmitMarshalContext *m, int argnum, MonoT
 
 		break;
 	}
+	case MARSHAL_ACTION_MANAGED_INIT_OUT:
 	case MARSHAL_ACTION_MANAGED_CONV_IN: {
 		MonoType *object_type = mono_get_object_type ();
 		MonoType *int_type = mono_get_int_type ();

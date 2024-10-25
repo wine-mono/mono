@@ -1004,6 +1004,9 @@ public class Tests {
 		if (arr.Length != 2)
 			return 1;
 
+		if (arr [0] != null || arr [1] != null)
+			return 1;
+
 		arr [0] = "ABC";
 		arr [1] = "DEF";
 

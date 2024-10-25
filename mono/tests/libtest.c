@@ -2502,7 +2502,7 @@ mono_test_marshal_out_string_array_delegate (char **arr, int len, ArrayDelegate 
 {
 	del (len, NULL, arr);
 
-	if (!strcmp (arr [0], "ABC") && !strcmp (arr [1], "DEF"))
+	if (arr [0] && arr [1] && !strcmp (arr [0], "ABC") && !strcmp (arr [1], "DEF"))
 		return 0;
 	else
 		return 1;

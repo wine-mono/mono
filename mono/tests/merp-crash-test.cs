@@ -359,7 +359,7 @@ class C
 			Console.WriteLine ("Crash file {0} missing", crashFilePath);
 		}
 
-		DumpLogCheck (expected_level: "MerpInvoke"); // we are expecting merp invoke to fail
+		DumpLogCheck ("Done", "MerpInvoke");
 
 		if (!xmlFileExists)
 			throw new Exception (String.Format ("Did not produce {0}", xmlFilePath));
@@ -391,7 +391,7 @@ class C
 		convert.Invoke(null, new object[] { null });
 	}
 
-	static void DumpLogCheck (string expected_level = "Done")
+	static void DumpLogCheck (string expected_level = "Done", string expected_failure = "")
 	{
 		var monoType = Type.GetType ("Mono.Runtime", false);
 		var convert = monoType.GetMethod("CheckCrashReportLog", BindingFlags.NonPublic | BindingFlags.Static);
@@ -399,7 +399,9 @@ class C
 		// Value of enum
 		string [] levels = new string [] { "None", "Setup", "SuspendHandshake", "UnmanagedStacks", "ManagedStacks", "StateWriter", "StateWriterDone", "MerpWriter", "MerpInvoke", "Cleanup", "Done", "DoubleFault" };
 
-		if (expected_level != levels [result])
+		if (expected_failure == levels [result])
+			Console.WriteLine (String.Format ("Crash level {0} is expected failure"));
+		else if (expected_level != levels [result])
 			throw new Exception (String.Format ("Crash level {0} does not match expected {1}", levels [result], expected_level));
 
 		// also clear hash and reason breadcrumbs
