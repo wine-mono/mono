@@ -62,7 +62,6 @@
 #include <mono/metadata/environment.h>
 #include <mono/metadata/mono-mlist.h>
 #include <mono/metadata/handle.h>
-#include <mono/utils/mono-merp.h>
 #include <mono/utils/mono-mmap.h>
 #include <mono/utils/mono-logger-internals.h>
 #include <mono/utils/mono-error.h>
@@ -94,9 +93,6 @@
 #define MONO_ARCH_CONTEXT_DEF
 #endif
 
-#if !defined(DISABLE_CRASH_REPORTING)
-#include <gmodule.h>
-#endif
 #include "mono/utils/mono-tls-inline.h"
 
 /*
@@ -1400,442 +1396,35 @@ next:
 	}
 }
 
-#ifdef DISABLE_CRASH_REPORTING
-
 static void 
 mono_summarize_managed_stack (MonoThreadSummary *out)
 {
-	return;
+	// not supported
 }
 
 static void 
 mono_summarize_unmanaged_stack (MonoThreadSummary *out)
 {
-	return;
+	// not supported
 }
 
 static void
 mono_summarize_exception (MonoException *exc, MonoThreadSummary *out)
 {
-	return;
+	// not supported
 }
 
 static void
 mono_crash_reporting_register_native_library (const char *module_path, const char *module_name)
 {
-	return;
+	// not supported
 }
 
 static void
 mono_crash_reporting_allow_all_native_libraries ()
 {
-	return;
+	// not supported
 }
-
-
-#else
-
-typedef struct {
-	MonoFrameSummary *frames;
-	int num_frames;
-	int max_frames;
-	MonoStackHash *hashes;
-	const char *error;
-} MonoSummarizeUserData;
-
-static void
-copy_summary_string_safe (char *dest, const char *src)
-{
-	g_strlcpy (dest, src, MONO_MAX_SUMMARY_NAME_LEN);
-}
-
-static void
-fill_frame_managed_info (MonoFrameSummary *frame, MonoMethod * method)
-{
-		MonoImage *image = mono_class_get_image (method->klass);
-		// Used for hashing, more stable across rebuilds than using GUID
-		copy_summary_string_safe (frame->str_descr, image->assembly_name);
-
-		frame->managed_data.guid = image->guid;
-		frame->managed_data.token = method->token;
-		frame->managed_data.filename = image->module_name;
-
-		MonoDotNetHeader *header = &image->image_info->cli_header;
-		frame->managed_data.image_size = header->nt.pe_image_size;
-		frame->managed_data.time_date_stamp = image->time_date_stamp;
-}
-
-typedef struct {
-	char *suffix;
-	char *exported_name;
-} MonoLibAllowlistEntry;
-
-static GList *native_library_allowlist;
-static gboolean allow_all_native_libraries = FALSE;
-
-static void
-mono_crash_reporting_register_native_library (const char *module_path, const char *module_name)
-{
-	// Examples: libsystem_pthread.dylib -> "pthread"
-	// Examples: libsystem_platform.dylib -> "platform"
-	// Examples: mono-sgen -> "mono" from above line
-	MonoLibAllowlistEntry*entry = g_new0 (MonoLibAllowlistEntry, 1);
-	entry->suffix = g_strdup (module_path);
-	entry->exported_name = g_strdup (module_name);
-	native_library_allowlist = g_list_append (native_library_allowlist, entry);
-}
-
-static void
-mono_crash_reporting_allow_all_native_libraries ()
-{
-	allow_all_native_libraries = TRUE;
-}
-
-static gboolean
-check_allowlisted_module (const char *in_name, const char **out_module)
-{
-#ifndef MONO_PRIVATE_CRASHES
-		return TRUE;
-#else
-	if (g_str_has_suffix (in_name, "mono-sgen")) {
-		if (out_module)
-			copy_summary_string_safe ((char *) *out_module, "mono");
-		return TRUE;
-	}
-	if (allow_all_native_libraries) {
-		if (out_module) {
-			/* for a module name, use the basename of the full path in in_name */
-			char *basename = (char *) in_name, *p = (char *) in_name;
-			while (*p != '\0') {
-				if (*p == '/')
-					basename = p + 1;
-				p++;
-			}
-			if (*basename)
-				copy_summary_string_safe ((char *) *out_module, basename);
-			else
-				copy_summary_string_safe ((char *) *out_module, "unknown");
-
-		}
-		return TRUE;
-	}
-
-	for (GList *cursor = native_library_allowlist; cursor; cursor = cursor->next) {
-		MonoLibAllowlistEntry*iter = (MonoLibAllowlistEntry*) cursor->data;
-		if (!g_str_has_suffix (in_name, iter->suffix))
-			continue;
-		if (out_module)
-			copy_summary_string_safe ((char *) *out_module, iter->exported_name);
-		return TRUE;
-	}
-
-	return FALSE;
-#endif
-}
-
-static intptr_t
-mono_make_portable_ip (intptr_t in_ip, intptr_t module_base)
-{
-	// FIXME: Make generalize away from llvm tools?
-	// So lldb starts the pointer base at 0x100000000
-	// and expects to get pointers as (offset + constant)
-	//
-	// Quirk shared by:
-	// /usr/bin/symbols  -- symbols version:			@(#)PROGRAM:symbols  PROJECT:SamplingTools-63501
-	// *CoreSymbolicationDT.framework version:	63750*/
-	intptr_t offset = in_ip - module_base;
-	intptr_t magic_value = offset + 0x100000000;
-	return magic_value;
-}
-
-static gboolean
-mono_get_portable_ip (intptr_t in_ip, intptr_t *out_ip, gint32 *out_offset, const char **out_module, char *out_name)
-{
-	// Note: it's not safe for us to be interrupted while inside of dl_addr, because if we
-	// try to call dl_addr while interrupted while inside the lock, we will try to take a
-	// non-recursive lock twice on this thread, and will deadlock.
-	char sname [256], fname [256];
-	void *saddr = NULL, *fbase = NULL;
-	gboolean success = g_module_address ((void*)in_ip, fname, 256, &fbase, sname, 256, &saddr);
-	if (!success)
-		return FALSE;
-
-	if (!check_allowlisted_module (fname, out_module))
-		return FALSE;
-
-	*out_ip = mono_make_portable_ip ((intptr_t) saddr, (intptr_t) fbase);
-	*out_offset = in_ip - (intptr_t) saddr;
-
-	if (saddr && out_name)
-		copy_summary_string_safe (out_name, sname);
-	return TRUE;
-}
-
-static guint64
-summarize_offset_free_hash (guint64 accum, MonoFrameSummary *frame)
-{
-	if (!frame->is_managed)
-		return accum;
-
-	// See: mono_ptrarray_hash
-	guint64 hash_accum = accum;
-
-	// The assembly and the method token, no offsets
-	hash_accum += mono_metadata_str_hash (frame->str_descr);
-	hash_accum += frame->managed_data.token;
-
-	return hash_accum;
-}
-
-static guint64
-summarize_offset_rich_hash (guint64 accum, MonoFrameSummary *frame)
-{
-	// See: mono_ptrarray_hash
-	guint64 hash_accum = accum;
-
-	if (!frame->is_managed) {
-		hash_accum += frame->unmanaged_data.ip;
-	} else {
-		hash_accum += mono_metadata_str_hash (frame->str_descr);
-		hash_accum += frame->managed_data.token;
-		hash_accum += frame->managed_data.il_offset;
-	}
-
-	return hash_accum;
-}
-
-static gboolean
-summarize_frame_internal (MonoMethod *method, gpointer ip, size_t native_offset, int il_offset, gboolean managed, gpointer user_data)
-{
-	MonoSummarizeUserData *ud = (MonoSummarizeUserData *) user_data;
-
-	gboolean valid_state = ud->num_frames + 1 < ud->max_frames;
-	if (!valid_state) {
-		ud->error = "Exceeded the maximum number of frames";
-		return TRUE;
-	}
-
-	MonoFrameSummary *dest = &ud->frames [ud->num_frames];
-
-	dest->unmanaged_data.ip = (intptr_t) ip;
-	dest->is_managed = managed;
-	dest->unmanaged_data.module [0] = '\0';
-
-	if (!managed && method && method->wrapper_type != MONO_WRAPPER_NONE && method->wrapper_type < MONO_WRAPPER_NUM) {
-		dest->is_managed = FALSE;
-		dest->unmanaged_data.has_name = TRUE;
-		copy_summary_string_safe (dest->str_descr, mono_wrapper_type_to_str (method->wrapper_type));
-	}
-	
-#ifndef MONO_PRIVATE_CRASHES
-	if (method)
-		dest->managed_data.name = (char *) method->name;
-#endif
-
-	if (managed) {
-		if (!method) {
-			ud->error = "Managed method frame, but no provided managed method";
-			return TRUE;
-		}
-		fill_frame_managed_info (dest, method);
-		dest->managed_data.native_offset = native_offset;
-		dest->managed_data.il_offset = il_offset;
-	} else {
-		dest->managed_data.token = -1;
-	}
-
-
-	ud->hashes->offset_free_hash = summarize_offset_free_hash (ud->hashes->offset_free_hash, dest);
-	ud->hashes->offset_rich_hash = summarize_offset_rich_hash (ud->hashes->offset_rich_hash, dest);
-
-	// We return FALSE, so we're continuing walking
-	// And we increment the pointer because we're done with this cell in the array
-	ud->num_frames++;
-	return FALSE;
-}
-
-static gboolean
-summarize_frame_managed_walk (MonoMethod *method, gpointer ip, size_t frame_native_offset, gboolean managed, gpointer user_data)
-{
-	int il_offset = -1;
-
-	if (managed && method) {
-		MonoDebugSourceLocation *location = mono_debug_lookup_source_location (method, frame_native_offset, mono_domain_get ());
-		if (location) {
-			il_offset = location->il_offset;
-			mono_debug_free_source_location (location);
-		}
-	}
-
-	intptr_t portable_ip = 0;
-	gint32 offset = 0;
-	mono_get_portable_ip ((intptr_t) ip, &portable_ip, &offset, NULL, NULL);
-
-	return summarize_frame_internal (method, (gpointer) portable_ip, frame_native_offset, il_offset, managed, user_data);
-}
-
-
-static gboolean
-summarize_frame (StackFrameInfo *frame, MonoContext *ctx, gpointer data)
-{
-	// Don't record trampolines between managed frames
-	if (frame->ji && frame->ji->is_trampoline)
-		return TRUE;
-
-	if (frame->ji && (frame->ji->is_trampoline || frame->ji->async))
-		return FALSE; // Keep unwinding
-
-	intptr_t ip = 0;
-	gint32 offset = 0;
-	mono_get_portable_ip ((intptr_t) MONO_CONTEXT_GET_IP (ctx), &ip, &offset, NULL, NULL);
-	// Don't need to handle return status "success" because this ip is stored below only, NULL is okay
-
-	gboolean is_managed = (frame->type == FRAME_TYPE_MANAGED || frame->type == FRAME_TYPE_INTERP);
-	MonoMethod *method = NULL;
-	if (frame && frame->ji && frame->type != FRAME_TYPE_TRAMPOLINE)
-		method = jinfo_get_method (frame->ji);
-
-	if (is_managed)
-		method = jinfo_get_method (frame->ji);
-
-	return summarize_frame_internal (method, (gpointer) ip, offset, frame->il_offset, is_managed, data);
-}
-
-static void
-mono_summarize_exception (MonoException *exc, MonoThreadSummary *out)
-{
-	memset (out, 0, sizeof (MonoThreadSummary));
-
-	MonoException *inner_exc = exc;
-	int exc_index = 0;
-
-	for (exc_index = 0; exc_index < MONO_MAX_SUMMARY_EXCEPTIONS; exc_index++) {
-		if (inner_exc == NULL)
-			break;
-
-		// Set up state to walk this MonoException's stack
-		MonoSummarizeUserData data;
-		memset (&data, 0, sizeof (MonoSummarizeUserData));
-		data.max_frames = MONO_MAX_SUMMARY_FRAMES;
-		data.num_frames = 0;
-		data.frames = out->exceptions [exc_index].managed_frames;
-
-		// Accumulate all hashes from all exceptions in traveral order
-		data.hashes = &out->hashes;
-
-		mono_exception_walk_trace (inner_exc, summarize_frame_managed_walk, &data);
-
-		// Save per-MonoException info
-		out->exceptions [exc_index].managed_exc_type = inner_exc->object.vtable->klass;
-		out->exceptions [exc_index].num_managed_frames = data.num_frames;
-
-		// Continue to traverse nesting of exceptions
-		inner_exc = (MonoException *) inner_exc->inner_ex;
-	}
-
-	out->num_exceptions = exc_index;
-}
-
-
-static void 
-mono_summarize_managed_stack (MonoThreadSummary *out)
-{
-	MonoSummarizeUserData data;
-	memset (&data, 0, sizeof (MonoSummarizeUserData));
-	data.max_frames = MONO_MAX_SUMMARY_FRAMES;
-	data.num_frames = 0;
-	data.frames = out->managed_frames;
-	data.hashes = &out->hashes;
-
-	// FIXME: collect stack pointer for both and sort frames by SP
-	// so people can see relative ordering of both managed and unmanaged frames.
-
-	// 
-	// Summarize managed stack
-	// 
-	mono_walk_stack_full (summarize_frame, out->ctx, out->domain, out->jit_tls, out->lmf, MONO_UNWIND_LOOKUP_IL_OFFSET, &data, TRUE);
-	out->num_managed_frames = data.num_frames;
-
-	if (data.error != NULL)
-		out->error_msg = data.error;
-	out->is_managed = (out->num_managed_frames != 0);
-}
-
-// Always runs on the dumped thread
-static void 
-mono_summarize_unmanaged_stack (MonoThreadSummary *out)
-{
-	MONO_ARCH_CONTEXT_DEF
-	// 
-	// Summarize unmanaged stack
-	// 
-#ifdef HAVE_BACKTRACE_SYMBOLS
-	MonoDomain *domain = mono_domain_get ();
-
-	gboolean has_jit_tls = mono_tls_get_jit_tls () != NULL;
-
-	intptr_t frame_ips [MONO_MAX_SUMMARY_FRAMES];
-
-	out->num_unmanaged_frames = backtrace ((void **)frame_ips, MONO_MAX_SUMMARY_FRAMES);
-
-	for (int i =0; i < out->num_unmanaged_frames; ++i) {
-		intptr_t ip = frame_ips [i];
-		MonoFrameSummary *frame = &out->unmanaged_frames [i];
-		const char* module_buf = frame->unmanaged_data.module;
-		int success = mono_get_portable_ip (ip, &frame->unmanaged_data.ip, &frame->unmanaged_data.offset, &module_buf, (char *) frame->str_descr);
-
-		/* If the thread is not attached to the JIT, (ie crashed native
-		 * thread), don't try to look for managed method info - it will
-		 * assert in mono_jit_info_table_find_internal */
-		if (!has_jit_tls)
-			continue;
-
-		/* attempt to look up any managed method at that ip */
-		/* TODO: Trampolines - follow examples from mono_print_method_from_ip() */
-
-		MonoJitInfo *ji;
-		MonoDomain *target_domain;
-		ji = mini_jit_info_table_find_ext (domain, (char *)ip, TRUE, &target_domain);
-		if (ji) {
-			frame->is_managed = TRUE;
-			if (!ji->async && !ji->is_trampoline) {
-				MonoMethod *method = jinfo_get_method (ji);
-				fill_frame_managed_info (frame, method);
-#ifndef MONO_PRIVATE_CRASHES
-				frame->managed_data.name = method->name;
-#endif
-			}
-		}
-
-		if (!success && !ji) {
-			frame->unmanaged_data.ip = ip;
-			continue;
-		}
-
-		if (out->unmanaged_frames [i].str_descr [0] != '\0')
-			out->unmanaged_frames [i].unmanaged_data.has_name = TRUE;
-
-		out->hashes.offset_free_hash = summarize_offset_free_hash (out->hashes.offset_free_hash, frame);
-		out->hashes.offset_rich_hash = summarize_offset_rich_hash (out->hashes.offset_rich_hash, frame);
-	}
-#endif
-
-	out->lmf = mono_get_lmf ();
-
-	MonoThreadInfo *thread = mono_thread_info_current_unchecked ();
-	out->info_addr = (intptr_t) thread;
-	out->jit_tls = thread ? thread->jit_data : NULL;
-	out->domain = mono_domain_get ();
-
-	if (!out->ctx) {
-		out->ctx = &out->ctx_mem;
-		mono_arch_flush_register_windows ();
-		MONO_INIT_CONTEXT_FROM_FUNC (out->ctx, mono_summarize_unmanaged_stack);
-	}
-
-	return;
-}
-#endif
 
 
 MonoBoolean

@@ -5027,54 +5027,7 @@ ss_clear_for_assembly (SingleStepReq *req, MonoAssembly *assembly)
 static void
 mono_debugger_agent_send_crash (char *json_dump, MonoStackHash *hashes, int pause)
 {
-	/* Did we crash on an unattached thread?  Can't do runtime notifications from there */
-	if (!mono_thread_info_current_unchecked ())
-		return;
-
-	MONO_ENTER_GC_UNSAFE;
-#ifndef DISABLE_CRASH_REPORTING
-	int suspend_policy;
-	GSList *events;
-	EventInfo ei;
-
-	if (!agent_config.enabled)
-		return;
-
-	// Don't send the event if the client doesn't expect it
-	if (!CHECK_PROTOCOL_VERSION (2, 49))
-		return;
-
-	// It doesn't make sense to wait for lldb/gdb to finish if we're not
-	// actually enabled. Therefore we do the wait here.
-	sleep (pause);
-
-	// Don't heap allocate when we can avoid it
-	EventRequest request;
-	memset (&request, 0, sizeof (request));
-	request.event_kind = EVENT_KIND_CRASH;
-
-	gpointer pdata [1];
-	pdata [0] = &request;
-	GPtrArray array;
-	memset (&array, 0, sizeof (array));
-	array.pdata = pdata;
-	array.len = 1;
-
-	mono_loader_lock ();
-	events = create_event_list (EVENT_KIND_CRASH, &array, NULL, NULL, &suspend_policy);
-	mono_loader_unlock ();
-
-	ei.dump = json_dump;
-	ei.hashes = hashes;
-
-	g_assert (events != NULL);
-
-	process_event (EVENT_KIND_CRASH, &ei, 0, NULL, events, suspend_policy);
-
-	// Don't die before it is sent.
-	sleep (4);
-#endif
-	MONO_EXIT_GC_UNSAFE;
+	// not supported
 }
 
 /*
