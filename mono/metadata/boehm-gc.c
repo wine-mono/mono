@@ -474,19 +474,10 @@ on_gc_notification (GC_EventType event)
 		mono_trace_message (MONO_TRACE_GC, "gc took %" G_GINT64_FORMAT " usecs", (mono_100ns_ticks () - gc_start_time) / 10);
 		break;
 	default:
-		break;
+		return;
 	}
 
-	switch (event) {
-	case GC_EVENT_MARK_START:
-	case GC_EVENT_MARK_END:
-	case GC_EVENT_RECLAIM_START:
-	case GC_EVENT_RECLAIM_END:
-		break;
-	default:
-		MONO_PROFILER_RAISE (gc_event, (e, 0, TRUE));
-		break;
-	}
+	MONO_PROFILER_RAISE (gc_event, (e, 0, TRUE));
 
 	switch (event) {
 	case GC_EVENT_PRE_STOP_WORLD:

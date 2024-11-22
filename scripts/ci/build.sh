@@ -2,7 +2,7 @@
 
 do_build ()
 {
-	./autogen.sh || exit 1
+	./autogen.sh --enable-werror || exit 1
 
 	make all || exit 1
 
