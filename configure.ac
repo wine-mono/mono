@@ -993,14 +993,6 @@ AC_SUBST([mcs_topdir_from_srcdir])
 # we do not configure the full gettext, as we consume it dynamically from C#
 AM_PO_SUBDIRS
 
-if test "x$USE_NLS" = "xyes"; then
-   AC_CHECK_PROG(HAVE_MSGFMT, msgfmt,yes,no)
-
-   if test "x$HAVE_MSGFMT" = "xno"; then
-	  AC_MSG_ERROR([msgfmt not found. You need to install the 'gettext' package, or pass --enable-nls=no to configure.])
-   fi
-fi
-
 AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
 
 pkg_config_path=
@@ -1747,6 +1739,14 @@ if test x$USE_NLS = xprofile_default; then
 
 	AC_SUBST([USE_NLS])
 	AC_MSG_RESULT([$USE_NLS])
+fi
+
+if test "x$USE_NLS" = "xyes"; then
+   AC_CHECK_PROG(HAVE_MSGFMT, msgfmt,yes,no)
+
+   if test "x$HAVE_MSGFMT" = "xno"; then
+	  AC_MSG_ERROR([msgfmt not found. You need to install the 'gettext' package, or pass --enable-nls=no to configure.])
+   fi
 fi
 
 AC_ARG_ENABLE(static-gcc-libs, [  --enable-static-gcc-libs      Statically link GCC support libs (for MinGW32)])
