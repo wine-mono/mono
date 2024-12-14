@@ -16,7 +16,7 @@ namespace MonoTests.System.Net.WebSockets
 	[TestFixture]
 	public class ClientWebSocketTest
 	{
-		const string EchoServerUrl = "ws://corefx-net-http11.azurewebsites.net/WebSocket/EchoWebSocket.ashx";
+		const string EchoServerUrl = "wss://corefx-net-http11.azurewebsites.net/WebSocket/EchoWebSocket.ashx";
 
 		ClientWebSocket socket;
 		MethodInfo headerSetMethod;
