@@ -2987,7 +2987,7 @@ mono_class_setup_parent (MonoClass *klass, MonoClass *parent)
 		klass->instance_size = MONO_ABI_SIZEOF (MonoObject);
 		return;
 	}
-	if (!strcmp (klass->name, "<Module>")) {
+	if (klass->type_token == mono_metadata_make_token (MONO_TABLE_TYPEDEF, 1)) {
 		klass->parent = NULL;
 		klass->instance_size = 0;
 		return;
