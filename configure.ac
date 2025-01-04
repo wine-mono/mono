@@ -449,12 +449,9 @@ case "$host" in
 				platform_ios=yes
 				has_dtrace=no
 				;;
-			aarch64*-darwin20*)
+			aarch64*-darwin*)
 				# OSX/arm64
 				support_boehm=no
-				;;
-			aarch64*-darwin*)
-				platform_ios=yes
 				;;
 		esac
 		;;
@@ -4765,10 +4762,6 @@ if test "x$host" != "x$target"; then
 		AC_DEFINE(MONO_ARCH_ILP32, 1, [64 bit mode with 4 byte longs and pointers])
 		sizeof_register=8
 		AC_DEFINE(TARGET_WATCHOS, 1, [...])
-		;;
-	aarch64*darwin20*)
-		TARGET=ARM64
-		TARGET_SYS=OSX
 		;;
 	aarch64*darwin*)
 		TARGET=ARM64
