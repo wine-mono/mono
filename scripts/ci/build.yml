@@ -27,3 +27,22 @@ linux-amd64-build:
             - mcs/class/monolite-*.tar.gz
         expire_in: 1 week
 
+build-dist:
+    stage: build
+    image: $CI_REGISTRY/mono/mono:debian-bookworm-linux-build
+    when: manual
+    interruptible: true
+    before_script:
+        - export BASEDIR="$PWD"
+        - export PATH="/usr/lib/ccache:$PATH"
+        - git config --global --add safe.directory $CI_PROJECT_DIR
+        - rm -fr .git/rebase-merge  # in case a previous CI run failed in git rebase
+    script:
+        - "scripts/ci/update-submodules.sh"
+        - "./autogen.sh"
+        - "make all"
+        - "make -j1 dist"
+    artifacts:
+        paths:
+            - mono-*.tar.xz
+        expire_in: 1 week

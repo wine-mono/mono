@@ -451,12 +451,9 @@ case "$host" in
 				platform_ios=yes
 				has_dtrace=no
 				;;
-			aarch64*-darwin20*)
+			aarch64*-darwin*)
 				# OSX/arm64
 				support_boehm=no
-				;;
-			aarch64*-darwin*)
-				platform_ios=yes
 				;;
 		esac
 		;;
@@ -994,14 +991,6 @@ AC_SUBST([mcs_topdir_from_srcdir])
 # gettext: prepare the translation directories. 
 # we do not configure the full gettext, as we consume it dynamically from C#
 AM_PO_SUBDIRS
-
-if test "x$USE_NLS" = "xyes"; then
-   AC_CHECK_PROG(HAVE_MSGFMT, msgfmt,yes,no)
-
-   if test "x$HAVE_MSGFMT" = "xno"; then
-	  AC_MSG_ERROR([msgfmt not found. You need to install the 'gettext' package, or pass --enable-nls=no to configure.])
-   fi
-fi
 
 AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
 
@@ -1749,6 +1738,14 @@ if test x$USE_NLS = xprofile_default; then
 
 	AC_SUBST([USE_NLS])
 	AC_MSG_RESULT([$USE_NLS])
+fi
+
+if test "x$USE_NLS" = "xyes"; then
+   AC_CHECK_PROG(HAVE_MSGFMT, msgfmt,yes,no)
+
+   if test "x$HAVE_MSGFMT" = "xno"; then
+	  AC_MSG_ERROR([msgfmt not found. You need to install the 'gettext' package, or pass --enable-nls=no to configure.])
+   fi
 fi
 
 AC_ARG_ENABLE(static-gcc-libs, [  --enable-static-gcc-libs      Statically link GCC support libs (for MinGW32)])
@@ -4780,10 +4777,6 @@ if test "x$host" != "x$target"; then
 		AC_DEFINE(MONO_ARCH_ILP32, 1, [64 bit mode with 4 byte longs and pointers])
 		sizeof_register=8
 		AC_DEFINE(TARGET_WATCHOS, 1, [...])
-		;;
-	aarch64*darwin20*)
-		TARGET=ARM64
-		TARGET_SYS=OSX
 		;;
 	aarch64*darwin*)
 		TARGET=ARM64
