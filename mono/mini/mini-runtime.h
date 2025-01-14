@@ -630,8 +630,6 @@ gboolean MONO_SIG_HANDLER_SIGNATURE (mono_chain_signal);
 #define DISABLE_SDB 1
 #endif
 
-void mini_register_sigterm_handler (void);
-
 #define MINI_BEGIN_CODEGEN() do { \
 	mono_codeman_enable_write (); \
 	} while (0)

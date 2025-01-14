@@ -4459,9 +4459,6 @@ mini_init (const char *filename, const char *runtime_version)
 	callbacks.is_interpreter_enabled = mini_is_interpreter_enabled;
 	callbacks.get_weak_field_indexes = mono_aot_get_weak_field_indexes;
 
-#ifndef DISABLE_CRASH_REPORTING
-	callbacks.install_state_summarizer = mini_register_sigterm_handler;
-#endif
 #ifdef ENABLE_METADATA_UPDATE
 	callbacks.metadata_update_init = mini_metadata_update_init;
 	callbacks.metadata_update_published = mini_invalidate_transformed_interp_methods;

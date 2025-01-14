@@ -4458,6 +4458,7 @@ namespace MonoTests.System.Net.Sockets
 		}
 
 		[Test]
+		[Category ("NotOnMac")] // multicast is not enabled by default on macOS
 		[Category ("RequiresBSDSockets")] // on watchOS device this happens: System.Net.Sockets.SocketException : The requested address is not valid in this context. This situation is too complex to detect and throw a PlatformNotSupportedException, so just ignore it.
 		public void SetSocketOption_MulticastInterfaceIndex_Any ()
 		{

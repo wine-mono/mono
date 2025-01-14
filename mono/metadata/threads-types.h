@@ -498,11 +498,6 @@ typedef struct {
 		int native_offset;
 		const char *guid;
 
-#ifndef MONO_PRIVATE_CRASHES
-		// We use ifdef to make it a compile-time error to store this 
-		// symbolicated string on release builds
-		const char *name;
-#endif
 		const char *filename;
 		guint32 image_size;
 		guint32 time_date_stamp;
@@ -565,23 +560,6 @@ typedef struct {
 	MonoContext *ctx;
 	MonoContext ctx_mem;
 } MonoThreadSummary;
-
-void
-mono_threads_summarize_init (void);
-
-gboolean
-mono_threads_summarize (MonoContext *ctx, gchar **out, MonoStackHash *hashes, gboolean silent, gboolean signal_handler_controller, gchar *mem, size_t provided_size);
-
-gboolean
-mono_threads_summarize_execute (MonoContext *ctx, gchar **out, MonoStackHash *hashes, gboolean silent, gchar *mem, size_t provided_size);
-
-gboolean
-mono_threads_summarize_one (MonoThreadSummary *out, MonoContext *ctx);
-
-#ifndef DISABLE_CRASH_REPORTING
-void
-mono_summarizer_create_leader_thread (void);
-#endif
 
 
 #if SIZEOF_VOID_P == 4

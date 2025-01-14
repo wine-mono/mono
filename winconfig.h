@@ -26,9 +26,6 @@
 /* No ENABLE_DEFINES below this point */
 
 
-/* Disable runtime state dumping */
-#define DISABLE_CRASH_REPORTING 1
-
 /* String of disabled features */
 #define DISABLED_FEATURES "none"
 
