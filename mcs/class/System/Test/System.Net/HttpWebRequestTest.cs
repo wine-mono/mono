@@ -66,7 +66,7 @@ namespace MonoTests.System.Net
 #endif
 		public void Sync ()
 		{
-			HttpWebRequest req = (HttpWebRequest) WebRequest.Create ("http://www.example.com");
+			HttpWebRequest req = (HttpWebRequest) WebRequest.Create ("http://test.winehq.org/tests/file.winetest");
 			Assert.IsNotNull (req.IfModifiedSince, "req:If Modified Since: ");
 
 			req.UserAgent = "MonoClient v1.0";
@@ -77,7 +77,7 @@ namespace MonoTests.System.Net
 			Assert.AreEqual ("OK", res.StatusCode.ToString (), "#B1");
 			Assert.AreEqual ("OK", res.StatusDescription, "#B2");
 
-			Assert.IsTrue (res.Headers.Get ("Content-Type").StartsWith ("text/html; charset=", StringComparison.OrdinalIgnoreCase), "#C1");
+			Assert.AreEqual ("application/winetest", res.Headers.Get ("Content-Type"), "#C1");
 			Assert.IsNotNull (res.LastModified, "#C2");
 			Assert.AreEqual (0, res.Cookies.Count, "#C3");
 
