@@ -538,8 +538,6 @@ Winehq Migration
 Migration from [mono/mono](https://github.com/mono/mono/) to Winehq is in progress.
 
 Tasks that remain:
-* **Migrate monolite**. In progress. We need a process for making official builds of monolite, and somewhere to put them. Then the code that fetches monolite needs to be updated.
 * **Remove test suite dependencies on Mono hosting**. Not yet started.
 * **Implement continuous integration on GitLab**. In progress. Currently, this is only implemented for the Linux platform. Windows CI in particular will require an alternative build process to Cygwin, likely based on WSL or Wine.
 * **Copy all required GitHub repositories to Winehq GitLab**. In progress.
-* **Create a release process**. Not yet started.
