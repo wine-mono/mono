@@ -33,28 +33,10 @@ Please see our guides for building Mono on
 [Linux](https://www.mono-project.com/docs/compiling-mono/linux/) and 
 [Windows](https://www.mono-project.com/docs/compiling-mono/windows/).
 
-Note that building from Git assumes that you already have Mono installed,
-so please download and [install the latest Mono release](https://www.mono-project.com/download/)
-before trying to build from Git. This is required because the Mono build
+Note that building from Git assumes that you either have Mono installed,
+or you have a working network connection. This is required because the Mono build
 relies on a working Mono C# compiler to compile itself
 (also known as [bootstrapping](https://en.wikipedia.org/wiki/Bootstrapping_(compilers))).
-
-If you don't have a working Mono installation
----------------------------------------------
-
-If you don't have a working Mono installation, you can try a slightly
-more risky approach: getting the latest version of the 'monolite' distribution,
-which contains just enough to run the 'mcs' compiler. You do this with:
-
-    # Run the following line after ./autogen.sh
-    make get-monolite-latest
-
-This will download and place the files appropriately so that you can then
-just run:
-
-    make
-
-The build will then use the files downloaded by `make get-monolite-latest`.
 
 Testing and Installation
 ------------------------
