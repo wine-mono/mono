@@ -4,8 +4,8 @@
 # This line is parsed by tools besides autoconf, such as msvc/mono.winconfig.targets.
 # It should remain in the format they expect.
 #
-AC_INIT(mono, [6.13.0],
-        [https://github.com/mono/mono/issues/new])
+AC_INIT(mono, [6.14.0],
+        [https://gitlab.winehq.org/mono/mono/-/issues/new])
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_MACRO_DIR([m4])
