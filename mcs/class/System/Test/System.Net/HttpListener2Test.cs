@@ -887,5 +887,61 @@ namespace MonoTests.System.Net {
 			ns.Close ();
 			listener.Close ();
 		}
+
+		// HttpListener handled ":" in literal IPv6 addresses as a port separator
+		[Test]
+#if FEATURE_NO_BSD_SOCKETS
+		[ExpectedException (typeof (PlatformNotSupportedException))]
+#endif
+		public void Test_HostIpv6()
+		{
+			HttpListener listener = NetworkHelpers.CreateAndStartHttpListener("http://+:", out var port, "/");
+
+			var ns = HttpListener2Test.CreateNS(port);
+			HttpListener2Test.Send(ns, "GET / HTTP/1.0\r\nHost: [::1]\r\n\r\n");
+
+			bool timeout;
+			HttpListenerContext ctx = HttpListener2Test.GetContextWithTimeout(listener, 1000, out timeout);
+			Assert.IsFalse(timeout, "Cannot get listener context");
+
+			HttpListener2Test.Send(ctx.Response.OutputStream, "%%%OK%%%");
+
+			ctx.Response.OutputStream.Close();
+			string response = HttpListener2Test.Receive(ns, 1024);
+
+			ns.Close();
+			listener.Close();
+
+			Assert.IsTrue(response.StartsWith("HTTP/1.1 200"));
+		}
+
+
+		[Test]
+#if FEATURE_NO_BSD_SOCKETS
+		[ExpectedException (typeof (PlatformNotSupportedException))]
+#endif
+		public void Test_HostIpv6WithPort()
+		{
+			HttpListener listener = NetworkHelpers.CreateAndStartHttpListener("http://+:", out var port, "/");
+
+			var ns = HttpListener2Test.CreateNS(port);
+			HttpListener2Test.Send(ns, $"GET / HTTP/1.0\r\nHost: [::1]:{port}\r\n\r\n");
+
+			bool timeout;
+			HttpListenerContext ctx = HttpListener2Test.GetContextWithTimeout(listener, 1000, out timeout);
+			Assert.IsFalse(timeout, "Cannot get listener context");
+
+			HttpListener2Test.Send(ctx.Response.OutputStream, "%%%OK%%%");
+
+			ctx.Response.OutputStream.Close();
+			string response = HttpListener2Test.Receive(ns, 1024);
+
+			ns.Close();
+			listener.Close();
+
+			Assert.IsTrue(response.StartsWith("HTTP/1.1 200"));
+		}
+
+
 	}
 }
