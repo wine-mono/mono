@@ -212,8 +212,14 @@ namespace System.Net {
 
 			if (raw_uri != null)
 				host = raw_uri.Host;
-	
-			int colon = host.IndexOf (':');
+
+			// Special case for literal IPv6 addresses (rfc2732)
+			int port_search_pos = 0;
+			var ipv6_host_end = host.IndexOf(']');
+			if (ipv6_host_end >= 0)
+				port_search_pos = ipv6_host_end;
+
+			int colon = host.IndexOf(':', port_search_pos);
 			if (colon >= 0)
 				host = host.Substring (0, colon);
 
