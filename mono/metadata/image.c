@@ -645,6 +645,11 @@ load_tables (MonoImage *image)
 	/* They must be the same */
 	g_assert ((const void *) image->tables_base == (const void *) rows);
 
+	if (heap_sizes & 0x40) {
+		/* undocumented flag indicating an extra 4 bytes in header */
+		image->tables_base += 4;
+	}
+
 	if (image->heap_pdb.size) {
 		/*
 		 * Obtain token sizes from the pdb stream.
