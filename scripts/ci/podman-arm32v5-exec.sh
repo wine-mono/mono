@@ -6,5 +6,5 @@ podman image build -f ${SRCDIR}/scripts/ci/linux-arm32v5.docker -t mono-linux-ar
 
 mkdir -p "${SRCDIR}/.podman-home" || exit 1
 
-exec podman run -u root -t --init -a stdin -a stdout -a stderr --volume "${SRCDIR}:/var/hostdir:Z" --volume "${SRCDIR}/.podman-home:/root:Z" -w /var/hostdir --read-only mono-linux-arm32v5 "$@"
+exec podman run --platform linux/arm/v5 -u root -t --init -a stdin -a stdout -a stderr --volume "${SRCDIR}:/var/hostdir:Z" --volume "${SRCDIR}/.podman-home:/root:Z" -w /var/hostdir --read-only mono-linux-arm32v5 "$@"
 
