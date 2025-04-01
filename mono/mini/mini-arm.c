@@ -3020,7 +3020,7 @@ mono_arch_start_dyn_call (MonoDynCallInfo *info, gpointer **args, guint8 *ret, g
 		case MONO_TYPE_R4:
 			if (ainfo->storage == RegTypeFP) {
 				float f = *(float*)arg;
-				p->fpregs [ainfo->reg / 2] = *(double*)&f;
+				((float*)p->fpregs) [ainfo->reg] = f;
 				p->has_fpregs = 1;
 			} else {
 				p->regs [slot] = *(host_mgreg_t*)arg;
