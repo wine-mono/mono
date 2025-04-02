@@ -9603,10 +9603,10 @@ pointer_commands (int command, guint8 *p, guint8 *end, Buffer *buf)
 		type =  m_class_get_byval_arg (m_class_get_element_class (klass));
 		size = mono_type_size (type, &align);
 		
-		if (!valid_memory_address((gpointer)addr, size))
+		if (!valid_memory_address((gpointer)(gsize)addr, size))
 			return ERR_INVALID_ARGUMENT;
 
-		buffer_add_value (buf, type, (gpointer)addr, domain);
+		buffer_add_value (buf, type, (gpointer)(gsize)addr, domain);
 
 		break;
 	default:

@@ -522,7 +522,7 @@ mono_arch_unwind_frame (MonoDomain *domain, MonoJitTlsData *jit_tls,
 
 		return TRUE;
 	} else if (*lmf) {
-		g_assert ((((guint64)(*lmf)->previous_lmf) & 2) == 0);
+		g_assert ((((gsize)(*lmf)->previous_lmf) & 2) == 0);
 
 		frame->type = FRAME_TYPE_MANAGED_TO_NATIVE;
 		
