@@ -60,6 +60,7 @@ MONO_JIT_ICALL (__emul_fcmp_cgt)	\
 MONO_JIT_ICALL (__emul_fcmp_cgt_un)	\
 MONO_JIT_ICALL (__emul_fcmp_clt)	\
 MONO_JIT_ICALL (__emul_fcmp_clt_un)	\
+MONO_JIT_ICALL (__emul_fcmp_cneq)	\
 MONO_JIT_ICALL (__emul_fcmp_eq)	\
 MONO_JIT_ICALL (__emul_fcmp_ge)	\
 MONO_JIT_ICALL (__emul_fcmp_ge_un)	\

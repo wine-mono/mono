@@ -1823,6 +1823,7 @@ mono_decompose_soft_float (MonoCompile *cfg)
 					break;
 				}
 				case OP_FCEQ:
+				case OP_FCNEQ:
 				case OP_FCGT:
 				case OP_FCGT_UN:
 				case OP_FCLT:
