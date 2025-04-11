@@ -2689,7 +2689,7 @@ decode_buffer (ProfContext *ctx)
 				while (*p++);
 
 				if (debug)
-					fprintf (outfile, "root register address %p size %" PRId64 " type %d key %p name %s\n", (void *) (ptr_base + ptrdiff), (guint64) size, type, (void *) (ptr_base + keydiff), desc);
+					fprintf (outfile, "root register address %p size %" PRId64 " type %d key %p name %s\n", (void *)(gsize) (ptr_base + ptrdiff), (guint64) size, type, (void *)(gsize) (ptr_base + keydiff), desc);
 			} else if (subtype == TYPE_HEAP_ROOT_UNREGISTER) {
 				uint64_t tdiff = decode_uleb128 (p + 1, &p);
 				LOG_TIME (time_base, tdiff);
@@ -2697,7 +2697,7 @@ decode_buffer (ProfContext *ctx)
 				int64_t ptrdiff = decode_sleb128 (p, &p);
 
 				if (debug)
-					fprintf (outfile, "root unregister address %p\n", (void *) (ptr_base + ptrdiff));
+					fprintf (outfile, "root unregister address %p\n", (void *)(gsize) (ptr_base + ptrdiff));
 			} else if (subtype == TYPE_HEAP_END) {
 				uint64_t tdiff = decode_uleb128 (p + 1, &p);
 				LOG_TIME (time_base, tdiff);

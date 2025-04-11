@@ -594,7 +594,7 @@ worker_try_create (void)
 	worker.worker_creation_current_count += 1;
 
 	mono_trace (G_LOG_LEVEL_DEBUG, MONO_TRACE_THREADPOOL, "[%p] try create worker, created %p, now = %d count = %d",
-		GUINT_TO_POINTER (MONO_NATIVE_THREAD_ID_TO_UINT (mono_native_thread_id_get ())), (gpointer) thread->tid, now, worker.worker_creation_current_count);
+		GUINT_TO_POINTER (MONO_NATIVE_THREAD_ID_TO_UINT (mono_native_thread_id_get ())), (gpointer)(gsize) thread->tid, now, worker.worker_creation_current_count);
 
 	mono_coop_mutex_unlock (&worker.worker_creation_lock);
 	return TRUE;

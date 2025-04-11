@@ -2096,8 +2096,8 @@ mono_emit_jit_dump (MonoJitInfo *jinfo, gpointer code)
 		
 		add_basic_JitCodeLoadRecord_info (&record);
 		record.header.total_size = sizeof (record) + nameLen + 1 + jinfo->code_size;
-		record.vma = (guint64)jinfo->code_start;
-		record.code_addr = (guint64)jinfo->code_start;
+		record.vma = (gsize)jinfo->code_start;
+		record.code_addr = (gsize)jinfo->code_start;
 		record.code_size = (guint64)jinfo->code_size;
 
 		mono_os_mutex_lock (&perf_dump_mutex);

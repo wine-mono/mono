@@ -6467,7 +6467,7 @@ emit_managed_wrapper_ilgen (MonoMethodBuilder *mb, MonoMethodSignature *invoke_s
 
 	if (sig->hasthis) {
 		if (target_handle) {
-			mono_mb_emit_icon8 (mb, (gint64)target_handle);
+			mono_mb_emit_icon8 (mb, (gsize)target_handle);
 			mono_mb_emit_byte (mb, CEE_CONV_I);
 			mono_mb_emit_icall (mb, mono_gchandle_get_target_internal);
 		} else {
@@ -6475,7 +6475,7 @@ emit_managed_wrapper_ilgen (MonoMethodBuilder *mb, MonoMethodSignature *invoke_s
 			g_assert_not_reached ();
 		}
 	} else if (closed) {
-		mono_mb_emit_icon8 (mb, (gint64)target_handle);
+		mono_mb_emit_icon8 (mb, (gsize)target_handle);
 		mono_mb_emit_byte (mb, CEE_CONV_I);
 		mono_mb_emit_icall (mb, mono_gchandle_get_target_internal);
 	}

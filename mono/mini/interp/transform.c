@@ -4155,7 +4155,7 @@ generate_code (TransformData *td, MonoMethod *method, MonoMethodHeader *header, 
 
 		if (td->prof_coverage) {
 			guint32 cil_offset = td->ip - header->code;
-			gpointer counter = &td->coverage_info->data [cil_offset].count;
+			guint64 counter = (gsize)&td->coverage_info->data [cil_offset].count;
 			td->coverage_info->data [cil_offset].cil_code = (unsigned char*)td->ip;
 
 			interp_add_ins (td, MINT_PROF_COVERAGE_STORE);

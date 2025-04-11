@@ -1145,7 +1145,7 @@ mono_class_get_virtual_methods (MonoClass* klass, gpointer *iter)
 			methodptr++;
 		}
 		if (*iter)
-			g_assert ((guint64)(*iter) > 0x100);
+			g_assert ((gsize)(*iter) > 0x100);
 		int mcount = mono_class_get_method_count (klass);
 		while (methodptr < &klass->methods [mcount]) {
 			if (*methodptr && ((*methodptr)->flags & METHOD_ATTRIBUTE_VIRTUAL))
