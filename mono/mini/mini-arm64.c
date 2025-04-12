@@ -486,20 +486,6 @@ emit_cmpw_imm (guint8 *code, int sreg, int imm)
 }
 
 static __attribute__ ((__warn_unused_result__)) guint8*
-emit_cmpx_imm (guint8 *code, int sreg, int imm)
-{
-	if (imm == 0) {
-		arm_cmpx (code, sreg, ARMREG_RZR);
-	} else {
-		// FIXME:
-		code = emit_imm (code, ARMREG_LR, imm);
-		arm_cmpx (code, sreg, ARMREG_LR);
-	}
-
-	return code;
-}
-
-static __attribute__ ((__warn_unused_result__)) guint8*
 emit_strb (guint8 *code, int rt, int rn, int imm)
 {
 	if (arm_is_strb_imm (imm)) {
