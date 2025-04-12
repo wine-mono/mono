@@ -32,7 +32,7 @@
 	branch = mono-legacy-0.9.5
 [submodule "external/boringssl"]
 	path = external/boringssl
-	url = https://github.com/mono/boringssl.git
+	url = https://gitlab.winehq.org/mono/boringssl.git
 	branch = mono
 [submodule "external/corefx"]
 	path = external/corefx
