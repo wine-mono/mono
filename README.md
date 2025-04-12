@@ -154,6 +154,9 @@ git config --global user.name "Your Name"
 git config --global user.email "me@example.com"
 ```
 
+To get access to fork repositories from a new account, you will
+need to [create a User Verification issue](https://gitlab.winehq.org/winehq/winehq/-/wikis/home#getting-access).
+
 When your changes are ready, [fork the Mono repository](https://gitlab.winehq.org/mono/mono/-/forks/new),
 push your changes to a branch to your fork, and [create a Merge Request](https://gitlab.winehq.org/mono/mono/-/merge_requests/new).
 
@@ -163,10 +166,12 @@ Winehq does not require a Contributor License Agreement. Sending
 your code implies licensing your work under the same free
 software license as the existing code.
 
+Alternatively, pull requests may be made to [the official mirror on GitHub](https://github.com/wine-mono/mono). This creates more work for the maintainer, so it's not preferred, but it may make sense if you're on GitHub already and only planning to send a single change.
+
 Reporting bugs
 ==============
 
-To submit bug reports, please [file a bug on the Winehq Bugzilla](https://bugs.winehq.org/enter_bug.cgi?product=Framework%20Mono).
+To submit bug reports, please [file a bug on the Winehq Bugzilla](https://bugs.winehq.org/enter_bug.cgi?product=Framework%20Mono) or [an issue on GitLab](https://gitlab.winehq.org/mono/mono/-/issues/new), or [an issue on the official mirror on GitHub](https://github.com/wine-mono/mono/issues/new).
 
 Configuration Options
 =====================
