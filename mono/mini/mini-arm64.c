@@ -1737,9 +1737,15 @@ mono_arch_dyn_call_get_buf_size (MonoDynCallInfo *info)
 static double
 bitcast_r4_to_r8 (float f)
 {
-	float *p = &f;
+	union {
+		float f;
+		double d;
+		guint64 i;
+	} u;
+	u.i = 0;
+	u.f = f;
 
-	return *(double*)p;
+	return u.d;
 }
 
 static float
