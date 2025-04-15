@@ -492,6 +492,12 @@ typedef struct ucontext {
 	#define UCONTEXT_REG_SP(ctx) (((ucontext_t*)(ctx))->uc_mcontext.sp)
 	#define UCONTEXT_REG_R0(ctx) (((ucontext_t*)(ctx))->uc_mcontext.regs [ARMREG_R0])
 	#define UCONTEXT_GREGS(ctx) (&(((ucontext_t*)(ctx))->uc_mcontext.regs))
+	#define UCONTEXT_REG_SET_PC(ctx, val) do { \
+		UCONTEXT_REG_PC (ctx) = (gsize)(val); \
+		 } while (0)
+	#define UCONTEXT_REG_SET_SP(ctx, val) do { \
+		UCONTEXT_REG_SP (ctx) = (val); \
+		 } while (0)
 #endif
 
 #ifndef UCONTEXT_REG_SET_PC

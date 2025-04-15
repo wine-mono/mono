@@ -486,20 +486,6 @@ emit_cmpw_imm (guint8 *code, int sreg, int imm)
 }
 
 static __attribute__ ((__warn_unused_result__)) guint8*
-emit_cmpx_imm (guint8 *code, int sreg, int imm)
-{
-	if (imm == 0) {
-		arm_cmpx (code, sreg, ARMREG_RZR);
-	} else {
-		// FIXME:
-		code = emit_imm (code, ARMREG_LR, imm);
-		arm_cmpx (code, sreg, ARMREG_LR);
-	}
-
-	return code;
-}
-
-static __attribute__ ((__warn_unused_result__)) guint8*
 emit_strb (guint8 *code, int rt, int rn, int imm)
 {
 	if (arm_is_strb_imm (imm)) {
@@ -1751,9 +1737,15 @@ mono_arch_dyn_call_get_buf_size (MonoDynCallInfo *info)
 static double
 bitcast_r4_to_r8 (float f)
 {
-	float *p = &f;
+	union {
+		float f;
+		double d;
+		guint64 i;
+	} u;
+	u.i = 0;
+	u.f = f;
 
-	return *(double*)p;
+	return u.d;
 }
 
 static float
