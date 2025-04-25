@@ -123,6 +123,10 @@
 #pragma warning(disable:4047) // FIXME differs in levels of indirection
 #endif
 
+#ifdef bool
+#undef bool
+#endif
+
 //#define MONO_DEBUG_ICALLARRAY
 
 // Inline with CoreCLR heuristics, https://github.com/dotnet/runtime/blob/69e114c1abf91241a0eeecf1ecceab4711b8aa62/src/coreclr/vm/threads.cpp#L6408.
