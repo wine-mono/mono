@@ -1187,26 +1187,26 @@ enum {
  * This structure represents a JIT backend.
  */
 typedef struct {
-	guint            have_card_table_wb : 1;
-	guint            have_op_generic_class_init : 1;
-	guint            emulate_mul_div : 1;
-	guint            emulate_div : 1;
-	guint            emulate_long_shift_opts : 1;
-	guint            have_objc_get_selector : 1;
-	guint            have_generalized_imt_trampoline : 1;
-	gboolean         have_op_tailcall_membase : 1;
-	gboolean         have_op_tailcall_reg : 1;
-	gboolean         have_volatile_non_param_register : 1;
-	guint            gshared_supported : 1;
-	guint            use_fpstack : 1;
-	guint            ilp32 : 1;
-	guint            need_got_var : 1;
-	guint            need_div_check : 1;
-	guint            no_unaligned_access : 1;
-	guint            disable_div_with_mul : 1;
-	guint            explicit_null_checks : 1;
-	guint            optimized_div : 1;
-	guint            force_float32 : 1;
+	guint32          have_card_table_wb : 1;
+	guint32          have_op_generic_class_init : 1;
+	guint32          emulate_mul_div : 1;
+	guint32          emulate_div : 1;
+	guint32          emulate_long_shift_opts : 1;
+	guint32          have_objc_get_selector : 1;
+	guint32          have_generalized_imt_trampoline : 1;
+	guint32          have_op_tailcall_membase : 1;
+	guint32          have_op_tailcall_reg : 1;
+	guint32          have_volatile_non_param_register : 1;
+	guint32          gshared_supported : 1;
+	guint32          use_fpstack : 1;
+	guint32          ilp32 : 1;
+	guint32          need_got_var : 1;
+	guint32          need_div_check : 1;
+	guint32          no_unaligned_access : 1;
+	guint32          disable_div_with_mul : 1;
+	guint32          explicit_null_checks : 1;
+	guint32          optimized_div : 1;
+	guint32          force_float32 : 1;
 	int              monitor_enter_adjustment;
 	int              dyn_call_param_area;
 } MonoBackend;
