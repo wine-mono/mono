@@ -41,7 +41,7 @@ static void sgen_unified_suspend_stop_world (void);
 
 static TV_DECLARE (end_of_last_stw);
 
-guint64 mono_time_since_last_stw ()
+guint64 mono_time_since_last_stw (void)
 {
 	if (end_of_last_stw == 0)
 		return 0;

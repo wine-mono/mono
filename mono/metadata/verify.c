@@ -49,7 +49,7 @@ mono_verifier_set_mode (MiniVerifierMode mode)
 }
 
 void
-mono_verifier_enable_verify_all ()
+mono_verifier_enable_verify_all (void)
 {
 	verify_all = TRUE;
 }
@@ -6100,7 +6100,7 @@ cleanup:
 }
 
 char*
-mono_verify_corlib ()
+mono_verify_corlib (void)
 {
 	/* This is a public API function so cannot be removed */
 	return NULL;
@@ -6136,7 +6136,7 @@ mono_verifier_is_enabled_for_image (MonoImage *image)
 }
 
 gboolean
-mono_verifier_is_enabled_for_pe_only ()
+mono_verifier_is_enabled_for_pe_only (void)
 {
 	return verify_all || verifier_mode == MONO_VERIFIER_PE_ONLY;
 }

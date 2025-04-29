@@ -1943,7 +1943,7 @@ switch_gc (char* argv[], const char* target_gc)
  * tries to increase the minimum number of files, if the number is below 1024
  */
 static void
-darwin_change_default_file_handles ()
+darwin_change_default_file_handles (void)
 {
 	struct rlimit limit;
 	

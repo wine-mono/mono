@@ -841,14 +841,14 @@ sgen_finish_concurrent_work (const char *reason, gboolean stw)
 }
 
 void
-mono_gc_stop_world ()
+mono_gc_stop_world (void)
 {
 	LOCK_GC;
 	sgen_stop_world (0, FALSE);
 }
 
 void
-mono_gc_restart_world ()
+mono_gc_restart_world (void)
 {
 	sgen_restart_world (0, FALSE);
 	UNLOCK_GC;
@@ -2161,7 +2161,7 @@ mono_gc_set_gc_callbacks (MonoGCCallbacks *callbacks)
 }
 
 MonoGCCallbacks *
-mono_gc_get_gc_callbacks ()
+mono_gc_get_gc_callbacks (void)
 {
 	return &gc_callbacks;
 }

@@ -1421,7 +1421,7 @@ mono_crash_reporting_register_native_library (const char *module_path, const cha
 }
 
 static void
-mono_crash_reporting_allow_all_native_libraries ()
+mono_crash_reporting_allow_all_native_libraries (void)
 {
 	// not supported
 }

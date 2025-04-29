@@ -741,7 +741,7 @@ mono_process_get_data (gpointer pid, MonoProcessData data)
 
 #ifndef HOST_WIN32
 int
-mono_process_current_pid ()
+mono_process_current_pid (void)
 {
 #if defined(HAVE_UNISTD_H)
 	return (int) getpid ();
