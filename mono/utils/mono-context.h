@@ -898,7 +898,7 @@ typedef struct {
 
 #include <sys/ucontext.h>
 
-#if __GLIBC_PREREQ(2, 26)
+#if __GLIBC__ > 2 || __GLIBC__ == 2 && __GLIBC_MINOR__ >= 26
 typedef ucontext_t MonoContext;
 #else
 typedef struct ucontext MonoContext;
