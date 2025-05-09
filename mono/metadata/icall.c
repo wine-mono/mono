@@ -6074,7 +6074,7 @@ ves_icall_Mono_Runtime_RegisterReportingForNativeLib (const char *path_suffix, c
 }
 
 void
-ves_icall_Mono_Runtime_RegisterReportingForAllNativeLibs ()
+ves_icall_Mono_Runtime_RegisterReportingForAllNativeLibs (void)
 {
 	// not supported
 }

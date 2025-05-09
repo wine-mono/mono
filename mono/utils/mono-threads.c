@@ -946,7 +946,7 @@ mono_thread_info_set_inited (void)
 }
 
 void
-mono_thread_info_cleanup ()
+mono_thread_info_cleanup (void)
 {
 	mono_native_tls_free (thread_info_key);
 	mono_native_tls_free (thread_exited_key);

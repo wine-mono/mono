@@ -781,7 +781,7 @@ mono_de_cancel_ss (SingleStepReq *req)
 }
 
 void
-mono_de_cancel_all_ss ()
+mono_de_cancel_all_ss (void)
 {
 	int i;
 	for (i = 0; i < the_ss_reqs->len; ++i) {

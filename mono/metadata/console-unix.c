@@ -323,7 +323,7 @@ MONO_SIG_HANDLER_FUNC (static, sigwinch_handler)
  * by System.Console when the Terminfo driver has been activated.
  */
 static void
-console_set_signal_handlers ()
+console_set_signal_handlers (void)
 {
 #if defined(HAVE_SIGACTION)
 	struct sigaction sigcont, sigint, sigwinch;

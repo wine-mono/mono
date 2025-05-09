@@ -60,7 +60,7 @@ mono_security_core_clr_set_options (MonoSecurityCoreCLROptions options) {
  */
 
 MonoSecurityCoreCLROptions
-mono_security_core_clr_get_options ()
+mono_security_core_clr_get_options (void)
 {
 	return security_core_clr_options;
 }
@@ -1046,7 +1046,7 @@ mono_security_core_clr_method_level (MonoMethod *method, gboolean with_class_lev
  *   Enable the verifier and the CoreCLR security model
  */
 void
-mono_security_enable_core_clr ()
+mono_security_enable_core_clr (void)
 {
 	mono_verifier_set_mode (MONO_VERIFIER_MODE_VERIFIABLE);
 	mono_security_set_mode (MONO_SECURITY_MODE_CORE_CLR);
