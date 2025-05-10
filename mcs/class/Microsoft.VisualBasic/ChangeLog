@@ -1,0 +1,215 @@
+2010-06-11  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Makefile:
+	* vbruntime1.rsp:
+	* strings-only1.txt:
+	* strings1.resources: Remove .NET 1.0/1.1 logic
+
+	* 2010VB.vbproj:
+	* AssemblyInfo.vb: Update for .NET 4.0.
+
+2010-06-12  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* 2010VB.sln:
+	* 2010VB.vbproj: Added for VS2010 work.
+
+2010-02-09  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Makefile: Set PLATFORM_PATH_SEPARATOR properly.
+
+2009-12-07  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Microsoft.VisualBasic.dll.sources: Add Hashtable.vb and ArrayList.vb
+	to the build so that they're disted.
+
+	* Makefile: Dist the *.moonlight.sources too.
+
+2009-12-07  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Makefile: Include vbruntime-moonlight.rsp in DISTFILES.
+
+2009-05-20  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* 2008VB.vbproj:
+	* 2008VB.sln: Added.
+
+2009-04-21  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* AssemblyInfo.vb, Makefile: Use winfx3.pub as the key file and set 
+	  the correct assembly version for moonlight.
+	* winfx3.pub, mono.snk: Added.
+
+2009-04-14  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Microsoft.VisualBasic.dll.moonlight.sources: Remove more
+	files from moonlight build.
+
+2008-03-17  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Makefile: Do sign Microsoft.VisualBasic.dll
+
+2008-02-15  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* strings1.resources, strings2.resources: Added.
+
+2008-02-15  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Makefile: don't extract resources from the vbproj file.
+	* Microsoft.VisualBasic.dll.sources.win, strings.resources: Updated.
+
+2008-02-15  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* strings-only1.txt, strings-only2.txt: Added.
+
+2008-02-12  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Makefile, vbruntime1.rsp, vbruntime2.rsp, vbruntime.rsp: Implement
+	  building different resources for 1.1 and 2.0 profiles.
+	* 2005VB.vbproj, Microsoft.VisualBasic.dll.sources.win, strings.resources,
+	  2005VB.sln: Updated.
+
+2007-12-17  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	
+
+2007-12-14  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Microsoft.VisualBasic.dll.sources, Microsoft.VisualBasic.dll.sources.win:
+	  Update.
+	* 2005VB.vbproj: Updated.
+
+2007-12-10  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	
+
+2007-12-04  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	
+
+2007-12-04  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	
+
+2007-08-13  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* 2005VB.vbproj: Update.
+
+2007-08-13  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* vbruntime1.rsp, vbruntime2.rsp: Changed all uses of NET_2_0 to NET_VER >=
+	  2.0, deleted NET_1_0, NET_1_1 and NET_2_0.
+
+2007-08-13  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* AssemblyInfo.vb, Makefile: Added MOONLIGHT conditional compilation symbol
+	  and started removing non-moonlight stuff from the files.
+	* Microsoft.VisualBasic.dll.moonlight.sources: New profile-specific sources
+	  file, does not contain files that isn't in moonlight at all.
+	* vbruntime-moonlight.rsp: Added, contains moonlight-specific compilation
+	  arguments.
+
+2007-05-30  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* 2005VB.vbproj, Microsoft.VisualBasic.dll.sources.win,
+	  Microsoft.VisualBasic.dll.sources: Update.
+	* strings.resources: Updated.
+	* Makefile: Added install-binary target.
+
+2007-05-10  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Microsoft.VisualBasic.FileIO/SpecialDirectories.vb: Fix weird paths
+	  we get (includes \\ in the middle) on Windows.
+	* Microsoft.VisualBasic/Conversion.vb: Val: accept decimal values with
+	  E+- in them.
+	* Microsoft.VisualBasic/Collection.vb: Lots of updates to make
+	  Collection work in the 2.0 profile.
+	* vbruntime.rsp: Now this file only contains options common to both 1.0
+	  and 2.0 builds.
+	* vbruntime1.rsp: Contains 1.0 specific options.
+	* vbruntime2.rsp: Contains 2.0 specific options.
+
+2007-05-09  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* 2005VB.vbproj: Finally found a way to send -novbruntimeref to the VS
+	  compiler. There's a hidden CompilerResponseFile option that can be
+	  set in the vbproj file, and I put -novbruntimeref in that response
+	  file. Building inside VS now works, with the minor caveat that the
+	  task-list still fills with errors (probably from the in-proc
+	  compiler VS uses), so I added an "Edit" configuration that doesn't
+	  build, but doesn't fill the task-list with errors.
+	* Helper.vb: Comment out this file for the moment.
+	* MonoTODOAttribute.vb: Fix indenting.
+	* 2005VB.rsp: Added.
+
+2007-05-06  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* strings.resources: Updated.
+	* strings.txt: Added two error messages used by My.Forms.
+
+2007-04-24  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* MonoTODOAttribute.vb: Build fix.
+
+2007-04-23  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* 2005VB.vbproj, Microsoft.VisualBasic.dll.sources.win,
+	  strings.resources, Microsoft.VisualBasic.dll.sources: Update.
+	* Microsoft.VisualBasic.CompilerServices/Operators.vb: Fix warnings.
+	* Microsoft.VisualBasic.CompilerServices/Conversions.vb: Fix warning
+	  (and a bug as well).
+	* MonoTODOAttribute.vb: Fix lineendings.
+	* Microsoft.VisualBasic/Interaction.vb: Fix warning and add a note for
+	  GetAllSettings that if this method is used, the assembly has to be
+	  recompiled between MS and Mono.
+	* Microsoft.VisualBasic/Collection.vb: Fix warning.
+	* Makefile: Add EXTRA_VBRUNTIME_FLAGS, and create sources for windows
+	  as well.
+
+2007-04-16  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Makefile: Use PLATFORM_PATH_SEPARATOR so that build succeeds on Windows.
+
+2007-03-07  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* AssemblyInfo.vb: Corcompare work.
+	* strings.resources: Updated.
+
+2007-03-01  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* vbruntime.rsp: Undo changes unwanted changes.
+
+2007-03-01  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* AssemblyInfo.vb: CorCompare work.
+	* Helper.vb: Changed encoding to 65001 without signature.
+	* 2005VB.vbproj: Updated.
+
+2007-02-22  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* vbruntime.rsp: Add -codepage:65001, makes compilation
+	independent of the current locale of the user.
+
+2007-02-13  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* 2005VB.vbproj, Microsoft.VisualBasic.dll.sources.win: Updated.
+
+2007-01-25  Wade Berrier  <wberrier@novell.com>
+
+	* Makefile: Add Microsoft.VisualBasic.dll.sources.win to 
+	DISTFILES to be able to build from 'make dist' tarball
+
+2007-01-18  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Makefile: Now Microsoft.VisualBasic.dll.sources is generated
+	automatically from 2005VB.vbproj.
+	
+2007-01-15  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* AssemblyInfo.vb: Reverted accidental version change.
+	* Microsoft.VisualBasic.dll.sources: updated.
+	* vbruntime.rsp: Updated with correct arguments.
+
+2006-12-29  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* 2005VB.vbproj: Set a default (dummy) root namespace
+	to remove all errors in VS2005. Enable warnings.

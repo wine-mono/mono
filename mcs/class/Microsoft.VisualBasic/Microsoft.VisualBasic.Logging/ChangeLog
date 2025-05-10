@@ -1,0 +1,56 @@
+2010-06-12  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Log.vb:
+	* AspLog.vb:
+	* LogFileLocation.vb:
+	* FileLogTraceListener.vb:
+	* DiskSpaceExhaustedOption.vb:
+	* LogFileCreationScheduleOption.vb: Remove .NET 1.0/1.1 logic.
+
+2009-07-10  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* FileLogTraceListener.vb:  Remove all uses of CType (and relatives): for primitive
+        types call the corresponding conversion method, for other types call
+        DirectCast.
+
+2010-04-16  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Log.vb: Use String.Compare/Length instead of equality operator.
+	Second step in making the vbruntime compile in vb9 (by not being
+	self-referential).
+
+2010-04-16  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* FileLogTraceListener.vb: Use full "path" to access members in modules, since modules
+	will be changed to classes.
+
+2007-08-13  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	
+
+2007-08-13  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* DiskSpaceExhaustedOption.vb, LogFileLocation.vb,
+	  LogFileCreationScheduleOption.vb, Log.vb, AspLog.vb,
+	  FileLogTraceListener.vb: Changed all uses of NET_2_0 to NET_VER >= 2.0,
+	  deleted NET_1_0, NET_1_1 and NET_2_0.
+
+2007-05-21  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Log.vb, FileLogTraceListener.vb: Remove a few mono_not_yet, things
+	  have been implemented.
+
+2007-05-11  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* FileLogTraceListener.vb, Log.vb: Corcompare fixes.
+
+2007-03-07  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Log.vb, FileLogTraceListener.vb: Removed mono_not_yet from a couple
+	  of methods, since more missing bits have been implemented on Mono.
+
+2007-01-15  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Added AspLog.vb, DispSpaceExhaustedOption.vb, 
+	FileLogTraceListener.vb, Log.vb, 
+	LogFileCreationScheduleOption.vb, LogFileLocation.vb

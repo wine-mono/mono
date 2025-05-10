@@ -1,0 +1,53 @@
+2010-06-12  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Clock.vb:
+	* Audio.vb:
+	* Ports.vb:
+	* Mouse.vb:
+	* Network.vb:
+	* Computer.vb:
+	* Keyboard.vb:
+	* MyWebClient.vb:
+	* ComputerInfo.vb:
+	* ServerComputer.vb:
+	* MyProgressDialog.vb:
+	* NetworkAvailableEventArgs.vb:
+	* NetworkAvailableEventHandler.vb: Remove .NET 1.0/1.1 logic.
+
+2007-12-05  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* ComputerInfo.vb: Make the changes actually compile.
+
+2007-12-04  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* ComputerInfo.vb: Corcompare work.
+
+2007-09-03 Igor Zelmanovich <igorz@mainsoft.com>
+
+	* Network.vb: some features is not supported for TARGET_JVM
+
+2007-08-13  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* MyWebClient.vb: More dependencies are implemented now.
+
+2007-08-13  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* NetworkAvailableEventArgs.vb, ComputerInfo.vb, ServerComputer.jvm.vb,
+	  MyWebClient.vb, Mouse.jvm.vb, ServerComputer.vb, Mouse.vb,
+	  Computer.jvm.vb, Network.vb, MyProgressDialog.vb,
+	  NetworkAvailableEventHandler.vb, Keyboard.jvm.vb, Clock.vb,
+	  Audio.jvm.vb, Computer.vb, Keyboard.vb, Audio.vb, Ports.jvm.vb,
+	  ComputerInfo.jvm.vb, Ports.vb: Changed all uses of NET_2_0 to NET_VER >=
+	  2.0, deleted NET_1_0, NET_1_1 and NET_2_0.
+
+2007-03-07  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Network.vb, NetworkAvailableEventHandler.vb: Removed mono_not_yet,
+	  since vbnc can now handle events on Mono.
+
+2007-01-15  Rolf Bjarne Kvinge  <RKVinge@novell.com>
+
+	* Added Audio.vb, Computer.vb, ComputerInfo.vb, Keyboard.vb
+	Mouse.vb, MyProgressDialog.vb, MyWebClient.vb, Network.vb, 
+	NetworkAvailableEventArgs.vb, NetworkAvailableEventHandler.vb,
+	Ports.vb, ServerComputer.vb
