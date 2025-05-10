@@ -13,6 +13,9 @@
 # LIB_REFS      - This should be a space separated list of assembly names which are added to the mcs
 #                 command line.
 #
+# LIB_IS_VB     - Use vbc to compile.
+# LIB_VBC_FLAGS - Command line flags passed to vbc.
+#
 
 LIB_REFS_FULL = $(call _FILTER_OUT,=, $(LIB_REFS)) $(DEFAULT_REFERENCES)
 LIB_REFS_ALIAS = $(filter-out $(LIB_REFS_FULL),$(LIB_REFS))
@@ -68,6 +71,10 @@ ifdef ENFORCE_LIBRARY_WARN_AS_ERROR
 ifeq ($(LIBRARY_WARN_AS_ERROR),yes)
 ifndef MCS_MODE
 LIB_MCS_FLAGS += -warnaserror
+else
+ifdef LIB_IS_VB
+LIB_VBC_FLAGS += -warnaserror
+endif
 endif
 endif
 endif
@@ -235,7 +242,11 @@ dist-local: dist-default
 	  case $$d in .) : ;; *) test ! -f $$d/ChangeLog || cp -p $$d/ChangeLog $(distdir)/$$d ;; esac ; done
 
 ifndef LIBRARY_COMPILE
+ifdef LIB_IS_VB
+LIBRARY_COMPILE = $(VBCOMPILE)
+else
 LIBRARY_COMPILE = $(CSCOMPILE)
+endif
 endif
 
 ifndef LIBRARY_SNK
@@ -295,6 +306,10 @@ $(topdir)/class/$(lib_dir)/$(PROFILE)/.stamp: | $(topdir)/class/$(lib_dir)/$(PRO
 endif
 
 ifndef NO_BUILD
+
+ifdef LIB_IS_VB
+LIB_MCS_FLAGS += $(LIB_VBC_FLAGS)
+endif
 
 $(build_lib): $(response) $(sn) $(BUILT_SOURCES) $(build_libdir)/.stamp $(GEN_RESOURCE_DEPS) $(MODULE_DEPS)
 	$(LIBRARY_COMPILE) $(LIBRARY_FLAGS) $(LIB_MCS_FLAGS) $(KEYFILE_MCS_FLAGS) $(GEN_RESOURCE_FLAGS) -target:library -out:$@ $(BUILT_SOURCES_cmdline) @$(response)
