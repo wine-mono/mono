@@ -2098,9 +2098,11 @@ namespace System.Net.Sockets
 
 			errorCode = SocketError.Success;
 
+			var ownedBuffer = new byte[size];
+			Array.Copy(buffer, offset, ownedBuffer, 0, size);
+
 			SocketAsyncResult sockares = new SocketAsyncResult (this, callback, state, SocketOperation.Send) {
-				Buffer = buffer,
-				Offset = offset,
+				Buffer = ownedBuffer,
 				Size = size,
 				SockFlags = socketFlags,
 			};
@@ -2344,9 +2346,11 @@ namespace System.Net.Sockets
 			ThrowIfBufferNull (buffer);
 			ThrowIfBufferOutOfRange (buffer, offset, size);
 
+			var ownedBuffer = new byte[size];
+			Array.Copy(buffer, offset, ownedBuffer, 0, size);
+
 			SocketAsyncResult sockares = new SocketAsyncResult (this, callback, state, SocketOperation.SendTo) {
-				Buffer = buffer,
-				Offset = offset,
+				Buffer = ownedBuffer,
 				Size = size,
 				SockFlags = socketFlags,
 				EndPoint = remoteEP,
