@@ -1222,15 +1222,15 @@ namespace System.Windows.Forms.X11Internal {
 		// XXX this method doesn't really fit well anywhere in the backend
 		public SizeF GetAutoScaleSize (Font font)
 		{
-			Graphics	g;
 			float		width;
 			string		magic_string = "The quick brown fox jumped over the lazy dog.";
 			double		magic_number = 44.549996948242189; // XXX my god, where did this number come from?
 
-			g = Graphics.FromHwnd (FosterParent.Handle);
-
-			width = (float) (g.MeasureString (magic_string, font).Width / magic_number);
-			return new SizeF(width, font.Height);
+			using (Graphics g = Graphics.FromHwnd (FosterParent.Handle))
+			{
+				width = (float) (g.MeasureString (magic_string, font).Width / magic_number);
+				return new SizeF(width, font.Height);
+			}
 		}
 
 		public void GetCursorPos (X11Hwnd hwnd, out int x, out int y)
