@@ -2201,6 +2201,53 @@ namespace MonoTests.System.Net.Sockets
 				sock.Close ();
 			}
 		}
+
+		[Test]
+		public void BeginSend ()
+		{
+			// set-up listening socket on a free port on the loopback interface
+			var endPoint = new IPEndPoint (IPAddress.Loopback, NetworkHelpers.FindFreePort());
+			var listen = new Socket(SocketType.Stream, ProtocolType.Tcp);
+			listen.Bind(endPoint);
+			listen.Listen(1);
+
+			// connect a new socket
+			var clientSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+			clientSocket.Connect(endPoint);
+
+			// accept new socket
+			var serverSocket = listen.Accept();
+
+			// set-up our sync state
+			var pendingSends = 2;
+			var waitHandle = new AutoResetEvent(false);
+
+			// set-up our async callback
+			AsyncCallback sendCallback = result => {
+				clientSocket.EndSend(result);
+				if (Interlocked.Decrement(ref pendingSends) == 0)
+					waitHandle.Set();
+			};
+
+			/* send two messages:
+			 * 1. byte[] { 1, 2, 3, 4 }; and
+			 * 2. byte[] { 5, 6, 7, 8 }
+			 */
+			var data = new byte[4] { 1, 2, 3, 4 };
+			clientSocket.BeginSend(data, 0, 4, SocketFlags.None, sendCallback, null);
+			data[0] = 5; data[1] = 6; data[2] = 7; data[3] = 8;
+			clientSocket.BeginSend(data, 0, 4, SocketFlags.None, sendCallback, null);
+
+			// wait for transmissions to complete
+			waitHandle.WaitOne();
+
+			// read from server socket
+			var read = new byte[8];
+			var len = serverSocket.Receive(read);
+
+			// assert received data is as expected
+			Assert.AreEqual (new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 }, read, "received data");
+		}
 		
 		[Test]
 		public void BeginSendSocketError ()
