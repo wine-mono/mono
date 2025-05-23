@@ -1,0 +1,76 @@
+2010-06-12  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* DateTypeTest.vb:
+	* ByteTypeTest.vb:
+	* LongTypeTest.vb:
+	* ShortTypeTest.vb:
+	* SingleTypeTest.vb:
+	* DoubleTypeTest.vb:
+	* IntegerTypeTest.vb:
+	* DecimalTypeTest.vb:
+	* DecimalTypeTest.vb:
+	* BooleanTypeTest.vb:
+	* ConversionsTests.vb:
+	* LateBindingTests.vb:
+	* LateBindingTests2.vb:
+	* LateBindingTests4.vb: Remove .NET 1.0/1.1 logic.
+
+2008-02-12  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* DoubleTypeTest.vb, DateTypeTest.vb, BooleanTypeTest.vb, SingleTypeTest.vb,
+	  IntegerTypeTest.vb, DecimalTypeTest.vb, LongTypeTest.vb,
+	  ShortTypeTest.vb, ByteTypeTest.vb: Added.
+	* OperatorsTests.vb: Set current culture to en-US.
+
+2008-01-12  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* LateBindingTests6.vb: Fix unused variable warning.
+
+2007-12-04  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* LateBindingTests.vb: Add test for #344217.
+
+2007-11-06  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* OperatorsTests.vb: Added test for #328099.
+
+2007-08-13  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* LateBindingTests2.vb, ConversionsTests.vb: Use NET_VER.
+	* LateBindingTests4.vb, LateBindingTests5.vb, OperatorsTests.vb: Fix code to
+	  build on 1.1.
+	* LateBindingTests.vb: Use NET_VER and fix code to build on 1.1.
+
+2007-08-13  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* LateBindingTests2.vb, LateBindingTests3.vb, LateBindingTests4.vb,
+	  LateBindingTests5.vb, LateBindingTests6.vb, LateBindingTests.vb: There's
+	  no longer any mono_not_yet.
+
+2007-05-10  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* UtilsTest.cs: Don't check exception message.
+
+2007-04-16  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* LateBindingsTest*.vb: Ifdef out all late binding tests since vbnc can't compile them yet.
+
+2007-03-01  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* LateBindingsTests2.vb: Mark LateBind_MS_Bug_NoFail as NotDotNet so that tests pass with MS.
+
+2006-09-20  Rafael Mizrahi <rafim@mainsoft.com> 
+	* merge old NUnit tests into new NUnit tests 
+
+2004-09-14  Rafael Teixeira <rafaelteixeirabr@hotmail.com> 
+	* UtilsTest.cs: upgraded to use nunit Assert class, also corrected testing for null that 
+	  was giving an exception when run.
+	  
+2004-01-21  Rafael Teixeira <rafaelteixeirabr@hotmail.com>
+	* Added UtilsTest.cs:
+		More tests (with bidimensional arrays) for Utils.CopyArray undocumented runtime function,
+		they are still failing tests
+
+2004-01-21  Rafael Teixeira <rafaelteixeirabr@hotmail.com>
+	* Added UtilsTest.cs:
+		Initial tests for Utils.CopyArray undocumented runtime function

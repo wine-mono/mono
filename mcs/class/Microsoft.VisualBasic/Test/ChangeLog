@@ -1,0 +1,164 @@
+2010-06-12  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* 2010VB*proj: Added VS2010 project files.
+
+	* Makefile: Fix svn paths.
+
+2010-06-09  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* bin/nunit.util.dll:
+	* bin/nunit.core.dll:
+	* bin/nunit-console.exe:
+	* bin/nunit.framework.dll: Deleted, they're fetched automatically when needed.
+
+2010-06-08  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Makefile: Clean up properly and fix the dl link to anonsvn.
+
+2009-07-10  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Makefile: Fix distcheck.
+
+2009-05-21  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Makefile:
+	* 2005VB_test_CS.csproj:
+	* 2005VB_test_CS.dll.rsp:
+	* 2005VB_test_CS.dll.sources:
+	* 2005VB_test_CS.dll.sources.win:
+	* 2005VB_test_VB.dll.rsp:
+	* 2005VB_test_VB.dll.sources:
+	* 2005VB_test_VB.dll.sources.win:
+	* 2005VB_test_VB.rsp:
+	* 2005VB_test_VB.vbproj:
+	* 2005VB_tester.vbproj:
+	* 2008VB_test_CS.dll.rsp:
+	* 2008VB_test_CS.dll.sources:
+	* 2008VB_test_CS.dll.sources.win:
+	* 2008VB_test_VB.dll.rsp:
+	* 2008VB_test_VB.dll.sources:
+	* 2008VB_test_VB.dll.sources.win: Move to VS 2008 project files.
+
+2008-11-15  Kornél Pál  <kornelpal@gmail.com>
+
+	* 2003VB_test.vbproj, 2005VB_test_VB.dll.sources,
+	  2005VB_test_VB.dll.sources.win, 2005VB_test_VB.JavaEE.vbproj,
+	  2005VB_test_VB.vbproj: Added Microsoft.VisualBasic\StringsTest.vb.
+
+2008-10-27  Rolf Bjarne Kvinge <RKvinge@novell.com>
+
+	* Makefile: Don't include binary files in source tarball, 
+	  wget them from svn whenever needed.
+
+2008-02-12  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Make.cmd: Minor fixes and more output.
+	* 2005VB_test_VB.dll.sources.win, 2005VB_test_VB.dll.sources,
+	  2005VB_test_VB.vbproj: Updated.
+	* Tester.vb: A more sophisticated tester.
+
+2008-01-12  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* 2005VB_test_VB.vbproj: Updated.
+
+2007-08-14  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Makefile: Use cmd.exe to execute Make.cmd.
+
+2007-08-13  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Make.cmd: Execute VB tests as well.
+	* 2005VB_test_VB.dll.rsp: Define _MYTYPE to avoid compiling the My
+	  namespace.
+	* Makefile: Set NET_VER for VB build.
+
+2007-08-13  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* 2005VB_test_VB.dll.sources.win: Updated.
+	* Makefile: Don't stop executing tests if the C# tests fail.
+
+2007-05-31  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Microsoft.VisualBasic.MyServices/RegistryProxyTest.cs: Ignore a few
+	  tests if they fail with security exceptions.
+
+2007-05-30  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Make.cmd: Exclude NotWorking tests and set correct defines according
+	  to fx version.
+	* Makefile: Updated, copy mdb files to output directory with assembly,
+	  and exclude NotWorking tests.
+
+2007-05-28  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Makefile: Execute Make.cmd (1_1/2_0) on cygwin to check the tests
+	  against MS.
+
+2007-05-21  Eyal Alaluf <eyala@mainsoft.com>
+
+	* Remove NotWorking and TargetJvmNotWorking from a few unit tests that
+	  actually work now.
+
+2007-05-17  Eyal Alaluf <eyala@mainsoft.com>
+
+	* Microsoft.VisualBasic/FinancialTests.cs: Added scenarios where period
+	  is non integral (e.g. 48.3). Added precision to most comparisons so
+	  small differences in calculation formulas won't fail the tests.
+
+2007-05-10  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Make.cmd: Update, can now build both 1.0 and 2.0.
+	* Makefile: Update to use either mcs or gmcs according to target
+	  version.
+
+2007-05-09  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Microsoft.VisualBasic.CompilerServices/UtilsTest.cs: Added more
+	  tests.
+	* 2005VB_test_CS.csproj: Updated.
+	* 2005VB_test_VB.vbproj: Updated to reference the 2005VB project while
+	  testing.
+	* 2005VB_test_VB.rsp: Added.
+
+2007-04-23  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* 2005VB_test_VB.dll.rsp, 2005VB_test_VB.dll.sources: Updated.
+	* Microsoft.VisualBasic.CompilerServices/LateBindingTests4.vb,
+	  Microsoft.VisualBasic.CompilerServices/LateBindingTests5.vb,
+	  Microsoft.VisualBasic/ErrObjectTests.vb,
+	  Microsoft.VisualBasic/InteractionTests.vb,
+	  Microsoft.VisualBasic/InformationTests.vb: Remove warnings.
+	* bin, bin/nunit-console.exe.config, bin/nunit.util.dll,
+	  bin/nunit.framework.dll, bin/nunit-console.exe, bin/nunit.core.dll:
+	  Added for unit tests.
+	* Makefile: C# tests can now be run on Mono.
+	* Microsoft.VisualBasic/FileSystemTests.vb: Remove warnings and fix
+	  lineendings.
+	* Microsoft.VisualBasic.MyServices.Internal/ContextValueTest.cs: Fix
+	  typo and lineendings.
+	* Microsoft.VisualBasic.FileIO/TextFieldParserTest.cs,
+	  Microsoft.VisualBasic.FileIO/SpecialDirectoriesTest.cs,
+	  Microsoft.VisualBasic.FileIO/MalformedLineExceptionTest.cs,
+	  Microsoft.VisualBasic.FileIO/FileSystemTest.vb,
+	  Microsoft.VisualBasic.CompilerServices/ObjectTypeTests.vb,
+	  Microsoft.VisualBasic.CompilerServices/LateBindingTests6.vb: Fix
+	  lineendings.
+
+2007-04-16  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Makefile: Use PLATFORM_PATH_SEPARATOR so that build succeeds on Windows.
+	* 2005VB_test_*proj: Define mono_not_yet.
+
+2007-03-01  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* 2005VB_test_CS.dll.rsp: Added
+	* 2005VB_test_VB.dll.rsp: Added
+	* 2005VB_test_CS.dll.sources.win: Added
+	* 2005VB_test_VB.dll.sources.win: Added
+	* 2005VB_test_CS.dll.sources: Added
+	* 2005VB_test_VB.dll.sources: Added
+	* 2005VB_test_CS.csproj: Moved from base directory.
+	* 2003VB_test.csproj: Moved from base directory
+	* 2003VB_test.vbproj: Moved from base directory
+	* 2005VB_test.sln: Moved to base directory
+	* Makefile: Added
