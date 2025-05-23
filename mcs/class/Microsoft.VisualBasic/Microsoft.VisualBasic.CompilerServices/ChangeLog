@@ -1,0 +1,212 @@
+2010-06-11  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Utils.vb:
+	* Versioned.vb:
+	* Operators.vb:
+	* LateBinder.vb:
+	* DoubleType.vb:
+	* DecimalType.vb:
+	* Conversions.vb:
+	* BooleanType.vb:
+	* IntegerType.vb:
+	* ProjectData.vb:
+	* LikeOperator.vb:
+	* NewLateBinding.vb:
+	* ObjectFlowControl.vb:
+	* StaticLocalInitFlag.vb:
+	* InternalErrorException.vb:
+	* IncompleteInitialization.vb: Remove .NET 1.0/1.1 logic
+
+2010-06-12  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* ProjectData.vb: Make it compile in VS2010.
+
+2010-04-16  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* LateBinder.vb: Call Utils.CopyArray manually instead of using
+	Redim Preserve.
+
+2010-04-16  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Versioned.vb:
+	* Operators.vb:
+	* LateBinder.vb:
+	* FlowControl.vb: Remove all uses of CType (and relatives): for primitive
+	types call the corresponding conversion method, for other types call
+	DirectCast.
+
+2010-04-16  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Conversions.vb: Simplify type checking and conversion.
+
+2010-04-16  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Versioned.vb: Use if instead of select on strings.
+
+2010-04-16  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Conversions.vb: Make this class internally accessible in all profiles.
+	This way we can call the VB conversion methods manually more easily.
+
+2010-04-16  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* StringType.vb:
+	* ObjectType.vb:
+	* CharType.vb:
+	* BooleanType.vb: Use String.Compare/Length instead of equality operator.
+	Second step in making the vbruntime compile in vb9 (by not being
+	self-referential).
+
+2009-05-01  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Operators.vb: Rename paramaters and shuffle some "#If
+	Moonlight Then" around to match SL api exactly.
+
+2009-04-14  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Utils.vb:
+	* LateBinder.vb:
+	* ProjectData.vb:
+	* Conversions.vb:
+	* LateBinding.vb: Try to only use methods in corlib which are
+	present in all profiles, or add moonlight-specific code
+	conditionally otherwse.
+
+2008-10-24  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* LateBinding.vb: LateIndexGet: Use our own late binder instead of the
+	  default one. Fixes #417557.
+
+2008-10-24  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* LateBinder.vb: BindToMethod: If no methods passed in, return Nothing.
+	  Fixes #417750.
+
+2008-02-12  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* DoubleType.vb, DecimalType.vb, DateType.vb, BooleanType.vb, SingleType.vb,
+	  IntegerType.vb, ShortType.vb, LongType.vb, ByteType.vb: Minor exception
+	  message fix.
+
+2007-12-17  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Utils.vb: Make this compile with vbc 7.
+
+2007-12-14  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* LateBinder.vb: If Missing.Value has been provided for an optional
+	  parameter, call the method with the default value, not Missing.Value.
+	* ExceptionUtils.vb: Added GetVBException.
+
+2007-12-04  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* LateBinding.vb: Revert last changes, wasn't supposed to go in.
+
+2007-12-04  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* LateBinder.vb: Implement compatibility with multidimensional arrays. Fixes
+	  #344217.
+
+2007-11-06  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Operators.vb: Fix CompareEqual with String<->Boolean. Fixes 328099.
+
+2007-08-13  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Operators.vb: Remove debug spew.
+
+2007-08-13  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* DoubleType.vb, NewLateBinding.vb, Versioned.vb, ObjectFlowControl.vb,
+	  LikeOperator.vb, Operators.vb, BooleanType.vb, IntegerType.vb, Utils.vb,
+	  IncompleteInitialization.vb, Conversions.vb: Changed all uses of NET_2_0
+	  to NET_VER >= 2.0, deleted NET_1_0, NET_1_1 and NET_2_0.
+
+﻿2007-05-11  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Operators.vb: Corcompare fixes.
+
+2007-05-09  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Operators.vb: Remove warnings.
+	* Utils.vb: Implement multi-dimensional arrays correctly in CopyArray.
+
+2007-05-06  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* DecimalType.vb: Add 2.0 conversion cases.
+	* Utils.vb: Implement GetResourceString. Fixes #81434.
+
+2007-05-03  Roei Erez <roeie@mainsoft.com>
+	* LateBinding.vb fix a bug in arrays on TARGET_JVM
+	
+2007-04-24  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* ProjectData.vb, OptionTextAttribute.vb: Corcompare fix.
+
+2007-04-16  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* LateBinder.vb: Ifdef 2.0 code.
+
+2007-04-16  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Versioned.vb: Fix and speedup IsNumeric. Fixes #80955.
+	* InternalErrorException.vb: Mark it as serializable.
+	* Operators.vb: Remove warnings and fix corcompare issues.
+
+2007-03-07  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* DoubleType.vb, StaticLocalInitFlag.vb, LateBinding.vb,
+	  NewLateBinding.vb, Versioned.vb, ObjectFlowControl.vb,
+	  ProjectData.vb, LikeOperator.vb, DecimalType.vb,
+	  OptionTextAttribute.vb, InternalErrorException.vb, ObjectType.vb,
+	  StringType.vb, CharArrayType.vb, IVbHost.vb, Operators.vb,
+	  CharType.vb, DateType.vb, ExceptionUtils.vb, BooleanType.vb,
+	  HostServices.vb, SingleType.vb, StandardModuleAttribute.vb,
+	  IntegerType.vb, Utils.vb, ShortType.vb, LongType.vb,
+	  DesignerGeneratedAttribute.vb, ByteType.vb,
+	  IncompleteInitialization.vb, Conversions.vb, FlowControl.vb:
+	  Corcompare work.
+
+2007-03-01  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Operators.vb: Implemented basic support for (Conditional)CompareObject*.
+
+2007-03-01  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+	
+	* OptionCompareAttribute.vb: CorCompare work.
+
+2007-02-13  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Operators.vb: Implemented CompareObjectEqual partially.
+	* TypeCombinations.vb: Added a enum of all combinations of TypeCodes.
+
+2007-01-24  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* IntegerType.vb: SByte, UInt16, UInt32 and UInt64 to 
+	Integer conversions are 2.0 features, so ifdef it so.
+
+2006-12-29  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* IntegerType.vb: Implemented conversions from
+	SByte, UInt16, UInt32 and UInt64 to Integer.
+	* ProjectData.vb: Removed some warnings.
+	* Strings.vb: Removed a warning.
+
+2006-12-13  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* IncompleteInitialization.vb: Call base constructors and remove 
+	  NIE.
+	  
+2006-09-14  Kornél Pál  <kornelpal@gmail.com>
+
+	* BooleanType.vb, CharArrayType.vb, CharType.vb, DateType.vb,
+	  DecimalType.vb, DoubleType.vb, IntegerType.vb, ShortType.vb,
+	  SingleType.vb: Use DirectCast when the exact data type is known
+	  that makes code faster and avoids circular dependency on
+	  Conversions that resulted in StackOverflowException for some
+	  conversions.
+
+2006-09-02  Miguel de Icaza  <miguel@novell.com>
+
+	* StaticLocalInitFlag.vb: The "State" is actually a field, not a
+	property, hope this fixes the VB compiler.
