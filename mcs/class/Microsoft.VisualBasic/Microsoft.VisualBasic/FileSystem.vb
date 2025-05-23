@@ -493,7 +493,7 @@ Namespace Microsoft.VisualBasic
             FindFileData(FileNumber).Lock(FromRecord, ToRecord)
         End Sub
         Public Shared Function LOF(ByVal FileNumber As Integer) As Long
-            FindFileData(FileNumber).LOF()
+            Return FindFileData(FileNumber).LOF()
         End Function
         Public Shared Sub MkDir(ByVal Path As String)
             If Path Is Nothing OrElse Path.Length = 0 Then Throw New System.ArgumentException("Argument 'Path' is Nothing or empty.")

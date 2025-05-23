@@ -69,6 +69,7 @@ Namespace Microsoft.VisualBasic
                 End Try
 
             End If
+            Return False
         End Function
         Public Shared Function IsDBNull(ByVal Expression As Object) As Boolean
             If Expression Is Nothing Then

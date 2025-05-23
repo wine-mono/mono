@@ -830,6 +830,8 @@ Namespace Microsoft.VisualBasic
                     Return 4
                 Case TypeCode.UInt64
                     Return 8
+                Case Else
+                    Throw New InvalidCastException
             End Select
 
         End Function
