@@ -5,6 +5,7 @@ LIBRARY = Microsoft.VisualBasic.dll
 LIB_IS_VB = yes
 
 LIB_REFS = System System.Core System.Data System.Web System.Xml System.Windows.Forms System.Drawing
+TEST_LIB_REFS = System System.Windows.Forms
 
 BUILT_FILES = strings2.resources
 KEYFILE = ../msfinal.pub
