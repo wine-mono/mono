@@ -17,7 +17,7 @@ strings2.txt: strings.txt strings-only2.txt
 	cat strings.txt > strings2.txt
 	cat strings-only2.txt >> strings2.txt
 
-RESOURCES_DEFS = strings,strings.txt strings2,strings2.txt
+RESOURCE_DEFS = strings,strings.txt strings2,strings2.txt
 
 include ../../build/library.make
 
