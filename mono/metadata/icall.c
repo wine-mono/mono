@@ -4331,8 +4331,11 @@ mono_class_get_methods_by_name (MonoClass *klass, const char *name, guint32 bfla
 
 	if (is_generic_parameter (m_class_get_byval_arg (klass)))
 		nslots = mono_class_get_vtable_size (m_class_get_parent (klass));
+	else if (mono_class_get_flags (klass) & TYPE_ATTRIBUTE_INTERFACE)
+		nslots = MAX(mono_class_num_methods (klass), mono_class_max_method_slot (klass));
 	else
-		nslots = MONO_CLASS_IS_INTERFACE_INTERNAL (klass) ? mono_class_num_methods (klass) : mono_class_get_vtable_size (klass);
+		nslots = mono_class_get_vtable_size (klass);
+
 	if (nslots >= sizeof (method_slots_default) * 8) {
 		method_slots = g_new0 (guint32, nslots / 32 + 1);
 	} else {
