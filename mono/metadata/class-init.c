@@ -3253,7 +3253,7 @@ create_array_method (MonoClass *klass, const char *name, MonoMethodSignature *si
 void
 mono_class_setup_methods (MonoClass *klass)
 {
-	int i, count;
+	int i, count, slot = 0;
 	MonoMethod **methods;
 
 	if (klass->methods)
@@ -3380,7 +3380,6 @@ mono_class_setup_methods (MonoClass *klass)
 	}
 
 	if (MONO_CLASS_IS_INTERFACE_INTERNAL (klass)) {
-		int slot = 0;
 		/*Only assign slots to virtual methods as interfaces are allowed to have static methods.*/
 		for (i = 0; i < count; ++i) {
 #ifndef DISABLE_COM
@@ -3419,6 +3418,7 @@ mono_class_setup_methods (MonoClass *klass)
 
 	if (!klass->methods) {
 		mono_class_set_method_count (klass, count);
+		mono_class_set_max_method_slot (klass, slot);
 
 		/* Needed because of the double-checking locking pattern */
 		mono_memory_barrier ();
