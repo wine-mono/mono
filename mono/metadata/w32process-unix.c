@@ -2325,6 +2325,17 @@ mono_get_exit_code_process (gpointer handle, gint32 *exitcode)
 }
 
 MonoBoolean
+ves_icall_Microsoft_Win32_NativeMethods_GetProcessIdFromHandle (gpointer handle, gint32 *id)
+{
+
+	if (!id) return FALSE;
+	*id = mono_w32process_get_pid (handle);
+	if (*id == 0) return FALSE;
+
+	return TRUE;
+}
+
+MonoBoolean
 ves_icall_Microsoft_Win32_NativeMethods_CloseProcess (gpointer handle)
 {
 	return mono_w32handle_close (handle);

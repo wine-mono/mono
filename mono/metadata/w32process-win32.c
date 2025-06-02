@@ -617,6 +617,16 @@ ves_icall_Microsoft_Win32_NativeMethods_GetExitCodeProcess (gpointer handle, gin
 	return GetExitCodeProcess (handle, (PDWORD)exitcode);
 }
 
+MonoBoolean
+ves_icall_Microsoft_Win32_NativeMethods_GetProcessIdFromHandle (gpointer handle, gint32 *id)
+{
+	if (!id) return FALSE;
+	*id = mono_w32process_get_pid(handle);
+	if (*id == 0) return FALSE;
+
+	return TRUE;
+}
+
 #if HAVE_API_SUPPORT_WIN32_GET_WORKING_SET_SIZE
 MonoBoolean
 ves_icall_Microsoft_Win32_NativeMethods_GetProcessWorkingSetSize (gpointer handle, gsize *min, gsize *max)

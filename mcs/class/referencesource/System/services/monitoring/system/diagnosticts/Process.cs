@@ -1442,9 +1442,15 @@ namespace System.Diagnostics {
 
             if ((state & State.HaveId) != (State)0) {
                 if (!haveProcessId) {
-#if !FEATURE_PAL && !MONO
+#if !FEATURE_PAL
                     if (haveProcessHandle) {
-                        SetProcessId(ProcessManager.GetProcessIdFromHandle(m_processHandle));
+                        int pid;
+                        if (NativeMethods.GetProcessIdFromHandle(m_processHandle, out pid)) {
+                            SetProcessId(pid);
+                        } else {
+                            EnsureState(State.Associated);
+                            throw new InvalidOperationException(SR.GetString(SR.ProcessIdRequired));
+                        }
                      }
                     else {                     
                         EnsureState(State.Associated);

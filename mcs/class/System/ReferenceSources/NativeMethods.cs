@@ -91,6 +91,22 @@ namespace Microsoft.Win32
 		[MethodImplAttribute (MethodImplOptions.InternalCall)]
 		public static extern bool GetExitCodeProcess (IntPtr processHandle, out int exitCode);
 
+		[MethodImplAttribute (MethodImplOptions.InternalCall)]
+		public static extern bool GetProcessIdFromHandle (IntPtr processHandle, out int processId);
+
+		public static bool GetProcessIdFromHandle (SafeProcessHandle processHandle, out int processId)
+		{
+			bool release = false;
+			try {
+				processHandle.DangerousAddRef (ref release);
+				IntPtr handle = processHandle.DangerousGetHandle ();
+				return GetProcessIdFromHandle (handle, out processId);
+			} finally {
+				if (release)
+					processHandle.DangerousRelease ();
+			}
+		}
+
 		public static bool GetExitCodeProcess (SafeProcessHandle processHandle, out int exitCode)
 		{
 			bool release = false;
