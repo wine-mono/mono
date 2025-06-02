@@ -2623,7 +2623,6 @@ namespace System.Windows.Forms {
 			IntPtr			WholeWindow;
 			IntPtr			ClientWindow;
 			SetWindowValuemask	ValueMask;
-			int[]			atoms;
 
 			hwnd = new Hwnd();
 
