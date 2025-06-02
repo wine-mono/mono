@@ -87,6 +87,7 @@ namespace System.Net.Http
 			serverCertificateValidationCallback = null;
 			unsafeAuthenticatedConnectionSharing = false;
 			connectionGroupName = "HttpClientHandler" + Interlocked.Increment (ref groupCounter);
+			MaxConnectionsPerServer = int.MaxValue;
 		}
 
 		internal void EnsureModifiability ()
@@ -519,14 +520,7 @@ namespace System.Net.Http
 			}
 		}
 
-		public int MaxConnectionsPerServer {
-			get {
-				throw new NotImplementedException ();
-			}
-			set {
-				throw new NotImplementedException ();
-			}
-		}
+		public int MaxConnectionsPerServer { get; set; }
 
 		public IDictionary<string, object> Properties {
 			get {
