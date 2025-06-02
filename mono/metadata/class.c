@@ -4953,6 +4953,18 @@ mono_class_num_methods (MonoClass *klass)
 }
 
 /**
+ * mono_class_max_method_slot:
+ * \param klass the \c MonoClass to act on
+ *
+ * \returns The maximum slot value for the methods in the class.
+ */
+int
+mono_class_max_method_slot (MonoClass *klass)
+{
+	return mono_class_get_max_method_slot (klass);
+}
+
+/**
  * mono_class_num_properties
  * \param klass the \c MonoClass to act on
  *

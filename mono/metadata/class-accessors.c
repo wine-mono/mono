@@ -215,6 +215,31 @@ mono_class_set_method_count (MonoClass *klass, guint32 count)
 }
 
 guint32
+mono_class_get_max_method_slot (MonoClass *klass)
+{
+	switch (m_class_get_class_kind (klass)) {
+	case MONO_CLASS_DEF:
+	case MONO_CLASS_GTD:
+		return m_classdef_get_max_method_slot ((MonoClassDef*)klass);
+	default:
+		return 0;
+	}
+}
+
+void
+mono_class_set_max_method_slot (MonoClass *klass, guint32 max_method_slot)
+{
+	switch (m_class_get_class_kind (klass)) {
+	case MONO_CLASS_DEF:
+	case MONO_CLASS_GTD:
+		((MonoClassDef*)klass)->max_method_slot = max_method_slot;
+		break;
+	default:
+		break;
+	}
+}
+
+guint32
 mono_class_get_field_count (MonoClass *klass)
 {
 	switch (m_class_get_class_kind (klass)) {

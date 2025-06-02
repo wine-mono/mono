@@ -138,7 +138,7 @@ struct _MonoClassDef {
 	 */
 	guint32 first_method_idx;
 	guint32 first_field_idx;
-	guint32 method_count, field_count;
+	guint32 method_count, field_count, max_method_slot;
 	/* next element in the class_cache hash list (in MonoImage) */
 	MonoClass *next_class_cache;
 };

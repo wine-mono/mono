@@ -202,6 +202,9 @@ MONO_API int
 mono_class_num_methods       (MonoClass *klass);
 
 MONO_API int
+mono_class_max_method_slot   (MonoClass *klass);
+
+MONO_API int
 mono_class_num_properties    (MonoClass *klass);
 
 MONO_API int

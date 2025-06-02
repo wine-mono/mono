@@ -1414,6 +1414,12 @@ void
 mono_class_set_method_count (MonoClass *klass, guint32 count);
 
 guint32
+mono_class_get_max_method_slot (MonoClass *klass);
+
+void
+mono_class_set_max_method_slot (MonoClass *klass, guint32 max_method_slot);
+
+guint32
 mono_class_get_field_count (MonoClass *klass);
 
 void

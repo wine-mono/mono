@@ -83,6 +83,7 @@ MONO_CLASS_GETTER(m_classdef_get_flags, guint32, , MonoClassDef, flags)
 MONO_CLASS_GETTER(m_classdef_get_first_method_idx, guint32, ,  MonoClassDef, first_method_idx)
 MONO_CLASS_GETTER(m_classdef_get_first_field_idx, guint32, , MonoClassDef, first_field_idx)
 MONO_CLASS_GETTER(m_classdef_get_method_count, guint32, ,  MonoClassDef, method_count)
+MONO_CLASS_GETTER(m_classdef_get_max_method_slot, guint32, ,  MonoClassDef, max_method_slot)
 MONO_CLASS_GETTER(m_classdef_get_field_count, guint32, ,  MonoClassDef, field_count)
 MONO_CLASS_GETTER(m_classdef_get_next_class_cache, MonoClass **, &, MonoClassDef, next_class_cache)
 
