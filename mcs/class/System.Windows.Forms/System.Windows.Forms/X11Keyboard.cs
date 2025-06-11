@@ -935,7 +935,7 @@ namespace System.Windows.Forms {
 			XIMStyles styles = (XIMStyles) Marshal.PtrToStructure (stylesPtr, typeof (XIMStyles));
 			XIMProperties [] supportedStyles = new XIMProperties [styles.count_styles];
 			for (int i = 0; i < styles.count_styles; i++)
-				supportedStyles [i] = (XIMProperties) Marshal.PtrToStructure (new IntPtr ((long) styles.supported_styles + i * Marshal.SizeOf (typeof (IntPtr))), typeof (XIMProperties));
+				supportedStyles [i] = (XIMProperties) Marshal.PtrToStructure (new IntPtr ((long) styles.supported_styles + i * Marshal.SizeOf (typeof (IntPtr))), Enum.GetUnderlyingType(typeof(XIMProperties)));
 			lock (XlibLock) {
 				XplatUIX11.XFree (stylesPtr);
 			}
