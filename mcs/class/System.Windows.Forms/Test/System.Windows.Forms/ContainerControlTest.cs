@@ -28,7 +28,6 @@
 
 using System;
 using C=System.ComponentModel;
-using System.Security.Permissions;
 using System.Windows.Forms;
 using System.Collections;
 using NUnit.Framework;
@@ -150,7 +149,6 @@ namespace MonoTests.System.Windows.Forms {
 	}
 
 	[TestFixture]
-	[SecurityPermission (SecurityAction.Deny, UnmanagedCode = true)]
 	public class ContainerControlTest  : TestHelper {
 		[Test]
 		public void RemoveActiveControlTest ()
