@@ -43,7 +43,14 @@ namespace MonoTests.Microsoft_VisualBasic.MyServices
 		{
 			Microsoft.VisualBasic.Devices.Computer pc = new Microsoft.VisualBasic.Devices.Computer();
 			Microsoft.VisualBasic.MyServices.SpecialDirectoriesProxy sd = pc.FileSystem.SpecialDirectories;
-			Assert.AreEqual (FixPath(System.Windows.Forms.Application.CommonAppDataPath), sd.AllUsersApplicationData, "AllUserApplicationData");
+			try
+			{
+				Assert.AreEqual (FixPath(System.Windows.Forms.Application.CommonAppDataPath), sd.AllUsersApplicationData, "AllUserApplicationData");
+			}
+			catch (System.UnauthorizedAccessException)
+			{
+				// Must be admin to create this directory
+			}
 			Assert.AreEqual (FixPath (System.Windows.Forms.Application.UserAppDataPath), sd.CurrentUserApplicationData, "CurrentUserApplicationData");
 			Assert.AreEqual (FixPath (Environment.GetFolderPath (Environment.SpecialFolder.Desktop)), sd.Desktop, "Desktop");
 			Assert.AreEqual (FixPath (Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments)), sd.MyDocuments, "MyDocuments");

@@ -41,7 +41,14 @@ namespace MonoTests.Microsoft_VisualBasic.FileIO
 		[Test]
 		public void PathTest()
 		{
-			Assert.AreEqual (FixPath (System.Windows.Forms.Application.CommonAppDataPath), SpecialDirectories.AllUsersApplicationData, "AllUserApplicationData");
+			try
+			{
+				Assert.AreEqual (FixPath (System.Windows.Forms.Application.CommonAppDataPath), SpecialDirectories.AllUsersApplicationData, "AllUserApplicationData");
+			}
+			catch (System.UnauthorizedAccessException)
+			{
+				// Must be admin to create this directory
+			}
 			Assert.AreEqual (FixPath (System.Windows.Forms.Application.UserAppDataPath), SpecialDirectories.CurrentUserApplicationData, "CurrentUserApplicationData");
 			Assert.AreEqual (FixPath (Environment.GetFolderPath (Environment.SpecialFolder.Desktop)), SpecialDirectories.Desktop, "Desktop");
 			Assert.AreEqual (FixPath (Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments)), SpecialDirectories.MyDocuments, "MyDocuments");
