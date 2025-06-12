@@ -35,14 +35,39 @@ Namespace Microsoft.VisualBasic.OSSpecific
     Friend Class LinuxDriver
         Inherits OSDriver
 
+        Private Overloads Function SetTime(seconds as Long, useconds as Integer) as Integer
+            If IntPtr.Size = 4 Then
+                Try
+                    Dim tv as New TimeVal64()
+                    tv.tv_sec = seconds
+                    tv.tv_usec = useconds
+                    Return settimeofday64(tv, IntPtr.Zero)
+                Catch e As EntryPointNotFoundException
+                    ' no __settimeofday64
+                End Try
+            End If
+
+            Try
+                Dim tv as New TimeVal()
+                tv.tv_sec = new IntPtr(seconds)
+                tv.tv_usec = new IntPtr(useconds)
+                Return settimeofday(tv, IntPtr.Zero)
+            Catch e As EntryPointNotFoundException
+                ' no settimeofday
+            End Try
+
+            Return stime(CType(seconds, Integer))
+        End Function
+
         Public Overrides Sub SetDate(ByVal Value As Date)
             Dim Now As System.DateTime = DateTime.Now
             Dim NewDate As System.DateTime = New DateTime(Value.Year, Value.Month, Value.Day, Now.Hour, Now.Minute, Now.Second, Now.Millisecond)
             Dim secondsTimeSpan As System.TimeSpan = NewDate.ToUniversalTime().Subtract(New DateTime(1970, 1, 1, 0, 0, 0))
-            Dim seconds As Integer = CType(secondsTimeSpan.TotalSeconds, Integer)
+            Dim seconds As Long = CType(secondsTimeSpan.TotalSeconds, Long)
+            Dim useconds As Integer = secondsTimeSpan.Milliseconds * 1000
 
 #If TARGET_JVM = False Then
-            If (stime(seconds) = -1) Then
+            If (SetTime(seconds, useconds) = -1) Then
                 Throw New UnauthorizedAccessException("The caller is not the super-user.")
             End If
 #Else
@@ -55,10 +80,11 @@ Namespace Microsoft.VisualBasic.OSSpecific
             Dim Now As System.DateTime = DateTime.Now
             Dim NewDate As System.DateTime = New DateTime(Now.Year, Now.Month, Now.Day, Value.Hour, Value.Minute, Value.Second, Value.Millisecond)
             Dim secondsTimeSpan As System.TimeSpan = NewDate.ToUniversalTime().Subtract(New DateTime(1970, 1, 1, 0, 0, 0))
-            Dim seconds As Integer = CType(secondsTimeSpan.TotalSeconds, Integer)
+            Dim seconds As Long = CType(secondsTimeSpan.TotalSeconds, Long)
+            Dim useconds As Integer = secondsTimeSpan.Milliseconds * 1000
 
 #If TARGET_JVM = False Then
-            If (stime(seconds) = -1) Then
+            If (SetTime(seconds, useconds) = -1) Then
                 Throw New UnauthorizedAccessException("The caller is not the super-user.")
             End If
 #Else
@@ -74,6 +100,28 @@ Namespace Microsoft.VisualBasic.OSSpecific
         Friend Shared Function stime(ByRef t As Integer) As Integer
             ' Leave function empty - DllImport attribute forwards calls to stime to
             ' stime in libc.dll
+        End Function
+
+        <StructLayout(LayoutKind.Sequential)>
+        Structure TimeVal
+            Public tv_sec As IntPtr
+            Public tv_usec As IntPtr
+        End Structure
+
+        <StructLayout(LayoutKind.Sequential)>
+        Structure TimeVal64
+            Public tv_sec As Long
+            Public tv_usec As Long
+        End Structure
+
+        <DllImport("libc", EntryPoint:="__settimeofday64", _
+           SetLastError:=True, CharSet:=CharSet.Unicode, ExactSpelling:=True)> _
+        Friend Shared Function settimeofday64(ByRef tv As TimeVal64, ByRef tz As IntPtr) As Integer
+        End Function
+
+        <DllImport("libc", EntryPoint:="settimeofday", _
+           SetLastError:=True, CharSet:=CharSet.Unicode, ExactSpelling:=True)> _
+        Friend Shared Function settimeofday(ByRef tv As TimeVal, ByRef tz As IntPtr) As Integer
         End Function
 #End If
 
