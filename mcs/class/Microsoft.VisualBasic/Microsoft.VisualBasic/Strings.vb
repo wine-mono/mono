@@ -1038,7 +1038,7 @@ Namespace Microsoft.VisualBasic
                 Return r
             End If
 
-            If Delimiter Is Nothing OrElse Expression.Length = 0 Then
+            If Delimiter Is Nothing OrElse Delimiter.Length = 0 Then
                 Dim r(0) As String
                 r(0) = Expression
                 Return r
