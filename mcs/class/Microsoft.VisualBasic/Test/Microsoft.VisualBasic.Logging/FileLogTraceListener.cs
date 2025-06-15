@@ -182,7 +182,7 @@ namespace MonoTests.Microsoft_VisualBasic.Logging
 				data = Microsoft.VisualBasic.FileIO.FileSystem.ReadAllText (filename);
 				Microsoft.VisualBasic.FileIO.FileSystem.DeleteFile (filename);
 				
-				Assert.AreEqual ("nunit\tCritical\t0\t\r\n", data, "#01");
+				Assert.AreEqual ("nunit\tCritical\t0\t" + Environment.NewLine, data, "#01");
 			}
 
 
@@ -197,7 +197,7 @@ namespace MonoTests.Microsoft_VisualBasic.Logging
 				data = Microsoft.VisualBasic.FileIO.FileSystem.ReadAllText (filename);
 				Microsoft.VisualBasic.FileIO.FileSystem.DeleteFile (filename);
 
-				Assert.AreEqual ("nunit\tCritical\t0\tdata\r\n", data, "#02");
+				Assert.AreEqual ("nunit\tCritical\t0\tdata" + Environment.NewLine, data, "#02");
 			}
 
 			using (FileLogTraceListener log = new FileLogTraceListener ()) {
@@ -211,7 +211,7 @@ namespace MonoTests.Microsoft_VisualBasic.Logging
 				data = Microsoft.VisualBasic.FileIO.FileSystem.ReadAllText (filename);
 				Microsoft.VisualBasic.FileIO.FileSystem.DeleteFile (filename);
 
-				Assert.AreEqual ("nunit\tCritical\t0\tdata\tdata2\r\n", data, "#03");
+				Assert.AreEqual ("nunit\tCritical\t0\tdata\tdata2" + Environment.NewLine, data, "#03");
 			}
 
 			using (FileLogTraceListener log = new FileLogTraceListener ()) {
@@ -225,7 +225,7 @@ namespace MonoTests.Microsoft_VisualBasic.Logging
 				data = Microsoft.VisualBasic.FileIO.FileSystem.ReadAllText (filename);
 				Microsoft.VisualBasic.FileIO.FileSystem.DeleteFile (filename);
 
-				Assert.AreEqual ("nunit\tCritical\t0\tmsg\r\n", data, "#04");
+				Assert.AreEqual ("nunit\tCritical\t0\tmsg" + Environment.NewLine, data, "#04");
 			}
 
 
@@ -240,7 +240,7 @@ namespace MonoTests.Microsoft_VisualBasic.Logging
 				data = Microsoft.VisualBasic.FileIO.FileSystem.ReadAllText (filename);
 				Microsoft.VisualBasic.FileIO.FileSystem.DeleteFile (filename);
 
-				Assert.AreEqual ("nunit\tCritical\t0\tmsg:arg1\r\n", data, "#05");
+				Assert.AreEqual ("nunit\tCritical\t0\tmsg:arg1" + Environment.NewLine, data, "#05");
 			}
 			
 			using (FileLogTraceListener log = new FileLogTraceListener ()) {
@@ -292,7 +292,7 @@ namespace MonoTests.Microsoft_VisualBasic.Logging
 				log.Close ();
 				data = Microsoft.VisualBasic.FileIO.FileSystem.ReadAllText (filename);
 
-				Assert.AreEqual ("nunit\tCritical\t0\t\r\n", data, "#01");	
+				Assert.AreEqual ("nunit\tCritical\t0\t" + Environment.NewLine, data, "#01");	
 			}
 
 
@@ -307,7 +307,7 @@ namespace MonoTests.Microsoft_VisualBasic.Logging
 				log.Close ();
 				data = Microsoft.VisualBasic.FileIO.FileSystem.ReadAllText (filename);
 
-				Assert.AreEqual ("nunit\tCritical\t0\t\r\n" + "nunit\tCritical\t0\t\r\n", data, "#02");
+				Assert.AreEqual ("nunit\tCritical\t0\t" + Environment.NewLine + "nunit\tCritical\t0\t" + Environment.NewLine, data, "#02");
 			}
 
 			using (FileLogTraceListener log = new FileLogTraceListener ()) {
@@ -321,7 +321,7 @@ namespace MonoTests.Microsoft_VisualBasic.Logging
 				log.Close ();
 				data = Microsoft.VisualBasic.FileIO.FileSystem.ReadAllText (filename);
 
-				Assert.AreEqual ("nunit\tCritical\t0\t\r\n", data, "#03");
+				Assert.AreEqual ("nunit\tCritical\t0\t" + Environment.NewLine, data, "#03");
 				Microsoft.VisualBasic.FileIO.FileSystem.DeleteFile (filename);
 			}
 			
