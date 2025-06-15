@@ -72,7 +72,14 @@ namespace MonoTests.Microsoft_VisualBasic.Logging
 			using (FileLogTraceListener log = new FileLogTraceListener ()) {
 				log.LogFileCreationSchedule = LogFileCreationScheduleOption.None;
 				log.Location = LogFileLocation.CommonApplicationDirectory;
-				Assert.AreEqual (System.IO.Path.Combine(Microsoft.VisualBasic.FileIO.SpecialDirectories.AllUsersApplicationData, log.BaseFileName) + ".log", log.FullLogFileName, "#A1");
+				try
+				{
+					Assert.AreEqual (System.IO.Path.Combine(Microsoft.VisualBasic.FileIO.SpecialDirectories.AllUsersApplicationData, log.BaseFileName) + ".log", log.FullLogFileName, "#A1");
+				}
+				catch (UnauthorizedAccessException)
+				{
+					Assert.Ignore("Need to be admin to create common appdata directory");
+				}
 
 				log.Location = LogFileLocation.ExecutableDirectory;
 				Assert.AreEqual (System.IO.Path.Combine (System.IO.Path.GetDirectoryName(System.Windows.Forms.Application.ExecutablePath), log.BaseFileName) + ".log", log.FullLogFileName, "#A2");
