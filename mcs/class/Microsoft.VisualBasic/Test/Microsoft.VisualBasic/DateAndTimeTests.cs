@@ -59,8 +59,15 @@ namespace MonoTests.Microsoft_VisualBasic
 		[TestFixtureTearDown]
 		public void TestFixtureTearDown()
 		{
-			DateAndTime.DateString = date;
-			DateAndTime.TimeString = time;
+			try
+			{
+				DateAndTime.DateString = date;
+				DateAndTime.TimeString = time;
+			}
+			catch (UnauthorizedAccessException)
+			{
+				// Need admin privs to set time.
+			}
 		}
 
 
