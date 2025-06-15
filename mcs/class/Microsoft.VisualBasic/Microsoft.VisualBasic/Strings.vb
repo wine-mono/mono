@@ -1089,11 +1089,19 @@ Namespace Microsoft.VisualBasic
         End Function
 
         Friend Shared Function String_Compare(ByVal strA As String, ByVal strB As String, ByVal ignoreCase As Boolean) As Integer
-            Return String.Compare(strA, strB, CultureInfo.CurrentCulture, CompareOptions.IgnoreCase)
+            Dim options As CompareOptions = 0
+            If ignoreCase Then
+                options = options Or CompareOptions.IgnoreCase
+            End If
+            Return String.Compare(strA, strB, CultureInfo.CurrentCulture, options)
         End Function
 
         Friend Shared Function String_Compare(ByVal strA As String, ByVal indexA As Integer, ByVal strB As String, ByVal indexB As Integer, ByVal length As Integer, ByVal ignoreCase As Boolean) As Integer
-            Return String.Compare(strA, indexA, strB, indexB, length, CultureInfo.CurrentCulture, CompareOptions.IgnoreCase)
+            Dim options As CompareOptions = 0
+            If ignoreCase Then
+                options = options Or CompareOptions.IgnoreCase
+            End If
+            Return String.Compare(strA, indexA, strB, indexB, length, CultureInfo.CurrentCulture, options)
         End Function
 
         Public Shared Function StrComp(ByVal String1 As String, ByVal String2 As String, _
