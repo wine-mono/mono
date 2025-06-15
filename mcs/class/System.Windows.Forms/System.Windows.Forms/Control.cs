@@ -4720,7 +4720,7 @@ namespace System.Windows.Forms
 
 			if (ScaleChildrenInternal)
 				foreach (Control c in Controls.GetAllControls ())
-					c.ScaleCore (dx, dy);
+					c.Scale (dx, dy);
 
 			ResumeLayout ();
 		}
