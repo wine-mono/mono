@@ -563,7 +563,7 @@ Public Class FilesSystemTest
         File.Delete(DATA_DIR + sep_ch + test_file_new)
     End Sub
 
-    <Test(), ExpectedException(GetType(IOException), "File already exists.")> _
+    <Test(), ExpectedException(GetType(IOException), ExpectedMessage:="File already exists.")> _
     Public Sub Rename_3()
         Dim test_dir As String = "Rename_test3"
         Dim tmp_dir As String = "Try_Dir"

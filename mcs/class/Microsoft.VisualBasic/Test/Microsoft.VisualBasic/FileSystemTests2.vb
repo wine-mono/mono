@@ -97,7 +97,7 @@ Public Class FileSystemTests2
         Assert.AreEqual(1, FreeFile, "#01")
     End Sub
 
-    <Test(), ExpectedException(GetType(IOException), "Too many files.")> _
+    <Test(), ExpectedException(GetType(IOException), ExpectedMessage:="Too many files.")> _
     Public Sub FreeFileTest2()
         Dim openedAll As Boolean
         Try
@@ -325,7 +325,7 @@ Public Class FileSystemTests2
         End Try
     End Sub
 
-    <Test(), ExpectedException(GetType(IOException), "File is not opened for write access.")> _
+    <Test(), ExpectedException(GetType(IOException), ExpectedMessage:="File is not opened for write access.")> _
     Public Sub FileOpenTestRandom2_b()
         Try
             Dim data As String
@@ -359,7 +359,7 @@ Public Class FileSystemTests2
         End Try
     End Sub
 
-    <Test(), ExpectedException(GetType(IOException), "File is not opened for read access.")> _
+    <Test(), ExpectedException(GetType(IOException), ExpectedMessage:="File is not opened for read access.")> _
     Public Sub FileOpenTestRandom3_b()
         Try
             Dim data As String
@@ -447,7 +447,7 @@ Public Class FileSystemTests2
         End Try
     End Sub
 
-    <Test(), ExpectedException(GetType(IOException), "Bad file mode.")> _
+    <Test(), ExpectedException(GetType(IOException), ExpectedMessage:="Bad file mode.")> _
     Public Sub FileOpenTestInput2_b()
         Try
             Dim data As String = Nothing
@@ -462,7 +462,7 @@ Public Class FileSystemTests2
         End Try
     End Sub
 
-    <Test(), ExpectedException(GetType(ArgumentException), "Argument 'Access' is not valid. Valid values for Input mode are 'OpenAccess.Read' and 'OpenAccess.Default'.")> _
+    <Test(), ExpectedException(GetType(ArgumentException), ExpectedMessage:="Argument 'Access' is not valid. Valid values for Input mode are 'OpenAccess.Read' and 'OpenAccess.Default'.")> _
     Public Sub FileOpenTestInput3()
         Try
             Dim filename As String = IO.Path.Combine(DATA_DIR, System.Reflection.MethodInfo.GetCurrentMethod.Name)
@@ -475,7 +475,7 @@ Public Class FileSystemTests2
         End Try
     End Sub
 
-    <Test(), ExpectedException(GetType(ArgumentException), "Argument 'Access' is not valid. Valid values for Input mode are 'OpenAccess.Read' and 'OpenAccess.Default'.")> _
+    <Test(), ExpectedException(GetType(ArgumentException), ExpectedMessage:="Argument 'Access' is not valid. Valid values for Input mode are 'OpenAccess.Read' and 'OpenAccess.Default'.")> _
     Public Sub FileOpenTestInput4()
         Try
             Dim filename As String = IO.Path.Combine(DATA_DIR, System.Reflection.MethodInfo.GetCurrentMethod.Name)
@@ -503,7 +503,7 @@ Public Class FileSystemTests2
         End Try
     End Sub
 
-    <Test(), ExpectedException(GetType(IOException), "Bad file mode.")> _
+    <Test(), ExpectedException(GetType(IOException), ExpectedMessage:="Bad file mode.")> _
     Public Sub FileOpenTestInput6()
         Try
             Dim data As String = Nothing
@@ -577,7 +577,7 @@ Public Class FileSystemTests2
         End Try
     End Sub
 
-    <Test(), ExpectedException(GetType(IOException), "Bad file mode.")> _
+    <Test(), ExpectedException(GetType(IOException), ExpectedMessage:="Bad file mode.")> _
     Public Sub FileOpenTestOutput2_b()
         Try
             Dim data As String
@@ -595,7 +595,7 @@ Public Class FileSystemTests2
         End Try
     End Sub
 
-    <Test(), ExpectedException(GetType(ArgumentException), "Argument 'Access' is not valid. Valid values for Output mode are 'OpenAccess.Write' and 'OpenAccess.Default'.")> _
+    <Test(), ExpectedException(GetType(ArgumentException), ExpectedMessage:="Argument 'Access' is not valid. Valid values for Output mode are 'OpenAccess.Write' and 'OpenAccess.Default'.")> _
     Public Sub FileOpenTestOutput3()
         Try
             Dim filename As String = IO.Path.Combine(DATA_DIR, System.Reflection.MethodInfo.GetCurrentMethod.Name)
@@ -608,7 +608,7 @@ Public Class FileSystemTests2
         End Try
     End Sub
 
-    <Test(), ExpectedException(GetType(ArgumentException), "Argument 'Access' is not valid. Valid values for Output mode are 'OpenAccess.Write' and 'OpenAccess.Default'.")> _
+    <Test(), ExpectedException(GetType(ArgumentException), ExpectedMessage:="Argument 'Access' is not valid. Valid values for Output mode are 'OpenAccess.Write' and 'OpenAccess.Default'.")> _
     Public Sub FileOpenTestOutput4()
         Try
             Dim filename As String = IO.Path.Combine(DATA_DIR, System.Reflection.MethodInfo.GetCurrentMethod.Name)
@@ -670,7 +670,7 @@ Public Class FileSystemTests2
         End Try
     End Sub
 
-    <Test(), ExpectedException(GetType(ArgumentException), "Argument 'Access' is not valid. Valid values for Append mode are 'OpenAccess.Write' and 'OpenAccess.Default'.")> _
+    <Test(), ExpectedException(GetType(ArgumentException), ExpectedMessage:="Argument 'Access' is not valid. Valid values for Append mode are 'OpenAccess.Write' and 'OpenAccess.Default'.")> _
     Public Sub FileOpenTestAppend3()
         Dim filename As String = IO.Path.Combine(DATA_DIR, System.Reflection.MethodInfo.GetCurrentMethod.Name)
         Try
@@ -721,7 +721,7 @@ Public Class FileSystemTests2
         End Try
     End Sub
 
-    <Test(), ExpectedException(GetType(IOException), "Bad file mode.")> _
+    <Test(), ExpectedException(GetType(IOException), ExpectedMessage:="Bad file mode.")> _
     Public Sub FileOpenTestAppend6()
         Try
             Dim data As String = Nothing
@@ -793,7 +793,7 @@ Public Class FileSystemTests2
         End Try
     End Sub
 
-    <Test(), ExpectedException(GetType(IOException), "File is not opened for write access.")> _
+    <Test(), ExpectedException(GetType(IOException), ExpectedMessage:="File is not opened for write access.")> _
     Public Sub FileOpenTestBinary2_b()
         Try
             Dim data As String = Nothing
@@ -808,7 +808,7 @@ Public Class FileSystemTests2
         End Try
     End Sub
 
-    <Test(), ExpectedException(GetType(IOException), "File is not opened for read access.")> _
+    <Test(), ExpectedException(GetType(IOException), ExpectedMessage:="File is not opened for read access.")> _
     Public Sub FileOpenTestBinary3()
         Try
             Dim data As String = Nothing

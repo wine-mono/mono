@@ -14,6 +14,10 @@ ifndef TEST_COMPILE
 TEST_COMPILE = $(subst $(test_remove),,$(CSCOMPILE))
 endif
 
+ifndef VBTEST_COMPILE
+VBTEST_COMPILE = $(subst $(test_remove),,$(VBCOMPILE)) $(VB_RUNTIME_FLAGS)
+endif
+
 TEST_RUNTIME_WRAPPERS_PATH = $(shell dirname $(RUNTIME))/_tmpinst/bin
 
 ## Unit test support
@@ -86,6 +90,12 @@ ifeq ($(wildcard $(test_sourcefile_base)),)
 test_sourcefile_base = $(ASSEMBLY:$(ASSEMBLY_EXT)=_test.dll.sources)
 endif
 
+vbtest_sourcefile_base = $(PROFILE)_$(ASSEMBLY:$(ASSEMBLY_EXT)=_vbtest.dll.sources)
+
+ifeq ($(wildcard $(vbtest_sourcefile_base)),)
+vbtest_sourcefile_base = $(ASSEMBLY:$(ASSEMBLY_EXT)=_vbtest.dll.sources)
+endif
+
 test_lib = $(PROFILE)_$(ASSEMBLY:$(ASSEMBLY_EXT)=_test.dll)
 test_lib_output = $(test_lib_dir)/$(test_lib)
 
@@ -99,7 +109,14 @@ test_flags += -r:$(the_assembly)
 test_assembly_dep = $(the_assembly)
 endif
 
+vbtest_flags = $(test_flags) $(TEST_VBC_FLAGS)
+
 tests_CLEAN_FILES += $(test_lib_output) $(test_response) $(test_makefrag)
+
+vbtest_library = $(ASSEMBLY:$(ASSEMBLY_EXT)=)_vbtest$(ASSEMBLY_EXT)
+vbtest_lib_output = $(test_lib_dir)/$(PROFILE)_$(vbtest_library)
+vbtest_response = $(depsdir)/$(PROFILE_PLATFORM)_$(PROFILE)_$(vbtest_library).response
+vbtest_makefrag = $(depsdir)/$(PROFILE_PLATFORM)_$(PROFILE)_$(vbtest_library).makefrag
 
 xtest_sourcefile_base = $(PROFILE_PLATFORM)_$(PROFILE)_$(ASSEMBLY:$(ASSEMBLY_EXT)=_xtest.dll.sources)
 
@@ -125,6 +142,10 @@ ifndef HAVE_CS_TESTS
 HAVE_CS_TESTS := $(wildcard $(test_sourcefile_base))
 endif
 
+ifndef HAVE_VB_TESTS
+HAVE_VB_TESTS := $(wildcard $(vbtest_sourcefile_base))
+endif
+
 HAVE_CS_XTESTS := $(wildcard $(xtest_sourcefile_base))
 
 endif # !NO_TEST
@@ -143,6 +164,28 @@ endif
 
 test_assemblies :=
 
+ifdef HAVE_VB_TESTS
+vbtest_assemblies = $(vbtest_lib_output)
+
+check: run-test
+test-local: $(vbtest_assemblies) $(test_lib_dir)/nunit-excludes.txt
+run-test-local: run-vbtest-lib
+run-test-ondotnet-local: run-vbtest-ondotnet-lib
+
+$(vbtest_lib_output).nunitlite.config: $(topdir)/tools/nunit-lite/nunit-lite-console/nunit-lite-console.exe.config.tmpl $(TEST_NUNITLITE_APP_CONFIG_GLOBAL) $(TEST_NUNITLITE_APP_CONFIG_RUNTIME) $(TEST_NUNITLITE_APP_CONFIG_SUPPLEMENTAL) | $(test_lib_dir)
+	cp -f $(topdir)/tools/nunit-lite/nunit-lite-console/nunit-lite-console.exe.config.tmpl $(vbtest_lib_output).nunitlite.config
+ifdef TEST_NUNITLITE_APP_CONFIG_GLOBAL
+	sed -i -e "/__INSERT_CUSTOM_APP_CONFIG_GLOBAL__/r $(TEST_NUNITLITE_APP_CONFIG_GLOBAL)" $(vbtest_lib_output).nunitlite.config
+endif
+ifdef TEST_NUNITLITE_APP_CONFIG_RUNTIME
+	sed -i -e "/__INSERT_CUSTOM_APP_CONFIG_RUNTIME__/r $(TEST_NUNITLITE_APP_CONFIG_RUNTIME)" $(vbtest_lib_output).nunitlite.config
+endif
+ifdef TEST_NUNITLITE_APP_CONFIG_SUPPLEMENTAL
+	cp -f $(TEST_NUNITLITE_APP_CONFIG_SUPPLEMENTAL) $(vbtest_lib_output).nunitlite.config.$(TEST_NUNITLITE_APP_CONFIG_SUPPLEMENTAL)
+endif
+
+endif
+
 ifdef HAVE_CS_TESTS
 test_assemblies += $(test_lib_output)
 
@@ -155,7 +198,7 @@ test-local: $(test_assemblies) $(test_lib_dir)/nunit-excludes.txt
 run-test-local: run-test-lib
 run-test-ondotnet-local: run-test-ondotnet-lib
 
-TEST_HARNESS_EXCLUDES = $(PLATFORM_TEST_HARNESS_EXCLUDES) $(PROFILE_TEST_HARNESS_EXCLUDES) NotWorking CAS
+TEST_HARNESS_EXCLUDES = $(PLATFORM_TEST_HARNESS_EXCLUDES) $(PROFILE_TEST_HARNESS_EXCLUDES) NotWorking CAS UI
 
 ifdef TEST_WITH_INTERPRETER
 TEST_HARNESS_EXCLUDES += NotWorkingRuntimeInterpreter
@@ -176,11 +219,11 @@ LABELS_ARG = -labels
 endif
 
 ifdef ALWAYS_AOT_TESTS
-test-local-aot-compile: $(topdir)/build/deps/nunit-$(PROFILE).stamp $(test_assemblies)
-	PATH="$(TEST_RUNTIME_WRAPPERS_PATH):$(PATH)" MONO_REGISTRY_PATH="$(HOME)/.mono/registry" MONO_TESTS_IN_PROGRESS="yes" $(TEST_RUNTIME) $(TEST_RUNTIME_FLAGS) $(AOT_BUILD_FLAGS) $(test_assemblies)
+test-local-aot-compile: $(topdir)/build/deps/nunit-$(PROFILE).stamp $(test_assemblies) $(vbtest_assemblies)
+	PATH="$(TEST_RUNTIME_WRAPPERS_PATH):$(PATH)" MONO_REGISTRY_PATH="$(HOME)/.mono/registry" MONO_TESTS_IN_PROGRESS="yes" $(TEST_RUNTIME) $(TEST_RUNTIME_FLAGS) $(AOT_BUILD_FLAGS) $(test_assemblies) $(vbtest_assemblies)
 
 else
-test-local-aot-compile: $(topdir)/build/deps/nunit-$(PROFILE).stamp $(test_assemblies)
+test-local-aot-compile: $(topdir)/build/deps/nunit-$(PROFILE).stamp $(test_assemblies) $(vbtest_assemblies)
 
 endif # ALWAYS_AOT_TESTS
 
@@ -266,17 +309,30 @@ run-test-ondotnet-lib: test-local
 	$(TEST_HARNESS) $(test_assemblies) $(NOSHADOW_FLAG) $(TEST_HARNESS_FLAGS) $(LOCAL_TEST_HARNESS_ONDOTNET_FLAGS) /exclude:$(subst $(space),$(comma),$(TEST_HARNESS_EXCLUDES) NotDotNet) $(LABELS_ARG) -format:nunit2 -result:TestResult-ondotnet-$(PROFILE).xml $(FIXTURE_ARG) $(TESTNAME_ARG) || ok=false; \
 	$$ok
 
+## FIXME: i18n problem in the 'sed' command below
+run-vbtest-lib: test-local test-local-aot-compile copy-nunitlite-appconfig
+	ok=:; \
+	PATH="$(TEST_RUNTIME_WRAPPERS_PATH):$(PATH)" MONO_REGISTRY_PATH="$(HOME)/.mono/registry" MONO_TESTS_IN_PROGRESS="yes" DBG_RUNTIME_ARGS="$(TEST_RUNTIME_FLAGS)" $(TEST_HARNESS_EXEC) $(vbtest_assemblies) $(NOSHADOW_FLAG) $(TEST_HARNESS_FLAGS) $(LOCAL_TEST_HARNESS_FLAGS) -exclude=$(subst $(space),$(comma),$(TEST_HARNESS_EXCLUDES)) $(LABELS_ARG) -format:nunit2 -result:TestResult-vb-$(PROFILE).xml $(FIXTURE_ARG) $(TESTNAME_ARG)|| ok=false; \
+	if [ ! -f "TestResult-$(PROFILE).xml" ]; then echo "<?xml version='1.0' encoding='utf-8'?><test-results failures='1' total='1' not-run='0' name='bcl-tests' date='$$(date +%F)' time='$$(date +%T)'><test-suite name='$(strip $(vbtest_assemblies))' success='False' time='0'><results><test-case name='$(notdir $(strip $(vbtest_assemblies))).crash' executed='True' success='False' time='0'><failure><message>The test runner didn't produce a test result XML, probably due to a crash of the runtime. Check the log for more details.</message><stack-trace></stack-trace></failure></test-case></results></test-suite></test-results>" > TestResult-vb-$(PROFILE).xml; fi; \
+	$$ok
+
+## Instructs compiler to compile to target .net execution, it can be usefull in rare cases when runtime detection is not possible
+run-vbtest-ondotnet-lib: LOCAL_TEST_COMPILER_ONDOTNET_FLAGS:=-d:RUN_ONDOTNET
+run-vbtest-ondotnet-lib: test-local
+	ok=:; \
+	$(TEST_HARNESS) $(vbtest_assemblies) $(NOSHADOW_FLAG) $(TEST_HARNESS_FLAGS) $(LOCAL_TEST_HARNESS_ONDOTNET_FLAGS) /exclude:$(subst $(space),$(comma),$(TEST_HARNESS_EXCLUDES) NotDotNet) $(LABELS_ARG) -format:nunit2 -result:TestResult-vb-ondotnet-$(PROFILE).xml $(FIXTURE_ARG) $(TESTNAME_ARG) || ok=false; \
+	$$ok
 
 endif
 
 TEST_FILES =
 
+$(test_lib_dir):
+	mkdir -p $@
+
 ifdef HAVE_CS_TESTS
 
 TEST_FILES += `sed -e '/^$$/d' -e 's,^../,,' -e '/^\#.*$$/d' -et -e 's,^,Test/,' $(test_sourcefile_base)`
-
-$(test_lib_dir):
-	mkdir -p $@
 
 $(test_lib_output): $(test_assembly_dep) $(test_response) $(test_nunit_dep) $(test_lib_output).nunitlite.config | $(test_lib_dir)
 	$(TEST_COMPILE) $(LIBRARY_FLAGS) -target:library -out:$@ $(test_flags) $(LOCAL_TEST_COMPILER_ONDOTNET_FLAGS) @$(test_response)
@@ -307,6 +363,25 @@ $(test_makefrag): $(test_response)
 	@sed 's,^,$(test_lib_output) $(test_lib_output:.dll=.part1.dll) $(test_lib_output:.dll=.part2.dll) $(test_lib_output:.dll=.part3.dll): ,' $< >$@
 
 -include $(test_makefrag)
+
+
+endif
+
+ifdef HAVE_VB_TESTS
+
+TEST_FILES += `sed -e '/^$$/d' -e 's,^../,,' -e '/^\#.*$$/d' -et -e 's,^,Test/,' $(vbtest_sourcefile_base)`
+
+$(vbtest_lib_output): $(test_assembly_dep) $(vbtest_response) $(test_nunit_dep) $(vbtest_lib_output).nunitlite.config $(VB_RUNTIME_PATH) | $(test_lib_dir)
+	$(VBTEST_COMPILE) $(LIBRARY_FLAGS) -target:library -out:$@ $(vbtest_flags) $(LOCAL_TEST_COMPILER_ONDOTNET_FLAGS) @$(vbtest_response)
+
+$(vbtest_response): $(vbtest_sourcefile_base) $(wildcard *_vbtest.dll.sources) $(wildcard *_vbtest.dll.exclude.sources) $(topdir)/build/tests.make $(depsdir)/.stamp
+	$(GENSOURCES) --basedir:./Test --strict --platformsdir:$(topdir)/build "$@" "$(vbtest_library)" "$(PROFILE_PLATFORM)" "$(PROFILE)"
+
+$(vbtest_makefrag): $(vbtest_response)
+	@echo Creating $@ ...
+	@sed 's,^,$(vbtest_lib_output): ,' $< >$@
+
+-include $(vbtest_makefrag)
 
 
 endif

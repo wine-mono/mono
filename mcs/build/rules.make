@@ -47,6 +47,8 @@ USE_VBC_FLAGS = /codepage:$(CODEPAGE) /nologo /noconfig /deterministic $(LOCAL_V
 USE_CFLAGS = $(LOCAL_CFLAGS) $(CFLAGS) $(CPPFLAGS)
 CSCOMPILE = $(Q_MCS) $(MCS) $(USE_MCS_FLAGS)
 VBCOMPILE = $(Q_VBC) $(BOOTSTRAP_PATH) $(RUNTIME) $(RUNTIME_FLAGS) $(VBC_LOCATION) $(USE_VBC_FLAGS)
+VB_RUNTIME_PATH = $(topdir)/class/lib/$(PROFILE)/Microsoft.VisualBasic.dll
+VB_RUNTIME_FLAGS = -vbruntime:$(VB_RUNTIME_PATH)
 CSC_RUNTIME_FLAGS = --aot-path=$(abspath $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)) --gc-params=nursery-size=64m
 CCOMPILE = $(CC) $(USE_CFLAGS)
 BOOT_COMPILE = $(Q_MCS) $(BOOTSTRAP_MCS) $(USE_MCS_FLAGS)
