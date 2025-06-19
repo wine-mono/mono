@@ -55,7 +55,13 @@ Namespace Devices
                 Dim portName As String = vbNames(0)
                 Dim port As SerialPort
 
-                port = ports.OpenSerialPort(portName)
+                Try
+                    port = ports.OpenSerialPort(portName)
+                Catch e As UnauthorizedAccessException
+                    Assert.Ignore("No permission to open serial port")
+                Catch e As System.IO.IOException
+                    Assert.Ignore("No permission to open serial port")
+                End Try
                 Assert.AreEqual(portName, port.PortName, testname & "-3")
                 port.Close()
 
