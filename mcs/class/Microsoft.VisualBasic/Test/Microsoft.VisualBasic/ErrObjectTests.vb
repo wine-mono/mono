@@ -66,6 +66,7 @@ Public Class ErrObjectTests
         Dim i As Integer
         Dim j As Integer
 
+        Err.Clear
         Try
             i = 10
             j = 0
