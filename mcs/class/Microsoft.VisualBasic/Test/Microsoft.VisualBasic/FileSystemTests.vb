@@ -411,7 +411,7 @@ Public Class FilesSystemTest
         File.SetAttributes(DATA_DIR + sep_ch + test_dir, req_attr)
 
         file_attr = FileSystem.GetAttr(DATA_DIR + sep_ch + test_dir)
-        Assert.AreEqual(CObj(req_attr), CObj(file_attr))
+        Assert.AreEqual(req_attr, file_attr)
         Thread.Sleep(60)
         Directory.Delete(DATA_DIR + sep_ch + test_dir)
 
@@ -643,7 +643,7 @@ Public Class FilesSystemTest
 
         file_attr = File.GetAttributes(DATA_DIR + sep_ch + test_file)
 
-        Assert.AreEqual(CObj(req_attr), CObj(file_attr))
+        Assert.AreEqual(req_attr, file_attr)
         Thread.Sleep(60)
         File.Delete(DATA_DIR + sep_ch + test_file)
     End Sub
@@ -662,7 +662,7 @@ Public Class FilesSystemTest
 
         file_attr = FileSystem.GetAttr(DATA_DIR + sep_ch + test_dir)
 
-        Assert.AreEqual(CObj(req_attr Or vbDirectory), CObj(file_attr))
+        Assert.AreEqual(req_attr Or vbDirectory, file_attr)
         Thread.Sleep(60)
         Directory.Delete(DATA_DIR + sep_ch + test_dir)
 
