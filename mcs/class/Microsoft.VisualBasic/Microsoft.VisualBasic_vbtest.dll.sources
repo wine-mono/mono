@@ -28,7 +28,6 @@ Microsoft.VisualBasic.Devices/ServerComputerTests.vb
 Microsoft.VisualBasic.FileIO/FileSystemTest.vb
 Microsoft.VisualBasic/ErrObjectTests.vb
 Microsoft.VisualBasic/ExceptionFilteringTests.vb
-Microsoft.VisualBasic/FileSystemTestGenerated.vb
 Microsoft.VisualBasic/FileSystemTests.vb
 Microsoft.VisualBasic/FileSystemTests2.vb
 Microsoft.VisualBasic/GlobalsTests.vb
