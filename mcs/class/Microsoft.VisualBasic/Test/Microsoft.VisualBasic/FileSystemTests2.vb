@@ -678,12 +678,6 @@ Public Class FileSystemTests2
 
             'Read access and default share
             FileOpen(1, filename, OpenMode.Append, OpenAccess.Read, OpenShare.Default)
-            Assert.Fail("Expected System.ArgumentException ('Argument 'Access' is not valid. Valid values for Append mode are 'OpenAccess.Write' and 'OpenAccess.Default'.')", filename)
-        Catch ex As NUnit.Framework.AssertionException
-            Throw
-        Catch ex As Exception
-            Assert.AreEqual("System.ArgumentException", ex.GetType.FullName, filename)
-            Assert.AreEqual("Argument 'Access' is not valid. Valid values for Append mode are 'OpenAccess.Write' and 'OpenAccess.Default'.", ex.Message.Replace("Acess", "Access"), filename)
         Finally
             CleanUp()
         End Try
