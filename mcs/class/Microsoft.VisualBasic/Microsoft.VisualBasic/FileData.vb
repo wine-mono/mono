@@ -133,11 +133,11 @@ Namespace Microsoft.VisualBasic
             Dim enc As System.Text.Encoding = System.Text.Encoding.Default
 
             If Me.Access = OpenAccess.Read OrElse Me.Access = OpenAccess.ReadWrite Then
-                Reader = New StreamReader(Stream, enc)
+                Reader = New StreamReader(Stream)
                 BinaryReader = New BinaryReader(Stream, enc)
             End If
             If Me.Access = OpenAccess.Write OrElse Me.Access = OpenAccess.ReadWrite Then
-                Writer = New StreamWriter(Stream, enc)
+                Writer = New StreamWriter(Stream)
                 Writer.AutoFlush = True
                 BinaryWriter = New BinaryWriter(Stream, enc)
             End If
