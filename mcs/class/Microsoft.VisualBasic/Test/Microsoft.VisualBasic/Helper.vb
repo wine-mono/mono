@@ -51,15 +51,7 @@ Public Class Helper
     End Sub
 
     Public Shared Sub CompareBytes(ByVal aa() As Byte, ByVal bb() As Byte, ByVal testname As String)
-        If aa.Length <> bb.Length Then
-            Assert.Fail(String.Format("{0}- '{1} <{3}>' and '{2} <{4}>' does not have same size", testname, "a", "b", aa.Length, bb.Length))
-        End If
-
-        For i As Integer = 0 To aa.Length - 1
-            If aa(i) <> bb(i) Then
-                Assert.Fail(String.Format("{0} - '{1} <{3:X},""{5}"">' and '{2} <{4:X},""{6}"">' differs at position {5}", testname, "a", "b", aa(i), bb(i), i, Chr(aa(i)), Chr(bb(i))))
-            End If
-        Next
+        Assert.AreEqual(aa, bb, testname)
     End Sub
 
     Public Shared Sub CompareFile(ByVal a As String, ByVal b As String, ByVal testName As String)
