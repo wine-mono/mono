@@ -2797,7 +2797,7 @@ emit_marshal_array_ilgen (EmitMarshalContext *m, int argnum, MonoType *t,
 				//char *msg = g_strdup ("Either SizeConst or SizeParamIndex should be specified when marshalling arrays to managed code.");
 				//mono_mb_emit_exception_marshal_directive (mb, msg);
 				//return conv_arg;
-				num_elem = 0;
+				num_elem = 1;
 			}
 		}
 
