@@ -1014,7 +1014,7 @@ public class Tests
 		int ArrayIn3 (object[] array);
 		[MethodImplAttribute (MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime)]
 		[PreserveSig]
-		int ArrayOut ([Out, MarshalAs (UnmanagedType.LPArray, SizeConst=1)] int[] array, out int result);
+		int ArrayOut ([Out, MarshalAs (UnmanagedType.LPArray)] int[] array, out int result);
 	}
 
 	[System.Runtime.InteropServices.GuidAttribute ("00000000-0000-0000-0000-000000000002")]
@@ -1266,7 +1266,7 @@ public class Tests
 			else
 			{
 				array[0] = 55;
-				result = 1;
+				result = array.Length;
 			}
 			return 0;
 		}
