@@ -14,7 +14,7 @@ LIB_VBC_FLAGS = -define:NET_VER=4.5 -vbruntime- -define:_MYTYPE="Empty" -define:
 
 RESOURCE_DEFS = strings,strings.txt
 
-TEST_VBC_FLAGS = -imports:System,System.Collections,Microsoft.VisualBasic,NUnit.Framework -optionstrict-
+TEST_VBC_FLAGS = -imports:System,System.Collections,Microsoft.VisualBasic,NUnit.Framework -optionstrict- -define:NET_VER=4.5
 
 include ../../build/library.make
 
