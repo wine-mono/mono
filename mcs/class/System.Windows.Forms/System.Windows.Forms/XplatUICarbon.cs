@@ -724,14 +724,8 @@ namespace System.Windows.Forms {
 				hwnd.AddNcInvalidArea (x, y, width, height);
 				if (!hwnd.nc_expose_pending && hwnd.visible) {
 					MSG msg = new MSG ();
-					Region rgn = new Region (hwnd.Invalid);
-					using (Graphics g = Graphics.FromHwnd(hwnd.whole_window))
-					{
-						IntPtr hrgn = rgn.GetHrgn(g);
-						msg.message = Msg.WM_NCPAINT;
-						msg.wParam = hrgn == IntPtr.Zero ? (IntPtr)1 : hrgn;
-						msg.refobject = rgn;
-					}
+					msg.message = Msg.WM_NCPAINT;
+					msg.wParam = (IntPtr)1;
 					msg.hwnd = hwnd.Handle;
 					EnqueueMessage (msg);
 					hwnd.nc_expose_pending = true;
