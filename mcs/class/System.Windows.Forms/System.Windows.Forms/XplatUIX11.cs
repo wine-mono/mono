@@ -4353,15 +4353,8 @@ namespace System.Windows.Forms {
 							    hwnd.client_window.ToInt32(), xevent.ExposeEvent.x, xevent.ExposeEvent.y,
 							    xevent.ExposeEvent.width, xevent.ExposeEvent.height);
 
-						Rectangle rect = new Rectangle (xevent.ExposeEvent.x, xevent.ExposeEvent.y, xevent.ExposeEvent.width, xevent.ExposeEvent.height);
-						Region region = new Region (rect);
-						using (Graphics g = Graphics.FromHwnd(hwnd.whole_window))
-						{
-							IntPtr hrgn = region.GetHrgn(g);
-							msg.message = Msg.WM_NCPAINT;
-							msg.wParam = hrgn == IntPtr.Zero ? (IntPtr)1 : hrgn;
-							msg.refobject = region;
-						}
+						msg.message = Msg.WM_NCPAINT;
+						msg.wParam = (IntPtr)1;
 						break;
 					}
 					DriverDebug("GetMessage(): Window {0:X} Exposed area {1},{2} {3}x{4}",
