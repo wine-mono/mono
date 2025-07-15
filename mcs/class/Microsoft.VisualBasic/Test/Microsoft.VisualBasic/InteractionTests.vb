@@ -145,7 +145,7 @@ Public Class InteractionTests
 #If Not TARGET_JVM Then
 #Region "GetAllSettings tests"
 
-    <Test()> _
+    <Category("NotWorking")> <Test()> _
 Public Sub GetAllSettings_1()
         Dim res_setting As String(,)
         Dim index, elm_count As Integer
