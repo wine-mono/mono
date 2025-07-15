@@ -36,7 +36,7 @@ Imports System.Collections
 Imports System.Threading
 Imports Microsoft.VisualBasic
 
-<Category("Broken"), TestFixture(), Category("MayFailOnSharedDrived")> _
+<Category("NotWorking"), TestFixture(), Category("MayFailOnSharedDrived")> _
 Public Class FilesSystemTest
     Public DATA_DIR As String
     Public sep_ch As Char
