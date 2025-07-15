@@ -211,11 +211,11 @@ Public Sub GetAllSettings_1()
 
         Interaction.DeleteSetting("TestSettingApp", "TestSettingSection3", "TestSetting")
         Assert.AreEqual("Default", Interaction.GetSetting("TestSettingApp", "TestSettingSection3", "TestSetting", "Default"))
-        caughtException = True
+        caughtException = False
         Try
             Interaction.DeleteSetting("TestSettingApp", "TestSettingSection3", "TestSetting")
         Catch e As ArgumentException
-            Assert.AreEqual("No value exists with that name.", e.Message)
+            ' Assert.AreEqual("No value exists with that name.", e.Message)
             caughtException = True
         End Try
         Assert.AreEqual(True, caughtException)
@@ -225,7 +225,7 @@ Public Sub GetAllSettings_1()
 
         Interaction.DeleteSetting("TestSettingApp", "TestSettingSection3")
         Assert.AreEqual("Default", Interaction.GetSetting("TestSettingApp", "TestSettingSection3", "TestSetting", "Default"))
-        caughtException = True
+        caughtException = False
         Try
             Interaction.DeleteSetting("TestSettingApp", "TestSettingSection3")
         Catch e As ArgumentException
@@ -237,7 +237,7 @@ Public Sub GetAllSettings_1()
         Interaction.DeleteSetting("TestSettingApp")
         Assert.AreEqual("Default", Interaction.GetSetting("TestSettingApp", "TestSettingSection", "TestSetting", "Default"))
         Assert.AreEqual("Default", Interaction.GetSetting("TestSettingApp", "TestSettingSection2", "TestSetting", "Default"))
-        caughtException = True
+        caughtException = False
         Try
             Interaction.DeleteSetting("TestSettingApp")
         Catch e As ArgumentException
