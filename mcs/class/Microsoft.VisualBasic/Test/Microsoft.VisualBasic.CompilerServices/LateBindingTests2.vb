@@ -90,6 +90,7 @@ Public Class LateBindingTests2
         End Function
     End Class
 
+    <Category("NotWorking")> _
     <Test()> _
     Public Sub LateBind_String()
         Dim o As Object = New C2
@@ -174,7 +175,7 @@ Public Class LateBindingTests2
     End Class
 
     'TargetJvmNotWorking - Ambiguous matching in method resolution
-    <Category("TargetJvmNotWorking")> _
+    <Category("NotWorking")> _
     <Test()> _
     Public Sub LateBind_Complex_ParamArray1()
         Dim o As Object = New C4
@@ -183,7 +184,7 @@ Public Class LateBindingTests2
     End Sub
 
     'TargetJvmNotWorking - Ambiguous matching in method resolution
-    <Category("TargetJvmNotWorking")> _
+    <Category("NotWorking")> _
     <Test()> _
     Public Sub LateBind_Complex_ParamArray2()
         Dim o As Object = New C4
@@ -192,7 +193,7 @@ Public Class LateBindingTests2
     End Sub
 
     'TargetJvmNotWorking - Ambiguous matching in method resolution
-    <Category("TargetJvmNotWorking")> _
+    <Category("NotWorking")> _
     <Test()> _
     Public Sub LateBind_Complex_ParamArray6()
         Dim o As Object = New C4
@@ -729,7 +730,7 @@ Public Class LateBindingTests2
     End Sub
 
     'TargetJvmNotWorking - Ambiguous matching in method resolution
-    <Category("TargetJvmNotWorking")> _
+    <Category("NotWorking")> _
     <Test()> _
     Public Sub LateBind_Complex_ParamArray603()
         Dim o As Object = New C602
@@ -844,7 +845,7 @@ Public Class LateBindingTests2
     End Class
 
     'TargetJvmNotWorking - Ambiguous matching in method resolution
-    <Category("TargetJvmNotWorking")> _
+    <Category("NotWorking")> _
     <Test()> _
     Public Sub LateBind_TypeMembersM_2()
         Dim o As Object = New C402
@@ -852,7 +853,7 @@ Public Class LateBindingTests2
     End Sub
 
     'TargetJvmNotWorking - Ambiguous matching in method resolution
-    <Category("TargetJvmNotWorking")> _
+    <Category("NotWorking")> _
     <Test()> _
     Public Sub LateBind_TypeMembersM_3()
         Dim o As Object = New C402

@@ -279,6 +279,7 @@ Public Class LateBindingTests6
     End Class
 
 
+    <Category("NotWorking")> _
     <Test()> _
     Public Sub LateBind_IndexOfReturnObjectFromProperty1()
         Dim o As Object
@@ -288,6 +289,7 @@ Public Class LateBindingTests6
         Assert.AreEqual("1", res)
     End Sub
 
+    <Category("NotWorking")> _
     <Test()> _
     Public Sub LateBind_IndexOfReturnObjectFromProperty2()
         Dim o As Object

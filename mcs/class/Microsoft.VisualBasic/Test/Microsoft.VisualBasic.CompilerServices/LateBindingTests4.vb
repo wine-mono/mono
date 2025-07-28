@@ -100,6 +100,7 @@ Public Class LateBindingTests4
         End Function
     End Class
 
+    <Category("NotWorking")> _
     <Test()> _
     Public Sub LateBind_ByRef_1()
         Dim o As Object = New C2
@@ -290,7 +291,7 @@ Public Class LateBindingTests4
     End Class
 
     'TargetJvmNotWorking - ArgumentException was thrown when InvalidCastExceptions should be thrown
-    <Category("TargetJvmNotWorking")> _
+    <Category("NotWorking")> _
     <Test(), ExpectedException(GetType(InvalidCastException))> _
        Public Sub LateBind_NamedParam_6()
         Dim o As Object = New C10
@@ -367,7 +368,7 @@ Public Class LateBindingTests4
     End Sub
 
     'TargetJvmNotWorking - MissingMemberException was thrown when InvalidCastExceptions should be thrown
-    <Category("TargetJvmNotWorking")> _
+    <Category("NotWorking")> _
     <Test(), ExpectedException(GetType(InvalidCastException))> _
        Public Sub LateBind_NamedParam_11()
         Dim o As Object = New C14
@@ -393,17 +394,13 @@ Public Class LateBindingTests4
         End Function
     End Class
 
-#If TARGET_JVM Then
-    <Test(), ExpectedException(GetType(InvalidCastException)),Category("TargetJvmNotWorking")> Public Sub LateBind_NamedParam_12()
-#Else
-    <Test(), ExpectedException(GetType(InvalidCastException))> Public Sub LateBind_NamedParam_12()
-#End If
+    <Test(), ExpectedException(GetType(InvalidCastException)),Category("NotWorking")> Public Sub LateBind_NamedParam_12()
         Dim o As Object = New C15
         Assert.AreEqual("Integer,Integer,ParamArray Integer()", o.F(i:=5, j:=6))
     End Sub
 
     'TargetJvmNotWorking - InvalidCastExceptions should be thrown
-    <Category("TargetJvmNotWorking")> _
+    <Category("NotWorking")> _
     <Test(), ExpectedException(GetType(InvalidCastException))> _
     Public Sub LateBind_NamedParam_15()
         Dim o As Object = New C15

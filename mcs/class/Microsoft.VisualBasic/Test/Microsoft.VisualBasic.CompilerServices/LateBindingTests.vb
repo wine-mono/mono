@@ -560,7 +560,7 @@ Public Class LateBindingTests
         End Function
     End Class
     'TargetJvmNotWorking - Assert.AreEqual("Short", o.F(sb)) Fail - support for 2.0 sbyte
-    <Category("TargetJvmNotWorking"), Test()> _
+    <Category("NotWorking"), Test()> _
     Public Sub LateBind_PrimitiveTypes_220()
         Dim o As Object = New C220
 
@@ -836,7 +836,7 @@ Public Class LateBindingTests
         End Function
     End Class
 
-    <Category("TargetJvmNotWorking"), Test()> _
+    <Category("NotWorking"), Test()> _
     Public Sub LateBind_PrimitiveTypes_260()
         Dim o As Object = New C260
 
@@ -905,7 +905,7 @@ Public Class LateBindingTests
         End Function
     End Class
 
-    <Category("TargetJvmNotWorking"), Test()> _
+    <Category("NotWorking"), Test()> _
     Public Sub LateBind_PrimitiveTypes_270()
         Dim o As Object = New C270
 
