@@ -3494,6 +3494,7 @@ typedef struct
 	int (STDCALL *ArrayOut)(MonoComObject* pUnk, guint32 *array, guint32 *result);
 	int (STDCALL *GetDefInterface1)(MonoComObject* pUnk, MonoDefItfObject **iface);
 	int (STDCALL *GetDefInterface2)(MonoComObject* pUnk, MonoDefItfObject **iface);
+	int (STDCALL *IntPtrOut)(MonoComObject* pUnk, gpointer ip);
 } MonoIUnknown;
 
 struct MonoComObject
@@ -3664,6 +3665,15 @@ GetDefInterface2(MonoComObject* pUnk, MonoDefItfObject **obj)
 	return S_OK;
 }
 
+LIBTEST_API int STDCALL
+IntPtrOut(MonoComObject* pUnk, gpointer ip)
+{
+	if (ip == GUINT_TO_POINTER(5))
+		return 0;
+	else
+		return 0x80004005;
+}
+
 static void create_com_object (MonoComObject** pOut);
 
 LIBTEST_API int STDCALL 
@@ -3703,6 +3713,7 @@ static void create_com_object (MonoComObject** pOut)
 	(*pOut)->vtbl->ArrayOut = ArrayOut;
 	(*pOut)->vtbl->GetDefInterface1 = GetDefInterface1;
 	(*pOut)->vtbl->GetDefInterface2 = GetDefInterface2;
+	(*pOut)->vtbl->IntPtrOut = IntPtrOut;
 }
 
 static MonoComObject* same_object = NULL;
@@ -5775,6 +5786,12 @@ mono_test_marshal_safearray_in_ccw(MonoComObject *pUnk)
 	SafeArrayDestroy(array);
 
 	return ret;
+}
+
+LIBTEST_API int STDCALL
+mono_test_marshal_intptr_out_ccw(MonoComObject *pUnk)
+{
+	return pUnk->vtbl->IntPtrOut(pUnk, GUINT_TO_POINTER(5));
 }
 
 LIBTEST_API int STDCALL
