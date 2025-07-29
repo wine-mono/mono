@@ -32,14 +32,15 @@ namespace MonoTests.System.Net
 		{
 			WebClient wc = new WebClient();
 			string filename = Path.GetTempFileName();
+			string url = "http://test.winehq.org/tests/file.winetest";
 			
 			// A new, but empty file has been created. This is a test case
 			// for bug 81005
-			wc.DownloadFile("http://example.com/", filename);
+			wc.DownloadFile(url, filename);
 			
 			// Now, remove the file and attempt to download again.
 			File.Delete(filename);
-			wc.DownloadFile("http://example.com/", filename);
+			wc.DownloadFile(url, filename);
 		}
 
 		[Test]
