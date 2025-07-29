@@ -49,6 +49,10 @@ namespace MonoTests.Microsoft_VisualBasic.FileIO
 			{
 				// Must be admin to create this directory
 			}
+			catch (System.IO.IOException)
+			{
+				// Read-only filesystem
+			}
 			Assert.AreEqual (FixPath (System.Windows.Forms.Application.UserAppDataPath), SpecialDirectories.CurrentUserApplicationData, "CurrentUserApplicationData");
 			Assert.AreEqual (FixPath (Environment.GetFolderPath (Environment.SpecialFolder.Desktop)), SpecialDirectories.Desktop, "Desktop");
 			Assert.AreEqual (FixPath (Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments)), SpecialDirectories.MyDocuments, "MyDocuments");
