@@ -485,6 +485,7 @@ namespace MonoTests.Microsoft.VisualBasic
 
 			// verify we don't cleanup files in temp directory too agressively
 			string[] tempFiles = Directory.GetFiles (_tempDir);
+			Array.Sort (tempFiles);
 			Assert.AreEqual (2, tempFiles.Length, "#C1");
 			Assert.AreEqual (tempFile, tempFiles[0], "#C2");
 			Assert.AreEqual (outputAssembly, tempFiles [1], "#C3");
