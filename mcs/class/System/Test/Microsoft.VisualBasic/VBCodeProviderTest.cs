@@ -155,12 +155,7 @@ namespace MonoTests.Microsoft.VisualBasic
 
 			// Execute the test app
 			ProcessStartInfo NewProcInfo = new ProcessStartInfo ();
-			if (Windows) {
-				NewProcInfo.FileName = compilerResults.CompiledAssembly.Location;
-			} else {
-				NewProcInfo.FileName = "mono";
-				NewProcInfo.Arguments = compilerResults.CompiledAssembly.Location;
-			}
+			NewProcInfo.FileName = compilerResults.CompiledAssembly.Location;
 			NewProcInfo.RedirectStandardOutput = true;
 			NewProcInfo.UseShellExecute = false;
 			NewProcInfo.CreateNoWindow = true;
