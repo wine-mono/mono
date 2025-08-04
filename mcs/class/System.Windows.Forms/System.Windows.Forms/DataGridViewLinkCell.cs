@@ -28,7 +28,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Drawing;
-using System.Security.Permissions;
 using System.ComponentModel;
 
 namespace System.Windows.Forms
@@ -315,7 +314,6 @@ namespace System.Windows.Forms
 			}
 
 			[MonoTODO ("Stub, does nothing")]
-			[SecurityPermission (SecurityAction.Demand, Flags = SecurityPermissionFlag.UnmanagedCode)]
 			public override void DoDefaultAction ()
 			{
 				//DataGridViewLinkCell cell = base.Owner as DataGridViewLinkCell;

@@ -467,9 +467,12 @@ namespace System.Windows.Forms {
 		// new property so we can set EditorBrowsable to never.
 		[Browsable(false)]
 		[EditorBrowsable(EditorBrowsableState.Never)]
-		public new bool AutoScale {
+		public new bool AutoScale
+		{
+#pragma warning disable CS0618 // Type or member is obsolete
 			get { return base.AutoScale; }
 			set { base.AutoScale = value; }
+#pragma warning restore CS0618
 		}
 
 		[Browsable(false)]

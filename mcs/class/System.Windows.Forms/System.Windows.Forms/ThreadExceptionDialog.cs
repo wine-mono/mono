@@ -183,7 +183,7 @@ namespace System.Windows.Forms
 				AssemblyName an = a.GetName ();
 				sb.AppendFormat ("Name:\t{0}" + Environment.NewLine, an.Name);
 				sb.AppendFormat ("Version:\t{0}" + Environment.NewLine, an.Version);
-				sb.AppendFormat ("Location:\t{0}" + Environment.NewLine, an.CodeBase);
+				sb.AppendFormat ("Location:\t{0}" + Environment.NewLine, a.Location);
 				sb.Append (Environment.NewLine);
 			}
 			textBoxDetails.Text = sb.ToString ();

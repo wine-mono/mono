@@ -6,7 +6,6 @@
 -resource:resources/DnDCopy.cur,System.Windows.Forms.DnDCopy.cur
 -resource:resources/DnDLink.cur,System.Windows.Forms.DnDLink.cur
 -resource:resources/DnDMove.cur,System.Windows.Forms.DnDMove.cur
--resource:resources/keyboards.resources
 -resource:resources/System.Windows.Forms.resources
 -resource:resources/16_computer.png
 -resource:resources/32_computer.png

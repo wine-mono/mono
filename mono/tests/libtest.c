@@ -3619,6 +3619,7 @@ typedef struct
 	int (STDCALL *ArrayOut)(MonoComObject* pUnk, guint32 *array, guint32 *result);
 	int (STDCALL *GetDefInterface1)(MonoComObject* pUnk, MonoDefItfObject **iface);
 	int (STDCALL *GetDefInterface2)(MonoComObject* pUnk, MonoDefItfObject **iface);
+	int (STDCALL *IntPtrOut)(MonoComObject* pUnk, gpointer ip);
 	int (STDCALL *PointClassIn)(MonoComObject* pUnk, const point *pt);
 	void (STDCALL *PointClassInOut)(MonoComObject* pUnk, point *pt);
 	int (STDCALL *PointClassOut)(MonoComObject* pUnk, point *pt);
@@ -3910,6 +3911,15 @@ SafeArrayOut(MonoComObject* pUnk, gpointer *safearray)
 #endif
 }
 
+LIBTEST_API int STDCALL
+IntPtrOut(MonoComObject* pUnk, gpointer ip)
+{
+	if (ip == GUINT_TO_POINTER(5))
+		return 0;
+	else
+		return 0x80004005;
+}
+
 static void create_com_object (MonoComObject** pOut);
 
 LIBTEST_API int STDCALL 
@@ -3949,6 +3959,7 @@ static void create_com_object (MonoComObject** pOut)
 	(*pOut)->vtbl->ArrayOut = ArrayOut;
 	(*pOut)->vtbl->GetDefInterface1 = GetDefInterface1;
 	(*pOut)->vtbl->GetDefInterface2 = GetDefInterface2;
+	(*pOut)->vtbl->IntPtrOut = IntPtrOut;
 	(*pOut)->vtbl->PointClassIn = PointClassIn;
 	(*pOut)->vtbl->PointClassInOut = PointClassInOut;
 	(*pOut)->vtbl->PointClassOut = PointClassOut;
@@ -6445,6 +6456,12 @@ mono_test_marshal_safearray_out_ccw(MonoComObject *pUnk)
 	}
 
 	return ret;
+}
+
+LIBTEST_API int STDCALL
+mono_test_marshal_intptr_out_ccw(MonoComObject *pUnk)
+{
+	return pUnk->vtbl->IntPtrOut(pUnk, GUINT_TO_POINTER(5));
 }
 
 LIBTEST_API int STDCALL

@@ -1,0 +1,210 @@
+2010-06-12  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Helper.cs:
+	* StringsTest.vb:
+	* StringsTest.cs:
+	* GlobalsTests.vb:
+	* FinancialTests.cs:
+	* ConversionTests.cs:
+	* CollectionTests.cs:
+	* FileSystemTests.vb:
+	* FileSystemTests2.vb:
+	* FileSystemTestGenerator.vb: Remove .NET 1.0/1.1 logic.
+
+2009-05-20  Rolf Bjarne Kvinge <RKvinge@novell.com>
+	* VBFixedStringAttributeTest.vb:
+	* VBFixedArrayAttributeTest.vb: Added.
+
+2009-05-20  Rolf Bjarne Kvinge <RKvinge@novell.com>
+
+	* InteractionTests.vb: Added tests for MsgBox.
+
+2009-05-20  Rolf Bjarne Kvinge <RKvinge@novell.com>
+
+	* Interaction.cs|vb: Port the C# tests to VB to not have two classes with
+	the same name (annoying when running tests in VS, since referencing both
+	the CS and VB project doesn't build).
+
+
+2008-12-12  Kornél Pál  <kornelpal@gmail.com>
+
+	* StringsTest.vb: TestChrWorker: Use GetMaxByteCount on profile 1.x that
+	  fixes the build.
+
+2008-11-15  Kornél Pál  <kornelpal@gmail.com>
+
+	* StringsTest.vb: Added.
+
+2008-02-15  Rolf Bjarne Kvinge <RKvinge@novell.com>
+
+	* FileSystemTestGenerated.vb: Added.
+
+2008-02-12  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* FileSystemTestGenerator.vb: Make this 1.1 compatible.
+	* FileSystemTests2.vb: Make this 1.1 compatible, add a few more tests.
+	* Helper.vb: Make this 1.1 compatible, add Read/Write/AppendAllBytes/Text.
+
+2008-01-12  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Helper.vb: Added a few helper methods.
+	* FileSystemTestGenerator.vb: Added, a FileSystem test generator.
+
+2007-12-24  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* FileSystemTests2.vb: Added, contains code for the missing fileio support.
+	  Not included in build yet, since it's not working for the moment.
+
+2007-08-14  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* FileSystemTests.vb: Remove some warnings and make assert messages more
+	  human readable.
+
+2007-08-13  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Helper.vb: Fix code to build on 1.1.
+	* ErrObjectTests.vb: Tests can't be shared.
+	* GlobalsTests.vb, FileSystemTests.vb: Use NET_VER.
+
+2007-08-13  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* DateAndTimeTests.cs: #81783 has been fixed, enable tests.
+
+2007-05-31  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* StringsTest.cs: Use unicode escape sequences for a few characters.
+	* DateAndTimeTests.cs: Update ignore message with bug-number.
+
+2007-05-30  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Helper.cs: Add OnMono/OnMS
+	* StringsTest.cs, InformationTests.cs: Ignore tests that fail due to
+	  bugs elsewhere in mono for the moment.
+	* DateAndTimeTests.cs: Ignore tests that fail due to bugs elsewhere in
+	  mono for the moment. DateString_1, TimeOfDay_1, TimeString_1: Make
+	  sure we reset the date/time to what it was before the test and
+	  ignore it if a SecurityException occurs (root permissions required
+	  on Linux).
+	* FinancialTests.cs: Mark a few more tests as NotWorking.
+
+2007-05-10  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* CollectionTests.cs: Added a few more asserts.
+	* FinancialTests.cs: Fixes for the 1.0 profile.
+
+2007-05-06  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* StringsTest.cs: Work around #81535.
+
+2007-03-01  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	*  CollectionTests.cs: Fix for 1.1 compilation.
+	*  Helper.cs: Fixes for 1.1 compilation.
+	*  Helper.vb: Fixes for 1.1 compilation.
+	*  StringsTest.cs: Fixes for 1.1 compilation, removed version difference check in Asc1, since it is culture-dependant and we are already specifying the culture 
+explicitly.
+	*  DateAndTimeTests.cs: Fixes for 1.1 compilation.
+	*  ErrObjectTests.vb: Fixes for 1.1 compilation.
+	*  FinancialTests.cs: Fixes for 1.1 compilation.
+	*  GlobalsTests.vb: Fix buggy test.
+	*  FileSystemTests.vb: Fixes for 1.1 compilation.
+
+2006-09-20  Rafael Mizrahi <rafim@mainsoft.com>
+
+	* merge the old NUnit tests directory into new NUnit tests directory.
+
+2006-04-28  Atsushi Enomoto  <atsushi@ximian.com>
+
+	* ConversionTest.cs : added test for bug #75555.
+
+2005-10-27  Alexandre Rocha Lima e Marcondes  <alexandre@psl-pr.softwarelivre.org>
+	* DateAndTimeTest.cs : Added new DateTime parsing tests.
+	* FileSystemTest.cs : Removed Windows platform speficic tests.
+	* ConversionTest.cs : Implemented Invariant CultureInfo on tests.
+
+2005-10-23  Atsushi Enomoto  <atsushi@ximian.com>
+	* StringsTest.cs : it's pretty massive task to just remove problematic
+	  lines, so just remove this file.
+
+2005-08-08 Gert Driesen <drieseng@users.sourceforge.net>
+	* CollectionTest.cs: Added tests for IList implementation. No longer
+	inherit from Assertion. Fixed tests to pass on MS.NET 1.x and 2.0.
+
+2005-08-02 Rafael Teixeira <rafaelteixeirabr@hotmail.com>
+	* StringsTest.cs:
+		Implement tests for InStrRev
+
+2004-08-04  Jochen Wezel <jwezel@compumaster.de>
+	* StringsTest.cs: reenabled Split and StrComp tests which had been 
+		disabled because of compilation trouble in the past
+	
+2004-06-17  Jambunathan K <kjambunathan@novell.com>
+	* FileSystemTest.cs: A few more test cases from Rob Tillie 
+	<Rob.Tillie@Student.tUL.EDU>
+
+2004-05-15 Anirban Bhattacharjee <banirban@novell.com>
+	* FinancialTest.cs: Tests for Financial class
+
+2004-04-26	Rafael Teixeira <rafaelteixeirabr@hotmail.com>
+	* DateAndTimeTest.cs:
+		Allow some slack for rounding differences on test #TI02
+
+2004-01-24  Rafael Teixeira <rafaelteixeirabr@hotmail.com>
+	* FileSystemTest.cs:
+		Correcting expected exception type in TestDir to match MS' behaviour
+	* CollectionTest.cs
+		Correcting expected exception type in Exception #E19 to match MS' behaviour
+	* DateAndTimeTest.cs:
+		Correcting expected WeekDay values for many asserts to match MS' behaviour
+		Correcting expected exception type in DateValue "#DV03" to match MS' behaviour
+		WeekdayName Test assumed FirstDayOfWeek.System to always be the same, but it is user configurable, 
+			test with FirstDayOfWeek.Monday instead
+		TimeValue Test wrongly wanted to receive the parsed time as happening today, 
+			instead it comes in day 1/1/1 (timescale-zero)
+		
+2004-01-21  Rafael Teixeira <rafaelteixeirabr@hotmail.com>
+	* Added FileSystemTest.cs:
+		Initial tests for FileSystem.Dir function
+	* moved sources and this Changelog to correct namespace directory
+
+2003-12-29  Jochen Wezel <jwezel@compumaster.de>
+
+	* Updated StringsTest.cs
+
+2003-12-10  Jochen Wezel <jwezel@compumaster.de>
+
+	* Added StringsTest.cs (needs further work on)
+
+2003-05-13  Martin Willemoes Hansen <mwh@sysrq.dk>
+	* CollectionTest.cs ConversionTest.cs DateAndTimeTest.cs
+	  Inherited from Assertion and removed 
+	  Assertion. prefix from assertions
+
+2003-04-17  Nick Drochak  <ndrochak@gol.com>
+
+	* makefile.gnu: get the nunit dll from class/lib now.
+	* DateAndTimeTest.cs: Ignore test that hangs mono.
+
+2003-04-15  Nick Drochak <ndrochak@gol.com>
+
+	* Microsoft.VisualBasic_test.build: use nunit version 2
+
+2003-03-13  Martin Willemoes Hansen <mwh@sysrq.dk>
+	* Credited myself in CollectionTest.cs, 
+	  ConversionTest.cs and DateAndTimeTest.cs
+
+2003-03-12  Martin Willemoes Hansen <mwh@sysrq.dk>
+	* Added makefile.gnu
+	* Added microsoftvisualbasic_test.args
+	* Removed AllTests.cs not need for NUnit 2.0
+	* Updated CollectionTest.cs, ConversionTest.cs and
+	  DateAndTimeTest.cs to NUnit 2.0
+
+2002-10-28  Nick Drochak <ndrochak@gol.com>
+
+	* DateAndTimeTest.cs: Make tests pass on Windows with .NET
+
+2002-10-23  Nick Drochak  <ndrochak@gol.com>
+
+	* DateAndTimeTest.cs: Try to set the culture for these tests and see
+	if that helps.  All but one works on my machine.

@@ -166,6 +166,8 @@ ICALL_EXTERN_C gboolean mono_fclt (double a, double b);
 
 ICALL_EXTERN_C gboolean mono_fclt_un (double a, double b);
 
+ICALL_EXTERN_C gboolean mono_fcneq (double a, double b);
+
 ICALL_EXTERN_C double   mono_fload_r4 (float *ptr);
 
 ICALL_EXTERN_C void     mono_fstore_r4 (double val, float *ptr);

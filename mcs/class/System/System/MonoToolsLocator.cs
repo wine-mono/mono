@@ -74,7 +74,7 @@ namespace System {
 					Mono = "mono";
 #endif
 
-				var mscorlibPath = new Uri (typeof (object).Assembly.CodeBase).LocalPath;
+				var mscorlibPath = new Uri (typeof (object).Assembly.Location).LocalPath;
 				McsCSharpCompiler = Path.GetFullPath (Path.Combine (mscorlibPath, "..", "..", "..", "..", "bin", "mcs"));
 				if (!File.Exists (McsCSharpCompiler))
 					McsCSharpCompiler = "mcs";

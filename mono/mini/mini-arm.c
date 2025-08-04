@@ -2101,6 +2101,8 @@ mono_arch_allocate_vars (MonoCompile *cfg)
 			size = mono_class_native_size (mono_class_from_mono_type_internal (t), &ualign);
 			align = ualign;
 		}
+		else if (IS_SOFT_FLOAT && !t->byref && t->type == MONO_TYPE_R4 && !cfg->r4fp)
+			size = 8;
 		else
 			size = mono_type_size (t, &align);
 

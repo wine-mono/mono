@@ -33,6 +33,7 @@
 #include <direct.h>
 #include <io.h>
 #include <assert.h>
+#include <lmcons.h>
 #include "../utils/w32subset.h"
 
 gboolean
@@ -203,13 +204,37 @@ g_get_home_dir (void)
 	return home_dir;
 }
 
+static char *volatile user_name;
+
 const gchar *
 g_get_user_name (void)
 {
-	const char * retName = g_getenv ("USER");
-	if (!retName)
-		retName = g_getenv ("USERNAME");
-	return retName;
+	DWORD size = UNLEN + 1;
+	gunichar2 *tmp_user_name_wchar;
+	gchar *tmp_user_name_utf8;
+
+	if (user_name) return user_name;
+
+	if (!(tmp_user_name_wchar = g_new(gunichar2, size)))
+		return NULL;
+
+	if (!GetUserNameW(tmp_user_name_wchar, &size)) {
+		g_free(tmp_user_name_wchar);
+		return NULL;
+	}
+
+	tmp_user_name_utf8 = u16to8(tmp_user_name_wchar);
+	g_free(tmp_user_name_wchar);
+
+	if (!tmp_user_name_utf8)
+		return NULL;
+
+	InterlockedCompareExchangePointer((void**)&user_name, tmp_user_name_utf8, NULL);
+
+	if (user_name != tmp_user_name_utf8)
+		g_free(tmp_user_name_utf8);
+
+	return user_name;
 }
 
 static const char *tmp_dir;

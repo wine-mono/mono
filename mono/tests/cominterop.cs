@@ -386,6 +386,9 @@ public class Tests
 	public static extern int mono_test_default_interface_ccw([MarshalAs (UnmanagedType.Interface)] ITest itest);
 
 	[DllImport("libtest")]
+	public static extern int mono_test_marshal_intptr_out_ccw([MarshalAs (UnmanagedType.Interface)] ITest itest);
+
+	[DllImport("libtest")]
 	public static extern bool mono_cominterop_is_supported ();
 
 	public static int Main ()
@@ -975,8 +978,10 @@ public class Tests
 					return 97;
 				if (mono_test_marshal_lparray_out_ccw(test) != 0)
 					return 98;
-				if (mono_test_marshal_safearray_out_ccw(test) != 0)
+				if (mono_test_marshal_intptr_out_ccw(test) != 0)
 					return 99;
+				if (mono_test_marshal_safearray_out_ccw(test) != 0)
+					return 100;
 			}
 			#endregion // SafeArray Tests
 
@@ -1180,6 +1185,8 @@ public class Tests
 		[return: MarshalAs (UnmanagedType.Interface)]
 		TestDefaultInterfaceClass2 GetDefInterface2();
 		[MethodImplAttribute (MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime)]
+		void IntPtrOut ([Out] IntPtr ip);
+		[MethodImplAttribute (MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime)]
 		[PreserveSig ()]
 		int PointClassIn ([In] Point pt);
 		[MethodImplAttribute (MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime)]
@@ -1263,7 +1270,7 @@ public class Tests
 		int ArrayIn3 (object[] array);
 		[MethodImplAttribute (MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime)]
 		[PreserveSig]
-		int ArrayOut ([Out, MarshalAs (UnmanagedType.LPArray, SizeConst=1)] int[] array, out int result);
+		int ArrayOut ([Out, MarshalAs (UnmanagedType.LPArray)] int[] array, out int result);
 	}
 
 	[System.Runtime.InteropServices.GuidAttribute ("00000000-0000-0000-0000-000000000002")]
@@ -1319,6 +1326,8 @@ public class Tests
 		public virtual extern TestDefaultInterfaceClass1 GetDefInterface1();
 		[MethodImplAttribute (MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime)]
 		public virtual extern TestDefaultInterfaceClass2 GetDefInterface2();
+		[MethodImplAttribute (MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime)]
+		public virtual extern void IntPtrOut ([Out] IntPtr ip);
 		[MethodImplAttribute (MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime)]
 		[PreserveSig ()]
 		public virtual extern int PointClassIn ([In] Point pt);
@@ -1535,9 +1544,17 @@ public class Tests
 			else
 			{
 				array[0] = 55;
-				result = 1;
+				result = array.Length;
 			}
 			return 0;
+		}
+
+		public int IntPtrOut(IntPtr ip)
+		{
+			if (ip == new IntPtr(5))
+				return 0;
+			else
+				return unchecked((int)0x80040005);
 		}
 	}
 
@@ -1734,6 +1751,12 @@ public class Tests
 		public int[] SafeArrayOut ()
 		{
 			return new int[]{1, 2, 3, 4, 5};
+		}
+
+		public void IntPtrOut (IntPtr ip)
+		{
+			if (ip != new IntPtr(5))
+				throw new ArgumentException();
 		}
 	}
 
@@ -1998,6 +2021,7 @@ public class Tests
 			itest.DoubleIn (3.14);
 			itest.ITestIn (itest);
 			itest.ITestOut (out itest2);
+			itest.IntPtrOut (new IntPtr(5));
 
 			Point pt = new Point(7, -10);
 			if (itest.PointClassIn (pt) != 0 || pt.x != 7 || pt.y != -10)

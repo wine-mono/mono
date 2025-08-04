@@ -2394,13 +2394,8 @@ namespace System.Windows.Forms.X11Internal {
 								  xevent.ExposeEvent.width, xevent.ExposeEvent.height);
 #endif
 
-						Rectangle rect = new Rectangle (xevent.ExposeEvent.x, xevent.ExposeEvent.y,
-										xevent.ExposeEvent.width, xevent.ExposeEvent.height);
-						Region region = new Region (rect);
-						IntPtr hrgn = region.GetHrgn (null); // Graphics object isn't needed
 						msg.message = Msg.WM_NCPAINT;
-						msg.wParam = hrgn == IntPtr.Zero ? (IntPtr)1 : hrgn;
-						msg.refobject = region;
+						msg.wParam = (IntPtr)1;
 					}
 
 					return true;

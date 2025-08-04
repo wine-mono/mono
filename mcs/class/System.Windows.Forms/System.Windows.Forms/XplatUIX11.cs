@@ -2623,7 +2623,6 @@ namespace System.Windows.Forms {
 			IntPtr			WholeWindow;
 			IntPtr			ClientWindow;
 			SetWindowValuemask	ValueMask;
-			int[]			atoms;
 
 			hwnd = new Hwnd();
 
@@ -2819,7 +2818,7 @@ namespace System.Windows.Forms {
 			}
 
 			// Win32 only allows creation cursors of a certain size
-			if ((bitmap.Width != width) || (bitmap.Width != height)) {
+			if (width != 0 && height != 0 && (bitmap.Width != width || bitmap.Width != height)) {
 				cursor_bitmap = new Bitmap(bitmap, new Size(width, height));
 				cursor_mask = new Bitmap(mask, new Size(width, height));
 			} else {
@@ -4354,12 +4353,8 @@ namespace System.Windows.Forms {
 							    hwnd.client_window.ToInt32(), xevent.ExposeEvent.x, xevent.ExposeEvent.y,
 							    xevent.ExposeEvent.width, xevent.ExposeEvent.height);
 
-						Rectangle rect = new Rectangle (xevent.ExposeEvent.x, xevent.ExposeEvent.y, xevent.ExposeEvent.width, xevent.ExposeEvent.height);
-						Region region = new Region (rect);
-						IntPtr hrgn = region.GetHrgn (null); // Graphics object isn't needed
 						msg.message = Msg.WM_NCPAINT;
-						msg.wParam = hrgn == IntPtr.Zero ? (IntPtr)1 : hrgn;
-						msg.refobject = region;
+						msg.wParam = (IntPtr)1;
 						break;
 					}
 					DriverDebug("GetMessage(): Window {0:X} Exposed area {1},{2} {3}x{4}",

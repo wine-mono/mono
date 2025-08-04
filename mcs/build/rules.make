@@ -25,6 +25,7 @@ VERSION = 0.93
 Q=$(if $(V),,@)
 # echo -e "\\t" does not work on some systems, so use 5 spaces
 Q_MCS=$(if $(V),,@echo "$(if $(MCS_MODE),MCS,CSC)     [$(intermediate)$(PROFILE_DIRECTORY)] $(notdir $(@))";)
+Q_VBC=$(if $(V),,@echo "VBC     [$(intermediate)$(PROFILE_DIRECTORY)] $(notdir $(@))";)
 Q_AOT=$(if $(V),,@echo "AOT     [$(intermediate)$(PROFILE_DIRECTORY)] $(notdir $(@))";)
 
 ifndef BUILD_TOOLS_PROFILE
@@ -42,8 +43,12 @@ COMPILER_SERVER_ARGS = $(if $(findstring 1,$(ENABLE_COMPILER_SERVER)),$(COMPILER
 CSC_LOCATION = $(if $(findstring 1,$(ENABLE_COMPILER_SERVER)),$(SERVER_CSC_LOCATION),$(STANDALONE_CSC_LOCATION))
 
 USE_MCS_FLAGS = $(COMPILER_SERVER_ARGS) /codepage:$(CODEPAGE) /nologo /noconfig /deterministic $(LOCAL_MCS_FLAGS) $(PLATFORM_MCS_FLAGS) $(PROFILE_MCS_FLAGS) $(MCS_FLAGS)
+USE_VBC_FLAGS = /codepage:$(CODEPAGE) /nologo /noconfig /deterministic $(LOCAL_VBC_FLAGS) $(PLATFORM_VBC_FLAGS) $(PROFILE_VBC_FLAGS) $(VBC_FLAGS)
 USE_CFLAGS = $(LOCAL_CFLAGS) $(CFLAGS) $(CPPFLAGS)
 CSCOMPILE = $(Q_MCS) $(MCS) $(USE_MCS_FLAGS)
+VBCOMPILE = $(Q_VBC) $(BOOTSTRAP_PATH) $(RUNTIME) $(RUNTIME_FLAGS) $(VBC_LOCATION) $(USE_VBC_FLAGS)
+VB_RUNTIME_PATH = $(topdir)/class/lib/$(PROFILE)/Microsoft.VisualBasic.dll
+VB_RUNTIME_FLAGS = -vbruntime:$(VB_RUNTIME_PATH)
 CSC_RUNTIME_FLAGS = --aot-path=$(abspath $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)) --gc-params=nursery-size=64m
 CCOMPILE = $(CC) $(USE_CFLAGS)
 BOOT_COMPILE = $(Q_MCS) $(BOOTSTRAP_MCS) $(USE_MCS_FLAGS)
@@ -69,6 +74,7 @@ depsdir = $(topdir)/build/deps
 export PROFILE
 export MCS
 export MCS_FLAGS
+export VBC_FLAGS
 export CC
 export CFLAGS
 export INSTALL

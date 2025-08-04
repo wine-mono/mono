@@ -2793,11 +2793,12 @@ emit_marshal_array_ilgen (EmitMarshalContext *m, int argnum, MonoType *t,
 			param_num = -1;
 
 		if (param_num == -1) {
-			if (num_elem <= 0) {
-				//char *msg = g_strdup ("Either SizeConst or SizeParamIndex should be specified when marshalling arrays to managed code.");
-				//mono_mb_emit_exception_marshal_directive (mb, msg);
-				//return conv_arg;
+			if (num_elem == -1)
 				num_elem = 1;
+			else if (num_elem <= 0) {
+				char *msg = g_strdup ("Either SizeConst or SizeParamIndex should be specified when marshalling arrays to managed code.");
+				mono_mb_emit_exception_marshal_directive (mb, msg);
+				return conv_arg;
 			}
 		}
 
@@ -2972,8 +2973,10 @@ emit_marshal_array_ilgen (EmitMarshalContext *m, int argnum, MonoType *t,
 			param_num = -1;
 
 		if (param_num == -1) {
-			if (num_elem <= 0) {
-				//g_assert_not_reached ();
+			if (num_elem == -1)
+				num_elem = 1;
+			else if (num_elem <= 0) {
+				g_assert_not_reached ();
 			}
 		}
 
@@ -6587,6 +6590,8 @@ emit_managed_wrapper_ilgen (MonoMethodBuilder *mb, MonoMethodSignature *invoke_s
 			case MONO_TYPE_CLASS:
 			case MONO_TYPE_VALUETYPE:
 				mono_emit_marshal (m, i, invoke_sig->params [i], mspecs [i + 1], tmp_locals [i], NULL, MARSHAL_ACTION_MANAGED_CONV_OUT);
+				break;
+			case MONO_TYPE_I:
 				break;
 			default:
 				g_assert_not_reached ();

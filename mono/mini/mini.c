@@ -635,7 +635,7 @@ set_vreg_to_inst (MonoCompile *cfg, int vreg, MonoInst *inst)
 }
 
 #define mono_type_is_long(type) (!(type)->byref && ((mono_type_get_underlying_type (type)->type == MONO_TYPE_I8) || (mono_type_get_underlying_type (type)->type == MONO_TYPE_U8)))
-#define mono_type_is_float(type) (!(type)->byref && (((type)->type == MONO_TYPE_R8) || ((type)->type == MONO_TYPE_R4)))
+#define mono_type_is_float(cfg, ty) (!(ty)->byref && (((ty)->type == MONO_TYPE_R8) || ((ty)->type == MONO_TYPE_R4 && !cfg->r4fp)))
 
 MonoInst*
 mono_compile_create_var_for_vreg (MonoCompile *cfg, MonoType *type, int opcode, int vreg)
@@ -691,7 +691,7 @@ mono_compile_create_var_for_vreg (MonoCompile *cfg, MonoType *type, int opcode, 
 
 #if SIZEOF_REGISTER == 4
 	if (mono_arch_is_soft_float ()) {
-		regpair = mono_type_is_long (type) || mono_type_is_float (type);
+		regpair = mono_type_is_long (type) || mono_type_is_float (cfg, type);
 	} else {
 		regpair = mono_type_is_long (type);
 	}
@@ -716,7 +716,7 @@ mono_compile_create_var_for_vreg (MonoCompile *cfg, MonoType *type, int opcode, 
 		}
 
 		if (mono_arch_is_soft_float () && cfg->opt & MONO_OPT_SSA) {
-			if (mono_type_is_float (type))
+			if (mono_type_is_float (cfg, type))
 				inst->flags = MONO_INST_VOLATILE;
 		}
 
@@ -762,7 +762,7 @@ mono_compile_create_var (MonoCompile *cfg, MonoType *type, int opcode)
 
 	if (mono_type_is_long (type))
 		dreg = mono_alloc_dreg (cfg, STACK_I8);
-	else if (mono_arch_is_soft_float () && mono_type_is_float (type))
+	else if (mono_arch_is_soft_float () && mono_type_is_float (cfg, type))
 		dreg = mono_alloc_dreg (cfg, STACK_R8);
 	else
 		/* All the others are unified */

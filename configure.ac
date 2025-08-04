@@ -6171,6 +6171,7 @@ AC_SUBST(mono_runtime)
 AC_SUBST(mono_runtime_wrapper)
 
 CSC_LOCATION=`cd $srcdir && pwd`/external/roslyn-binaries/Microsoft.Net.Compilers/3.9.0/csc.exe
+VBC_LOCATION=`cd $srcdir && pwd`/external/roslyn-binaries/Microsoft.Net.Compilers/3.9.0/vbc.exe
 VBCS_LOCATION=`cd $srcdir && pwd`/external/roslyn-binaries/Microsoft.Net.Compilers/3.9.0/VBCSCompiler.exe
 
 if test $csc_compiler = mcs; then
@@ -6187,6 +6188,7 @@ if test x$host_win32 = xyes; then
     mono_cfg_dir=`cygpath -w -a $mono_cfg_root`\\etc
     CSC=`cygpath -m -a $CSC`
     CSC_LOCATION=`cygpath -m -a $CSC_LOCATION`
+    VBC_LOCATION=`cygpath -m -a $VBC_LOCATION`
     VBCS_LOCATION=`cygpath -m -a $VBCS_LOCATION`
   else
     mono_cfg_dir=`echo $mono_cfg_root | tr '/' '\\'`\\etc
@@ -6944,6 +6946,7 @@ fi
 
     echo "STANDALONE_CSC_LOCATION=$CSC_LOCATION" >> $srcdir/$mcsdir/build/config.make
     echo "SERVER_CSC_LOCATION?=$CSC_LOCATION" >> $srcdir/$mcsdir/build/config.make
+    echo "VBC_LOCATION?=$VBC_LOCATION" >> $srcdir/$mcsdir/build/config.make
     echo "VBCS_LOCATION?=$VBCS_LOCATION" >> $srcdir/$mcsdir/build/config.make
 
     if test $csc_compiler = mcs; then

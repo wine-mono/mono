@@ -34,7 +34,6 @@ using System.Drawing;
 using System.Drawing.Design;
 using System.Globalization;
 using System.Runtime.InteropServices;
-using System.Security.Permissions;
 using System.Windows.Forms;
 
 namespace System.Windows.Forms
@@ -161,7 +160,6 @@ namespace System.Windows.Forms
 		}
 		
 		[EditorBrowsable (EditorBrowsableState.Advanced)]
-		[UIPermission (SecurityAction.InheritanceDemand, Window = UIPermissionWindow.AllWindows)]
 		protected override void CreateHandle ()
 		{
 			base.CreateHandle ();

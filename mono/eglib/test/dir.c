@@ -17,6 +17,11 @@ test_dir (void)
 	GDir *dir;
 	GError *gerror;
 	const gchar *name;
+#ifdef G_OS_WIN32
+	const gchar *dirname = "c:\\Windows\\";
+#else
+	const gchar *dirname = "/etc/";
+#endif
 
 	/*
 	dir = g_dir_open (NULL, 0, NULL);
@@ -37,7 +42,7 @@ test_dir (void)
 		return FAILED ("4 got no error");
 	g_error_free (gerror);
 	gerror = NULL;
-	dir = g_dir_open (g_get_tmp_dir (), 9, &gerror);
+	dir = g_dir_open (dirname, 9, &gerror);
 	if (dir == NULL)
 		return FAILED ("5 opendir should succeed");
 	if (gerror != NULL)

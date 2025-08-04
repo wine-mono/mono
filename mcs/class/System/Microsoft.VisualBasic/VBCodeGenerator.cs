@@ -139,18 +139,24 @@ namespace Microsoft.VisualBasic
 			else
 				args.Append ("/target:library ");
 
-			/* Disabled. It causes problems now. -- Gonzalo
 			if (options.IncludeDebugInformation)
-				args.AppendFormat("/debug ");
-			*/
+				args.AppendFormat("/debug+ ");
 
 			if (options.TreatWarningsAsErrors)
 				args.Append ("/warnaserror ");
 
-			/* Disabled. vbnc does not support warninglevels.
+			/* Disabled. vbc does not support warninglevels.
 			if (options.WarningLevel != -1)
 				args.AppendFormat ("/wlevel:{0} ", options.WarningLevel);
 			*/
+
+			string privateBinPath = AppDomain.CurrentDomain.SetupInformation.PrivateBinPath;
+			if (privateBinPath != null && privateBinPath.Length > 0)
+				args.AppendFormat ("/libpath:\"{0}\" ", privateBinPath);
+			
+			if (options.Win32Resource != null)
+				args.AppendFormat("/win32resource:\"{0}\" ",
+					options.Win32Resource);
 
 			if (options.OutputAssembly == null || options.OutputAssembly.Length == 0) {
 				string ext = (options.GenerateExecutable ? "exe" : "dll");
@@ -177,9 +183,19 @@ namespace Microsoft.VisualBasic
 				args.Append (options.CompilerOptions);
 				args.Append (" ");
 			}
-			/* Disabled, vbnc does not support this.
-			args.Append (" -- "); // makes vbnc not try to process filenames as options
+
+			foreach (string embeddedResource in options.EmbeddedResources) {
+				args.AppendFormat("/resource:\"{0}\" ", embeddedResource);
+			}
+
+			foreach (string linkedResource in options.LinkedResources) {
+				args.AppendFormat("/linkresource:\"{0}\" ", linkedResource);
+			}
+
+			/* Disabled, vbc does not support this.
+			args.Append (" -- "); // makes vbc not try to process filenames as options
 			*/
+
 			foreach (string source in fileNames)
 				args.AppendFormat (" \"{0}\" ", source);
 

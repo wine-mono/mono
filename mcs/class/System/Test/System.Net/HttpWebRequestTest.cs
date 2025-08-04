@@ -3228,7 +3228,7 @@ namespace MonoTests.System.Net
 		// This test is supposed to fail prior to .NET 4.0
 		public void Post_EmptyRequestStream ()
 		{
-			var wr = HttpWebRequest.Create ("http://example.com");
+			var wr = HttpWebRequest.Create ("http://test.winehq.org/tests/post.php");
 			wr.Method = "POST";
 			wr.GetRequestStream ();
 			

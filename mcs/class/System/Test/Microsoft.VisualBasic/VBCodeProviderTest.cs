@@ -32,7 +32,6 @@ namespace MonoTests.Microsoft.VisualBasic
 	}
 
 	[TestFixture]
-	[Category ("NotWorking")] // we cannot rely on vbnc being available
 	public class VBCodeProviderTest
 	{
 		private string _tempDir;
@@ -117,7 +116,6 @@ namespace MonoTests.Microsoft.VisualBasic
 		}
 
 		[Test]
-		[Category ("NotWorking")] // we cannot rely on vbnc being available
 		public void CreateCompiler ()
 		{
 			// Prepare the compilation
@@ -155,12 +153,7 @@ namespace MonoTests.Microsoft.VisualBasic
 
 			// Execute the test app
 			ProcessStartInfo NewProcInfo = new ProcessStartInfo ();
-			if (Windows) {
-				NewProcInfo.FileName = compilerResults.CompiledAssembly.Location;
-			} else {
-				NewProcInfo.FileName = "mono";
-				NewProcInfo.Arguments = compilerResults.CompiledAssembly.Location;
-			}
+			NewProcInfo.FileName = compilerResults.CompiledAssembly.Location;
 			NewProcInfo.RedirectStandardOutput = true;
 			NewProcInfo.UseShellExecute = false;
 			NewProcInfo.CreateNoWindow = true;
@@ -192,7 +185,6 @@ namespace MonoTests.Microsoft.VisualBasic
 		}
 
 		[Test]
-		[Category ("NotWorking")] // we cannot rely on vbnc being available
 		public void CompileFromFile_InMemory ()
 		{
 			// create vb source file
@@ -239,7 +231,6 @@ namespace MonoTests.Microsoft.VisualBasic
 		}
 
 		[Test]
-		[Category ("NotWorking")] // we cannot rely on vbnc being available
 		public void CompileFromFileBatch_Executable_InMemory ()
 		{
 			// create vb source file
@@ -328,7 +319,6 @@ namespace MonoTests.Microsoft.VisualBasic
 		}
 
 		[Test]
-		[Category ("NotWorking")] // we cannot rely on vbnc being available
 		public void CompileFromFileBatch_Library_InMemory ()
 		{
 			// create vb source file
@@ -416,7 +406,6 @@ namespace MonoTests.Microsoft.VisualBasic
 		}
 
 		[Test]
-		[Category ("NotWorking")] // we cannot rely on vbnc being available
 		public void CompileFromSource_InMemory ()
 		{
 			// create a file in temp directory to ensure that compiler is not removing
@@ -449,7 +438,6 @@ namespace MonoTests.Microsoft.VisualBasic
 		}
 
 		[Test]
-		[Category ("NotWorking")] // we cannot rely on vbnc being available
 		public void CompileFromSourceBatch_InMemory ()
 		{
 			// create a file in temp directory to ensure that compiler is not removing
@@ -485,13 +473,13 @@ namespace MonoTests.Microsoft.VisualBasic
 
 			// verify we don't cleanup files in temp directory too agressively
 			string[] tempFiles = Directory.GetFiles (_tempDir);
+			Array.Sort (tempFiles);
 			Assert.AreEqual (2, tempFiles.Length, "#C1");
 			Assert.AreEqual (tempFile, tempFiles[0], "#C2");
 			Assert.AreEqual (outputAssembly, tempFiles [1], "#C3");
 		}
 
 		[Test]
-		[Category ("NotWorking")] // we cannot rely on vbnc being available
 		public void CompileFromDom_NotInMemory ()
 		{
 			// create a file in temp directory to ensure that compiler is not removing
@@ -521,7 +509,6 @@ namespace MonoTests.Microsoft.VisualBasic
 		}
 
 		[Test]
-		[Category ("NotWorking")] // we cannot rely on vbnc being available
 		public void CompileFromDomBatch_NotInMemory ()
 		{
 			// create a file in temp directory to ensure that compiler is not removing
@@ -551,7 +538,6 @@ namespace MonoTests.Microsoft.VisualBasic
 		}
 
 		[Test]
-		[Category ("NotWorking")] // we cannot rely on vbnc being available
 		public void CompileFromDom_InMemory ()
 		{
 			// create a file in temp directory to ensure that compiler is not removing
@@ -582,7 +568,6 @@ namespace MonoTests.Microsoft.VisualBasic
 		}
 
 		[Test]
-		[Category ("NotWorking")] // we cannot rely on vbnc being available
 		public void CompileFromDomBatch_InMemory ()
 		{
 			// create a file in temp directory to ensure that compiler is not removing

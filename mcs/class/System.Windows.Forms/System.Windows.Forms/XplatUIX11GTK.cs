@@ -3172,9 +3172,12 @@ namespace System.Windows.Forms {
 						
 						Rectangle rect = new Rectangle (xevent.ExposeEvent.x, xevent.ExposeEvent.y, xevent.ExposeEvent.width, xevent.ExposeEvent.height);
 						Region region = new Region (rect);
-						IntPtr hrgn = region.GetHrgn (null); // Graphics object isn't needed
-						msg.message = Msg.WM_NCPAINT;
-						msg.wParam = hrgn;
+						using (Graphics g = Graphics.FromHwnd(hwnd.whole_window))
+						{
+							IntPtr hrgn = region.GetHrgn(g);
+							msg.message = Msg.WM_NCPAINT;
+							msg.wParam = hrgn;
+						}
 						hwnd.nc_expose_pending = false;
 						break;
 					}

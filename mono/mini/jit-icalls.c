@@ -671,6 +671,12 @@ mono_fceq (double a, double b)
 }
 
 gboolean
+mono_fcneq (double a, double b)
+{
+	return a != b;
+}
+
+gboolean
 mono_fcgt (double a, double b)
 {
 	return a > b;

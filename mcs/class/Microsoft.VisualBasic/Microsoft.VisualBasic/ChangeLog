@@ -1,0 +1,317 @@
+2010-06-11  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Strings.vb:
+	* Globals.vb:
+	* FileData.vb:
+	* ErrObject.vb:
+	* Conversion.vb:
+	* Collection.vb:
+	* FileSystem.vb:
+	* VbStrConv.vb:
+	* Information.vb:
+	* MsgBoxStyle.vb:
+	* MsgBoxResult.vb:
+	* AudioPlayMode.vb:
+	* HideModuleNameAttribute.vb:
+	* MyGroupCollectionAttribute.vb: Remove .NET 1.0/1.1 logic.
+
+2010-06-12  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* ErrObject.vb: Make it compile in VS2010.
+
+2009-07-10  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* FileSystem.vb: A character can never be equal to an empty string, remove
+	condition. Also to get the first character in a string just use the indexed
+	Chars property instead of substring and converting that string back to a character.
+
+2010-04-16  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* ChangeLog:
+	* Conversion.vb: Use character constants whenever possible when comparing characters
+	instead of converting characters to strings and comparing that. Also do an explicit
+	ToString on characters when joining them.
+
+2010-04-16  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* ControlChars.vb: Reduce the number of (ignorable) errors in VS.
+
+2010-04-16  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Collection.vb: Fix type checking, no way this can be right.
+
+2010-04-16  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Strings.vb: Call Utils.CopyArray manually instead of using
+	Redim Preserve.
+
+	* Interaction.vb: Don't use Redim Preserve to create an array for the
+	first time.
+
+2010-04-16  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Strings.vb:
+	* Interaction.vb:
+	* Information.vb:
+	* FileSystem.vb:
+	* FileData.vb:
+	* DateAndTime.vb:
+	* Collection.vb:  Remove all uses of CType (and relatives): for primitive
+	types call the corresponding conversion method, for other types call
+	DirectCast.
+
+2010-04-16  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Information.vb:
+	* DateAndTime.vb: Use if instead of select on strings.
+
+2010-04-16  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Strings.vb:
+	* Interaction.vb:
+	* FileSystem.vb:
+	* FileData.vb:
+	* Collection.vb: Use String.Compare/Length instead of equality operator.
+	Second step in making the vbruntime compile in vb9 (by not being
+	self-referential).
+
+2009-12-18  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Strings.vb: Fix ctor to be shared so that shared fields are
+	initialized, and fix FormatNumeric to check if a key exists before
+	trying to fetch it, Hashtable might throw exceptions otherwise.
+
+2010-04-16  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Financial.vb:
+	* FileSystem.vb:
+	* Strings.vb: VS-format.
+
+2009-07-10  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* VBFixedStringAttribute.vb:
+	* VBFixedArrayAttribute.vb:  Fix eol issues.
+
+2009-07-10  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* VBMath.vb:
+	* Strings.vb:
+	* Interaction.vb:
+	* Information.vb:
+	* Financial.vb:
+	* FileSystem.vb:
+	* DateAndTime.vb:
+	* Conversion.vb:
+	* Constants.vb: Don't use Module, use Class and make all
+	members static. First step in making vbruntime compilable with
+	vb9.
+
+2009-07-10  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* FileData.vb: Use full "path" to access members in modules, since modules
+	will be changed to classes.
+
+2009-05-20  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* VBFixedStringAttribute.vb:
+	* VBFixedArrayAttribute.vb: Implemented.
+
+2009-05-20  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Interaction.vb: In MsgBox we need to return the value
+	from the call to MessageBox.
+
+	Modified patch from Lachlan Keown (lachlankeown@gmail.com).
+
+2009-05-01  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Strings.vb:
+	* ErrObject.vb:
+	* Constants.vb:
+	* Collection.vb:
+	* FileSystem.vb:
+	* DateAndTime.vb:
+	* Interaction.vb: Rename paramaters and shuffle some "#If
+	Moonlight Then" around to match SL api exactly.
+
+2009-04-14  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Hashtable.vb:
+	* ArrayList.vb: Add two wrapper classes since these do not
+	exist in Silverlight.
+
+	* Strings.vb:
+	* ErrObject.vb:
+	* DateAndTime.vb: Try to only use methods in corlib which are
+	present in all profiles, or add moonlight-specific code
+	conditionally otherwse.
+
+2008-12-12  Kornél Pál  <kornelpal@gmail.com>
+
+	* Strings.vb: Chr: Use GetMaxByteCount on profile 1.x that fixes the build.
+
+2008-11-15  Kornél Pál  <kornelpal@gmail.com>
+
+	* Strings.vb: Asc, AscW: Changed argument name to String.
+	  Asc(String), AscW(String): Implemented more efficient argument check.
+	  Asc: Added ASCII fast path, support for double byte character sets and
+	  now uses Encoding.Default.
+	  Chr: Added ASCII fast path and support for double byte character sets.
+	  ChrW: Implemented more efficient conversion.
+
+2008-02-12  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* FileData.vb: Lots of fixes.
+	* FileSystem.vb: Implement file io.
+	* Information.vb: Added helper method.
+
+2007-12-24  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* FileData.vb: Added, contains code for the missing fileio support. Not
+	  included in build yet, since it's not working for the moment.
+
+2007-12-17  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* FileSystem.vb: Make this compile with vbc 7.
+
+2007-12-14  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* ErrObject.vb: Make GetExceptionFromNumber friend so that ExceptionUtils
+	  can access it.
+	* FileSystem.vb: Implement FreeFile,FileClose and partially FileOpen.
+
+2007-12-10  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* FileSystem.vb: Remove a couple of warnings.
+
+2007-12-05  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Collection.vb: Make the changes actually compile.
+
+2007-12-04  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Collection.vb: Corcompare work.
+
+2007-08-14  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* DateAndTime.vb: Remove warning.
+	* Globals.vb: Minor fix case for 1.1 profile.
+	* FileSystem.vb: Fix Dir to return files and directories if
+	  FileAttributes.Directory is specified + some code cleanup.
+
+2007-08-13  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Globals.vb, FileSystem.vb, VbStrConv.vb, HideModuleNameAttribute.vb,
+	  Conversion.vb, Strings.vb, Collection.vb, AudioPlayMode.vb,
+	  MyGroupCollectionAttribute.vb: Changed all uses of NET_2_0 to NET_VER >=
+	  2.0, deleted NET_1_0, NET_1_1 and NET_2_0.
+
+2007-08-13  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Constants.vb, Interaction.vb, Strings.vb: Removed some members for
+	  moonlight.
+
+2007-07-16  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Information.vb: Fix 1.0 build.
+
+2007-05-30  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* DateAndTime.vb: Move OS-specific code to the OS drivers (date/time
+	  setters). Fix DateAdd to use the current culture.
+	* Information.vb: Speed up IsNumeric and make it equal to
+	  Versioned.IsNumeric (except where it's supposed to be different).
+	* Strings.vb: Speed up Filter, and provide an implementation for Asc
+	  for non-ascii code pages.
+	* Collection.vb: On any profile below 2.0 the IList.Item setter is
+	  broken, so break it.
+
+2007-05-21  Eyal Alaluf <eyala@mainsoft.com>
+
+	* DateAndTime.vb: Fix DateDiff of DateInterval.WeekOfYear
+
+2007-05-17  Eyal Alaluf <eyala@mainsoft.com>
+
+	* Financial.vb: Fix calculations. The biggest issue was non integral
+	  periods. E.g. IPmt(0.1/48, 24.5, 48, 50000, 0, DueDate.EndOfPeriod)
+
+2007-05-09  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Information.vb: Fix type comparison.
+
+2007-04-24  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* Conversion.vb: Build fix.
+
+2007-04-16  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* MsgBoxStyle.vb: Revert ifdef, it was the other way.
+	* Collection.vb: Fix signatures to match MS.
+
+2007-03-07  Rolf Bjarne Kvinge <RKvinge@novell.com> 
+
+	* VbStrConv.vb, MsgBoxStyle.vb, Collection.vb, MsgBoxResult.vb:
+	  Corcompare work.
+
+2007-03-01  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	*  FirstWeekOfYear.vb:
+	*  DueDate.vb:
+	*  Constants.vb:
+	*  CallType.vb:
+	*  AppWinStyle.vb:
+	*  DateAndTime.vb:
+	*  ErrObject.vb:
+	*  TabInfo.vb:
+	*  OpenAccess.vb:
+	*  FileSystem.vb:
+	*  FirstDayOfWeek.vb:
+	*  CompareMethod.vb:
+	*  TriState.vb:
+	*  SpcInfo.vb:
+	*  HideModuleNameAttribute.vb:
+	*  VariantType.vb:
+	*  OpenMode.vb:
+	*  MsgBoxStyle.vb:
+	*  DateInterval.vb:
+	*  OpenShare.vb:
+	*  Conversion.vb:
+	*  Information.vb:
+	*  DateFormat.vb:
+	*  ComClassAttribute.vb:
+	*  Strings.vb:
+	*  Collection.vb:
+	*  AudioPlayMode.vb:
+	*  MsgBoxResult.vb:
+	*  MyGroupCollectionAttribute.vb:
+	*  FileAttribute.vb: CorCompare work.
+
+
+
+2006-12-29  Rolf Bjarne Kvinge  <RKvinge@novell.com>
+
+	* Strings.vb: Removed a warning.
+
+2006-11-27  Miguel de Icaza  <miguel@novell.com>
+
+	* Interaction.vb: Implement InputBox
+
+2006-10-22 Guy Cohen <guyc@mainsoft.com>
+	* Fix Get/Set Settings, to use HKCU\Software\VB and VBA Program Settings
+	* Fix Partition bug to better work with spaces
+
+2006-10-10  Kornél Pál  <kornelpal@gmail.com>
+
+	* Interaction.vb: Declare Module as Public. (Fix regression.)
+
+2006-09-12  Miguel de Icaza  <miguel@novell.com>
+
+	* Interaction.cs: Convert from a Module into an non-inheritable
+	class;   Turn all methods into shared methods.
+
+	(MsgBox): Implement, should make Sudoku work.
+
+2006-09-12  Kornél Pál  <kornelpal@gmail.com>
+
+	* Strings.vb: Call AscW(Char) in AscW(Char) recursively that will result
+	  in returning the first parameter without any method being called.
