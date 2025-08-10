@@ -80,6 +80,10 @@ namespace MonoTests.Microsoft_VisualBasic.Logging
 				{
 					Assert.Ignore("Need to be admin to create common appdata directory");
 				}
+				catch (System.IO.IOException)
+				{
+					Assert.Ignore("Cannot create common appdata directory");
+				}
 
 				log.Location = LogFileLocation.ExecutableDirectory;
 				Assert.AreEqual (System.IO.Path.Combine (System.IO.Path.GetDirectoryName(System.Windows.Forms.Application.ExecutablePath), log.BaseFileName) + ".log", log.FullLogFileName, "#A2");
