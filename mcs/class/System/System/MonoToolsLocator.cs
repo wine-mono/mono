@@ -21,6 +21,7 @@ namespace System {
 			var gac = typeof (Environment).GetProperty ("GacPath", BindingFlags.Static | BindingFlags.NonPublic);
 			var getGacMethod = gac.GetGetMethod (true);
 			var GacPath = Path.GetDirectoryName ((string) getGacMethod.Invoke (null, null));
+			var mscorlibPath = new Uri (typeof (object).Assembly.Location).LocalPath;
 
 			if (Path.DirectorySeparatorChar == '\\') {
 				StringBuilder moduleName = new StringBuilder (1024);
@@ -56,6 +57,10 @@ namespace System {
 				//	throw new FileNotFoundException ("C# compiler not found at " + CSharpCompiler);
 
 				VBCompiler = Path.Combine (GacPath,  "4.5\\vbc.exe");
+				if (!File.Exists (VBCompiler)) {
+					VBCompiler = Path.GetFullPath( Path.Combine (mscorlibPath, "..", "..", "..", "..", "..", "external", "roslyn-binaries", "Microsoft.Net.Compilers", "3.9.0", "vbc.exe") );
+				}
+
 				AssemblyLinker = Path.Combine (GacPath, "4.5\\al.exe");
 
 				if (!File.Exists (AssemblyLinker)) {
@@ -68,12 +73,14 @@ namespace System {
 				if (!File.Exists (Mono))
 					Mono = "mono";
 
-				var mscorlibPath = new Uri (typeof (object).Assembly.Location).LocalPath;
 				McsCSharpCompiler = Path.GetFullPath (Path.Combine (mscorlibPath, "..", "..", "..", "..", "bin", "mcs"));
 				if (!File.Exists (McsCSharpCompiler))
 					McsCSharpCompiler = "mcs";
 
 				VBCompiler = Path.GetFullPath (Path.Combine (mscorlibPath, "..", "..", "..", "..", "bin", "vbc"));
+				if (!File.Exists (VBCompiler)) {
+					VBCompiler = Path.GetFullPath( Path.Combine (mscorlibPath, "..", "..", "..", "..", "..", "external", "roslyn-binaries", "Microsoft.Net.Compilers", "3.9.0", "vbc.exe") );
+				}
 				if (!File.Exists (VBCompiler))
 					VBCompiler = "vbc";
 
