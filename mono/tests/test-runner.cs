@@ -58,6 +58,7 @@ public class TestRunner
 
 		string disabled_tests = null;
 		string runtime = "mono";
+		string runtime_shell = null;
 		string config = null;
 		string mono_path = null;
 		string runtime_args = null;
@@ -99,6 +100,13 @@ public class TestRunner
 						return 1;
 					}
 					runtime = args [i + 1];
+					i += 2;
+				} else if (args [i] == "--shell") {
+					if (i + 1 >= args.Length) {
+						Console.WriteLine ("Missing argument to --shell command line option.");
+						return 1;
+					}
+					runtime_shell = args [i + 1];
 					i += 2;
 				} else if (args [i] == "--runtime-args") {
 					if (i + 1 >= args.Length) {
@@ -288,6 +296,8 @@ public class TestRunner
 
 					string process_args = "";
 
+					if (runtime_shell != null)
+						process_args += " " + runtime;
 					if (opt_set != null)
 						process_args += " -O=" + opt_set;
 					if (runtime_args != null)
@@ -295,7 +305,7 @@ public class TestRunner
 
 					process_args += " " + test;
 
-					ProcessStartInfo info = new ProcessStartInfo (runtime, process_args);
+					ProcessStartInfo info = new ProcessStartInfo (runtime_shell ?? runtime, process_args);
 					info.UseShellExecute = false;
 					info.RedirectStandardOutput = true;
 					info.RedirectStandardError = true;
