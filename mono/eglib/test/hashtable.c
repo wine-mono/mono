@@ -169,6 +169,30 @@ hash_iter (void)
 #endif
 }
 
+static RESULT
+str_hash (void)
+{
+	if (g_str_hash("") != g_str_hash(""))
+		return FAILED("Hash of empty string inconsistent");
+
+	if (g_str_hash("a") != g_str_hash("a"))
+		return FAILED("Hash of 'a' inconsistent");
+
+	if (g_str_hash("ab") != g_str_hash("ab"))
+		return FAILED("Hash of 'ab' inconsistent");
+
+	if (g_str_hash("a") == g_str_hash(""))
+		return FAILED("Hash collision 'a' and ''");
+
+	if (g_str_hash("a") == g_str_hash("b"))
+		return FAILED("Hash collision 'a' and 'b'");
+
+	if (g_str_hash("a") == g_str_hash("ab"))
+		return FAILED("Hash collision 'a' and 'ab'");
+
+	return NULL;
+}
+
 static Test hashtable_tests [] = {
 	{"t1", hash_t1},
 	{"t2", hash_t2},
@@ -176,6 +200,7 @@ static Test hashtable_tests [] = {
 	{"default", hash_default},
 	{"null_lookup", hash_null_lookup},
 	{"iter", hash_iter},
+	{"str_hash", str_hash},
 	{NULL, NULL}
 };
 
