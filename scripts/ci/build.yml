@@ -1,7 +1,7 @@
 
 linux-amd64-build:
     stage: build
-    image: $CI_REGISTRY/mono/mono:debian-bookworm-linux-build
+    image: $CI_REGISTRY/mono/mono:debian-trixie-linux-build
     rules:
         - if: $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_PROJECT_NAMESPACE == 'mono'
     interruptible: true
@@ -29,7 +29,7 @@ linux-amd64-build:
 
 build-dist:
     stage: build
-    image: $CI_REGISTRY/mono/mono:debian-bookworm-linux-build
+    image: $CI_REGISTRY/mono/mono:debian-trixie-linux-build
     when: manual
     interruptible: true
     before_script:

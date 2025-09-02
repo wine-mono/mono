@@ -9,7 +9,7 @@ build-image-linux-build:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
   variables:
-    IMAGE_LOCAL: "$CI_REGISTRY_IMAGE:debian-bookworm-linux-build"
+    IMAGE_LOCAL: "$CI_REGISTRY_IMAGE:debian-trixie-linux-build"
     DOCKER_FILE: "$CI_PROJECT_DIR/scripts/ci/linux-build.docker"
   script:
     - mkdir -p /kaniko/.docker
@@ -28,7 +28,7 @@ build-image-linux-test:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
   variables:
-    IMAGE_LOCAL: "$CI_REGISTRY_IMAGE:debian-bookworm-linux-test"
+    IMAGE_LOCAL: "$CI_REGISTRY_IMAGE:debian-trixie-linux-test"
     DOCKER_FILE: "$CI_PROJECT_DIR/scripts/ci/linux-test.docker"
   script:
     - mkdir -p /kaniko/.docker

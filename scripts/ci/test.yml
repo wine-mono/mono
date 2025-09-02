@@ -1,7 +1,7 @@
 
 linux-amd64-test:
     stage: test
-    image: $CI_REGISTRY/mono/mono:debian-bookworm-linux-test
+    image: $CI_REGISTRY/mono/mono:debian-trixie-linux-test
     rules:
         - if: $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_PROJECT_NAMESPACE == 'mono'
     interruptible: true
@@ -17,7 +17,7 @@ linux-amd64-test:
 
 linux-amd64-test-monolite:
     stage: test
-    image: $CI_REGISTRY/mono/mono:debian-bookworm-linux-build
+    image: $CI_REGISTRY/mono/mono:debian-trixie-linux-build
     rules:
         - if: $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_PROJECT_NAMESPACE == 'mono'
     interruptible: true

@@ -1,4 +1,4 @@
-FROM --platform=linux/arm/v7 debian:bookworm
+FROM --platform=linux/arm/v7 debian:trixie
 
 WORKDIR /tmp
 
