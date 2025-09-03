@@ -87,7 +87,7 @@ mono_path_canonicalize (const char *path)
 		lastpos = lastpos-1;
 #endif
 	
-	if (dest != lastpos) strcpy (dest, lastpos);
+	if (dest != lastpos) memmove (dest, lastpos, strlen(lastpos) + 1);
 	
 	g_strreverse (abspath);
 
