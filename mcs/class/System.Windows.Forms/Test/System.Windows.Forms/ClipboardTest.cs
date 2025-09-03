@@ -130,7 +130,7 @@ public static class MainClass
 
 				// Execute the app
 				using (var app = Process.Start (exeName)) {
-					app.WaitForExit ();
+					app.WaitForExit (5000);
 				}
 
 				// Text should still be on the clipboard
@@ -169,7 +169,7 @@ public static class MainClass
 
 				// Execute the app
 				using (var app = Process.Start (exeName)) {
-					app.WaitForExit ();
+					app.WaitForExit (5000);
 				}
 
 				// Text should no longer be on the clipboard
