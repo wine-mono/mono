@@ -112,7 +112,7 @@ namespace MonoTests.System
 				case "Europe/Tallinn":
 				case "Europe/Riga":
 				case "Europe/Vilnius":
-				case "Europe/Kiev":
+				case "Europe/Kyiv":
 					return "FLE Standard Time";
 				case "Europe/Prague":
 				case "Europe/Budapest":
@@ -726,8 +726,8 @@ namespace MonoTests.System
 									new DateTime (2020, 3, 29, 2, 0, 0), new DateTime (2020, 3, 29, 2, 30, 0), new DateTime (2020, 3, 29, 3, 0, 0),
 									new TimeSpan (1, 0, 0), new TimeSpan (2, 0, 0));
 
-				// Ukraine, Kiev (Eastern European ST):    Jumps ahead at 3:00 AM on 3/29/2020 to 4:00 AM
-				CheckJumpingIntoDST ("Europe/Kiev",
+				// Ukraine, Kyiv (Eastern European ST):    Jumps ahead at 3:00 AM on 3/29/2020 to 4:00 AM
+				CheckJumpingIntoDST ("Europe/Kyiv",
 									new DateTime (2020, 3, 29, 3, 0, 0), new DateTime (2020, 3, 29, 3, 30, 0), new DateTime (2020, 3, 29, 4, 0, 0),
 									new TimeSpan (2, 0, 0), new TimeSpan (3, 0, 0));
 
