@@ -427,6 +427,24 @@ namespace MonoTests.System.Collections.Generic {
 		}
 
 		[Test]
+		public void ForEachModifiedDotNet ()
+		{
+			int[] array = new int[] { 5, 4, 3, 2, 1 };
+
+			var list = array.ToList<int>();
+
+			list.ForEach((int i) => {
+				if (i == 5)
+					list.Add(0);
+				if (i == 0)
+					list.Add(-1);
+			});
+
+			Assert.AreEqual (7, list.Count);
+		}
+
+
+		[Test]
 		public void SortTestTrickyPivot ()
 		{
 			int[] array = new int[] { 1, 3, 5, 2, 6, 6, 6, 6, 6, 6, 6,7 ,4 };
