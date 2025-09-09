@@ -13,6 +13,7 @@ LIB_MCS_FLAGS = \
 	-d:USEOFFSET \
 	-d:MONO_PARTIAL_DATA_IMPORT \
 	-resource:../../../external/corefx/src/System.Data.SqlClient/src/Resources/System.Data.SqlClient.SqlMetaData.xml	\
+	-resource:../../../external/corefx/src/System.Data.Odbc/src/Resources/System.Data.Odbc.OdbcMetaData.xml \
 	-unsafe
 
 ifdef MOBILE_PROFILE
