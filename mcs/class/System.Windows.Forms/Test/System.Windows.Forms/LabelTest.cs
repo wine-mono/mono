@@ -362,6 +362,27 @@ namespace MonoTests.System.Windows.Forms
 			Assert.AreNotEqual (l3_saved_size, l3.Size, "#2");
 			p3.ResumeLayout ();
 		}
+
+		[Test]
+		public void TestWrap ()
+		{
+			Label l = new Label();
+			l.Text = "word word";
+			
+			Size pref_size = l.GetPreferredSize (Size.Empty);
+
+			Size wrap_size = l.GetPreferredSize (new Size (pref_size.Width - 5, 0));
+
+			// Decreasing width causes wrapping which increases height.
+			Assert.IsTrue (wrap_size.Height > pref_size.Height, $"{pref_size.Width}x{pref_size.Height} / {wrap_size.Width}x{wrap_size.Height}");
+
+			l.MaximumSize = new Size (pref_size.Width - 5, 0);
+
+			// GetPreferredSize accounts for maximum width
+			Assert.AreEqual (wrap_size, l.GetPreferredSize (Size.Empty));
+			// Even if we specify a greater width
+			Assert.AreEqual (wrap_size, l.GetPreferredSize (new Size(pref_size.Width, 0)));
+		}
 	}
 
    [TestFixture]
