@@ -517,3 +517,4 @@ System.Net.WebSockets/ClientWebSocketTest.cs
 ../../test-helpers/NetworkHelpers.cs
 ../../test-helpers/SocketResponder.cs
 ../../test-helpers/PathHelpers.cs
+System.Media/SoundPlayerTest.cs
