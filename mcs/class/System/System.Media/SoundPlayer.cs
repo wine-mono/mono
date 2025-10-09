@@ -40,7 +40,7 @@ namespace System.Media {
 
 		string sound_location;
 		Stream audiostream;
-		object tag = String.Empty;
+		object tag;
 		MemoryStream mstream;
 		bool load_completed;
 		int load_timeout = 10000;
