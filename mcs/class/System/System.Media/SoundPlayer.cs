@@ -258,7 +258,7 @@ namespace System.Media {
 				stopped = true;
 				if (adata != null)
 					adata.IsStopped = true;
-			} else {
+			} else if (win32_player != null) {
 				win32_player.Stop ();
 			}
 		}
