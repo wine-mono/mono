@@ -100,6 +100,13 @@ namespace MonoTests.System.Media
 		{
 			stream_changed++;
 		}
+
+		[Test]
+		public void StopWithoutPlay ()
+		{
+			SoundPlayer player = new SoundPlayer ();
+			player.Stop ();
+		}
 	}
 }
 

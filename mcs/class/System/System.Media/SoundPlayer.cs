@@ -40,7 +40,7 @@ namespace System.Media {
 
 		string sound_location;
 		Stream audiostream;
-		object tag = String.Empty;
+		object tag;
 		MemoryStream mstream;
 		bool load_completed;
 		int load_timeout = 10000;
@@ -258,7 +258,7 @@ namespace System.Media {
 				stopped = true;
 				if (adata != null)
 					adata.IsStopped = true;
-			} else {
+			} else if (win32_player != null) {
 				win32_player.Stop ();
 			}
 		}
