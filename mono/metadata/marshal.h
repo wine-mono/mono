@@ -117,6 +117,7 @@ typedef enum {
 	WRAPPER_SUBTYPE_ICALL_WRAPPER, // specifically JIT icalls
 	WRAPPER_SUBTYPE_NATIVE_FUNC_AOT,
 	WRAPPER_SUBTYPE_NATIVE_FUNC_INDIRECT,
+	WRAPPER_SUBTYPE_NATIVE_FUNC,
 	WRAPPER_SUBTYPE_PINVOKE,
 	/* Subtypes of MONO_WRAPPER_OTHER */
 	WRAPPER_SUBTYPE_SYNCHRONIZED_INNER,
@@ -162,6 +163,7 @@ typedef struct {
 
 typedef struct {
 	MonoMethod *method;
+	gpointer func;
 } ManagedToNativeWrapperInfo;
 
 typedef struct {
