@@ -7389,6 +7389,7 @@ mono_guid_to_string (const guint8 *guid)
 char *
 mono_guid_to_string_minimal (const guint8 *guid)
 {
+	if (!guid) return NULL;
 	return g_strdup_printf ("%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
 				guid[3], guid[2], guid[1], guid[0],
 				guid[5], guid[4],

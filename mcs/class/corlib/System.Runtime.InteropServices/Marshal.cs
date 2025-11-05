@@ -507,7 +507,7 @@ namespace System.Runtime.InteropServices
 		[ComVisible (true)]
 		public static IntPtr GetExceptionPointers()
 		{
-			throw new NotImplementedException ();
+			return (IntPtr)0; // FIXME
 		}
 
 		public static IntPtr GetHINSTANCE (Module m)
