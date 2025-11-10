@@ -2876,20 +2876,22 @@ interp_create_method_pointer (MonoMethod *method, gboolean compile, MonoError *e
 #ifdef HOST_WASM
 	if (method->wrapper_type == MONO_WRAPPER_NATIVE_TO_MANAGED) {
 		WrapperInfo *info = mono_marshal_get_wrapper_info (method);
-		MonoMethod *orig_method = info->d.native_to_managed.method;
+		if (info->subtype != WRAPPER_SUBTYPE_NATIVE_FUNC) {
+			MonoMethod *orig_method = info->d.native_to_managed.method;
 
-		/*
-		 * These are called from native code. Ask the host app for a trampoline.
-		 */
-		MonoFtnDesc *ftndesc = g_new0 (MonoFtnDesc, 1);
-		ftndesc->addr = entry_func;
-		ftndesc->arg = imethod;
+			/*
+			 * These are called from native code. Ask the host app for a trampoline.
+			 */
+			MonoFtnDesc *ftndesc = g_new0 (MonoFtnDesc, 1);
+			ftndesc->addr = entry_func;
+			ftndesc->arg = imethod;
 
-		addr = mono_wasm_get_native_to_interp_trampoline (orig_method, ftndesc);
-		if (addr) {
-			mono_memory_barrier ();
-			imethod->jit_entry = addr;
-			return addr;
+			addr = mono_wasm_get_native_to_interp_trampoline (orig_method, ftndesc);
+			if (addr) {
+				mono_memory_barrier ();
+				imethod->jit_entry = addr;
+				return addr;
+			}
 		}
 
 	}

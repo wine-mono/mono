@@ -59,4 +59,14 @@ public class Tests {
 
 		return d (5) == 6 ? 0 : 1;
 	}
+
+	static int test_0_function_pointer_round_trip () {
+		IntPtr ptr = new IntPtr(2);
+
+		SimpleDelegate d = (SimpleDelegate)Marshal.GetDelegateForFunctionPointer (ptr, typeof (SimpleDelegate));
+
+		IntPtr round = Marshal.GetFunctionPointerForDelegate (d);
+
+		return ptr == round ? 0 : 1;
+	}
 }

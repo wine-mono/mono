@@ -2975,7 +2975,7 @@ interp_transform_call (TransformData *td, MonoMethod *method, MonoMethod *target
 				 */
 				if (method->wrapper_type == MONO_WRAPPER_MANAGED_TO_NATIVE) {
 					WrapperInfo *info = mono_marshal_get_wrapper_info (method);
-					if (info) {
+					if (info && info->subtype != WRAPPER_SUBTYPE_NATIVE_FUNC) {
 						MonoMethod *pinvoke_method = info->d.managed_to_native.method;
 						imethod = mono_interp_get_imethod (domain, pinvoke_method, error);
 						return_val_if_nok (error, FALSE);

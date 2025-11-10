@@ -373,6 +373,27 @@ mono_delegate_to_ftnptr_impl (MonoDelegateHandle delegate, MonoError *error)
 	}
 
 	MonoObjectHandle delegate_target;
+
+	if (method->wrapper_type == MONO_WRAPPER_MANAGED_TO_NATIVE)
+	{
+		WrapperInfo *info = mono_marshal_get_wrapper_info (method);
+
+		if (info->subtype == WRAPPER_SUBTYPE_NATIVE_FUNC_AOT)
+		{
+			delegate_target = MONO_HANDLE_NEW_GET (MonoObject, delegate, target);
+			MonoGCHandle gchandle = NULL;
+			gpointer raw = mono_object_handle_pin_unbox (delegate_target, &gchandle);
+			result = *(gpointer*)raw;
+			mono_gchandle_free_internal (gchandle);
+			goto leave;
+		}
+		else if (info->subtype == WRAPPER_SUBTYPE_NATIVE_FUNC)
+		{
+			result = info->d.managed_to_native.func;
+			goto leave;
+		}
+	}
+
 	delegate_target = MONO_HANDLE_NEW_GET (MonoObject, delegate, target);
 	if (!MONO_HANDLE_IS_NULL (delegate_target)) {
 		/* Produce a location which can be embedded in JITted code */
@@ -3860,6 +3881,7 @@ mono_marshal_get_native_func_wrapper (MonoImage *image, MonoMethodSignature *sig
 	GHashTable *cache;
 	gboolean found;
 	char *name;
+	WrapperInfo *info;
 
 	key.sig = sig;
 	key.pointer = func;
@@ -3877,6 +3899,9 @@ mono_marshal_get_native_func_wrapper (MonoImage *image, MonoMethodSignature *sig
 
 	mono_marshal_emit_native_wrapper (image, mb, sig, piinfo, mspecs, func, EMIT_NATIVE_WRAPPER_CHECK_EXCEPTIONS);
 
+	info = mono_wrapper_info_create (mb, WRAPPER_SUBTYPE_NATIVE_FUNC);
+	info->d.managed_to_native.func = func;
+
 	csig = mono_metadata_signature_dup_full (image, sig);
 	csig->pinvoke = 0;
 
@@ -3884,13 +3909,11 @@ mono_marshal_get_native_func_wrapper (MonoImage *image, MonoMethodSignature *sig
 	new_key->sig = csig;
 	new_key->pointer = func;
 
-	res = mono_mb_create_and_cache_full (cache, new_key, mb, csig, csig->param_count + 16, NULL, &found);
+	res = mono_mb_create_and_cache_full (cache, new_key, mb, csig, csig->param_count + 16, info, &found);
 	if (found)
 		g_free (new_key);
 
 	mono_mb_free (mb);
-
-	mono_marshal_set_wrapper_info (res, NULL);
 
 	return res;
 }
