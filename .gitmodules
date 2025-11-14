@@ -54,7 +54,7 @@
 	url = https://github.com/mono/xunit-binaries.git
 [submodule "external/api-doc-tools"]
 	path = external/api-doc-tools
-	url = https://github.com/mono/api-doc-tools.git
+	url = https://gitlab.winehq.org/mono/api-doc-tools.git
 [submodule "external/api-snapshot"]
 	path = external/api-snapshot
 	url = https://github.com/mono/api-snapshot.git
