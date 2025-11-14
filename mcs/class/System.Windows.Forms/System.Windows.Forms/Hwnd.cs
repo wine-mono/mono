@@ -630,26 +630,38 @@ namespace System.Windows.Forms {
 
 		public Rectangle Invalid {
 			get {
-				if (invalid_list.Count == 0)
-					return Rectangle.Empty;
+				lock (invalid_list) {
+					if (invalid_list.Count == 0)
+						return Rectangle.Empty;
 
-				Rectangle result = (Rectangle)invalid_list[0];
-				for (int i = 1; i < invalid_list.Count; i ++) {
-					result = Rectangle.Union (result, (Rectangle)invalid_list[i]);
+					Rectangle result = (Rectangle)invalid_list[0];
+					for (int i = 1; i < invalid_list.Count; i ++) {
+						result = Rectangle.Union (result, (Rectangle)invalid_list[i]);
+					}
+					return result;
 				}
-				return result;
 			}
 		}
 
 		public Rectangle[] ClipRectangles {
 			get {
-				return (Rectangle[]) invalid_list.ToArray (typeof (Rectangle));
+				lock (invalid_list) {
+					return (Rectangle[]) invalid_list.ToArray (typeof (Rectangle));
+				}
  			}
  		}
 
 		public Rectangle NCInvalid {
-			get { return nc_invalid; }
-			set { nc_invalid = value; }
+			get {
+				lock (invalid_list) {
+					return nc_invalid;
+				}
+			}
+			set {
+				lock (invalid_list) {
+					nc_invalid = value;
+				}
+			}
 
 		}
 
@@ -789,48 +801,58 @@ namespace System.Windows.Forms {
 		}
 
 		public void AddInvalidArea(Rectangle rect) {
-			ArrayList tmp = new ArrayList ();
-			foreach (Rectangle r in invalid_list) {
-				if (!rect.Contains (r)) {
-					tmp.Add (r);
+			lock (invalid_list) {
+				ArrayList tmp = new ArrayList ();
+				foreach (Rectangle r in invalid_list) {
+					if (!rect.Contains (r)) {
+						tmp.Add (r);
+					}
 				}
+				tmp.Add (rect);
+				invalid_list = tmp;
 			}
-			tmp.Add (rect);
-			invalid_list = tmp;
 		}
 
 		public void ClearInvalidArea() {
-			invalid_list.Clear();
-			expose_pending = false;
+			lock (invalid_list) {
+				invalid_list.Clear();
+				expose_pending = false;
+			}
 		}
 
 		public void AddNcInvalidArea(int x, int y, int width, int height) {
-			if (nc_invalid == Rectangle.Empty) {
-				nc_invalid = new Rectangle (x, y, width, height);
-				return;
+			lock (invalid_list) {
+				if (nc_invalid == Rectangle.Empty) {
+					nc_invalid = new Rectangle (x, y, width, height);
+					return;
+				}
+
+				int right, bottom;
+				right = Math.Max (nc_invalid.Right, x + width);
+				bottom = Math.Max (nc_invalid.Bottom, y + height);
+				nc_invalid.X = Math.Min (nc_invalid.X, x);
+				nc_invalid.Y = Math.Min (nc_invalid.Y, y);
+
+				nc_invalid.Width = right - nc_invalid.X;
+				nc_invalid.Height = bottom - nc_invalid.Y;
 			}
-
-			int right, bottom;
-			right = Math.Max (nc_invalid.Right, x + width);
-			bottom = Math.Max (nc_invalid.Bottom, y + height);
-			nc_invalid.X = Math.Min (nc_invalid.X, x);
-			nc_invalid.Y = Math.Min (nc_invalid.Y, y);
-
-			nc_invalid.Width = right - nc_invalid.X;
-			nc_invalid.Height = bottom - nc_invalid.Y;
 		}
 
 		public void AddNcInvalidArea(Rectangle rect) {
-			if (nc_invalid == Rectangle.Empty) {
-				nc_invalid = rect;
-				return;
+			lock (invalid_list) {
+				if (nc_invalid == Rectangle.Empty) {
+					nc_invalid = rect;
+					return;
+				}
+				nc_invalid = Rectangle.Union (nc_invalid, rect);
 			}
-			nc_invalid = Rectangle.Union (nc_invalid, rect);
 		}
 
 		public void ClearNcInvalidArea() {
-			nc_invalid = Rectangle.Empty;
-			nc_expose_pending = false;
+			lock (invalid_list) {
+				nc_invalid = Rectangle.Empty;
+				nc_expose_pending = false;
+			}
 		}
 
 		public override string ToString() {
