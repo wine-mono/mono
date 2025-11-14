@@ -20,6 +20,9 @@ Microsoft.Win32.SafeHandles/SafeNCryptKeyHandle.cs
 Microsoft.Win32.SafeHandles/SafeNCryptProviderHandle.cs
 Microsoft.Win32.SafeHandles/SafeNCryptSecretHandle.cs
 
+System.Diagnostics.Eventing/EventDescriptor.cs
+System.Diagnostics.Eventing/EventProvider.cs
+
 System.IO.Pipes/PipeStream.cs
 ../../../external/corefx/src/System.IO.Pipes/src/Microsoft/Win32/SafeHandles/SafePipeHandle.cs
 ../../../external/corefx/src/System.IO.Pipes/src/System/IO/Error.cs
