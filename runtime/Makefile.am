@@ -176,6 +176,7 @@ test-bundle-local:
 	done
 	cp -L $(top_srcdir)/external/xunit-binaries/*.dll $(top_srcdir)/external/xunit-binaries/*.exe $(top_srcdir)/external/xunit-binaries/*.config $(TEST_BUNDLE_PATH)/net_4_x/
 	cp -R $(mcs_topdir)/class/System.IO.Compression/BrotliTestData $(mcs_topdir)/class/System.IO.Compression/UncompressedTestFiles $(TEST_BUNDLE_PATH)/net_4_x/
+	cp -L $(mcs_topdir)/tools/security/cert-sync.exe $(mcs_topdir)/tools/security/cert-sync.pdb $(TEST_BUNDLE_PATH)/net_4_x/
 	$(MAKE) -C $(mcs_topdir)/tests test-bundle
 	$(MAKE) -C $(mcs_topdir)/errors test-bundle
 	$(MAKE) -C $(mcs_topdir)/packages test-bundle
