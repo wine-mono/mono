@@ -69,12 +69,10 @@ namespace System.Xaml
 
 		public override bool Read ()
 		{
-			if (source.IsEmpty) {
-				node = default (XamlNodeLineInfo);
-				return false;
-			}
-			node = source.Dequeue ();
-			return true;
+			if (source.TryDequeue (out node))
+				return true;
+			node = default (XamlNodeLineInfo);
+			return false;
 		}
 
 		public bool HasLineInfo {
