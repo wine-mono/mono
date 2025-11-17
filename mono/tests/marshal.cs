@@ -61,11 +61,13 @@ public class Tests {
 	}
 
 	static int test_0_function_pointer_round_trip () {
-		IntPtr ptr = new IntPtr(2);
+		IntPtr ptr = Marshal.AllocCoTaskMem(256);
 
 		SimpleDelegate d = (SimpleDelegate)Marshal.GetDelegateForFunctionPointer (ptr, typeof (SimpleDelegate));
 
 		IntPtr round = Marshal.GetFunctionPointerForDelegate (d);
+
+		Marshal.FreeCoTaskMem(ptr);
 
 		return ptr == round ? 0 : 1;
 	}
