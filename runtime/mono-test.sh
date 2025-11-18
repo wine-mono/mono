@@ -25,7 +25,7 @@ echo "--------------------------------------------------------------------------
 case "$(uname)" in
     "Linux")
         mkdir -p ~/.config/.mono/
-        wget -qO- https://download.mono-project.com/test/new-certs.tgz| tar zx -C ~/.config/.mono/
+        "${MONO_EXECUTABLE}" --config "$r/_tmpinst/etc/mono/config" "$r/net_4_x/cert-sync.exe" --quiet --user /etc/ssl/certs/ca-certificates.crt
         ;;
 esac
 

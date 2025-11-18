@@ -22,7 +22,7 @@
 //
 using System;
 using System.Collections;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Reflection;
 using System.Windows.Markup;
 
@@ -30,7 +30,7 @@ namespace System.Xaml
 {
 	public class XamlNodeQueue
 	{
-		Queue<XamlNodeLineInfo> queue = new Queue<XamlNodeLineInfo> ();
+		ConcurrentQueue<XamlNodeLineInfo> queue = new ConcurrentQueue<XamlNodeLineInfo> ();
 		XamlSchemaContext ctx;
 		XamlReader reader;
 		XamlWriter writer;
@@ -55,7 +55,7 @@ namespace System.Xaml
 		}
 
 		public bool IsEmpty {
-			get { return queue.Count == 0; }
+			get { return queue.IsEmpty; }
 		}
 
 		public XamlReader Reader {
@@ -66,9 +66,9 @@ namespace System.Xaml
 			get { return writer; }
 		}
 
-		internal XamlNodeLineInfo Dequeue ()
+		internal bool TryDequeue (out XamlNodeLineInfo info)
 		{
-			return queue.Dequeue ();
+			return queue.TryDequeue (out info);
 		}
 
 		internal void Enqueue (XamlNodeInfo info)
