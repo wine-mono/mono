@@ -670,6 +670,29 @@ create_thread_object (MonoDomain *domain, MonoInternalThread *internal)
 }
 
 static void
+mono_thread_check_apartment_state (MonoInternalThread *thread)
+{
+#if HOST_WIN32
+	APTTYPE apttype;
+	APTTYPEQUALIFIER qualifier;
+	if (thread->apartment_state == ThreadApartmentState_Unknown &&
+		SUCCEEDED(CoGetApartmentType(&apttype, &qualifier)))
+	{
+		switch (apttype)
+		{
+		case APTTYPE_STA:
+		case APTTYPE_MAINSTA:
+			thread->apartment_state = ThreadApartmentState_STA;
+			break;
+		case APTTYPE_MTA:
+			thread->apartment_state = ThreadApartmentState_MTA;
+			break;
+		}
+	}
+#endif
+}
+
+static void
 init_internal_thread_object (MonoInternalThread *thread)
 {
 	thread->longlived = g_new0 (MonoLongLivedThreadData, 1);
@@ -1579,6 +1602,8 @@ mono_thread_internal_attach (MonoDomain *domain)
 		return NULL;
 
 	internal = create_internal_thread_object ();
+
+	mono_thread_check_apartment_state (internal);
 
 	thread = create_thread_object (domain, internal);
 
