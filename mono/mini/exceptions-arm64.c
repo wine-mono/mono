@@ -535,6 +535,7 @@ mono_arch_handle_exception (void *ctx, gpointer obj)
 #if defined(MONO_CROSS_COMPILE)
 	g_assert_not_reached ();
 #else
+	MonoContext mctx;
 	MonoJitTlsData *jit_tls;
 	void *sigctx = ctx;
 
@@ -545,13 +546,18 @@ mono_arch_handle_exception (void *ctx, gpointer obj)
 
 	/* Pass the ctx parameter in TLS */
 	mono_sigctx_to_monoctx (sigctx, &jit_tls->ex_ctx);
+
 	/* The others in registers */
-	UCONTEXT_REG_R0 (sigctx) = (gsize)obj;
+	mctx = jit_tls->ex_ctx;
+	mctx.regs [0] = (host_mgreg_t) obj;
 
 	gpointer addr = (gpointer)handle_signal_exception;
-	UCONTEXT_REG_SET_PC (sigctx, addr);
-	host_mgreg_t sp = UCONTEXT_REG_SP (sigctx) - MONO_ARCH_REDZONE_SIZE;
-	UCONTEXT_REG_SET_SP (sigctx, sp);
+	mctx.pc = (host_mgreg_t) addr;
+
+	host_mgreg_t sp = mctx.regs [ARMREG_SP] - MONO_ARCH_REDZONE_SIZE;
+	mctx.regs [ARMREG_SP] = sp;
+
+	mono_monoctx_to_sigctx (&mctx, sigctx);
 #endif
 
 	return TRUE;
@@ -563,6 +569,8 @@ mono_arch_ip_from_context (void *sigctx)
 #ifdef MONO_CROSS_COMPILE
 	g_assert_not_reached ();
 	return NULL;
+#elif defined(HOST_WIN32)
+	return (gpointer)((CONTEXT*)sigctx)->Pc;
 #else
 	return (gpointer)UCONTEXT_REG_PC (sigctx);
 #endif
