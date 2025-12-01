@@ -68,7 +68,7 @@ mono_get_module_file_name (HMODULE module_handle)
 HMODULE coree_module_handle = NULL;
 static gboolean init_from_coree = FALSE;
 
-#if HAVE_API_SUPPORT_WIN32_COREE
+#if defined(HAVE_API_SUPPORT_WIN32_COREE) && (!defined(_WIN64) || defined(_M_IA64) || defined(_M_AMD64))
 #include <shellapi.h>
 
 /* Entry point called by LdrLoadDll of ntdll.dll after _CorValidateImage. */
