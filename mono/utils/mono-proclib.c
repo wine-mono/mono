@@ -28,6 +28,10 @@
 #include <utils/mono-io-portability.h>
 #include <utils/mono-logger-internals.h>
 
+#ifdef HOST_WIN32
+#include <windows.h>
+#endif
+
 #if defined(_POSIX_VERSION)
 #ifdef HAVE_SYS_ERRNO_H
 #include <sys/errno.h>
@@ -675,6 +679,23 @@ get_pid_status_item (int pid, const char *item, MonoProcessError *error, int mul
 #endif
 }
 
+static gint64
+get_pid_session_id (int pid, MonoProcessError *error)
+{
+#ifdef HOST_WIN32
+	DWORD session = 0;
+	if (!ProcessIdToSessionId (pid, &session))
+	{
+		if (error)
+			*error = MONO_PROCESS_ERROR_OTHER;
+	}
+	return session;
+#else
+	return 0;
+#endif
+}
+
+
 /**
  * mono_process_get_data:
  * \param pid pid of the process
@@ -724,6 +745,8 @@ mono_process_get_data_with_error (gpointer pid, MonoProcessData data, MonoProces
 		return get_process_stat_time (rpid, 0, FALSE, error);
 	case MONO_PROCESS_PAGED_BYTES:
 		return get_pid_status_item (rpid, "VmSwap", error, 1024);
+	case MONO_PROCESS_SESSION_ID:
+		return get_pid_session_id (rpid, error);
 
 		/* Nothing yet */
 	case MONO_PROCESS_END:

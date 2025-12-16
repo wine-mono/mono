@@ -317,11 +317,15 @@ namespace System.Diagnostics
 			}
 		}
 
-		[MonoNotSupported ("")]
+		[MonoNotSupported ("Windows only")]
 		[DesignerSerializationVisibility (DesignerSerializationVisibility.Hidden)]
 		[MonitoringDescription ("The session ID for this process.")]
 		public int SessionId {
-			get { return 0; }
+			get
+			{
+				int error;
+				return (int)GetProcessData (processId, 13, out error);
+			}
 		}
 
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
