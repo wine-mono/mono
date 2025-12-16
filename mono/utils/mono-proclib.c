@@ -28,6 +28,10 @@
 #include <utils/mono-io-portability.h>
 #include <utils/mono-logger-internals.h>
 
+#ifdef HOST_WIN32
+#include <windows.h>
+#endif
+
 #if defined(_POSIX_VERSION)
 #ifdef HAVE_SYS_ERRNO_H
 #include <sys/errno.h>
