@@ -372,6 +372,10 @@ case "$host" in
 			support_boehm=no
 			with_gc=sgen
 			;;
+		loongarch64*)
+			support_boehm=no
+			with_gc=sgen
+			;;
 		esac
 		with_sgen_default_concurrent=yes
 		;;
@@ -4645,7 +4649,7 @@ case "$host" in
 		;;
 	loongarch64-*)
 		TARGET=LOONGARCH64
-		AOT_SUPPORTED="yes"
+		AOT_SUPPORTED="no"
 		BTLS_SUPPORTED=yes
 		BTLS_PLATFORM=loongarch64
 		arch_target=loongarch64
@@ -4891,7 +4895,7 @@ esac
 MONO_ARCH_GSHAREDVT_SUPPORTED=0
 case "$HOST" in
 X86 | AMD64 | ARM | ARM64 | LOONGARCH64)
-	MONO_ARCH_GSHAREDVT_SUPPORTED=1 # keep in sync with mini-{x86,amd64,arm,arm64}.h
+	MONO_ARCH_GSHAREDVT_SUPPORTED=1 # keep in sync with mini-{x86,amd64,arm,arm64,loongarch64}.h
 	;;
 esac
 

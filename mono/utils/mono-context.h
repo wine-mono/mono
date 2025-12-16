@@ -1058,7 +1058,7 @@ typedef struct {
 
 #define MONO_ARCH_HAS_MONO_CONTEXT (1)
 
-#elif (defined(__loongarch64) && !defined(MONO_CROSS_COMPILE)) || (defined(TARGET_LOONGARCH64))
+#elif (defined(__loongarch_lp64) && !defined(MONO_CROSS_COMPILE)) || (defined(TARGET_LOONGARCH64))
 
 #include <mono/arch/loongarch64/loongarch64-codegen.h>
 

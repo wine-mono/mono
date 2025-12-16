@@ -71,7 +71,7 @@
 
 #define REDZONE_SIZE	0
 
-#elif defined(__loongarch64)
+#elif defined(__loongarch_lp64)
 
 #define REDZONE_SIZE	0
 

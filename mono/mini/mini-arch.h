@@ -23,7 +23,7 @@
 #include "mini-arm.h"
 #elif defined(TARGET_ARM64)
 #include "mini-arm64.h"
-#elif defined(__loongarch64)
+#elif defined(__loongarch_lp64)
 #include "mini-loongarch64.h"
 #elif defined(__mips__)
 #include "mini-mips.h"
