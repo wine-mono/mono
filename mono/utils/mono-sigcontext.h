@@ -569,7 +569,7 @@ typedef struct ucontext
 # define UCONTEXT_REG_Rn(ctx, n) (((ucontext_t *)(ctx))->uc_mcontext.gregs[(n)])
 # define UCONTEXT_IP(ctx)         (((ucontext_t *)(ctx))->uc_mcontext.psw.addr)
 
-#elif defined(__loongarch64)
+#elif defined(__loongarch_lp64)
 
 # if HAVE_UCONTEXT_H
 #  include <ucontext.h>
@@ -584,7 +584,6 @@ typedef struct ucontext
 	 } while (0)
 #endif
 
-# define UCONTEXT_FPREGS(ctx)	((double*)(((ucontext_t *)(ctx))->uc_mcontext.__fpregs))
 # define UCONTEXT_GREGS(ctx)	(((ucontext_t *)(ctx))->uc_mcontext.__gregs)
 # define UCONTEXT_REG_PC(ctx)	(((ucontext_t *)(ctx))->uc_mcontext.__pc)
 # define UCONTEXT_REG_SP(ctx)	(((ucontext_t *)(ctx))->uc_mcontext.__gregs [loongarch_sp])
