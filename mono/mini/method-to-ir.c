@@ -2099,7 +2099,7 @@ handle_enum:
 		case MONO_TYPE_I8:
 		case MONO_TYPE_U8:
 			if (args [i]->type != STACK_I8 &&
-				!(SIZEOF_VOID_P == 8 && (args [i]->type == STACK_I4 || args [i]->type == STACK_PTR)))
+				!(SIZEOF_VOID_P == 8 && (args [i]->type == STACK_I4 || args [i]->type == STACK_PTR || args[i]->type == STACK_MP)))
 				return TRUE;
 			continue;
 		case MONO_TYPE_R4:
