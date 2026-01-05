@@ -38,10 +38,6 @@ DISABLE_MCS_DOCS = yes
 endif
 endif
 
-ifdef MCS_MODE
-DISABLE_MCS_DOCS = yes
-endif
-
 test-local run-test-local run-test-ondotnet-local doc-update:
 
 clean-local:

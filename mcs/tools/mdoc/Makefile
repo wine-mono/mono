@@ -32,6 +32,7 @@ MDOC_TEST_FILES = \
 	Test/DocTest-v1.cs                                        \
 	Test/DocTest-v2.patch                                     \
 	Test/msxdoc-expected.importslashdoc.xml                   \
+	Test/msxdoc-expected.mcs.importslashdoc.xml               \
 	Test/TestEcmaDocs.xml                                     \
 	Test/validate.check.monodocer                             \
 	Test/validate.check.monodocer.importslashdoc              \
@@ -43,12 +44,6 @@ MULTI-UNIFIED = Test/DocTest-DropNS-unified.dll Test/DocTest-DropNS-unified-mult
 $(PROGRAM): $(PROGRAM_DEPS)
 
 PROGRAM_COMPILE = $(CSCOMPILE)
-
-ifdef MCS_MODE
-NO_INSTALL=1
-NO_BUILD=1
-NO_TEST=1
-endif
 
 include ../../build/executable.make
 
@@ -79,6 +74,10 @@ cleanup:
 	-rm -Rf Test/en.actual Test/html.actual
 	-rm -f monodocer1.exe*
 
+ifdef MCS_MODE
+EXPECTED_SET = .mcs
+endif
+
 Test/DocTest-addNonGeneric.dll:
 	$(CSCOMPILE) $(TEST_CSCFLAGS) $(MSCORLIB) -unsafe -target:library -out:$@ Test/DocTest-addNonGeneric.cs
 
@@ -87,7 +86,7 @@ Test/DocTest-addNonGeneric-v2.dll:
 
 Test/DocTest-DropNS-classic-secondary.dll:
 	@echo $(value @)
-	$(CSCOMPILE) $(TEST_CSCFLAGS) $(MSCORLIB) -unsafe -target:library -out:$@ Test/DocTest-DropNS-classic-secondary.cs -doc:Test/DocTest-DropNS-classic-secondary.xml
+	$(CSCOMPILE) $(TEST_CSCFLAGS) $(MSCORLIB) -unsafe -target:library -out:$@ Test/DocTest-DropNS-classic-secondary.cs -doc:Test/DocTest-DropNS-classic-secondary$(EXPECTED_SET).xml
 
 Test/DocTest-DropNS-classic.dll:
 	@echo $(value @)
@@ -153,7 +152,7 @@ check-monodocer-addNonGeneric: $(PROGRAM)
 	$(MONO) $(PROGRAM) update -o Test/en.actual Test/DocTest-addNonGeneric-v2.dll
 	$(MONO) $(PROGRAM) update -o Test/en.actual Test/DocTest-addNonGeneric-v2.dll
 	$(MONO) $(PROGRAM) update -o Test/en.actual Test/DocTest-addNonGeneric-v2.dll
-	$(DIFF) Test/en.expected-addNonGeneric Test/en.actual
+	$(DIFF) Test/en.expected$(EXPECTED_SET)-addNonGeneric Test/en.actual
 
 check-monodocer-dropns-classic: $(PROGRAM)
 	# tests the simplest --dropns case, a single class where the root namespace was dropped.
@@ -161,7 +160,7 @@ check-monodocer-dropns-classic: $(PROGRAM)
 	$(MAKE) Test/DocTest-DropNS-classic.dll
 	$(MONO) $(PROGRAM) update -o Test/en.actual Test/DocTest-DropNS-classic.dll --api-style=classic
 	$(MAKE) update-monodocer-dropns-unified
-	$(DIFF) Test/en.expected-dropns-classic-v1 Test/en.actual
+	$(DIFF) Test/en.expected$(EXPECTED_SET)-dropns-classic-v1 Test/en.actual
 
 check-monodocer-dropns-multi: $(PROGRAM)
 	-rm -Rf Test/en.actual
@@ -178,7 +177,7 @@ check-monodocer-dropns-multi: $(PROGRAM)
 	$(MONO) $(PROGRAM) update -o Test/en.actual $(MULTI-CLASSIC) --api-style=classic 
 	$(MONO) $(PROGRAM) update -o Test/en.actual $(MULTI-UNIFIED) --api-style=unified --dropns Test/DocTest-DropNS-unified.dll=MyFramework --dropns Test/DocTest-DropNS-unified-multitest.dll=MyFramework 
 	
-	$(DIFF) Test/en.expected-dropns-multi Test/en.actual
+	$(DIFF) Test/en.expected$(EXPECTED_SET)-dropns-multi Test/en.actual
 
 
 check-monodocer-dropns-multi-withexisting: $(PROGRAM)
@@ -196,7 +195,7 @@ check-monodocer-dropns-multi-withexisting: $(PROGRAM)
 	$(MONO) $(PROGRAM) update -o Test/en.actual $(MULTI-CLASSIC) --api-style=classic 
 	$(MONO) $(PROGRAM) update -o Test/en.actual $(MULTI-UNIFIED) --api-style=unified --dropns Test/DocTest-DropNS-unified.dll=MyFramework --dropns Test/DocTest-DropNS-unified-multitest.dll=MyFramework 
 	
-	$(DIFF) Test/en.expected-dropns-multi-withexisting Test/en.actual
+	$(DIFF) Test/en.expected$(EXPECTED_SET)-dropns-multi-withexisting Test/en.actual
 
 check-monodocer-dropns-delete: $(PROGRAM)
 	-rm -Rf Test/en.actual
@@ -211,7 +210,7 @@ check-monodocer-dropns-delete: $(PROGRAM)
 	$(MONO) $(PROGRAM) update --delete -o Test/en.actual Test/DocTest-DropNS-classic-deletetest.dll --api-style=classic
 	$(MAKE) Test/DocTest-DropNS-unified-deletetest-V2.dll
 	$(MONO) $(PROGRAM) update --delete -o Test/en.actual Test/DocTest-DropNS-unified-deletetest.dll --api-style=unified --dropns Test/DocTest-DropNS-unified-deletetest.dll=MyFramework -statistics Test/actual_statistics.txt
-	$(DIFF) Test/en.expected-dropns-delete Test/en.actual
+	$(DIFF) Test/en.expected$(EXPECTED_SET)-dropns-delete Test/en.actual
 	$(DIFF) Test/expected_remove_statistics.txt Test/actual_statistics.txt
 
 check-monodocer-dropns-classic-withsecondary: $(PROGRAM)
@@ -221,7 +220,7 @@ check-monodocer-dropns-classic-withsecondary: $(PROGRAM)
 	$(MAKE) Test/DocTest-DropNS-classic-secondary.dll
 	$(MONO) $(PROGRAM) update -o Test/en.actual Test/DocTest-DropNS-classic.dll Test/DocTest-DropNS-classic-secondary.dll --api-style=classic
 	$(MAKE) update-monodocer-dropns-unified-withsecondary
-	$(DIFF) Test/en.expected-dropns-classic-withsecondary Test/en.actual
+	$(DIFF) Test/en.expected$(EXPECTED_SET)-dropns-classic-withsecondary Test/en.actual
 
 update-monodocer-dropns-unified: $(PROGRAM)
 	$(MAKE) Test/DocTest-DropNS-unified.dll
@@ -240,34 +239,34 @@ check-monodocer-internal-interface: $(PROGRAM)
 	-rm -Rf Test/en.actual
 	$(MAKE) Test/DocTest-InternalInterface.dll
 	$(MONO) $(PROGRAM) update -o Test/en.actual Test/DocTest-InternalInterface.dll -lang VB.NET
-	$(DIFF) Test/en.expected-internal-interface Test/en.actual
+	$(DIFF) Test/en.expected$(EXPECTED_SET)-internal-interface Test/en.actual
 
 check-monodocer-enumerations: $(PROGRAM)
 	-rm -Rf Test/en.actual
 	$(MAKE) Test/DocTest-enumerations.dll
 	$(MONO) $(PROGRAM) update -o Test/en.actual Test/DocTest-enumerations.dll
-	$(DIFF) Test/en.expected-enumerations Test/en.actual
+	$(DIFF) Test/en.expected$(EXPECTED_SET)-enumerations Test/en.actual
 
 check-monodocer-update: $(PROGRAM)
-	find Test/en.expected -name \*.xml -exec rm "{}" \;
+	find Test/en.expected$(EXPECTED_SET) -name \*.xml -exec rm "{}" \;
 	$(MAKE) Test/DocTest.dll-v1
-	$(MONO) $(PROGRAM) update -o Test/en.expected Test/DocTest.dll -lang docid -lang vb.net -lang fsharp -lang javascript -lang c++/cli -lang c++/cx -lang c++/winrt
+	$(MONO) $(PROGRAM) update -o Test/en.expected$(EXPECTED_SET) Test/DocTest.dll -lang docid -lang vb.net -lang fsharp -lang javascript -lang c++/cli -lang c++/cx -lang c++/winrt
 
 check-monodocer: $(PROGRAM)
 	-rm -Rf Test/en.actual
 	$(MAKE) Test/DocTest.dll-v1
 	$(MONO) $(PROGRAM) update --debug -o Test/en.actual Test/DocTest.dll -lang docid -lang vb.net -lang fsharp -lang javascript -lang c++/cli -lang c++/cx -lang c++/winrt
-	$(DIFF) Test/en.expected Test/en.actual
+	$(DIFF) Test/en.expected$(EXPECTED_SET) Test/en.actual
 	$(MONO) $(PROGRAM) update --debug -o Test/en.actual Test/DocTest.dll -lang docid -lang vb.net -lang fsharp -lang javascript -lang c++/cli -lang c++/cx -lang c++/winrt
-	$(DIFF) Test/en.expected Test/en.actual
+	$(DIFF) Test/en.expected$(EXPECTED_SET) Test/en.actual
 
 check-monodocer-since-update: $(PROGRAM)
-	find Test/en.expected.since -name \*.xml -exec rm "{}" \;
+	find Test/en.expected$(EXPECTED_SET).since -name \*.xml -exec rm "{}" \;
 	$(MAKE) Test/DocTest.dll-v1
-	$(MONO) $(PROGRAM) update -o Test/en.expected.since Test/DocTest.dll 
+	$(MONO) $(PROGRAM) update -o Test/en.expected$(EXPECTED_SET).since Test/DocTest.dll 
 	$(MAKE) Test/DocTest.dll-v2
 	$(MONO) $(PROGRAM) update --since="Version 2.0" \
-		-o Test/en.expected.since Test/DocTest.dll 
+		-o Test/en.expected$(EXPECTED_SET).since Test/DocTest.dll 
 
 check-monodocer-since: $(PROGRAM)
 	rm -Rf Test/en.actual
@@ -276,17 +275,17 @@ check-monodocer-since: $(PROGRAM)
 	$(MAKE) Test/DocTest.dll-v2
 	$(MONO) $(PROGRAM) --debug update --since="Version 2.0" \
 		-o Test/en.actual Test/DocTest.dll 
-	$(DIFF) Test/en.expected.since Test/en.actual
+	$(DIFF) Test/en.expected$(EXPECTED_SET).since Test/en.actual
 
 check-monodocer-delete-update: $(PROGRAM)
-	find Test/en.expected.delete -type f -exec rm "{}" \;
+	find Test/en.expected$(EXPECTED_SET).delete -type f -exec rm "{}" \;
 	$(MAKE) Test/DocTest.dll-v1
-	$(MONO) $(PROGRAM) update -o Test/en.expected.delete Test/DocTest.dll
+	$(MONO) $(PROGRAM) update -o Test/en.expected$(EXPECTED_SET).delete Test/DocTest.dll
 	$(MAKE) Test/DocTest.dll-v2
-	$(MONO) $(PROGRAM) update -o Test/en.expected.delete Test/DocTest.dll
+	$(MONO) $(PROGRAM) update -o Test/en.expected$(EXPECTED_SET).delete Test/DocTest.dll
 	$(MAKE) Test/DocTest.dll-v1
 	$(MONO) $(PROGRAM) update -fno-assembly-versions --delete \
-		-o Test/en.expected.delete Test/DocTest.dll
+		-o Test/en.expected$(EXPECTED_SET).delete Test/DocTest.dll
 
 check-monodocer-delete: $(PROGRAM)
 	rm -Rf Test/en.actual
@@ -296,28 +295,28 @@ check-monodocer-delete: $(PROGRAM)
 	$(MONO) $(PROGRAM) --debug update -o Test/en.actual Test/DocTest.dll
 	$(MAKE) Test/DocTest.dll-v1
 	$(MONO) $(PROGRAM) --debug update -fno-assembly-versions --delete -o Test/en.actual Test/DocTest.dll
-	$(DIFF) Test/en.expected.delete Test/en.actual
+	$(DIFF) Test/en.expected$(EXPECTED_SET).delete Test/en.actual
 
 check-monodocer-importslashdoc-update: $(PROGRAM)
-	find Test/en.expected.importslashdoc -name \*.xml -exec rm "{}" \;
+	find Test/en.expected$(EXPECTED_SET).importslashdoc -name \*.xml -exec rm "{}" \;
 	$(MAKE) Test/DocTest.dll-v1 TEST_CSCFLAGS=-doc:Test/DocTest.xml
 	$(MONO) $(PROGRAM) --debug update -i Test/DocTest.xml \
-		-o Test/en.expected.importslashdoc Test/DocTest.dll 
+		-o Test/en.expected$(EXPECTED_SET).importslashdoc Test/DocTest.dll 
 
 check-monodocer-importslashdoc: $(PROGRAM)
 	rm -Rf Test/en.actual
 	$(MAKE) Test/DocTest.dll-v1 TEST_CSCFLAGS=-doc:Test/DocTest.xml
 	$(MONO) $(PROGRAM) --debug update -i Test/DocTest.xml \
 		-o Test/en.actual Test/DocTest.dll 
-	$(DIFF) Test/en.expected.importslashdoc Test/en.actual
+	$(DIFF) Test/en.expected$(EXPECTED_SET).importslashdoc Test/en.actual
 
 check-monodocer-importecmadoc-update: $(PROGRAM)
-	find Test/en.expected.importecmadoc -name \*.xml -exec rm "{}" \;
+	find Test/en.expected$(EXPECTED_SET).importecmadoc -name \*.xml -exec rm "{}" \;
 	$(MAKE) Test/DocTest.dll-v1
 	$(MONO) $(PROGRAM) --debug update -i Test/TestEcmaDocs.xml \
 		'--type=System.Action`1' --type=System.AsyncCallback \
 		--type=System.Environment --type=System.Array \
-		-o Test/en.expected.importecmadoc Test/DocTest.dll 
+		-o Test/en.expected$(EXPECTED_SET).importecmadoc Test/DocTest.dll 
 
 check-monodocer-importecmadoc: $(PROGRAM)
 	rm -Rf Test/en.actual
@@ -326,25 +325,25 @@ check-monodocer-importecmadoc: $(PROGRAM)
 		'--type=System.Action`1' --type=System.AsyncCallback \
 		--type=System.Environment --type=System.Array \
 		-o Test/en.actual Test/DocTest.dll 
-	$(DIFF) Test/en.expected.importecmadoc Test/en.actual
+	$(DIFF) Test/en.expected$(EXPECTED_SET).importecmadoc Test/en.actual
 
 check-mdoc-export-html-update: $(PROGRAM)
-	find Test/html.expected -name \*.html -exec rm "{}" \;
-	$(MONO) $(PROGRAM) export-html -o Test/html.expected \
-		Test/en.expected.importslashdoc 
+	find Test/html.expected$(EXPECTED_SET) -name \*.html -exec rm "{}" \;
+	$(MONO) $(PROGRAM) export-html -o Test/html.expected$(EXPECTED_SET) \
+		Test/en.expected$(EXPECTED_SET).importslashdoc 
 
 check-mdoc-export-html: check-monodocer $(PROGRAM)
 	rm -Rf Test/html.actual
 	$(MONO) $(PROGRAM) export-html -o Test/html.actual \
-		Test/en.expected.importslashdoc
-	$(DIFF) Test/html.expected Test/html.actual
+		Test/en.expected$(EXPECTED_SET).importslashdoc
+	$(DIFF) Test/html.expected$(EXPECTED_SET) Test/html.actual
 
 check-mdoc-export-html-with-version: $(PROGRAM)
 	rm -Rf Test/html.actual.v0 Test/html.actual.since-with-v0 .v0.txt .v2.txt
 	$(MONO) $(PROGRAM) export-html -o Test/html.actual.v0 \
-		Test/en.expected
+		Test/en.expected$(EXPECTED_SET)
 	$(MONO) $(PROGRAM) export-html -o Test/html.actual.since-with-v0 \
-		Test/en.expected.since -with-version 0.0.0.0
+		Test/en.expected$(EXPECTED_SET).since -with-version 0.0.0.0
 	(cd Test/html.actual.v0            && find . -type f) | sort > .v0.txt
 	(cd Test/html.actual.since-with-v0 && find . -type f) | sort > .v2.txt
 	$(DIFF) .v0.txt .v2.txt   # assert no types added
@@ -352,37 +351,37 @@ check-mdoc-export-html-with-version: $(PROGRAM)
 check-md-html-dir: $(PROGRAM)
 	rm -Rf Test/html.actual
 	$(MONO) $(PROGRAM) export-html -dest:Test/html.actual $(DIR) 
-	$(DIFF) Test/html.expected Test/html.actual
+	$(DIFF) Test/html.expected$(EXPECTED_SET) Test/html.actual
 
 check-mdoc-export-msxdoc-update:
-	$(MONO) $(PROGRAM) export-msxdoc -o - Test/en.expected.importslashdoc \
-		> Test/msxdoc-expected.importslashdoc.xml
+	$(MONO) $(PROGRAM) export-msxdoc -o - Test/en.expected$(EXPECTED_SET).importslashdoc \
+		> Test/msxdoc-expected$(EXPECTED_SET).importslashdoc.xml
 
 check-mdoc-export-msxdoc:
-	$(MONO) $(PROGRAM) export-msxdoc -o - Test/en.expected.importslashdoc \
-		| $(DIFF) - Test/msxdoc-expected.importslashdoc.xml
+	$(MONO) $(PROGRAM) export-msxdoc -o - Test/en.expected$(EXPECTED_SET).importslashdoc \
+		| $(DIFF) - Test/msxdoc-expected$(EXPECTED_SET).importslashdoc.xml
 
 my_abs_top_srcdir = $(shell cd . && pwd)
 
 check-mdoc-validate-update: $(PROGRAM)
-	$(MONO) $(PROGRAM) validate -f ecma Test/en.expected 2>&1 | \
+	$(MONO) $(PROGRAM) validate -f ecma Test/en.expected$(EXPECTED_SET) 2>&1 | \
 		sed 's#file://$(my_abs_top_srcdir)/##g' > \
 		Test/validate.check.monodocer
-	$(MONO) $(PROGRAM) validate -f ecma Test/en.expected.importslashdoc 2>&1 | \
+	$(MONO) $(PROGRAM) validate -f ecma Test/en.expected$(EXPECTED_SET).importslashdoc 2>&1 | \
 		sed 's#file://$(my_abs_top_srcdir)/##g' > \
 		Test/validate.check.monodocer.importslashdoc
-	$(MONO) $(PROGRAM) validate -f ecma Test/en.expected.since 2>&1 | \
+	$(MONO) $(PROGRAM) validate -f ecma Test/en.expected$(EXPECTED_SET).since 2>&1 | \
 		sed 's#file://$(my_abs_top_srcdir)/##g' > \
 		Test/validate.check.monodocer.since
 
 check-mdoc-validate: $(PROGRAM)
-	$(MONO) $(PROGRAM) validate -f ecma Test/en.expected 2>&1 | \
+	$(MONO) $(PROGRAM) validate -f ecma Test/en.expected$(EXPECTED_SET) 2>&1 | \
 		sed 's#file://$(my_abs_top_srcdir)/##g' | \
 		$(DIFF_QUIET) - Test/validate.check.monodocer
-	$(MONO) $(PROGRAM) validate -f ecma Test/en.expected.importslashdoc 2>&1 | \
+	$(MONO) $(PROGRAM) validate -f ecma Test/en.expected$(EXPECTED_SET).importslashdoc 2>&1 | \
 		sed 's#file://$(my_abs_top_srcdir)/##g' | \
 		$(DIFF_QUIET) - Test/validate.check.monodocer.importslashdoc
-	$(MONO) $(PROGRAM) validate -f ecma Test/en.expected.since 2>&1 | \
+	$(MONO) $(PROGRAM) validate -f ecma Test/en.expected$(EXPECTED_SET).since 2>&1 | \
 		sed 's#file://$(my_abs_top_srcdir)/##g' | \
 		$(DIFF_QUIET) - Test/validate.check.monodocer.since
 
@@ -390,10 +389,6 @@ run-test-local: check-doc-tools
 
 run-test-update : check-doc-tools-update
 
-ifdef MCS_MODE
-check-doc-tools:
-	@echo "WARNING: running in mcs mode, mdoc doesn't compile with mcs. Skipping."
-else
 check-doc-tools:  \
 	check-monodocer-since \
 	check-monodocer-importecmadoc \
@@ -412,7 +407,6 @@ check-doc-tools:  \
 	check-monodocer-dropns-multi-withexisting
 
 #check-monodocer-dropns-delete
-endif
 
 check-doc-tools-update: check-monodocer-since-update \
 	check-monodocer-importecmadoc-update \
