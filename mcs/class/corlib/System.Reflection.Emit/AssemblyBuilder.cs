@@ -420,7 +420,7 @@ namespace System.Reflection.Emit
 
 		private void AddResourceFile (string name, string fileName, ResourceAttributes attribute, bool fileNeedsToExists)
 		{
-			check_name_and_filename (name, fileName, fileNeedsToExists);
+			check_name_and_filename (name, fileName, fileNeedsToExists, true);
 
 			// Resource files are created/searched under the assembly storage
 			// directory
@@ -557,7 +557,7 @@ namespace System.Reflection.Emit
 
 		private ModuleBuilder DefineDynamicModule (string name, string fileName, bool emitSymbolInfo, bool transient)
 		{
-			check_name_and_filename (name, fileName, false);
+			check_name_and_filename (name, fileName, false, !transient);
 
 			if (!transient) {
 				if (Path.GetExtension (fileName) == String.Empty)
@@ -1031,22 +1031,22 @@ namespace System.Reflection.Emit
 		}
 
 		private void check_name_and_filename (string name, string fileName,
-											  bool fileNeedsToExists) {
+											  bool fileNeedsToExists, bool fileMustBeValid) {
 			if (name == null)
 				throw new ArgumentNullException ("name");
-			if (fileName == null)
+			if (fileMustBeValid && fileName == null)
 				throw new ArgumentNullException ("fileName");
 			if (name.Length == 0)
 				throw new ArgumentException ("Empty name is not legal.", "name");
-			if (fileName.Length == 0)
+			if (fileMustBeValid && fileName.Length == 0)
 				throw new ArgumentException ("Empty file name is not legal.", "fileName");
-			if (Path.GetFileName (fileName) != fileName)
+			if (fileMustBeValid && Path.GetFileName (fileName) != fileName)
 				throw new ArgumentException ("fileName '" + fileName + "' must not include a path.", "fileName");
 
 			// Resource files are created/searched under the assembly storage
 			// directory
 			string fullFileName = fileName;
-			if (dir != null)
+			if (fileMustBeValid && dir != null)
 				fullFileName = Path.Combine (dir, fileName);
 
 			if (fileNeedsToExists && !File.Exists (fullFileName))
@@ -1054,7 +1054,7 @@ namespace System.Reflection.Emit
 
 			if (resources != null) {
 				for (int i = 0; i < resources.Length; ++i) {
-					if (resources [i].filename == fullFileName)
+					if (fileMustBeValid && resources [i].filename == fullFileName)
 						throw new ArgumentException ("Duplicate file name '" + fileName + "'");
 					if (resources [i].name == name)
 						throw new ArgumentException ("Duplicate name '" + name + "'");
@@ -1064,7 +1064,7 @@ namespace System.Reflection.Emit
 			if (modules != null) {
 				for (int i = 0; i < modules.Length; ++i) {
 					// Use fileName instead of fullFileName here
-					if (!modules [i].IsTransient () && (modules [i].FileName == fileName))
+					if (fileMustBeValid && !modules [i].IsTransient () && (modules [i].FileName == fileName))
 						throw new ArgumentException ("Duplicate file name '" + fileName + "'");
 					if (modules [i].Name == name)
 						throw new ArgumentException ("Duplicate name '" + name + "'");
