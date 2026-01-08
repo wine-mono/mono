@@ -36,7 +36,7 @@ using Win32 = System.Runtime.Remoting.Channels.Ipc.Win32;
 
 namespace System.Runtime.Remoting.Channels.Ipc
 {
-        public class IpcServerChannel : IChannelReceiver, IChannel
+        public class IpcServerChannel : IChannelReceiver, ISecurableChannel
         {
                 IChannelReceiver _innerChannel;
                 string _portName;
@@ -93,6 +93,18 @@ namespace System.Runtime.Remoting.Channels.Ipc
                 {
                         get { return ((IChannel)_innerChannel).ChannelPriority; }
                 }
+
+				public bool IsSecured
+				{
+					get
+					{
+						return true;
+					}
+					set
+					{
+						throw new NotImplementedException ();
+					}
+				}
 
                 public string Parse (string url, out string objectURI)
                 {
