@@ -2032,6 +2032,8 @@ mono_arch_flush_icache (guint8 *code, gint size)
 #ifndef MONO_CROSS_COMPILE
 #if __APPLE__
 	sys_icache_invalidate (code, size);
+#elif defined(TARGET_WIN32)
+	__clear_cache (code, code + size);	
 #else
 	/* Don't rely on GCC's __clear_cache implementation, as it caches
 	 * icache/dcache cache line sizes, that can vary between cores on
