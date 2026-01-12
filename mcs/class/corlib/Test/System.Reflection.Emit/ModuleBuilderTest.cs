@@ -116,6 +116,22 @@ namespace MonoTests.System.Reflection.Emit
 		}
 
 		[Test]
+		public void TestTransientInvalid ()
+		{
+			var assemblyBuilder = genAssembly ();
+			var module = assemblyBuilder.DefineDynamicModule ("d\0d");
+			// Assert.AreEqual ("d", module.ScopeName); // NUL goes through in Mono
+		}
+
+		[Test, ExpectedException(typeof(ArgumentException))]
+		public void TestTransientInvalidFQName ()
+		{
+			var assemblyBuilder = genAssembly ();
+			var module = assemblyBuilder.DefineDynamicModule ("d\0d");
+			Assert.IsNull (module.FullyQualifiedName);
+		}
+
+		[Test]
 		public void TestGlobalMethods ()
 		{
 			AssemblyBuilder builder = genAssembly ();
