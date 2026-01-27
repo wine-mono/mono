@@ -41,7 +41,7 @@ LINKED_ASSEMBLIES = $(addprefix $(AOTDIR)/,$(ASSEMBLIES))
 AOT_IMAGES = $(patsubst %,$(AOTDIR)/%$(PLATFORM_AOT_SUFFIX),$(ASSEMBLIES))
 TEST_IMAGES = $(patsubst %,$(AOTDIR)/%$(PLATFORM_AOT_SUFFIX),$(SOURCES:.cs=.exe))
 
-$(AOTDIR)/%.dll:
+$(AOTDIR)/%.dll: $(CLASS)/%.dll
 	mkdir -p $(AOTDIR)
 	cp $(CLASS)/$*.dll $(AOTDIR)/
 
