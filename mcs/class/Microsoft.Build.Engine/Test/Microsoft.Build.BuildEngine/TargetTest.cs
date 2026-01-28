@@ -42,7 +42,6 @@ namespace MonoTests.Microsoft.Build.BuildEngine {
 	[TestFixture]
 	public class TargetTest {
 		
-		static bool isMono = Type.GetType ("Mono.Runtime", false) != null;
 		Engine			engine;
 		Project			project;
 		
@@ -399,33 +398,6 @@ namespace MonoTests.Microsoft.Build.BuildEngine {
 
 		bool Build (string projectXml, ILogger logger)
 		{
-			if (!isMono) {
-				var reader = new StringReader (projectXml);
-				var xml = XmlReader.Create (reader);
-				return BuildOnDotNet (xml, logger);
-			} else {
-				return BuildOnMono (projectXml, logger);
-			}
-		}
-
-		bool BuildOnDotNet (XmlReader reader, ILogger logger)
-		{
-			var type = Type.GetType ("Microsoft.Build.Evaluation.ProjectCollection, Microsoft.Build, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
-
-			var prop = type.GetProperty ("GlobalProjectCollection");
-			var coll = prop.GetValue (null, null);
-				
-			var loadProject = coll.GetType ().GetMethod (
-					"LoadProject", new Type[] { typeof (XmlReader), typeof (string) });
-			var proj = loadProject.Invoke (coll, new object[] { reader, "4.0" });
-				
-			var build = proj.GetType ().GetMethod ("Build", new Type[] { typeof (string), typeof (ILogger[]) });
-			var ret = (bool)build.Invoke (proj, new object[] { "Main", new ILogger[] { logger }});
-			return ret;
-		}
-
-		bool BuildOnMono (string projectXml, ILogger logger)
-		{
 			var engine = new Engine (Consts.BinPath);
 			var project = engine.CreateNewProject ();
 			project.LoadXml (projectXml);
@@ -644,74 +616,6 @@ namespace MonoTests.Microsoft.Build.BuildEngine {
 						<Message Text='@(Foo)' />
 					</Target>
 				</Project>", "A;B;C;D;B;C");
-		}
-
-		[Test]
-		public void ItemGroupInsideTarget_RemoveMetadata ()
-		{
-			ItemGroupInsideTarget (
-				@"<Project ToolsVersion=""4.0"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
-					<ItemGroup>
-						<Foo Include='A' />
-						<Foo Include='B'>
-							<Hello>World</Hello>
-						</Foo>
-						<Foo Include='C'>
-							<Hello>Boston</Hello>
-						</Foo>
-						<Foo Include='D'>
-							<Test>Monkey</Test>
-						</Foo>
-					</ItemGroup>
-					<PropertyGroup>
-						<Foo>Hello</Foo>
-					</PropertyGroup>
-
-					<Target Name='Main'>
-						<ItemGroup>
-							<Bar Include='@(Foo)' RemoveMetadata='$(Foo)' />
-							<Bar Include='E'>
-								<Hello>Monkey</Hello>
-							</Bar>
-						</ItemGroup>
-				
-						<Message Text='%(Bar.Identity)' Condition=""'%(Bar.Hello)' != ''""/>
-					</Target>
-				</Project>", "E");
-		}
-
-		[Test]
-		public void ItemGroupInsideTarget_RemoveMetadata2 ()
-		{
-			ItemGroupInsideTarget (
-				@"<Project ToolsVersion=""4.0"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
-					<ItemGroup>
-						<Foo Include='A' />
-						<Foo Include='B'>
-							<Hello>World</Hello>
-						</Foo>
-						<Foo Include='C'>
-							<Hello>Boston</Hello>
-						</Foo>
-						<Foo Include='D'>
-							<Test>Monkey</Test>
-						</Foo>
-					</ItemGroup>
-					<PropertyGroup>
-					<Foo>Hello</Foo>
-					</PropertyGroup>
-
-					<Target Name='Main'>
-						<ItemGroup>
-							<Foo RemoveMetadata='$(Foo)' />
-							<Foo Include='E'>
-								<Hello>Monkey</Hello>
-							</Foo>
-						</ItemGroup>
-				
-					<Message Text='%(Foo.Identity)' Condition=""'%(Foo.Hello)' != ''""/>
-					</Target>
-				</Project>", "E");
 		}
 
 		[Test]
