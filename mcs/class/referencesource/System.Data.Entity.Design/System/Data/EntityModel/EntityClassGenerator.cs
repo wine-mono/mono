@@ -20,7 +20,6 @@ using System.Data.Entity.Design.Common;
 using System.IO;
 using System.Xml;
 using System.Data.Entity.Design.SsdlGenerator;
-using Microsoft.Build.Utilities;
 using System.Runtime.Versioning;
 
 namespace System.Data.Entity.Design

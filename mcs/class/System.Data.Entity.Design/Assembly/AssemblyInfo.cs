@@ -1,10 +1,7 @@
 //
 // AssemblyInfo.cs
 //
-// Authors:
-//	Marek Safar (marek.safar@gmail.com)
-//
-// Copyright 2014 Xamarin Inc (http://www.xamarin.com)
+// Copyright 2026 Esme Povirk for CodeWeavers
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -37,9 +34,9 @@ using System.Runtime.InteropServices;
 
 // General Information about the assembly
 
-[assembly: AssemblyTitle ("System.Data.Entity.dll")]
-[assembly: AssemblyDescription ("System.Data.Entity.dll")]
-[assembly: AssemblyDefaultAlias ("System.Data.Entity.dll")]
+[assembly: AssemblyTitle ("System.Data.Entity.Design.dll")]
+[assembly: AssemblyDescription ("System.Data.Entity.Design.dll")]
+[assembly: AssemblyDefaultAlias ("System.Data.Entity.Design.dll")]
 
 [assembly: AssemblyCompany (Consts.MonoCompany)]
 [assembly: AssemblyProduct (Consts.MonoProduct)]
@@ -63,6 +60,4 @@ using System.Runtime.InteropServices;
 
 
 [assembly: ComVisible (false)]
-
-[assembly: InternalsVisibleTo ("System.Data.Entity.Design, PublicKey=" + AssemblyRef.FrameworkPublicKeyFull2)]
 

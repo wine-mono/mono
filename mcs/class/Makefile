@@ -364,6 +364,7 @@ net_4_x_parallel_dirs = \
 	System.Data.Services.Client	\
 	System.Data.Services \
 	System.Data.Entity \
+	System.Data.Entity.Design \
 	System.Data.DataSetExtensions	\
 	System.Json		\
 	System.Json.Microsoft \
