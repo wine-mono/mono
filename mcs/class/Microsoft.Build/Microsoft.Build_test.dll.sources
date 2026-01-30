@@ -1,5 +1,6 @@
 ../../test-helpers/NunitHelpers.cs
 ../../test-helpers/TestResourceHelper.cs
+../../Microsoft.Build.Tasks/Test/Microsoft.Build.Tasks/TestMessageLogger.cs
 FunctionalTest.cs
 Microsoft.Build.Construction/ProjectItemElementTest.cs
 Microsoft.Build.Construction/ProjectRootElementTest.cs
@@ -9,6 +10,7 @@ Microsoft.Build.Evaluation/ProjectItemTest.cs
 Microsoft.Build.Evaluation/ProjectTest.cs
 Microsoft.Build.Evaluation/ProjectPropertyTest.cs
 Microsoft.Build.Evaluation/ResolvedImportTest.cs
+Microsoft.Build.Evaluation/TargetTest.cs
 Microsoft.Build.Evaluation/ToolsetTest.cs
 Microsoft.Build.Execution/BuildManagerTest.cs
 Microsoft.Build.Execution/BuildParametersTest.cs
