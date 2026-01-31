@@ -17,7 +17,6 @@ using System.Data.Entity.Design.Common;
 using System.Data.Entity.Design.SsdlGenerator;
 using System.Reflection;
 using System.Data.Entity.Design.PluralizationServices;
-using Microsoft.Build.Utilities;
 using System.Runtime.Versioning;
 using System.Linq;
 

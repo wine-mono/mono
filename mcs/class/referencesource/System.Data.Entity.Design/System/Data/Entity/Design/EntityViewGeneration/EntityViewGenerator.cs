@@ -26,7 +26,6 @@ using System.Data.Entity.Design.Common;
 using System.Diagnostics;
 using System.Globalization;
 using System.Data.Common.Utils;
-using Microsoft.Build.Utilities;
 using System.Runtime.Versioning;
 using System.Linq;
 

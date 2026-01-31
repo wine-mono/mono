@@ -24,7 +24,6 @@ using System.Data.Common.CommandTrees;
 using System.Data.Common.CommandTrees.ExpressionBuilder;
 using System.Text;
 using System.Linq;
-using Microsoft.Build.Utilities;
 
 namespace System.Data.Entity.Design
 {

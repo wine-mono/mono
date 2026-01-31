@@ -17,7 +17,6 @@ namespace System.Data.Entity.Design
     using System.Data.Metadata.Edm;
     using System.Data.Mapping;
     using System.Data.Entity.Design.Common;
-    using Microsoft.Build.Utilities;
     using System.Data.Entity.Design.SsdlGenerator;
     using System.Diagnostics;
     using System.Linq;
