@@ -44,7 +44,7 @@ namespace System.Drawing
 	[TypeConverter (typeof (FontConverter))]
 	public sealed class Font : MarshalByRefObject, ISerializable, ICloneable, IDisposable
 	{
-		private IntPtr	fontObject = IntPtr.Zero;
+		private IntPtr	nativeFont = IntPtr.Zero; // name expected by DevExpress.Utils.Text.FontGuard
 		private string  systemFontName;
 		private string  originalFontName;
 		private float _size;
@@ -67,7 +67,7 @@ namespace System.Drawing
 			}
 
 			setProperties (family, emSize, style, unit, charSet, isVertical);           
-			Status status = GDIPlus.GdipCreateFont (family.NativeFamily, emSize,  style, unit, out fontObject);
+			Status status = GDIPlus.GdipCreateFont (family.NativeFamily, emSize,  style, unit, out nativeFont);
 			
 			if (status == Status.FontStyleNotFound)
 				throw new ArgumentException (Locale.GetText ("Style {0} isn't supported by font {1}.", style.ToString (), familyName));
@@ -105,9 +105,9 @@ namespace System.Drawing
 
 		public void Dispose ()
 		{
-			if (fontObject != IntPtr.Zero) {
-				Status status = GDIPlus.GdipDeleteFont (fontObject);
-				fontObject = IntPtr.Zero;
+			if (nativeFont != IntPtr.Zero) {
+				Status status = GDIPlus.GdipDeleteFont (nativeFont);
+				nativeFont = IntPtr.Zero;
 				GC.SuppressFinalize (this);
 				// check the status code (throw) at the last step
 				GDIPlus.CheckStatus (status);
@@ -265,11 +265,11 @@ namespace System.Drawing
 
 		public IntPtr ToHfont ()
 		{
-			if (fontObject == IntPtr.Zero)
+			if (nativeFont == IntPtr.Zero)
 				throw new ArgumentException (Locale.GetText ("Object has been disposed."));
 
 			if (GDIPlus.RunningOnUnix ())
-				return fontObject;
+				return nativeFont;
 
 			// win32 specific code
 			if (olf == null) {
@@ -292,7 +292,7 @@ namespace System.Drawing
 			}
 			
 			setProperties (fontFamily, size, style, GraphicsUnit.Pixel, 0, false);
-			fontObject = newFontObject;
+			nativeFont = newFontObject;
 		}
 
 		public Font (Font prototype, FontStyle newStyle)
@@ -300,7 +300,7 @@ namespace System.Drawing
 			// no null checks, MS throws a NullReferenceException if original is null
 			setProperties (prototype.FontFamily, prototype.Size, newStyle, prototype.Unit, prototype.GdiCharSet, prototype.GdiVerticalFont);
 				
-			Status status = GDIPlus.GdipCreateFont (_fontFamily.NativeFamily, Size, Style, Unit, out fontObject);
+			Status status = GDIPlus.GdipCreateFont (_fontFamily.NativeFamily, Size, Style, Unit, out nativeFont);
 			GDIPlus.CheckStatus (status);			
 		}
 
@@ -342,7 +342,7 @@ namespace System.Drawing
 
 			Status status;
 			setProperties (family, emSize, style, unit, gdiCharSet,  gdiVerticalFont );		
-			status = GDIPlus.GdipCreateFont (family.NativeFamily, emSize,  style,   unit,  out fontObject);
+			status = GDIPlus.GdipCreateFont (family.NativeFamily, emSize,  style,   unit,  out nativeFont);
 			GDIPlus.CheckStatus (status);
 		}
 
@@ -383,7 +383,7 @@ namespace System.Drawing
 
 		internal IntPtr NativeObject {            
 			get {
-				return fontObject;
+				return nativeFont;
 			}
 		}
 
@@ -691,7 +691,7 @@ namespace System.Drawing
 				throw new ArgumentNullException ("graphics");
 
 			float size;
-			Status status = GDIPlus.GdipGetFontHeight (fontObject, graphics.NativeObject, out size);
+			Status status = GDIPlus.GdipGetFontHeight (nativeFont, graphics.NativeObject, out size);
 			GDIPlus.CheckStatus (status);
 			return size;
 		}
@@ -699,7 +699,7 @@ namespace System.Drawing
 		public float GetHeight (float dpi)
 		{
 			float size;
-			Status status = GDIPlus.GdipGetFontHeightGivenDPI (fontObject, dpi, out size);
+			Status status = GDIPlus.GdipGetFontHeightGivenDPI (nativeFont, dpi, out size);
 			GDIPlus.CheckStatus (status);
 			return size;
 		}
