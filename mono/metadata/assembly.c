@@ -117,6 +117,7 @@ static const AssemblyVersionMap framework_assemblies [] = {
 	{"Microsoft.Build.Utilities.v3.5", 2, "Microsoft.Build.Utilities.v4.0"},
 	{"Microsoft.CSharp", 0},
 	{"Microsoft.VisualBasic", 1},
+	{"Microsoft.VisualBasic.Compatibility", 1},
 	{"Microsoft.VisualC", 1},
 	FACADE_ASSEMBLY ("Microsoft.Win32.Primitives"),
 	FACADE_ASSEMBLY ("Microsoft.Win32.Registry"),
