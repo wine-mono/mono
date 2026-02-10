@@ -510,37 +510,37 @@ load_metadata_ptrs (MonoImage *image, MonoCLIImageInfo *iinfo)
 	ptr += 2;
 
 	for (i = 0; i < streams; i++){
-		if (strncmp (ptr + 8, "#~", 3) == 0){
+		if (strncmp (ptr + 8, "#~", 3) == 0 && !image->heap_tables.data){
 			image->heap_tables.data = image->raw_metadata + read32 (ptr);
 			image->heap_tables.size = read32 (ptr + 4);
 			ptr += 8 + 3;
-		} else if (strncmp (ptr + 8, "#Strings", 9) == 0){
+		} else if (strncmp (ptr + 8, "#Strings", 9) == 0 && !image->heap_strings.data){
 			image->heap_strings.data = image->raw_metadata + read32 (ptr);
 			image->heap_strings.size = read32 (ptr + 4);
 			ptr += 8 + 9;
-		} else if (strncmp (ptr + 8, "#US", 4) == 0){
+		} else if (strncmp (ptr + 8, "#US", 4) == 0 && !image->heap_us.data){
 			image->heap_us.data = image->raw_metadata + read32 (ptr);
 			image->heap_us.size = read32 (ptr + 4);
 			ptr += 8 + 4;
-		} else if (strncmp (ptr + 8, "#Blob", 6) == 0){
+		} else if (strncmp (ptr + 8, "#Blob", 6) == 0 && !image->heap_blob.data){
 			image->heap_blob.data = image->raw_metadata + read32 (ptr);
 			image->heap_blob.size = read32 (ptr + 4);
 			ptr += 8 + 6;
-		} else if (strncmp (ptr + 8, "#GUID", 6) == 0){
+		} else if (strncmp (ptr + 8, "#GUID", 6) == 0 && !image->heap_guid.data){
 			image->heap_guid.data = image->raw_metadata + read32 (ptr);
 			image->heap_guid.size = read32 (ptr + 4);
 			ptr += 8 + 6;
-		} else if (strncmp (ptr + 8, "#-", 3) == 0) {
+		} else if (strncmp (ptr + 8, "#-", 3) == 0 && !image->heap_tables.data) {
 			image->heap_tables.data = image->raw_metadata + read32 (ptr);
 			image->heap_tables.size = read32 (ptr + 4);
 			ptr += 8 + 3;
 			image->uncompressed_metadata = TRUE;
 			mono_trace (G_LOG_LEVEL_DEBUG, MONO_TRACE_ASSEMBLY, "Assembly '%s' has the non-standard metadata heap #-.\nRecompile it correctly (without the /incremental switch or in Release mode).", image->name);
-		} else if (strncmp (ptr + 8, "#Pdb", 5) == 0) {
+		} else if (strncmp (ptr + 8, "#Pdb", 5) == 0 && !image->heap_pdb.data) {
 			image->heap_pdb.data = image->raw_metadata + read32 (ptr);
 			image->heap_pdb.size = read32 (ptr + 4);
 			ptr += 8 + 5;
-		} else if (strncmp (ptr + 8, "#JTD", 5) == 0) {
+		} else if (strncmp (ptr + 8, "#JTD", 5) == 0 && !image->minimal_delta) {
 			// See https://github.com/dotnet/runtime/blob/110282c71b3f7e1f91ea339953f4a0eba362a62c/src/libraries/System.Reflection.Metadata/src/System/Reflection/Metadata/MetadataReader.cs#L165-L175
 			// skip read32(ptr) and read32(ptr + 4)
 			// ignore the content of this stream
@@ -644,6 +644,11 @@ load_tables (MonoImage *image)
 
 	/* They must be the same */
 	g_assert ((const void *) image->tables_base == (const void *) rows);
+
+	if (heap_sizes & 0x40) {
+		/* undocumented flag indicating an extra 4 bytes in header */
+		image->tables_base += 4;
+	}
 
 	if (image->heap_pdb.size) {
 		/*
