@@ -64,6 +64,10 @@ namespace MonoTests.Microsoft_VisualBasic
 				DateAndTime.DateString = date;
 				DateAndTime.TimeString = time;
 			}
+			catch (NotImplementedException)
+			{
+				// Not implemented for Windows in Mono
+			}
 			catch (UnauthorizedAccessException)
 			{
 				// Need admin privs to set time.
@@ -728,6 +732,7 @@ namespace MonoTests.Microsoft_VisualBasic
 
         //DateAndTime.DateString property is read-only under TARGET_JVM
         [Category("TargetJvmNotWorking")]
+		[Category("NotOnWindows")] // not yet implemented in Win32Driver
 		[Test]
 		public void DateString_1()
 		{
@@ -1076,6 +1081,7 @@ namespace MonoTests.Microsoft_VisualBasic
 		
         //DateAndTime.TimeOfDay property is read-only under TARGET_JVM
         [Category("TargetJvmNotWorking")]
+		[Category("NotOnWindows")] // not yet implemented in Win32Driver
 		[Test]
 		public void TimeOfDay_1()
 		{
@@ -1170,6 +1176,7 @@ namespace MonoTests.Microsoft_VisualBasic
 
         //DateAndTime.TimeString property is read-only under TARGET_JVM
         [Category("TargetJvmNotWorking")]
+		[Category("NotOnWindows")] // not yet implemented in Win32Driver
 		[Test]
 		public void TimeString_1()
 		{
