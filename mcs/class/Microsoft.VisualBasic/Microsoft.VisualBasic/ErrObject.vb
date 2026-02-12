@@ -29,7 +29,7 @@
 ' WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 '
 Imports System
-'Imports System.Runtime.InteropServices
+Imports System.Runtime.InteropServices
 'Imports Microsoft.VisualBasic.CompilerServices
 'Imports System.Diagnostics
 
@@ -159,8 +159,7 @@ Namespace Microsoft.VisualBasic
         End Property
         Public ReadOnly Property LastDllError() As System.Int32
             Get
-                'TODO: go native and get the last dll error
-                Throw New NotImplementedException
+                Return Marshal.GetLastWin32Error()
             End Get
         End Property
         Public Property Number() As System.Int32
