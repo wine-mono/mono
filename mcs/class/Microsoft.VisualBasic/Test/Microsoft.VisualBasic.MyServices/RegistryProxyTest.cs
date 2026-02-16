@@ -56,7 +56,7 @@ namespace MonoTests.Microsoft_VisualBasic.MyServices
 			try {
 				Microsoft.VisualBasic.MyServices.RegistryProxy registry = getProxy ();
 				string name = ".someweirdthing";
-				string keyname = "HKEY_CLASSES_ROOT\\" + name;
+				string keyname = "HKEY_CURRENT_USER\\" + name;
 				string valuename = ".name";
 				registry.SetValue (keyname, valuename, "a");
 				object value = registry.GetValue (keyname, valuename, "b");
@@ -65,7 +65,7 @@ namespace MonoTests.Microsoft_VisualBasic.MyServices
 				value = registry.GetValue (keyname, valuename, "c");
 				Assert.AreEqual ("c", value, "#02");
 				
-				registry.ClassesRoot.DeleteSubKey(name);
+				registry.CurrentUser.DeleteSubKey(name);
 			} catch (System.Security.SecurityException ex) {
 				Assert.Ignore (ex.Message);
 			}
@@ -78,7 +78,7 @@ namespace MonoTests.Microsoft_VisualBasic.MyServices
 			try {	        
 				Microsoft.VisualBasic.MyServices.RegistryProxy registry = getProxy ();
 				string name = ".someweirdthing";
-				string keyname = "HKEY_CLASSES_ROOT\\" + name;
+				string keyname = "HKEY_CURRENT_USER\\" + name;
 				string valuename = ".name";
 				registry.SetValue (keyname, valuename, 1);
 				object value = registry.GetValue (keyname, valuename, 2);
@@ -87,7 +87,7 @@ namespace MonoTests.Microsoft_VisualBasic.MyServices
 				value = registry.GetValue (keyname, valuename, 3);
 				Assert.AreEqual (3, value, "#02");
 				
-				registry.ClassesRoot.DeleteSubKey(name);
+				registry.CurrentUser.DeleteSubKey(name);
 			} catch (System.Security.SecurityException ex) {
 				Assert.Ignore (ex.Message);
 			}
