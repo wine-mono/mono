@@ -9555,17 +9555,7 @@ create_file_to_check_memory_address (void)
 static gboolean 
 valid_memory_address (gpointer addr, gint size)
 {
-#ifndef _MSC_VER
-	gboolean ret = TRUE;
-	create_file_to_check_memory_address ();
-	if(file_check_valid_memory < 0) {
-		return TRUE;
-	}
-	write (file_check_valid_memory,  (gpointer)addr, 1);
-	if (errno == EFAULT) {
-		ret = FALSE;
-	}
-#else
+#ifdef _MSC_VER
 	int i = 0;
 	gboolean ret = FALSE;
 	__try {
@@ -9574,6 +9564,18 @@ valid_memory_address (gpointer addr, gint size)
 		ret = TRUE;
 	} __except(1) {
 		return ret;
+	}
+#elif defined(HOST_WIN32)
+	gboolean ret = !IsBadReadPtr(addr, size);
+#else
+	gboolean ret = TRUE;
+	create_file_to_check_memory_address ();
+	if(file_check_valid_memory < 0) {
+		return TRUE;
+	}
+	write (file_check_valid_memory,  (gpointer)addr, 1);
+	if (errno == EFAULT) {
+		ret = FALSE;
 	}
 #endif	
 	return ret;
