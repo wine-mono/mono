@@ -151,6 +151,11 @@ namespace MonoTests.System.IO.MemoryMappedFiles {
 		}
 
 		[Test]
+		public void CreateNew_Null () {
+			MemoryMappedFile.CreateNew (null, 8192);
+		}
+
+		[Test]
 		public void CreateViewStream_Offsets () {
 			var file = MemoryMappedFile.CreateFromFile (fname, FileMode.Open);
 
