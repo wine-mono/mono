@@ -308,7 +308,7 @@ done:
 static void*
 open_memory_map (const char *c_mapName, int mode, gint64 *capacity, int access, int options, int *ioerror)
 {
-	MmapHandle *handle;
+	MmapHandle *handle = NULL;
 	if (*capacity <= 0 && mode != FILE_MODE_OPEN) {
 		*ioerror = CAPACITY_MUST_BE_POSITIVE;
 		return NULL;
@@ -326,7 +326,8 @@ open_memory_map (const char *c_mapName, int mode, gint64 *capacity, int access, 
 	}
 
 	named_regions_lock ();
-	handle = (MmapHandle*)g_hash_table_lookup (named_regions, c_mapName);
+	if (c_mapName)
+		handle = (MmapHandle*)g_hash_table_lookup (named_regions, c_mapName);
 	if (handle) {
 		if (mode == FILE_MODE_CREATE_NEW) {
 			*ioerror = FILE_ALREADY_EXISTS;
@@ -378,8 +379,8 @@ open_memory_map (const char *c_mapName, int mode, gint64 *capacity, int access, 
 		handle->fd = fd;
 		handle->name = g_strdup (c_mapName);
 
-		g_hash_table_insert (named_regions, handle->name, handle);
-
+		if (handle->name)
+			g_hash_table_insert (named_regions, handle->name, handle);
 	}
 
 done:
@@ -394,7 +395,12 @@ void *
 mono_mmap_open_file (const gunichar2 *path, gint path_length, int mode, const gunichar2 *mapName, gint mapName_length, gint64 *capacity, int access, int options, int *ioerror, MonoError *error)
 {
 	MmapHandle *handle = NULL;
-	g_assert (path || mapName);
+
+	if (!path && !mapName)
+	{
+		handle = (MmapHandle*)open_memory_map (NULL, mode, capacity, access, options, ioerror);
+		return handle;
+	}
 
 	if (!mapName) {
 		char * c_path = mono_utf16_to_utf8 (path, path_length, error);

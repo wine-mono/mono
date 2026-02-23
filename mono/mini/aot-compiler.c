@@ -12513,7 +12513,7 @@ compile_asm (MonoAotCompile *acfg)
 	else if (acfg->aot_opts.llvm_only)
 		g_string_append_printf (str, "%s", acfg->aot_opts.clangxx);
 	else
-		g_string_append_printf (str, "\"%s%s\"", tool_prefix, ld_binary_name);
+		g_string_append_printf (str, "%s %s", ld_binary_name, LD_OPTIONS);
 	g_string_append_printf (str, " -shared");
 #endif
 	g_string_append_printf (str, " -o %s %s %s %s",

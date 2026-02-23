@@ -22,6 +22,7 @@ glib_libs = $(top_builddir)/mono/eglib/libeglib.la
 # portable to any platform having a C compiler.
 MPH_C_SOURCE =					\
 	errno.c					\
+	fcntl.c					\
 	map.c					\
 	map.h					\
 	map-impl.h				\
@@ -29,13 +30,13 @@ MPH_C_SOURCE =					\
 	signal.c				\
 	stdio.c					\
 	string.c					\
-	stdlib.c
+	stdlib.c				\
+	sys-stat.c
 
 # Source code which helps implement POSIX and other related Unix standards,
 # and *may* be portable between Unix platforms.
 MPH_UNIX_SOURCE =				\
 	dirent.c				\
-	fcntl.c					\
 	fstab.c					\
 	grp.c					\
 	macros.c				\
@@ -48,7 +49,6 @@ MPH_UNIX_SOURCE =				\
 	sys-mman.c				\
 	sys-sendfile.c				\
 	sys-socket.c				\
-	sys-stat.c				\
 	sys-statvfs.c				\
 	sys-time.c				\
 	sys-uio.c				\
