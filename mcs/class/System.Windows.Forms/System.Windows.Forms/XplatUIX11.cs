@@ -1590,10 +1590,14 @@ namespace System.Windows.Forms {
 		}
 
 		void UpdateMessageQueue (XEventQueue queue) {
-			UpdateMessageQueue(queue, true);
+			UpdateMessageQueue(queue, true, true);
 		}
 
 		void UpdateMessageQueue (XEventQueue queue, bool allowIdle) {
+			UpdateMessageQueue(queue, allowIdle, true);
+		}
+
+		void UpdateMessageQueue (XEventQueue queue, bool allowIdle, bool allowBlocking) {
 			long	now;
 			int		pending;
 			Hwnd		hwnd;
@@ -1624,7 +1628,7 @@ namespace System.Windows.Forms {
 					timeout = NextTimeout (queue.timer_list, now);
 				}
 
-				if (timeout > 0) {
+				if (timeout > 0 && allowBlocking) {
 					int length = pollfds.Length - 1;
 					lock (wake_waiting_lock) {
 						if (wake_waiting == false) {
@@ -3704,8 +3708,13 @@ namespace System.Windows.Forms {
 			return Point.Empty;
 		}
 
-		[MonoTODO("Implement filtering")]
 		internal override bool GetMessage(Object queue_id, ref MSG msg, IntPtr handle, int wFilterMin, int wFilterMax)
+		{
+			return GetMessage(queue_id, ref msg, handle, wFilterMin, wFilterMax, true);
+		}
+
+		[MonoTODO("Implement filtering")]
+		internal bool GetMessage(Object queue_id, ref MSG msg, IntPtr handle, int wFilterMin, int wFilterMax, bool allowBlocking)
 		{
 			XEvent	xevent;
 			bool	client;
@@ -3716,7 +3725,7 @@ namespace System.Windows.Forms {
 			if (((XEventQueue)queue_id).Count > 0) {
 				xevent = (XEvent) ((XEventQueue)queue_id).Dequeue ();
 			} else {
-				UpdateMessageQueue ((XEventQueue)queue_id);
+				UpdateMessageQueue ((XEventQueue)queue_id, allowBlocking, allowBlocking);
 
 				if (((XEventQueue)queue_id).Count > 0) {
 					xevent = (XEvent) ((XEventQueue)queue_id).Dequeue ();
@@ -4869,32 +4878,17 @@ namespace System.Windows.Forms {
 		internal override bool PeekMessage(Object queue_id, ref MSG msg, IntPtr hWnd, int wFilterMin, int wFilterMax, uint flags)
 		{
 			XEventQueue queue = (XEventQueue) queue_id;
-			bool	pending;
 
 			if ((flags & (uint)PeekMessageFlags.PM_REMOVE) == 0) {
 				throw new NotImplementedException("PeekMessage PM_NOREMOVE is not implemented yet");	// FIXME - Implement PM_NOREMOVE flag
 			}
 
-			pending = false;
-			if (queue.Count > 0 || queue.GetQuitMessage(false, out int _exitcode)) {
-				pending = true;
-			} else {
-				// Only call UpdateMessageQueue if real events are pending 
-				// otherwise we go to sleep on the socket
-				if (XPending(DisplayHandle) != 0) {
-					UpdateMessageQueue((XEventQueue)queue_id);
-					pending = true;
-				} else if (((XEventQueue)queue_id).Paint.Count > 0) {
-					pending = true;
-				}
-			}
+			if (!(queue.Count > 0 || queue.GetQuitMessage(false, out int _exitcode)))
+				UpdateMessageQueue((XEventQueue)queue_id, false, false);
 
 			CheckTimers(queue.timer_list, Timer.StopWatchNowMilliseconds);
 
-			if (!pending) {
-				return false;
-			}
-			return GetMessage(queue_id, ref msg, hWnd, wFilterMin, wFilterMax);
+			return GetMessage(queue_id, ref msg, hWnd, wFilterMin, wFilterMax, false) && msg.message != Msg.WM_ENTERIDLE;
 		}
 
 		internal override bool PostMessage (IntPtr handle, Msg message, IntPtr wparam, IntPtr lparam)
