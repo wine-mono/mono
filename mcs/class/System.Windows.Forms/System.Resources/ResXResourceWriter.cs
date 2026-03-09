@@ -357,7 +357,7 @@ namespace System.Resources
 			if (string.IsNullOrEmpty (baseDirectoryPath))
 				return absPath;
 
-			baseDirectoryPath = baseDirectoryPath.TrimEnd (Path.DirectorySeparatorChar);
+			baseDirectoryPath = baseDirectoryPath.TrimEnd (new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
 
 			fixed (char* bPtr = baseDirectoryPath, aPtr = absPath) {
 				var bEnd = bPtr + baseDirectoryPath.Length;
