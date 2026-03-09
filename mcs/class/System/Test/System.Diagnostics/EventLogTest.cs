@@ -82,9 +82,11 @@ namespace MonoTests.System.Diagnostics
 			if (Win32EventLogEnabled)
 			{
 				// EventLog requires admin permissions on Windows
-				WindowsIdentity identity = WindowsIdentity.GetCurrent ();
-				WindowsPrincipal principal = new WindowsPrincipal (identity);
-				if (!principal.IsInRole (WindowsBuiltInRole.Administrator)) {
+				try
+				{
+					EventLog.SourceExists ("monotempsource", ".");
+				}
+				catch (SecurityException e) {
 					Assert.Ignore ("Not running as Administrator");
 				}
 

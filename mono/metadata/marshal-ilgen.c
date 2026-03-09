@@ -6591,6 +6591,8 @@ emit_managed_wrapper_ilgen (MonoMethodBuilder *mb, MonoMethodSignature *invoke_s
 			case MONO_TYPE_VALUETYPE:
 				mono_emit_marshal (m, i, invoke_sig->params [i], mspecs [i + 1], tmp_locals [i], NULL, MARSHAL_ACTION_MANAGED_CONV_OUT);
 				break;
+			case MONO_TYPE_BOOLEAN:
+			case MONO_TYPE_PTR:
 			case MONO_TYPE_I:
 				break;
 			default:
