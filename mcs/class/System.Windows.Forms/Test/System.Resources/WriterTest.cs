@@ -218,6 +218,7 @@ namespace MonoTests.System.Resources
 		}
 
 		[Test]
+		[NUnit.Framework.Category ("NotDotNet")] // fails on .NET Framework
 		public void BasePath_ChangesAbsoluteFileRef_Object ()
 		{
 			var fileref = new ResXFileRef (FixSeparator (@"/dir/dir/filename.ext"), "System.String");
