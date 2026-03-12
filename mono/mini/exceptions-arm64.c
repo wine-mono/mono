@@ -722,7 +722,7 @@ mono_arch_handle_exception (void *ctx, gpointer obj)
 {
 #if defined(MONO_CROSS_COMPILE)
 	g_assert_not_reached ();
-#else
+#elif defined(MONO_ARCH_USE_SIGACTION)
 	MonoContext mctx;
 	MonoJitTlsData *jit_tls;
 	void *sigctx = ctx;
@@ -746,6 +746,14 @@ mono_arch_handle_exception (void *ctx, gpointer obj)
 	mctx.regs [ARMREG_SP] = sp;
 
 	mono_monoctx_to_sigctx (&mctx, sigctx);
+#else
+	MonoContext mctx;
+
+	mono_sigctx_to_monoctx (ctx, &mctx);
+
+	mono_handle_exception (&mctx, obj);
+
+	mono_monoctx_to_sigctx (&mctx, ctx);
 #endif
 
 	return TRUE;
