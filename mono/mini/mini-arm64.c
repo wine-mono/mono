@@ -3313,14 +3313,14 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			arm_movspx (code, ARMREG_SP, ARMREG_IP1);
 
 			/* Init */
-			/* ip1 = pointer, ip0 = end */
+			/* ip1 = pointer, ip0 = end of not yet initialized portion */
 			arm_addx (code, ARMREG_IP0, ARMREG_IP1, ARMREG_IP0);
 			buf [0] = code;
 			arm_cmpx (code, ARMREG_IP1, ARMREG_IP0);
 			buf [1] = code;
 			arm_bcc (code, ARMCOND_EQ, 0);
-			arm_stpx (code, ARMREG_RZR, ARMREG_RZR, ARMREG_IP1, 0);
-			arm_addx_imm (code, ARMREG_IP1, ARMREG_IP1, 16);
+			arm_subx_imm (code, ARMREG_IP0, ARMREG_IP0, 16);
+			arm_stpx (code, ARMREG_RZR, ARMREG_RZR, ARMREG_IP0, 0);
 			arm_b (code, buf [0]);
 			arm_patch_rel (buf [1], code, MONO_R_ARM64_BCC);
 
@@ -3338,10 +3338,10 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 
 			/* Init */
 			g_assert (MONO_ARCH_FRAME_ALIGNMENT == 16);
-			offset = 0;
-			while (offset < imm) {
+			offset = imm;
+			while (offset) {
+				offset -= 16;
 				arm_stpx (code, ARMREG_RZR, ARMREG_RZR, ARMREG_SP, offset);
-				offset += 16;
 			}
 			arm_movspx (code, dreg, ARMREG_SP);
 			if (cfg->param_area)
