@@ -61,6 +61,8 @@ static __attribute__ ((__warn_unused_result__)) guint8* emit_load_regset (guint8
 static guint8* emit_brx (guint8 *code, int reg);
 static guint8* emit_blrx (guint8 *code, int reg);
 
+static guint8* emit_get_last_error (guint8* code, int dreg);
+
 const char*
 mono_arch_regname (int reg)
 {
@@ -4718,6 +4720,9 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 				if ((MONO_ARCH_CALLEE_SAVED_REGS & (1 << i)) || i == ARMREG_SP || i == ARMREG_FP)
 					arm_strx (code, i, ins->sreg1, MONO_STRUCT_OFFSET (MonoContext, regs) + i * sizeof (target_mgreg_t));
 			break;
+		case OP_GET_LAST_ERROR:
+			code = emit_get_last_error (code, ins->dreg);
+			break;
 		default:
 			g_warning ("unknown opcode %s in %s()\n", mono_inst_name (ins->opcode), __FUNCTION__);
 			g_assert_not_reached ();
@@ -5676,3 +5681,24 @@ mono_arm_emit_brx (guint8 *code, int reg)
 {
 	return emit_brx (code, reg);
 }
+
+#ifdef TARGET_WIN32
+
+#define TEB_LAST_ERROR_OFFSET 0x68
+
+static guint8*
+emit_get_last_error (guint8* code, int dreg)
+{
+	code = emit_ldrw (code, dreg, 18, TEB_LAST_ERROR_OFFSET);
+	return code;
+}
+
+#else
+
+static guint8*
+emit_get_last_error (guint8* code, int dreg)
+{
+	g_assert_not_reached ();
+}
+
+#endif
