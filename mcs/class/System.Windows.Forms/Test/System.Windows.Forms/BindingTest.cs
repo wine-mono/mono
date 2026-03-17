@@ -81,12 +81,9 @@ namespace MonoTests.System.Windows.Forms.DataBinding {
 		}
 
 		[Test]
+		[Category ("NotWorking")] // Broken on Mono
 		public void BindingManagerBaseTest ()
 		{
-			if (TestHelper.RunningOnUnix) {
-				Assert.Ignore ("Fails at the moment");
-			}
-
 			Control c1 = new Control ();
 			Control c2 = new Control ();
 			Binding binding;

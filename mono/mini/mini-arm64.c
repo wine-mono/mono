@@ -61,6 +61,8 @@ static __attribute__ ((__warn_unused_result__)) guint8* emit_load_regset (guint8
 static guint8* emit_brx (guint8 *code, int reg);
 static guint8* emit_blrx (guint8 *code, int reg);
 
+static guint8* emit_get_last_error (guint8* code, int dreg);
+
 const char*
 mono_arch_regname (int reg)
 {
@@ -3311,14 +3313,14 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 			arm_movspx (code, ARMREG_SP, ARMREG_IP1);
 
 			/* Init */
-			/* ip1 = pointer, ip0 = end */
+			/* ip1 = pointer, ip0 = end of not yet initialized portion */
 			arm_addx (code, ARMREG_IP0, ARMREG_IP1, ARMREG_IP0);
 			buf [0] = code;
 			arm_cmpx (code, ARMREG_IP1, ARMREG_IP0);
 			buf [1] = code;
 			arm_bcc (code, ARMCOND_EQ, 0);
-			arm_stpx (code, ARMREG_RZR, ARMREG_RZR, ARMREG_IP1, 0);
-			arm_addx_imm (code, ARMREG_IP1, ARMREG_IP1, 16);
+			arm_subx_imm (code, ARMREG_IP0, ARMREG_IP0, 16);
+			arm_stpx (code, ARMREG_RZR, ARMREG_RZR, ARMREG_IP0, 0);
 			arm_b (code, buf [0]);
 			arm_patch_rel (buf [1], code, MONO_R_ARM64_BCC);
 
@@ -3336,10 +3338,10 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 
 			/* Init */
 			g_assert (MONO_ARCH_FRAME_ALIGNMENT == 16);
-			offset = 0;
-			while (offset < imm) {
+			offset = imm;
+			while (offset) {
+				offset -= 16;
 				arm_stpx (code, ARMREG_RZR, ARMREG_RZR, ARMREG_SP, offset);
-				offset += 16;
 			}
 			arm_movspx (code, dreg, ARMREG_SP);
 			if (cfg->param_area)
@@ -4718,6 +4720,9 @@ mono_arch_output_basic_block (MonoCompile *cfg, MonoBasicBlock *bb)
 				if ((MONO_ARCH_CALLEE_SAVED_REGS & (1 << i)) || i == ARMREG_SP || i == ARMREG_FP)
 					arm_strx (code, i, ins->sreg1, MONO_STRUCT_OFFSET (MonoContext, regs) + i * sizeof (target_mgreg_t));
 			break;
+		case OP_GET_LAST_ERROR:
+			code = emit_get_last_error (code, ins->dreg);
+			break;
 		default:
 			g_warning ("unknown opcode %s in %s()\n", mono_inst_name (ins->opcode), __FUNCTION__);
 			g_assert_not_reached ();
@@ -5676,3 +5681,24 @@ mono_arm_emit_brx (guint8 *code, int reg)
 {
 	return emit_brx (code, reg);
 }
+
+#ifdef TARGET_WIN32
+
+#define TEB_LAST_ERROR_OFFSET 0x68
+
+static guint8*
+emit_get_last_error (guint8* code, int dreg)
+{
+	code = emit_ldrw (code, dreg, 18, TEB_LAST_ERROR_OFFSET);
+	return code;
+}
+
+#else
+
+static guint8*
+emit_get_last_error (guint8* code, int dreg)
+{
+	g_assert_not_reached ();
+}
+
+#endif
