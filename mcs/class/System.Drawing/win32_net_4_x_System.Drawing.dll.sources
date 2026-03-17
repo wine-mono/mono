@@ -2,3 +2,8 @@
 
 ../../../external/corefx/src/System.Drawing.Common/src/System/Drawing/BufferedGraphics.Windows.cs
 ../../../external/corefx/src/System.Drawing.Common/src/System/Drawing/BufferedGraphicsContext.Windows.cs
+
+../../../external/corefx/src/Common/src/Interop/Windows/Interop.Libraries.cs
+../../../external/corefx/src/Common/src/Interop/Windows/user32/Interop.Win32SystemColors.cs
+../../../external/corefx/src/Common/src/Interop/Windows/user32/Interop.GetSysColor.cs
+
