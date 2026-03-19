@@ -31,6 +31,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.ComponentModel;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -50,7 +51,7 @@ namespace System.Windows.Forms {
 		#region Local Variables
 		private static XplatUIWin32	instance;
 		private static int		ref_count;
-		private static IntPtr		FosterParentLast;
+		private static ConcurrentDictionary<int,IntPtr> thread_foster_parent = new ConcurrentDictionary<int,IntPtr> ();
 
 		internal static MouseButtons	mouse_state;
 		internal static Point		mouse_position;
@@ -852,8 +853,6 @@ namespace System.Windows.Forms {
 
 			wnd_proc = InternalWndProc;
 
-			FosterParentLast = IntPtr.Zero;
-
 			scroll_height = Win32GetSystemMetrics(SystemMetrics.SM_CYHSCROLL);
 			scroll_width = Win32GetSystemMetrics(SystemMetrics.SM_CXVSCROLL);
 
@@ -866,15 +865,32 @@ namespace System.Windows.Forms {
 
 		private IntPtr GetFosterParent()
 		{
-			if (!IsWindow(FosterParentLast))
-			{
-				FosterParentLast=Win32CreateWindow(WindowExStyles.WS_EX_TOOLWINDOW, "static", "Foster Parent Window", WindowStyles.WS_OVERLAPPEDWINDOW, 0, 0, 0, 0, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+			return GetFosterParent (Win32GetCurrentThreadId ());
+		}
 
-				if (FosterParentLast==IntPtr.Zero) {
-					Win32MessageBox(IntPtr.Zero, "Could not create foster window, win32 error " + Win32GetLastError().ToString(), "Oops", 0);
-				}
+		private IntPtr GetFosterParent(IntPtr hwnd)
+		{
+			return GetFosterParent (Win32GetWindowThreadProcessId (hwnd, IntPtr.Zero));
+		}
+
+		private IntPtr GetFosterParent(int tid)
+		{
+			if (thread_foster_parent.TryGetValue (tid, out IntPtr result))
+			{
+				if (IsWindow (result))
+					return result;
 			}
-			return FosterParentLast;
+			if (tid != Win32GetCurrentThreadId ())
+			{
+				throw new NotSupportedException ("Cannot create foster parent window for another thread");
+			}
+			IntPtr foster_parent = Win32CreateWindow(WindowExStyles.WS_EX_TOOLWINDOW, "static", "Foster Parent Window", WindowStyles.WS_OVERLAPPEDWINDOW, 0, 0, 0, 0, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+
+			if (foster_parent==IntPtr.Zero) {
+				Win32MessageBox(IntPtr.Zero, "Could not create foster window, win32 error " + Win32GetLastError().ToString(), "Oops", 0);
+			}
+			thread_foster_parent [tid] = foster_parent;
+			return foster_parent;
 		}
 
 		private string RegisterWindowClass (int classStyle)
@@ -1622,18 +1638,19 @@ namespace System.Windows.Forms {
 		internal override IntPtr CreateWindow(CreateParams cp) {
 			IntPtr	WindowHandle;
 			IntPtr	ParentHandle;
+			IntPtr foster_parent = GetFosterParent(); // Make sure this window exists so other threads can send a message to it
 
 			ParentHandle=cp.Parent;
 
 			if ((ParentHandle==IntPtr.Zero) && (cp.Style & (int)(WindowStyles.WS_CHILD))!=0) {
 				// We need to use our foster parent window until this poor child gets it's parent assigned
-				ParentHandle = GetFosterParent();
+				ParentHandle = foster_parent;
 			}
 
 			if ( ((cp.Style & (int)(WindowStyles.WS_CHILD | WindowStyles.WS_POPUP))==0) && ((cp.ExStyle & (int)WindowExStyles.WS_EX_APPWINDOW) == 0)) {
 				// If we want to be hidden from the taskbar we need to be 'owned' by 
 				// something not on the taskbar. FosterParent is just that
-				ParentHandle = GetFosterParent();
+				ParentHandle = foster_parent;
 			}
 
 			Point location;
@@ -2569,7 +2586,7 @@ namespace System.Windows.Forms {
 
 		internal override void SendAsyncMethod (AsyncMethodData method)
 		{
-			Win32PostMessage(GetFosterParent(), Msg.WM_ASYNC_MESSAGE, IntPtr.Zero, (IntPtr)GCHandle.Alloc (method));
+			Win32PostMessage(GetFosterParent(method.Handle), Msg.WM_ASYNC_MESSAGE, IntPtr.Zero, (IntPtr)GCHandle.Alloc (method));
 		}
 
 		internal override void SetTimer (Timer timer)
@@ -3460,6 +3477,9 @@ namespace System.Windows.Forms {
 		[DllImport ("user32.dll", EntryPoint="GetClientRect", CallingConvention=CallingConvention.StdCall)]
 		private extern static IntPtr Win32GetClientRect(IntPtr hWnd, out RECT rect);
 
+		[DllImport ("user32.dll", EntryPoint="GetWindowThreadProcessId", CallingConvention=CallingConvention.StdCall)]
+		private extern static int Win32GetWindowThreadProcessId(IntPtr hWnd, IntPtr lpdwProcessId);
+
 		[DllImport ("user32.dll", EntryPoint="ScreenToClient", CallingConvention=CallingConvention.StdCall)]
 		private extern static bool Win32ScreenToClient(IntPtr hWnd, ref POINT pt);
 
@@ -3653,6 +3673,9 @@ namespace System.Windows.Forms {
 
 		[DllImport ("user32.dll", EntryPoint="SetClipboardData", CallingConvention=CallingConvention.StdCall)]
 		private extern static IntPtr Win32SetClipboardData(uint format, IntPtr handle);
+
+		[DllImport ("kernel32.dll", EntryPoint="GetCurrentThreadId", CallingConvention=CallingConvention.StdCall)]
+		private extern static int Win32GetCurrentThreadId();
 
 		[DllImport ("kernel32.dll", EntryPoint="GlobalAlloc", CallingConvention=CallingConvention.StdCall)]
 		internal extern static IntPtr Win32GlobalAlloc(GAllocFlags Flags, int dwBytes);
