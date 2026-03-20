@@ -178,12 +178,21 @@ case "$host" in
 			RID="win-x64"
 			COREARCH="x64"
 			;;
+		aarch64-*-*)
+			support_boehm=no
+			with_gc=sgen
+			RID="win-arm64"
+			COREARCH="arm64"
+			;;
 		esac
 
 		# Windows 7 or later is required
 		WIN32_CPPFLAGS="-DWINVER=0x0601 -D_WIN32_WINNT=0x0601 -D_WIN32_IE=0x0501 -D_UNICODE -DUNICODE -DWIN32_THREADS -DFD_SETSIZE=1024"
 		CPPFLAGS="$CPPFLAGS $WIN32_CPPFLAGS"
 		WIN32_LDFLAGS="-lbcrypt -lmswsock -lws2_32 -lole32 -loleaut32 -lpsapi -lversion -ladvapi32 -lwinmm -lkernel32 -liphlpapi -static-libgcc"
+		if test x"$COREARCH" = xarm64; then
+			WIN32_LDFLAGS="$WIN32_LDFLAGS -lntdll"
+		fi;
 		LDFLAGS="$LDFLAGS $WIN32_LDFLAGS"
 		libmono_cflags="-mms-bitfields -mwindows"
 		libmono_ldflags="-mms-bitfields -mwindows"

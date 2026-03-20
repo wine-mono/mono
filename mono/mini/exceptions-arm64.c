@@ -44,7 +44,9 @@ static LONG CALLBACK seh_unhandled_exception_filter(EXCEPTION_POINTERS* ep)
 #endif
 
 	if (mono_dump_start ())
+	{
 		mono_handle_native_crash (mono_get_signame (SIGSEGV), NULL, NULL);
+	}
 
 	return EXCEPTION_CONTINUE_SEARCH;
 }
@@ -541,6 +543,685 @@ mono_arch_exceptions_init (void)
 		g_slist_free (tramps);
 	}
 }
+
+// Implies defined(TARGET_WIN32)
+#ifdef MONO_ARCH_HAVE_UNWIND_TABLE
+
+// Dynamic function table used when registering unwind info for OS unwind support.
+static GList *g_dynamic_function_table_begin;
+static GList *g_dynamic_function_table_end;
+
+// SRW lock (lightweight read/writer lock) protecting dynamic function table.
+static SRWLOCK g_dynamic_function_table_lock = SRWLOCK_INIT;
+
+static GList *
+fast_find_range_in_table_no_lock_ex (gsize begin_range, gsize end_range, gboolean *continue_search)
+{
+	GList *found_entry = NULL;
+
+	// Fast path, look at boundaries.
+	if (g_dynamic_function_table_begin != NULL) {
+		DynamicFunctionTableEntry *first_entry = (DynamicFunctionTableEntry*)g_dynamic_function_table_begin->data;
+		DynamicFunctionTableEntry *last_entry = (g_dynamic_function_table_end != NULL ) ? (DynamicFunctionTableEntry*)g_dynamic_function_table_end->data : first_entry;
+
+		// Sorted in descending order based on begin_range, check first item, that is the entry with highest range.
+		if (first_entry != NULL && first_entry->begin_range <= begin_range && first_entry->end_range >= end_range) {
+				// Entry belongs to first entry in list.
+				found_entry = g_dynamic_function_table_begin;
+				*continue_search = FALSE;
+		} else {
+			if (first_entry != NULL && first_entry->begin_range >= begin_range) {
+				if (last_entry != NULL && last_entry->begin_range <= begin_range) {
+					// Entry has a range that could exist in table, continue search.
+					*continue_search = TRUE;
+				}
+			}
+		}
+	}
+
+	return found_entry;
+}
+
+static GList *
+find_range_in_table_no_lock_ex (const gpointer code_block, gsize block_size)
+{
+	GList *found_entry = NULL;
+	gboolean continue_search = FALSE;
+
+	gsize begin_range = (gsize)code_block;
+	gsize end_range = begin_range + block_size;
+
+	// Fast path, check table boundaries.
+	found_entry = fast_find_range_in_table_no_lock_ex (begin_range, end_range, &continue_search);
+	if (found_entry || continue_search == FALSE)
+		return found_entry;
+
+	// Scan table for an entry including range.
+	for (GList *node = g_dynamic_function_table_begin; node; node = node->next) {
+		DynamicFunctionTableEntry *current_entry = (DynamicFunctionTableEntry *)node->data;
+		g_assert_checked (current_entry != NULL);
+
+		// Do we have a match?
+		if (current_entry->begin_range == begin_range && current_entry->end_range == end_range) {
+			found_entry = node;
+			break;
+		}
+	}
+
+	return found_entry;
+}
+
+static DynamicFunctionTableEntry *
+find_range_in_table_no_lock (const gpointer code_block, gsize block_size)
+{
+	GList *found_entry = find_range_in_table_no_lock_ex (code_block, block_size);
+	return (found_entry != NULL) ? (DynamicFunctionTableEntry *)found_entry->data : NULL;
+}
+
+#define ENABLE_CHECKED_BUILD_UNWINDINFO
+#ifdef ENABLE_CHECKED_BUILD_UNWINDINFO
+static void
+validate_table_no_lock (void)
+{
+	// Validation method checking that table is sorted as expected and don't include overlapped regions.
+	// Method will assert on failure to explicitly indicate what check failed.
+	if (g_dynamic_function_table_begin != NULL) {
+		g_assert_checked (g_dynamic_function_table_end != NULL);
+
+		DynamicFunctionTableEntry *previous_entry = NULL;
+		DynamicFunctionTableEntry *current_entry = NULL;
+		for (GList *node = g_dynamic_function_table_begin; node; node = node->next) {
+			current_entry = (DynamicFunctionTableEntry *)node->data;
+
+			g_assert_checked (current_entry != NULL);
+			g_assert_checked (current_entry->end_range > current_entry->begin_range);
+
+			if (previous_entry != NULL) {
+				// List should be sorted in descending order on begin_range.
+				g_assert_checked (previous_entry->begin_range > current_entry->begin_range);
+
+				// Check for overlapped regions.
+				g_assert_checked (previous_entry->begin_range >= current_entry->end_range);
+			}
+
+			previous_entry = current_entry;
+		}
+	}
+}
+
+#else
+
+static void
+validate_table_no_lock (void)
+{
+}
+#endif /* ENABLE_CHECKED_BUILD_UNWINDINFO */
+
+static DynamicFunctionTableEntry *
+mono_arch_unwindinfo_insert_range_in_table (const gpointer code_block, gsize block_size)
+{
+	DynamicFunctionTableEntry *new_entry = NULL;
+
+	gsize begin_range = (gsize)code_block;
+	gsize end_range = begin_range + block_size;
+
+	AcquireSRWLockExclusive (&g_dynamic_function_table_lock);
+	new_entry = find_range_in_table_no_lock (code_block, block_size);
+	if (new_entry == NULL && block_size != 0) {
+		// Allocate new entry.
+		new_entry = g_new0 (DynamicFunctionTableEntry, 1);
+		if (new_entry != NULL) {
+
+			// Pre-allocate RUNTIME_FUNCTION array, assume average method size of
+			// MONO_UNWIND_INFO_RT_FUNC_SIZE bytes.
+			InitializeSRWLock (&new_entry->lock);
+			new_entry->handle = NULL;
+			new_entry->begin_range = begin_range;
+			new_entry->end_range = end_range;
+			new_entry->rt_funcs_max_count = (block_size / MONO_UNWIND_INFO_RT_FUNC_SIZE) + 1;
+			new_entry->rt_funcs_current_count = 0;
+			new_entry->rt_funcs = g_new0 (RUNTIME_FUNCTION, new_entry->rt_funcs_max_count);
+
+			if (new_entry->rt_funcs != NULL) {
+				// Check insert on boundaries. List is sorted descending on begin_range.
+				if (g_dynamic_function_table_begin == NULL) {
+					g_dynamic_function_table_begin = g_list_append (g_dynamic_function_table_begin, new_entry);
+					g_dynamic_function_table_end = g_dynamic_function_table_begin;
+				} else if (((DynamicFunctionTableEntry *)(g_dynamic_function_table_begin->data))->begin_range < begin_range) {
+					// Insert at the head.
+					g_dynamic_function_table_begin = g_list_prepend (g_dynamic_function_table_begin, new_entry);
+				} else if (((DynamicFunctionTableEntry *)(g_dynamic_function_table_end->data))->begin_range > begin_range) {
+					// Insert at tail.
+					g_list_append (g_dynamic_function_table_end, new_entry);
+					g_dynamic_function_table_end = g_dynamic_function_table_end->next;
+				} else {
+					//Search and insert at correct position.
+					for (GList *node = g_dynamic_function_table_begin; node; node = node->next) {
+						DynamicFunctionTableEntry * current_entry = (DynamicFunctionTableEntry *)node->data;
+						g_assert_checked (current_entry != NULL);
+
+						if (current_entry->begin_range < new_entry->begin_range) {
+							g_dynamic_function_table_begin = g_list_insert_before (g_dynamic_function_table_begin, node, new_entry);
+							break;
+						}
+					}
+				}
+
+				// Allocate new growable handle table for entry.
+				g_assert_checked (new_entry->handle == NULL);
+				DWORD result = RtlAddGrowableFunctionTable (&new_entry->handle,
+									new_entry->rt_funcs, new_entry->rt_funcs_current_count,
+									new_entry->rt_funcs_max_count, new_entry->begin_range, new_entry->end_range);
+				g_assert (!result);
+
+				// Only included in checked builds. Validates the structure of table after insert.
+				validate_table_no_lock ();
+
+			} else {
+				g_free (new_entry);
+				new_entry = NULL;
+			}
+		}
+	}
+	ReleaseSRWLockExclusive (&g_dynamic_function_table_lock);
+
+	return new_entry;
+}
+
+static void
+mono_arch_unwindinfo_create (gpointer* monoui)
+{
+	PUNWIND_INFO newunwindinfo;
+	*monoui = newunwindinfo = g_new0 (UNWIND_INFO, 1);
+}
+
+#define DEBUG_UWOP_ENABLED 0
+#define DEBUG_UWOP if (DEBUG_UWOP_ENABLED) g_print
+
+static void
+push_unwind_op1 (PUNWIND_INFO unwindinfo, guint8 op)
+{
+	unwindinfo->code_count++;
+	g_assert (unwindinfo->code_count <= MONO_MAX_UNWIND_CODES);
+	unwindinfo->unwind_codes[MONO_MAX_UNWIND_CODES - unwindinfo->code_count] = op;
+	unwindinfo->xdata.CodeWords = (unwindinfo->code_count + 3) >> 2;
+	DEBUG_UWOP ("UNWIND OP: %x\n", op);
+}
+
+static void
+push_unwind_op2 (PUNWIND_INFO unwindinfo, guint16 op)
+{
+	unwindinfo->code_count+=2;
+	g_assert (unwindinfo->code_count <= MONO_MAX_UNWIND_CODES);
+	unwindinfo->unwind_codes[MONO_MAX_UNWIND_CODES - unwindinfo->code_count] = op >> 8;
+	unwindinfo->unwind_codes[MONO_MAX_UNWIND_CODES - unwindinfo->code_count + 1] = op;
+	unwindinfo->xdata.CodeWords = (unwindinfo->code_count + 3) >> 2;
+	DEBUG_UWOP ("UNWIND OP: %x\n", op);
+}
+
+static void
+initialize_unwind_info_internal_ex (GSList *unwind_ops, PUNWIND_INFO unwindinfo)
+{
+	if (unwindinfo != NULL)
+		push_unwind_op1 (unwindinfo, UWOP_END);
+
+	if (unwind_ops != NULL && unwindinfo != NULL) {
+		MonoUnwindOp *unwind_op_data;
+		gint32 prev_cfa_ofs = 0;
+		guint32 prev_when = 0;
+		guint16 prev_regp = 0;
+		guint32 prev_regp_when = 0;
+
+		for (GSList *l = unwind_ops; l; l = l->next) {
+			unwind_op_data = (MonoUnwindOp *)l->data;
+
+			if (unwind_op_data->op == DW_CFA_def_cfa) {
+				DEBUG_UWOP ("DW_CFA_def_cfa %s %x %x\n", mono_arch_regname(unwind_op_data->reg), unwind_op_data->val, unwind_op_data->when);
+				g_assert (unwind_op_data->reg == ARMREG_SP);
+				g_assert (unwind_op_data->val == 0);
+				g_assert (unwind_op_data->when == 0);
+				continue;
+			}
+
+			g_assert (unwind_op_data->when >= prev_when + 4);
+
+			while (unwind_op_data->when > prev_when + 4)
+			{
+				push_unwind_op1 (unwindinfo, UWOP_NOP);
+				prev_when += 4;
+			}
+
+			switch (unwind_op_data->op) {
+				case DW_CFA_def_cfa_offset:
+				{
+					gint32 alloc_amount = unwind_op_data->val - prev_cfa_ofs;
+					DEBUG_UWOP ("DW_CFA_def_cfa_offset %x %x\n", unwind_op_data->val, unwind_op_data->when);
+					g_assert (unwind_op_data->when == prev_when + 4);
+
+					if (l->next && l->next->next) {
+						MonoUnwindOp* next_op = (MonoUnwindOp *)l->next->data;
+						MonoUnwindOp* next2_op = (MonoUnwindOp *)l->next->next->data;
+
+						if (next_op->when == unwind_op_data->when &&
+							next2_op->when == unwind_op_data->when)
+						{
+							g_assert (next_op->op == DW_CFA_offset);
+							DEBUG_UWOP ("DW_CFA_offset %s %x %x\n", mono_arch_regname(next_op->reg), next_op->val, next_op->when);
+							g_assert (next_op->reg == ARMREG_FP);
+							g_assert (next2_op->op == DW_CFA_offset);
+							DEBUG_UWOP ("DW_CFA_offset %s %x %x\n", mono_arch_regname(next2_op->reg), next2_op->val, next2_op->when);
+							g_assert (next2_op->reg == ARMREG_LR);
+
+							gint32 fp_ofs = prev_cfa_ofs + next_op->val;
+							gint32 lr_ofs = prev_cfa_ofs + next2_op->val;
+
+							g_assert (fp_ofs == -alloc_amount);
+							g_assert (lr_ofs == fp_ofs + 8);
+
+							// UWOP_SAVE_FPLR_X adds an extra 8 bytes to offset
+							gint32 adjusted_offset = alloc_amount - 8;
+
+							g_assert ((adjusted_offset & 0xfffffe03) == 0);
+
+							push_unwind_op1 (unwindinfo, UWOP_SAVE_FPLR_X | (adjusted_offset >> 3));
+
+							prev_cfa_ofs = unwind_op_data->val;
+							prev_when = next_op->when;
+
+							l = l->next->next;
+							break;
+						}
+					}
+
+					if ((alloc_amount & 0xfffffe0f) == 0)
+						push_unwind_op1 (unwindinfo, UWOP_ALLOC_S | (alloc_amount >> 4));
+					else if ((alloc_amount & 0xffff800f) == 0)
+						push_unwind_op2 (unwindinfo, UWOP_ALLOC_M | (alloc_amount >> 4));
+					else
+						g_assert_not_reached (); // TODO: UWOP_ALLOC_L
+					prev_when = unwind_op_data->when;
+					prev_cfa_ofs = unwind_op_data->val;
+					break;
+				}
+				case DW_CFA_offset:
+				{
+					DEBUG_UWOP ("DW_CFA_offset %s %x %x\n", mono_arch_regname(unwind_op_data->reg), unwind_op_data->val, unwind_op_data->when);
+					g_assert (unwind_op_data->when == prev_when + 4);
+
+					if (unwind_op_data->reg == ARMREG_LR)
+					{
+						g_assert (l->next);
+						MonoUnwindOp* next_op = (MonoUnwindOp *)l->next->data;
+						g_assert (next_op->op == DW_CFA_offset);
+						DEBUG_UWOP ("DW_CFA_offset %s %x %x\n", mono_arch_regname(next_op->reg), next_op->val, next_op->when);
+						g_assert (next_op->reg == ARMREG_FP);
+						g_assert (next_op->when == prev_when + 4);
+
+						gint32 lr_ofs = prev_cfa_ofs + unwind_op_data->val;
+						gint32 fp_ofs = prev_cfa_ofs + next_op->val;
+
+						g_assert (lr_ofs == fp_ofs + 8);
+						g_assert ((fp_ofs & 0xfffffe07) == 0);
+
+						push_unwind_op1 (unwindinfo, UWOP_SAVE_FPLR | (fp_ofs >> 3));
+
+						prev_when = next_op->when;
+						l = l->next;
+						break;
+					}
+
+					if (l->next)
+					{
+						MonoUnwindOp* next_op = (MonoUnwindOp *)l->next->data;
+
+						if (next_op->when == unwind_op_data->when) {
+							g_assert (next_op->op == DW_CFA_offset);
+							DEBUG_UWOP ("DW_CFA_offset %s %x %x\n", mono_arch_regname(next_op->reg), next_op->val, next_op->when);
+							g_assert (next_op->reg == unwind_op_data->reg + 1);
+							g_assert (next_op->val == unwind_op_data->val + 8);
+
+							gint32 reg_ofs = prev_cfa_ofs + unwind_op_data->val;
+							g_assert ((reg_ofs & 0xfffffe07) == 0);
+							gint32 adjusted_reg = unwind_op_data->reg - 19;
+							g_assert ((adjusted_reg & 0xfffffff0) == 0);
+
+							if (prev_regp == unwind_op_data->reg - 2 && prev_regp_when == unwind_op_data->when - 4)
+								push_unwind_op1 (unwindinfo, UWOP_SAVE_NEXT);
+							else
+								push_unwind_op2 (unwindinfo, UWOP_SAVE_REGP | (adjusted_reg << 6) | (reg_ofs >> 3));
+
+							prev_when = unwind_op_data->when;
+							prev_regp = unwind_op_data->reg;
+							prev_regp_when = unwind_op_data->when;
+							l = l->next;
+							break;
+						}
+					}
+
+					gint32 reg_ofs = prev_cfa_ofs + unwind_op_data->val;
+					g_assert ((reg_ofs & 0xfffffe07) == 0);
+					gint32 adjusted_reg = unwind_op_data->reg - 19;
+					g_assert ((adjusted_reg & 0xfffffff0) == 0);
+
+					push_unwind_op2 (unwindinfo, UWOP_SAVE_REG | (adjusted_reg << 6) | (reg_ofs >> 3));
+
+					prev_when = unwind_op_data->when;
+					break;
+				}
+				case DW_CFA_def_cfa_register:
+					DEBUG_UWOP ("DW_CFA_def_cfa_register %s %x\n", mono_arch_regname(unwind_op_data->reg), unwind_op_data->when);
+					g_assert (unwind_op_data->when == prev_when + 4);
+					g_assert (unwind_op_data->reg == ARMREG_FP);
+
+					prev_when = unwind_op_data->when;
+
+					push_unwind_op1 (unwindinfo, UWOP_SET_FP);
+					break;
+				default:
+					DEBUG_UWOP ("%x\n", unwind_op_data->op);
+					g_assert_not_reached ();
+					break;
+			}
+		}
+	}
+}
+
+static PUNWIND_INFO
+initialize_unwind_info_internal (GSList *unwind_ops)
+{
+	PUNWIND_INFO unwindinfo;
+
+	mono_arch_unwindinfo_create ((gpointer*)&unwindinfo);
+	initialize_unwind_info_internal_ex (unwind_ops, unwindinfo);
+
+	return unwindinfo;
+}
+
+guint
+mono_arch_unwindinfo_init_method_unwind_info (gpointer cfg)
+{
+	MonoCompile * current_cfg = (MonoCompile *)cfg;
+	g_assert (current_cfg->arch.unwindinfo == NULL);
+	current_cfg->arch.unwindinfo = initialize_unwind_info_internal (current_cfg->unwind_ops);
+	return mono_arch_unwindinfo_get_size ((PUNWIND_INFO)(current_cfg->arch.unwindinfo));
+}
+
+static void
+mono_arch_unwindinfo_free_unwind_info (PUNWIND_INFO unwind_info)
+{
+	g_free (unwind_info);
+}
+
+static GList *
+find_pc_in_table_no_lock_ex (const gpointer pc)
+{
+	GList *found_entry = NULL;
+	gboolean continue_search = FALSE;
+
+	gsize begin_range = (gsize)pc;
+	gsize end_range = begin_range;
+
+	// Fast path, check table boundaries.
+	found_entry = fast_find_range_in_table_no_lock_ex (begin_range, begin_range, &continue_search);
+	if (found_entry || continue_search == FALSE)
+		return found_entry;
+
+	// Scan table for a entry including range.
+	for (GList *node = g_dynamic_function_table_begin; node; node = node->next) {
+		DynamicFunctionTableEntry *current_entry = (DynamicFunctionTableEntry *)node->data;
+		g_assert_checked (current_entry != NULL);
+
+		// Do we have a match?
+		if (current_entry->begin_range <= begin_range && current_entry->end_range >= end_range) {
+			found_entry = node;
+			break;
+		}
+	}
+
+	return found_entry;
+}
+
+static DynamicFunctionTableEntry *
+find_pc_in_table_no_lock (const gpointer pc)
+{
+	GList *found_entry = find_pc_in_table_no_lock_ex (pc);
+	return (found_entry != NULL) ? (DynamicFunctionTableEntry *)found_entry->data : NULL;
+}
+
+#ifdef ENABLE_CHECKED_BUILD_UNWINDINFO
+static void
+validate_rt_funcs_in_table_no_lock (DynamicFunctionTableEntry *entry)
+{
+	// Validation method checking that runtime function table is sorted as expected and don't include overlapped regions.
+	// Method will assert on failure to explicitly indicate what check failed.
+	g_assert_checked (entry != NULL);
+	g_assert_checked (entry->rt_funcs_max_count >= entry->rt_funcs_current_count);
+	g_assert_checked (entry->rt_funcs != NULL);
+
+	PRUNTIME_FUNCTION current_rt_func = NULL;
+	PRUNTIME_FUNCTION previous_rt_func = NULL;
+	for (int i = 0; i < entry->rt_funcs_current_count; ++i) {
+		current_rt_func = &(entry->rt_funcs [i]);
+
+		g_assert_checked (current_rt_func->BeginAddress < current_rt_func->UnwindData);
+
+		if (previous_rt_func != NULL) {
+			// List should be sorted in ascending order based on BeginAddress.
+			g_assert_checked (previous_rt_func->BeginAddress < current_rt_func->BeginAddress);
+
+			// Check for overlapped regions.
+			g_assert_checked (previous_rt_func->UnwindData <= current_rt_func->BeginAddress);
+		}
+
+		previous_rt_func = current_rt_func;
+	}
+}
+
+#else
+
+static void
+validate_rt_funcs_in_table_no_lock (DynamicFunctionTableEntry *entry)
+{
+}
+#endif /* ENABLE_CHECKED_BUILD_UNWINDINFO */
+
+PRUNTIME_FUNCTION
+mono_arch_unwindinfo_insert_rt_func_in_table (const gpointer code, gsize code_size)
+{
+	PRUNTIME_FUNCTION new_rt_func = NULL;
+
+	gsize begin_range = (gsize)code;
+	gsize end_range = begin_range + code_size;
+
+	AcquireSRWLockShared (&g_dynamic_function_table_lock);
+
+	DynamicFunctionTableEntry *found_entry = find_pc_in_table_no_lock (code);
+
+	if (found_entry != NULL) {
+
+		AcquireSRWLockExclusive (&found_entry->lock);
+
+		g_assert_checked (found_entry->begin_range <= begin_range);
+		g_assert_checked (found_entry->end_range >= begin_range && found_entry->end_range >= end_range);
+		g_assert_checked (found_entry->rt_funcs != NULL);
+		g_assert_checked ((guchar*)code - found_entry->begin_range >= 0);
+
+		gsize code_offset = (gsize)code - found_entry->begin_range;
+		gsize entry_count = found_entry->rt_funcs_current_count;
+		gsize max_entry_count = found_entry->rt_funcs_max_count;
+		PRUNTIME_FUNCTION current_rt_funcs = found_entry->rt_funcs;
+
+		RUNTIME_FUNCTION new_rt_func_data;
+		new_rt_func_data.BeginAddress = code_offset;
+
+		gsize aligned_unwind_data = ALIGN_TO(end_range, UNWIND_INFO_ALIGN);
+		new_rt_func_data.UnwindData = aligned_unwind_data - found_entry->begin_range;
+
+		PRUNTIME_FUNCTION new_rt_funcs = NULL;
+
+		// List needs to be sorted in ascending order based on BeginAddress (Windows requirement if list
+		// going to be directly reused in OS func tables. Check if we can append to end of existing table without realloc.
+		if (entry_count == 0 || ((entry_count < max_entry_count) && (current_rt_funcs [entry_count - 1].BeginAddress) < code_offset)) {
+			new_rt_func = &(current_rt_funcs [entry_count]);
+			*new_rt_func = new_rt_func_data;
+			entry_count++;
+		} else {
+			// No easy way out, need to realloc, grow to double size (or current max, if to small).
+			max_entry_count = entry_count * 2 > max_entry_count ? entry_count * 2 : max_entry_count;
+			new_rt_funcs = g_new0 (RUNTIME_FUNCTION, max_entry_count);
+
+			if (new_rt_funcs != NULL) {
+				gsize from_index = 0;
+				gsize to_index = 0;
+
+				// Copy from old table into new table. Make sure new rt func gets inserted
+				// into correct location based on sort order.
+				for (; from_index < entry_count; ++from_index) {
+					if (new_rt_func == NULL && current_rt_funcs [from_index].BeginAddress > new_rt_func_data.BeginAddress) {
+						new_rt_func = &(new_rt_funcs [to_index++]);
+						*new_rt_func = new_rt_func_data;
+					}
+
+					if (current_rt_funcs [from_index].UnwindData != 0)
+						new_rt_funcs [to_index++] = current_rt_funcs [from_index];
+				}
+
+				// If we didn't insert by now, put it last in the list.
+				if (new_rt_func == NULL) {
+					new_rt_func = &(new_rt_funcs [to_index]);
+					*new_rt_func = new_rt_func_data;
+				}
+			}
+
+			entry_count++;
+		}
+
+		// Update the stats for current entry.
+		found_entry->rt_funcs_current_count = entry_count;
+		found_entry->rt_funcs_max_count = max_entry_count;
+
+		if (new_rt_funcs == NULL) {
+			// No new table just report increase in use.
+			g_assert_checked (found_entry->handle != NULL);
+			RtlGrowFunctionTable (found_entry->handle, found_entry->rt_funcs_current_count);
+		} else {
+			// New table, delete old table and rt funcs, and register a new one.
+			RtlDeleteGrowableFunctionTable (found_entry->handle);
+			found_entry->handle = NULL;
+			g_free (found_entry->rt_funcs);
+			found_entry->rt_funcs = new_rt_funcs;
+			DWORD result = RtlAddGrowableFunctionTable (&found_entry->handle,
+								found_entry->rt_funcs, found_entry->rt_funcs_current_count,
+								found_entry->rt_funcs_max_count, found_entry->begin_range, found_entry->end_range);
+			g_assert (!result);
+		}
+
+		// Only included in checked builds. Validates the structure of table after insert.
+		validate_rt_funcs_in_table_no_lock (found_entry);
+
+		ReleaseSRWLockExclusive (&found_entry->lock);
+	}
+
+	ReleaseSRWLockShared (&g_dynamic_function_table_lock);
+
+	return new_rt_func;
+}
+
+void
+mono_arch_unwindinfo_install_method_unwind_info (PUNWIND_INFO *monoui, gpointer code, guint code_size)
+{
+	PUNWIND_INFO unwindinfo, targetinfo;
+	guchar codecount;
+	guint64 targetlocation;
+	if (!*monoui)
+		return;
+
+	unwindinfo = *monoui;
+	targetlocation = (guint64)&(((guchar*)code)[code_size]);
+	targetinfo = (PUNWIND_INFO) ALIGN_TO(targetlocation, UNWIND_INFO_ALIGN);
+
+	targetinfo->xdata = unwindinfo->xdata;
+
+	g_assert ((code_size & 3) == 0);
+	g_assert (code_size < (1 << 20)); // Need multiple records in this case
+	targetinfo->xdata.FunctionLength = code_size >> 2;
+
+	codecount = unwindinfo->code_count;
+	if (codecount) {
+		memcpy (&targetinfo->unwind_codes [0], &unwindinfo->unwind_codes [MONO_MAX_UNWIND_CODES - codecount],
+			sizeof (UNWIND_CODE) * codecount);
+	}
+
+	mono_arch_unwindinfo_free_unwind_info (unwindinfo);
+	*monoui = 0;
+
+	// Register unwind info in table.
+	mono_arch_unwindinfo_insert_rt_func_in_table (code, code_size);
+}
+
+void
+mono_arch_unwindinfo_install_tramp_unwind_info (GSList *unwind_ops, gpointer code, guint code_size)
+{
+	PUNWIND_INFO unwindinfo = initialize_unwind_info_internal (unwind_ops);
+	if (unwindinfo != NULL) {
+		mono_arch_unwindinfo_install_method_unwind_info (&unwindinfo, code, code_size);
+	}
+}
+
+void
+mono_arch_code_chunk_new (void *chunk, int size)
+{
+	mono_arch_unwindinfo_insert_range_in_table (chunk, size);
+}
+
+static void
+remove_range_in_table_no_lock (GList *entry)
+{
+	if (entry != NULL) {
+		if (entry == g_dynamic_function_table_end)
+			g_dynamic_function_table_end = entry->prev;
+
+		g_dynamic_function_table_begin = g_list_remove_link (g_dynamic_function_table_begin, entry);
+		DynamicFunctionTableEntry *removed_entry = (DynamicFunctionTableEntry *)entry->data;
+
+		g_assert_checked (removed_entry != NULL);
+		g_assert_checked (removed_entry->rt_funcs != NULL);
+
+		// Remove function table from OS.
+		if (removed_entry->handle != NULL) {
+			RtlDeleteGrowableFunctionTable (removed_entry->handle);
+		}
+
+		g_free (removed_entry->rt_funcs);
+		g_free (removed_entry);
+
+		g_list_free_1 (entry);
+	}
+
+	// Only included in checked builds. Validates the structure of table after remove.
+	validate_table_no_lock ();
+}
+
+void
+mono_arch_unwindinfo_remove_pc_range_in_table (const gpointer code)
+{
+	AcquireSRWLockExclusive (&g_dynamic_function_table_lock);
+
+	GList *found_entry = find_pc_in_table_no_lock_ex (code);
+
+	g_assert_checked (found_entry != NULL || ((DynamicFunctionTableEntry *)found_entry->data)->begin_range == (gsize)code);
+	remove_range_in_table_no_lock (found_entry);
+
+	ReleaseSRWLockExclusive (&g_dynamic_function_table_lock);
+}
+
+void
+mono_arch_code_chunk_destroy (void *chunk)
+{
+	mono_arch_unwindinfo_remove_pc_range_in_table (chunk);
+}
+
+#endif /* MONO_ARCH_HAVE_UNWIND_TABLE */
 
 /*
  * mono_arm_throw_exception:
