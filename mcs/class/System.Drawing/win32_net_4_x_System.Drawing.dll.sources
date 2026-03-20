@@ -48,3 +48,8 @@ System.Drawing/LocalAppContextSwitches.cs
 ../../../external/corefx/src/System.Drawing.Common/src/misc/GDI/WindowsRegion.cs
 ../../../external/corefx/src/System.Drawing.Common/src/misc/GDI/WindowsRegionCombineMode.cs
 ../../../external/corefx/src/System.Drawing.Common/src/misc/DbgUtil.cs
+
+../../../external/corefx/src/Common/src/Interop/Windows/Interop.Libraries.cs
+../../../external/corefx/src/Common/src/Interop/Windows/user32/Interop.Win32SystemColors.cs
+../../../external/corefx/src/Common/src/Interop/Windows/user32/Interop.GetSysColor.cs
+
