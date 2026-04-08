@@ -183,7 +183,7 @@ MonoDl*
 mono_dl_open (const char *name, int flags, char **error_msg)
 {
 #ifdef HOST_WIN32
-	const int native_flags = LOAD_WITH_ALTERED_SEARCH_PATH;
+	const int native_flags = g_path_is_absolute (name) ? LOAD_WITH_ALTERED_SEARCH_PATH : 0;
 #else
 	const int native_flags = 0;
 #endif
