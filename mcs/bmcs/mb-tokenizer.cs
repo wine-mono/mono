@@ -237,6 +237,8 @@ namespace Mono.CSharp
 			keywords.Add ("object", Token.OBJECT);
 			keywords.Add ("of", Token.OF);
 			keywords.Add ("off", Token.OFF); // Not a VB.NET Keyword
+			keywords.Add ("operator", Token.OPERATOR);
+			keywords.Add ("narrowing", Token.NARROWING);
 			keywords.Add ("on", Token.ON);
 			keywords.Add ("option", Token.OPTION);
 			keywords.Add ("optional", Token.OPTIONAL);
@@ -287,6 +289,7 @@ namespace Mono.CSharp
 			keywords.Add ("wend", Token.WEND); // An unused VB.NET keyword
 			keywords.Add ("when", Token.WHEN);
 			keywords.Add ("while", Token.WHILE);
+			keywords.Add ("widening", Token.WIDENING);
 			keywords.Add ("with", Token.WITH);
 			keywords.Add ("withevents", Token.WITHEVENTS);
 			keywords.Add ("writeonly", Token.WRITEONLY);

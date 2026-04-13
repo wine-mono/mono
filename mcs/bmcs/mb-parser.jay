@@ -606,7 +606,10 @@ namespace Mono.CSharp
 %token OF
 %token OFF
 %token ON
-%token OPTION	
+%token OPTION
+%token OPERATOR
+%token WIDENING
+%token NARROWING
 %token OPTIONAL	
 %token OR
 %token ORELSE
@@ -1574,8 +1577,66 @@ class_member_declarator
 	
 method_declaration
 	: sub_declaration
-	| func_declaration 
+	| func_declaration
+	| operator_declaration
 // 	| must_override_declaration
+	;
+
+// VB operator declarations have real metadata and overload-resolution
+// effects.  The backend Operator node exists, but the VB frontend still
+// lacks the symbol-to-OpType mapping and the expression-resolution
+// plumbing needed to bind uses of those operators correctly.  Reject the
+// declaration loudly instead of parsing and dropping it.
+operator_declaration
+	: opt_widening_narrowing OPERATOR operator_symbol opt_params opt_type_with_ranks logical_end_of_line
+	  {
+		Report.Error (33000, lexer.Location,
+			"User-defined operator declarations are not supported by " +
+			"this bootstrap compiler; rewrite the operator body as an " +
+			"explicit method (Equals, Compare, ...) on the enclosing type");
+		current_local_parameters = (Parameters) $4;
+		start_block ();
+		oob_stack.Push (lexer.Location);
+	  }
+	  opt_statement_list
+	  end_block
+	  END OPERATOR logical_end_of_line
+	  {
+		oob_stack.Pop ();
+		current_local_parameters = null;
+		$$ = null;
+	  }
+	;
+
+opt_widening_narrowing
+	: /* empty */
+	| WIDENING
+	| NARROWING
+	;
+
+operator_symbol
+	: OP_LT
+	| OP_GT
+	| OP_LE
+	| OP_GE
+	| OP_NE
+	| ASSIGN
+	| PLUS
+	| MINUS
+	| STAR
+	| DIV
+	| OP_IDIV
+	| MOD
+	| OP_EXP
+	| OP_CONCAT
+	| AND
+	| OR
+	| XOR
+	| NOT
+	| OP_SHIFT_LEFT
+	| OP_SHIFT_RIGHT
+	| LIKE
+	| CTYPE
 	;
 
 // Bodyless abstract declarations keyed by MUSTOVERRIDE in
