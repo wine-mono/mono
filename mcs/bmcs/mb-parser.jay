@@ -1405,6 +1405,10 @@ modifier
 	| OVERLOADS			{ $$ = Modifiers.NEW; }
 	| SHADOWS			{ $$ = Modifiers.SHADOWS; }
 	| MUSTINHERIT			{ $$ = Modifiers.ABSTRACT; }
+	/* MUSTOVERRIDE is handled separately in class_member_declaration
+	   because a MustOverride member has no body. Putting it in the
+	   general modifier rule would steer the parser into the normal
+	   body-bearing Sub/Function/Property paths and create conflicts. */
 	| READONLY 			{ $$ = Modifiers.READONLY; }
 	| DEFAULT 			{ $$ = Modifiers.DEFAULT; }
 	| WRITEONLY			{ $$ = Modifiers.WRITEONLY; }
@@ -1521,6 +1525,24 @@ class_member_declaration
 	   {
 	   	$$ = $3;
 	   }
+	|  opt_attributes
+	   opt_modifiers
+	   MUSTOVERRIDE
+	   {
+		// Save the modifiers that appeared before MUSTOVERRIDE so a
+		// second opt_modifiers can extend them instead of resetting
+		// current_modifiers to 0.
+		oob_stack.Push ((int) current_modifiers);
+	   }
+	   opt_modifiers
+	   {
+		int pre = (int) oob_stack.Pop ();
+		current_modifiers = pre | (int) current_modifiers;
+	   }
+	   abstract_member_declarator
+	   {
+	   	$$ = $7;
+	   }
 	;
 
 class_member_declarator
@@ -1539,6 +1561,98 @@ method_declaration
 	: sub_declaration
 	| func_declaration 
 // 	| must_override_declaration
+	;
+
+// Bodyless abstract declarations keyed by MUSTOVERRIDE in
+// class_member_declaration so the parser can choose the no-body form
+// cleanly instead of colliding with the normal body-bearing rules.
+abstract_member_declarator
+	: SUB identifier opt_type_params opt_params opt_implement_clause logical_end_of_line
+	  {
+		TypeArguments type_args = (TypeArguments) $3;
+		MemberName name = (type_args == null)
+			? new MemberName ((string) $2)
+			: new MemberName ((string) $2, type_args);
+
+		int mods = (int) current_modifiers | Modifiers.ABSTRACT;
+
+		GenericMethod generic = null;
+		if (type_args != null) {
+			generic = new GenericMethod (current_namespace, current_container, name, lexer.Location);
+			generic.SetParameterInfo (null);
+		}
+
+		Method method = new Method (current_class, generic, TypeManager.system_void_expr,
+					    mods, false, name,
+					    (Parameters) $4, (Attributes) current_attributes,
+					    lexer.Location);
+		current_container.AddMethod (method);
+		$$ = method;
+	  }
+	| FUNCTION identifier opt_type_params opt_type_character opt_params opt_type_with_ranks opt_implement_clause logical_end_of_line
+	  {
+		TypeArguments type_args = (TypeArguments) $3;
+		MemberName name = (type_args == null)
+			? new MemberName ((string) $2)
+			: new MemberName ((string) $2, type_args);
+		Expression rettype = ($6 == null) ? (($4 == null) ? TypeManager.system_object_expr : (Expression) $4 ) : (Expression) $6;
+
+		int mods = (int) current_modifiers | Modifiers.ABSTRACT;
+
+		GenericMethod generic = null;
+		if (type_args != null) {
+			generic = new GenericMethod (current_namespace, current_container, name, lexer.Location);
+			generic.SetParameterInfo (null);
+		}
+
+		Method method = new Method (current_class, generic, rettype, mods,
+					    false, name, (Parameters) $5, current_attributes,
+					    lexer.Location);
+		current_container.AddMethod (method);
+		$$ = method;
+	  }
+	| PROPERTY identifier opt_type_character opt_property_parameters opt_type_with_ranks opt_implement_clause logical_end_of_line
+	  {
+		Expression ptype = ($5 == null) ? (($3 == null) ?
+			TypeManager.system_object_expr : (Expression) $3) : (Expression) $5;
+		MemberName name = new MemberName ((string) $2);
+		int mods = (int) current_modifiers | Modifiers.ABSTRACT;
+
+		Parameters parms = (Parameters) $4;
+		Parameters get_params, set_params;
+		if (parms != Parameters.EmptyReadOnlyParameters) {
+			get_params = parms.Copy (lexer.Location);
+			set_params = parms.Copy (lexer.Location);
+		} else {
+			get_params = Parameters.EmptyReadOnlyParameters;
+			set_params = new Parameters (null, null, lexer.Location);
+		}
+
+		// Mirror the concrete-property path: ReadOnly omits the setter,
+		// WriteOnly omits the getter, and only the accessor that really
+		// exists gets a null-block Accessor. Passing null here means
+		// "dummy, reserved-but-not-emitted accessor", which is how the
+		// Property constructor models a forbidden ReadOnly/WriteOnly side.
+		Accessor get_block = null;
+		Accessor set_block = null;
+
+		if ((current_modifiers & Modifiers.WRITEONLY) == 0)
+			get_block = new Accessor (null, 0, null, lexer.Location);
+
+		if ((current_modifiers & Modifiers.READONLY) == 0) {
+			set_block = new Accessor (null, 0, null, lexer.Location);
+
+			Parameter implicit_value_parameter = new Parameter (
+				ptype, "Value", Parameter.Modifier.NONE, null);
+			set_params.AppendParameter (implicit_value_parameter);
+		}
+
+		Property prop = new Property (current_class, ptype, mods, false, name,
+			(Attributes) current_attributes, get_params, get_block,
+			set_params, set_block, lexer.Location);
+		current_container.AddProperty (prop);
+		$$ = prop;
+	  }
 	;
 	
 // must_override_declaration
