@@ -728,7 +728,8 @@ namespace Mono.CSharp {
 				    
 			} else if (expr_type == TypeManager.char_type){
 				//
-				// From char to ushort, int, uint, long, ulong, float, double
+				// From char to ushort, int, uint, long, ulong, float, double,
+				// decimal, and string.
 				// 
 				if ((target_type == TypeManager.ushort_type) ||
 				    (target_type == TypeManager.int32_type) ||
@@ -737,7 +738,8 @@ namespace Mono.CSharp {
 				    (target_type == TypeManager.int64_type) ||
 				    (target_type == TypeManager.float_type) ||
 				    (target_type == TypeManager.double_type) ||
-				    (target_type == TypeManager.decimal_type))
+				    (target_type == TypeManager.decimal_type) ||
+				    (target_type == TypeManager.string_type))
 					return true;
 
 			} else if (expr_type == TypeManager.float_type){
@@ -1565,6 +1567,12 @@ namespace Mono.CSharp {
 			ret_expr = ConvertIntegralConstant (const_expr, target_type);
 			if (ret_expr != null)
 				return ret_expr;
+
+			if (target_type == TypeManager.string_type) {
+				StringConstant sc = const_expr.ConvertToString ();
+				if (sc != null)
+					return sc;
+			}
 
 			if (target_type == TypeManager.float_type) {
 				if (const_expr_type == TypeManager.double_type)

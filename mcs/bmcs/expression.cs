@@ -6246,6 +6246,61 @@ namespace Mono.CSharp {
 			return true;
 		}
 
+		static IntConstant TryGetInt32ConstantArgument (Expression expr)
+		{
+			Constant constant = expr as Constant;
+			if (constant == null)
+				return null;
+
+			EnumConstant enum_constant = constant as EnumConstant;
+			if (enum_constant != null)
+				constant = enum_constant.Child;
+
+			Constant converted = Convert.ConvertIntegralConstant (constant, TypeManager.int32_type);
+			if (converted != null)
+				return converted as IntConstant;
+
+			if (constant.Type == TypeManager.char_type)
+				return constant.ConvertToInt ();
+
+			return null;
+		}
+
+		static Expression TryFoldVisualBasicConstantIntrinsic (MethodBase method, ArrayList arguments)
+		{
+			MethodInfo cmi = method as MethodInfo;
+			if (cmi == null || arguments == null || arguments.Count != 1)
+				return null;
+
+			if (cmi.DeclaringType != TypeManager.msvb_strings_type ||
+			    cmi.ReturnType != TypeManager.char_type)
+				return null;
+
+			Type[] parameter_types = TypeManager.GetArgumentTypes (cmi);
+			if (parameter_types.Length != 1 || parameter_types[0] != TypeManager.int32_type)
+				return null;
+
+			IntConstant ic = TryGetInt32ConstantArgument (((Argument) arguments[0]).Expr);
+			if (ic == null)
+				return null;
+
+			int value = ic.Value;
+			switch (cmi.Name) {
+			case "ChrW":
+				if (value >= 0 && value <= char.MaxValue)
+					return new CharConstant ((char) value);
+				break;
+			case "Chr":
+				// The VB constant-expression whitelist only admits Chr
+				// in the ASCII range; out-of-range values stay as a call.
+				if (value >= 0 && value <= 128)
+					return new CharConstant ((char) value);
+				break;
+			}
+
+			return null;
+		}
+
 		public override Expression DoResolve (EmitContext ec)
 		{
 			//
@@ -6340,6 +6395,10 @@ namespace Mono.CSharp {
 					return null;
 				}
 			}
+
+			Expression folded_constant = TryFoldVisualBasicConstantIntrinsic (method, Arguments);
+			if (folded_constant != null)
+				return folded_constant;
 			
 			if (mg.InstanceExpression != null)
 				mg.InstanceExpression.CheckMarshallByRefAccess (ec.ContainerType);

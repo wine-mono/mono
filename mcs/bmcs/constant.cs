@@ -171,6 +171,11 @@ namespace Mono.CSharp {
 		{
 			return null;
 		}
+
+		public virtual StringConstant ConvertToString ()
+		{
+			return null;
+		}
 		
 		public virtual BoolConstant ConvertToBoolean ()
 		{
@@ -339,6 +344,11 @@ namespace Mono.CSharp {
 		public override object GetValue ()
 		{
 			return Value;
+		}
+
+		public override StringConstant ConvertToString ()
+		{
+			return new StringConstant (Value.ToString ());
 		}
 
 		public override DoubleConstant ConvertToDouble ()
@@ -1541,4 +1551,3 @@ namespace Mono.CSharp {
 	}
 
 }
-

@@ -104,6 +104,19 @@ namespace Mono.CSharp {
 			return null;
 		}
 
+		static string ConstantToConcatenationString (Constant constant)
+		{
+			StringConstant sc = constant as StringConstant;
+			if (sc != null)
+				return sc.Value;
+
+			CharConstant cc = constant as CharConstant;
+			if (cc != null)
+				return cc.Value.ToString ();
+
+			return null;
+		}
+
 		static void DoConstantNumericPromotions (EmitContext ec, Binary.Operator oper,
 							 ref Constant left, ref Constant right,
 							 Location loc)
@@ -215,6 +228,15 @@ namespace Mono.CSharp {
 			Type wrap_as;
 			Constant result = null;
 			switch (oper){
+			case Binary.Operator.Concatenation:
+				string left_string = ConstantToConcatenationString (left);
+				string right_string = ConstantToConcatenationString (right);
+
+				if (left_string != null && right_string != null)
+					return new StringConstant (left_string + right_string);
+
+				return null;
+
 			case Binary.Operator.BitwiseOr:
 				DoConstantNumericPromotions (ec, oper, ref left, ref right, loc);
 				if (left == null || right == null)

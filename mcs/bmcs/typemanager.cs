@@ -122,6 +122,7 @@ public partial class TypeManager {
 	static public Type msvbcs_char_type;
 	static public Type msvbcs_chararray_type;
 	static public Type msvbcs_date_type;
+	static public Type msvb_strings_type;
 
 	static public Type msvbcs_comparemethod_type;
 
@@ -1468,6 +1469,7 @@ public partial class TypeManager {
 		msvbcs_chararray_type = CoreLookupType ("Microsoft.VisualBasic.CompilerServices.CharArrayType");
 		msvbcs_date_type = CoreLookupType ("Microsoft.VisualBasic.CompilerServices.DateType");
 		msvbcs_string_type = CoreLookupType ("Microsoft.VisualBasic.CompilerServices.StringType");
+		msvb_strings_type = CoreLookupType ("Microsoft.VisualBasic.Strings");
 
 		msvbcs_comparemethod_type = CoreLookupType ("Microsoft.VisualBasic.CompareMethod");
 	}
