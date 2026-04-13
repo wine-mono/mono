@@ -6314,6 +6314,10 @@ namespace Mono.CSharp {
 			if (base_access != null)
 				return base_access.ResolveForInvocation (ec);
 
+			SimpleName simple_name = expr as SimpleName;
+			if (simple_name != null)
+				return simple_name.ResolveForInvocation (ec);
+
 			return expr.Resolve (ec, ResolveFlags.VariableOrValue | ResolveFlags.MethodGroup);
 		}
 
@@ -8661,9 +8665,18 @@ namespace Mono.CSharp {
 				FullNamedExpression retval = ns.Lookup (ec.DeclSpace, lookup_id, loc);
 				if ((retval != null) && (args != null))
 					retval = new ConstructedType (retval, args, loc).ResolveAsTypeStep (ec);
-				if (retval == null)
-					Report.Error (234, loc, "The type or namespace name `{0}' could not be found in namespace `{1}'", Identifier, ns.FullName);
-				return retval;
+				if (retval != null)
+					return retval;
+
+				Type standard_module = FindStandardModuleOwner (ec, ns.FullName, Identifier, args, loc);
+				if (standard_module != null)
+					return BindStandardModuleMember (ec, standard_module, Identifier, args,
+									 right_side, preserve_property_group, loc);
+				if (Report.Errors > 0)
+					return null;
+
+				Report.Error (234, loc, "The type or namespace name `{0}' could not be found in namespace `{1}'", Identifier, ns.FullName);
+				return null;
 			}
 					
 			//

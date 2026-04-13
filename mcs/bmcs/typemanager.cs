@@ -407,6 +407,11 @@ public partial class TypeManager {
 	// </remarks>
 	public static Hashtable all_imported_types;
 
+	// VB standard modules are scoped to their containing namespace.  We keep
+	// a side table so namespace and imported-name lookup can fall back to those
+	// members without pretending they are regular namespace children.
+	static Hashtable standard_modules;
+
 	struct Signature {
 		public string name;
 		public Type [] args;
@@ -431,6 +436,7 @@ public partial class TypeManager {
 		fields = null;
 		references = null;
 		negative_hits = null;
+		standard_modules = null;
 		builder_to_constant = null;
 		fieldbuilders_to_fields = null;
 		events = null;
@@ -525,6 +531,7 @@ public partial class TypeManager {
 		
 		types = new Hashtable ();
 		typecontainers = new Hashtable ();
+		standard_modules = new Hashtable ();
 		
 		builder_to_declspace = new PtrHashtable ();
 		builder_to_member_cache = new PtrHashtable ();
@@ -722,6 +729,7 @@ public partial class TypeManager {
 		
 		n [top] = a;
 		assemblies = n;
+		RegisterStandardModules (a);
 	}
 
         public static Assembly [] GetAssemblies ()
@@ -746,6 +754,75 @@ public partial class TypeManager {
 	public static Module[] Modules {
 		get {
 			return modules;
+		}
+	}
+
+	public static void AddStandardModule (Type type)
+	{
+		string ns = type.Namespace;
+		if (ns == null)
+			ns = String.Empty;
+
+		ArrayList list = (ArrayList) standard_modules [ns];
+		if (list == null) {
+			list = new ArrayList ();
+			standard_modules [ns] = list;
+		}
+
+		foreach (Type existing in list) {
+			if (existing == type)
+				return;
+		}
+
+		list.Add (type);
+	}
+
+	public static Type[] GetStandardModules (string ns)
+	{
+		if (ns == null)
+			ns = String.Empty;
+
+		ArrayList list = (ArrayList) standard_modules [ns];
+		if (list == null || list.Count == 0)
+			return NoTypes;
+
+		return (Type[]) list.ToArray (typeof (Type));
+	}
+
+	static bool IsStandardModuleType (Type type)
+	{
+		if (!type.IsClass || !type.IsSealed)
+			return false;
+
+		object [] attrs = type.GetCustomAttributes (false);
+		foreach (object attr in attrs) {
+			if (attr.GetType ().FullName ==
+			    "Microsoft.VisualBasic.CompilerServices.StandardModuleAttribute")
+				return true;
+		}
+
+		return false;
+	}
+
+	// Referenced assemblies can be discovered by reflection here.  The current
+	// compilation registers modules from VBModule.DefineType before attributes are
+	// emitted, so both paths end up in the same lookup table.
+	public static void RegisterStandardModules (Assembly assembly)
+	{
+		Type [] types;
+
+		try {
+			types = assembly.GetTypes ();
+		} catch (ReflectionTypeLoadException ex) {
+			types = ex.Types;
+		}
+
+		foreach (Type type in types) {
+			if (type == null)
+				continue;
+
+			if (IsStandardModuleType (type))
+				AddStandardModule (type);
 		}
 	}
 

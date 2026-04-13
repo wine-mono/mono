@@ -667,6 +667,66 @@ namespace Mono.CSharp {
 					     AllMemberTypes, AllBindingFlags, loc);
 		}
 
+		protected static void Error_AmbiguousStandardModuleMember (Location loc, string name, Type module1, Type module2)
+		{
+			Report.Error (104, loc, "`{0}' is an ambiguous reference ({1}.{0} or {2}.{0})",
+				      name, module1.FullName, module2.FullName);
+		}
+
+		static bool StandardModuleHasMatch (EmitContext ec, Type module, string name, TypeArguments args)
+		{
+			if (ec.DeclSpace != null && !ec.DeclSpace.CheckAccessLevel (module))
+				return false;
+
+			MemberInfo [] members = TypeManager.MemberLookup (
+				ec.ContainerType, module, module,
+				AllMemberTypes, AllBindingFlags, name, null);
+
+			if (members == null && args != null) {
+				string lookup_id = MemberName.MakeName (name, args);
+				members = TypeManager.MemberLookup (
+					ec.ContainerType, module, module,
+					AllMemberTypes, AllBindingFlags, lookup_id, null);
+			}
+
+			return members != null;
+		}
+
+		protected static Type FindStandardModuleOwner (EmitContext ec, string namespace_name,
+							    string name, TypeArguments args, Location loc)
+		{
+			Type found = null;
+
+			foreach (Type module in TypeManager.GetStandardModules (namespace_name)) {
+				if (!StandardModuleHasMatch (ec, module, name, args))
+					continue;
+
+				if (found != null) {
+					Error_AmbiguousStandardModuleMember (loc, name, found, module);
+					return null;
+				}
+
+				found = module;
+			}
+
+			return found;
+		}
+
+		protected static Expression BindStandardModuleMember (EmitContext ec, Type module,
+							      string name, TypeArguments args,
+							      Expression right_side,
+							      bool preserve_property_group,
+							      Location loc)
+		{
+			MemberAccess access = new MemberAccess (new TypeExpression (module, loc), name, args, loc);
+			if (preserve_property_group)
+				return access.ResolveForInvocation (ec);
+
+			return right_side != null
+				? access.DoResolveLValue (ec, right_side)
+				: access.DoResolve (ec);
+		}
+
 		public static Expression MemberLookup (EmitContext ec, Type qualifier_type,
 						       Type queried_type, string name, Location loc)
 		{
@@ -2281,6 +2341,11 @@ namespace Mono.CSharp {
 			return SimpleNameResolve (ec, right_side, false, false);
 		}
 		
+		public Expression ResolveForInvocation (EmitContext ec)
+		{
+			return SimpleNameResolve (ec, null, false, false, true);
+		}
+
 
 		public Expression DoResolveAllowStatic (EmitContext ec, bool intermediate)
 		{
@@ -2309,7 +2374,14 @@ namespace Mono.CSharp {
 		Expression SimpleNameResolve (EmitContext ec, Expression right_side,
 					      bool allow_static, bool intermediate)
 		{
-			Expression e = DoSimpleNameResolve (ec, right_side, allow_static, intermediate);
+			return SimpleNameResolve (ec, right_side, allow_static, intermediate, false);
+		}
+
+		Expression SimpleNameResolve (EmitContext ec, Expression right_side,
+					      bool allow_static, bool intermediate,
+					      bool preserve_property_group)
+		{
+			Expression e = DoSimpleNameResolve (ec, right_side, allow_static, intermediate, preserve_property_group);
 			if (e == null)
 				return null;
 
@@ -2330,6 +2402,63 @@ namespace Mono.CSharp {
 			return e;
 		}
 
+		Expression ResolveStandardModuleSimpleName (EmitContext ec, Expression right_side,
+						     bool preserve_property_group)
+		{
+			NamespaceEntry ns;
+			Type module;
+
+			if (ec.DeclSpace != null) {
+				for (ns = ec.DeclSpace.NamespaceEntry; ns != null; ns = ns.ImplicitParent) {
+					module = FindStandardModuleOwner (ec, ns.FullName, Name, Arguments, loc);
+					if (module == null) {
+						if (Report.Errors > 0)
+							return null;
+						continue;
+					}
+
+					return BindStandardModuleMember (ec, module, Name, Arguments, right_side,
+									 preserve_property_group, loc);
+				}
+			}
+
+			module = FindStandardModuleOwner (ec, String.Empty, Name, Arguments, loc);
+			if (module != null)
+				return BindStandardModuleMember (ec, module, Name, Arguments, right_side,
+								 preserve_property_group, loc);
+			if (Report.Errors > 0)
+				return null;
+
+			if (ec.DeclSpace == null)
+				return null;
+
+			for (ns = ec.DeclSpace.NamespaceEntry; ns != null; ns = ns.Parent) {
+				Type imported_module = null;
+
+				foreach (Namespace using_ns in ns.GetUsingTable ()) {
+					module = FindStandardModuleOwner (ec, using_ns.FullName, Name, Arguments, loc);
+					if (module == null) {
+						if (Report.Errors > 0)
+							return null;
+						continue;
+					}
+
+					if (imported_module != null) {
+						Error_AmbiguousStandardModuleMember (loc, Name, imported_module, module);
+						return null;
+					}
+
+					imported_module = module;
+				}
+
+				if (imported_module != null)
+					return BindStandardModuleMember (ec, imported_module, Name, Arguments, right_side,
+									 preserve_property_group, loc);
+			}
+
+			return null;
+		}
+
 		/// <remarks>
 		///   7.5.2: Simple Names. 
 		///
@@ -2347,7 +2476,7 @@ namespace Mono.CSharp {
 		///   Type is both an instance variable and a Type;  Type.GetType
 		///   is the static method not an instance method of type.
 		/// </remarks>
-		Expression DoSimpleNameResolve (EmitContext ec, Expression right_side, bool allow_static, bool intermediate)
+		Expression DoSimpleNameResolve (EmitContext ec, Expression right_side, bool allow_static, bool intermediate, bool preserve_property_group)
 		{
 			Expression e = null;
 
@@ -2368,14 +2497,14 @@ namespace Mono.CSharp {
 						return var.Resolve (ec);
 				}
 
-				ParameterReference pref = current_block.GetParameterReference (Name, loc);
-				if (pref != null) {
-					if (right_side != null)
-						return pref.ResolveLValue (ec, right_side);
-					else
-						return pref.Resolve (ec);
+					ParameterReference pref = current_block.GetParameterReference (Name, loc);
+					if (pref != null) {
+						if (right_side != null)
+							return pref.ResolveLValue (ec, right_side);
+						else
+							return pref.Resolve (ec);
+					}
 				}
-			}
 			
 			//
 			// Stage 2: Lookup members 
@@ -2414,10 +2543,17 @@ namespace Mono.CSharp {
 			if (e == null) {
 				if (almost_matched != null)
 					almostMatchedMembers = almost_matched;
-				if (almost_matched_type == null)
-					almost_matched_type = ec.ContainerType;
-				MemberLookupFailed (ec, null, almost_matched_type, ((SimpleName) this).Name, ec.DeclSpace.Name, loc);
-				return null;
+
+				e = ResolveStandardModuleSimpleName (ec, right_side, preserve_property_group);
+				if (e == null) {
+					if (Report.Errors > 0)
+						return null;
+
+					if (almost_matched_type == null)
+						almost_matched_type = ec.ContainerType;
+					MemberLookupFailed (ec, null, almost_matched_type, ((SimpleName) this).Name, ec.DeclSpace.Name, loc);
+					return null;
+				}
 			}
 
 			if (e is TypeExpr)
@@ -2456,6 +2592,12 @@ namespace Mono.CSharp {
 					       me.InstanceExpression.Type + "'");
 					return null;
 				}
+
+				// Invocation needs the raw PropertyExpr here for the same reason
+				// as MemberAccess: VB reclassifies a bare property group through
+				// invocation/index syntax instead of forcing direct accessor calls.
+				if (preserve_property_group && right_side == null && e is PropertyExpr)
+					return e;
 
 				return (right_side != null)
 					? e.DoResolveLValue (ec, right_side)

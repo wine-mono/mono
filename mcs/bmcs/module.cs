@@ -53,5 +53,13 @@ namespace Mono.CSharp
 				return base.TypeAttr | TypeAttributes.AutoLayout | TypeAttributes.Class | TypeAttributes.Sealed;
 			}
 		}
+
+		public override TypeBuilder DefineType ()
+		{
+			TypeBuilder tb = base.DefineType ();
+			if (tb != null)
+				TypeManager.AddStandardModule (tb);
+			return tb;
+		}
 	}
 }
