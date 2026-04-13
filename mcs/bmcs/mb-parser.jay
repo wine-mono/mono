@@ -2612,13 +2612,52 @@ opt_get_accessor_declaration
 	| get_accessor_declaration
 	;
 
+// Accessor visibility is semantically meaningful: PropertyMethod already
+// stores accessor ModFlags and PropertyBase enforces the VB rules that an
+// accessor modifier must be more restrictive than the property and that
+// only one accessor may differ.  Parse the accessor modifier into a
+// dedicated flag set instead of leaking it through current_modifiers.
+opt_accessor_modifiers
+	: /* empty */
+	  {
+		$$ = (int) 0;
+	  }
+	| accessor_modifiers
+	  {
+		$$ = $1;
+	  }
+	;
+
+accessor_modifiers
+	: accessor_modifier
+	| accessor_modifiers accessor_modifier
+	  {
+		int m1 = (int) $1;
+		int m2 = (int) $2;
+
+		if ((m1 & m2) != 0) {
+			Location l = lexer.Location;
+			Report.Error (1004, l, "Duplicate modifier: `" + Modifiers.Name (m2) + "'");
+		}
+
+		$$ = (int) (m1 | m2);
+	  }
+	;
+
+accessor_modifier
+	: PUBLIC		{ $$ = Modifiers.PUBLIC; }
+	| PROTECTED		{ $$ = Modifiers.PROTECTED; }
+	| FRIEND		{ $$ = Modifiers.INTERNAL; }
+	| PRIVATE		{ $$ = Modifiers.PRIVATE; }
+	;
+
 opt_set_accessor_declaration
 	: /* empty */			{ $$ = null; }
 	| set_accessor_declaration
 	;
 
 get_accessor_declaration
-	: opt_attributes GET logical_end_of_line
+	: opt_attributes opt_accessor_modifiers GET logical_end_of_line
 	  {
 		if ((current_modifiers & Modifiers.WRITEONLY) != 0)
 	  		Report.Error (30023, "'WriteOnly' properties cannot have a 'Get' accessor");
@@ -2640,7 +2679,7 @@ get_accessor_declaration
 	  {
 		// See comment in set_accessor_declaration below: accessor
 		// modifiers are distinct from property-level modifiers.
-		$$ = new Accessor ((ToplevelBlock) $8, 0,
+		$$ = new Accessor ((ToplevelBlock) $9, (int) $2,
 				   (Attributes) $1, lexer.Location);
 
 		current_local_parameters = null;
@@ -2651,7 +2690,7 @@ get_accessor_declaration
 
 
 set_accessor_declaration
-	: opt_attributes SET opt_set_parameter logical_end_of_line
+	: opt_attributes opt_accessor_modifiers SET opt_set_parameter logical_end_of_line
 	  {
         if ((current_modifiers & Modifiers.READONLY) != 0)
 	  		Report.Error (30022, "'ReadOnly' properties cannot have a 'Set' accessor");
@@ -2676,7 +2715,7 @@ set_accessor_declaration
 		// current_modifiers here would leak property-level flags into
 		// the accessor and trip Modifiers.Check (which has a much
 		// smaller allowed set for accessors).
-		$$ = new Accessor ((ToplevelBlock) $8, 0,
+		$$ = new Accessor ((ToplevelBlock) $9, (int) $2,
 				   (Attributes) $1, lexer.Location);
 		current_local_parameters = null;
 		lexer.PropertyParsing = true;
