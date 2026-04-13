@@ -577,6 +577,7 @@ namespace Mono.CSharp
 %token INTEGER	
 %token INTERFACE
 %token IS
+%token ISNOT
 %token LET
 %token LIB	
 %token LIKE	
@@ -4488,6 +4489,15 @@ relational_expression
 	  {
 		$$ = new Binary (Binary.Operator.Is,
 			         (Expression) $1, (Expression) $3, lexer.Location);
+	  }
+	| relational_expression ISNOT shift_expression
+	  {
+		// VB9 'IsNot': desugar to Not (a Is b).  No IL support path
+		// is needed because LogicalNot of a reference-comparison is
+		// handled by the existing Unary emit path.
+		Binary cmp = new Binary (Binary.Operator.Is,
+			         (Expression) $1, (Expression) $3, lexer.Location);
+		$$ = new Unary (Unary.Operator.LogicalNot, cmp, lexer.Location);
 	  }
 	| relational_expression LIKE shift_expression
 	  {
