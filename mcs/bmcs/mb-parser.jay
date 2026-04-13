@@ -596,7 +596,8 @@ namespace Mono.CSharp
 %token NOTHING
 %token NOTINHERITABLE
 %token NOTOVERRIDABLE
-%token OBJECT	
+%token OBJECT
+%token OF
 %token OFF
 %token ON
 %token OPTION	
@@ -660,6 +661,7 @@ namespace Mono.CSharp
 %token OPEN_BRACKET  "["
 %token CLOSE_BRACKET "]"
 %token OPEN_PARENS   "("
+%token OPEN_PARENS_OF "(Of"  /* synthetic: the tokenizer merges "(" followed by the Of keyword into this single token so the LALR(1) grammar can distinguish generic type-argument lists from parameter lists / array indexing without ambiguous lookahead. */
 %token OPEN_BRACE    "{"
 %token CLOSE_BRACE   "}"
 %token CLOSE_PARENS  ")"
@@ -922,6 +924,17 @@ qualified_identifier
 	{
 		$$ = new MemberName ((MemberName) $1, (string) $3, null);
 	  }
+	;
+
+type_name
+	: identifier opt_type_args
+	{
+		$$ = new MemberName ((string) $1, (TypeArguments) $2);
+	}
+	| type_name DOT identifier opt_type_args
+	{
+		$$ = new MemberName ((MemberName) $1, (string) $3, (TypeArguments) $4);
+	}
 	;
 	
 opt_imports_directives
@@ -1574,34 +1587,43 @@ method_declaration
 	
 
 sub_declaration
-	: SUB identifier opt_params 
+	: SUB identifier opt_type_params opt_params
 	  {
-		MemberName name = new MemberName ((string) $2);
+		TypeArguments type_args = (TypeArguments) $3;
+		MemberName name = (type_args == null)
+			? new MemberName ((string) $2)
+			: new MemberName ((string) $2, type_args);
 
 		if ((current_container is Struct) && (current_modifiers == 0))
-			current_modifiers = Modifiers.PUBLIC;		
+			current_modifiers = Modifiers.PUBLIC;
 
 
 		GenericMethod generic = null;
+		if (type_args != null) {
+			generic = new GenericMethod (current_namespace, current_container, name, lexer.Location);
+			generic.SetParameterInfo (null);
+		}
 		Method method = new Method (current_class, generic, TypeManager.system_void_expr,
-					    (int) current_modifiers, false, name, 
-					    (Parameters) $3, (Attributes) current_attributes, 
+					    (int) current_modifiers, false, name,
+					    (Parameters) $4, (Attributes) current_attributes,
 					    lexer.Location);
 
-		current_local_parameters = (Parameters) $3;
+		current_local_parameters = (Parameters) $4;
 		$$ = method;
 
 		iterator_container = (IIteratorContainer) method;
 	  }
-	  opt_evt_handler opt_implement_clause logical_end_of_line 
+	  opt_evt_handler opt_implement_clause logical_end_of_line
 	  // FIXME: opt_event_handler and opt_implements_clause are yet to be handled
 	  begin_block
-	  opt_statement_list 
+	  opt_statement_list
 	  end_block
 	  END SUB logical_end_of_line
 	  {
-		Method method = (Method) $4;
-		Block b = (Block) $10;
+		// Position shift: opt_type_args added as $3, so the mid-rule
+		// action is now at $5 and end_block at $11.
+		Method method = (Method) $5;
+		Block b = (Block) $11;
 		const int extern_abstract = (Modifiers.EXTERN | Modifiers.ABSTRACT);
 
 		if (b == null){
@@ -1618,7 +1640,7 @@ sub_declaration
 			}
 		}
 
-		method.Block = (ToplevelBlock) $10;
+		method.Block = (ToplevelBlock) $11;
 		current_container.AddMethod (method);
 
 		current_local_parameters = null;
@@ -1627,19 +1649,26 @@ sub_declaration
 	;
 
 func_declaration
-	: FUNCTION identifier opt_type_character
-	  opt_params opt_type_with_ranks 
+	: FUNCTION identifier opt_type_params opt_type_character
+	  opt_params opt_type_with_ranks
 	  {
-		MemberName name =  new MemberName ((string) $2);
-		Expression rettype = ($5 == null) ? (($3 == null) ? TypeManager.system_object_expr : (Expression) $3 ) : (Expression) $5;
+		TypeArguments type_args = (TypeArguments) $3;
+		MemberName name = (type_args == null)
+			? new MemberName ((string) $2)
+			: new MemberName ((string) $2, type_args);
+		Expression rettype = ($6 == null) ? (($4 == null) ? TypeManager.system_object_expr : (Expression) $4 ) : (Expression) $6;
 
 		GenericMethod generic = null;
+		if (type_args != null) {
+			generic = new GenericMethod (current_namespace, current_container, name, lexer.Location);
+			generic.SetParameterInfo (null);
+		}
 
 		Method method = new Method (current_class, generic, rettype, current_modifiers,
-					    false, name,  (Parameters) $4, current_attributes,
+					    false, name,  (Parameters) $5, current_attributes,
 					    lexer.Location);
 
-		current_local_parameters = (Parameters) $4;
+		current_local_parameters = (Parameters) $5;
 
 		$$ = method;
 		iterator_container = method;
@@ -1647,19 +1676,22 @@ func_declaration
 // 	  FIXME: opt_implement_clauses needs to be taken care of
 	  opt_implement_clause logical_end_of_line
 	  begin_block
-	  { 
-		Method method = (Method) $6;
+	  {
+		// Position shift: opt_type_args added as $3, so the first
+		// mid-rule action moved from $6 to $7.
+		Method method = (Method) $7;
 
 		ArrayList retval = new ArrayList ();
 		retval.Add (new VariableDeclaration ((string) $2, method.Type, lexer.Location));
 		declare_local_variables (method.Type, retval, lexer.Location);
-	  }	  
+	  }
 	  opt_statement_list
 	  end_block
 	  END FUNCTION logical_end_of_line
 	  {
-		Method method = (Method) $6;
-		Block b = (Block) $12;
+		// Position shift: mid-rule 1 is now $7, end_block is now $13.
+		Method method = (Method) $7;
+		Block b = (Block) $13;
 		const int extern_abstract = (Modifiers.EXTERN | Modifiers.ABSTRACT);
 
 		if (b == null){
@@ -4717,13 +4749,57 @@ boolean_expression
 	: expression
 	;
 
+opt_type_args
+	: /* empty */
+	  { $$ = null; }
+	| OPEN_PARENS_OF type_argument_list CLOSE_PARENS
+	  { $$ = $2; }
+	;
+
+opt_type_params
+	: /* empty */
+	  { $$ = null; }
+	| OPEN_PARENS_OF type_parameter_list CLOSE_PARENS
+	  { $$ = $2; }
+	;
+
+type_parameter_list
+	: identifier
+	  {
+		TypeArguments args = new TypeArguments (lexer.Location);
+		args.Add (new SimpleName ((string) $1, lexer.Location));
+		$$ = args;
+	  }
+	| type_parameter_list COMMA identifier
+	  {
+		TypeArguments args = (TypeArguments) $1;
+		args.Add (new SimpleName ((string) $3, lexer.Location));
+		$$ = args;
+	  }
+	;
+
+type_argument_list
+	: type
+	  {
+		TypeArguments args = new TypeArguments (lexer.Location);
+		args.Add ((Expression) $1);
+		$$ = args;
+	  }
+	| type_argument_list COMMA type
+	  {
+		TypeArguments args = (TypeArguments) $1;
+		args.Add ((Expression) $3);
+		$$ = args;
+	  }
+	;
+
 type
-	: namespace_or_type_name 
-	  {  	
+	: type_name
+	  {
 		$$ = ((MemberName) $1).GetTypeExpression (lexer.Location);
 	  }
-	| builtin_types 
-	//| array_type 
+	| builtin_types
+	//| array_type
 	;
 
 type_list

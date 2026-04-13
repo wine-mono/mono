@@ -227,7 +227,8 @@ namespace Mono.CSharp
 			keywords.Add ("notinheritable", Token.NOTINHERITABLE);
 			keywords.Add ("notoverridable", Token.NOTOVERRIDABLE);
 			keywords.Add ("object", Token.OBJECT);
-			keywords.Add ("off", Token.OFF); // Not a VB.NET Keyword 
+			keywords.Add ("of", Token.OF);
+			keywords.Add ("off", Token.OFF); // Not a VB.NET Keyword
 			keywords.Add ("on", Token.ON);
 			keywords.Add ("option", Token.OPTION);
 			keywords.Add ("optional", Token.OPTIONAL);
@@ -804,17 +805,59 @@ namespace Mono.CSharp
 			return Token.EOL;
 		}	
 			
+		// Single-slot token buffer used to merge the two-token sequence
+		// "OPEN_PARENS OF" into a single OPEN_PARENS_OF token. The VB
+		// parser needs to distinguish "foo(" (method call or array index)
+		// from "foo(Of" (generic type-argument list) with LALR(1) lookahead;
+		// merging the two tokens into one at the lexer level resolves the
+		// ambiguity cleanly.
+		int pending_token = 0;
+		object pending_val = null;
+
 		public int token ()
 		{
+			if (pending_token != 0) {
+				current_token = pending_token;
+				val = pending_val;
+				pending_token = 0;
+				pending_val = null;
+				return current_token;
+			}
+
 			int lastToken = current_token;
 			do
 			{
 				current_token = xtoken ();
-				if (current_token == 0) 
+				if (current_token == 0)
 					return Token.EOF;
 				if (current_token == Token.REM)
 					current_token = DropComments();
 			} while (lastToken == Token.EOL && current_token == Token.EOL);
+
+			// Merge "( Of" into OPEN_PARENS_OF only when the Of token
+			// is on the same logical line. VB generic type-argument and
+			// type-parameter lists use "(Of", but an end-of-line after
+			// "(" should still terminate the statement unless some other
+			// continuation rule applies.
+			if (current_token == Token.OPEN_PARENS) {
+				object saved_val = val;
+				int next;
+				next = xtoken ();
+				if (next == 0)
+					next = Token.EOF;
+				else if (next == Token.REM)
+					next = DropComments ();
+
+				if (next == Token.OF) {
+					current_token = Token.OPEN_PARENS_OF;
+					val = saved_val;
+				} else {
+					pending_token = next;
+					pending_val = val;
+					val = saved_val;
+					current_token = Token.OPEN_PARENS;
+				}
+			}
 
 			// Console.WriteLine ("Token = " + val);
 
