@@ -4034,6 +4034,18 @@ local_variable_declaration
 	  {
 		$$ = new DictionaryEntry (DecomposeQI("_local_vars_", lexer.Location), $2);		
 	  }
+	| STATIC variable_declarators
+	  {
+		// VB Static locals need shared backing storage with
+		// once-only initialization and recursive-call visibility.
+		// bmcs does not implement that lowering safely, so reject
+		// them instead of silently treating them like ordinary locals.
+		Report.Error (30826, lexer.Location,
+			"'Static' local variables are not supported by this " +
+			"bootstrap compiler; rewrite as a Shared or instance " +
+			"field on the enclosing class");
+		$$ = new DictionaryEntry (DecomposeQI("_local_vars_", lexer.Location), $2);
+	  }
  	;
 
 	
