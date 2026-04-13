@@ -646,6 +646,7 @@ namespace Mono.CSharp
 %token TYPEOF	
 %token UNICODE
 %token UNTIL
+%token USING
 %token VARIANT	
 %token WEND
 %token WHEN	
@@ -3078,6 +3079,8 @@ embedded_statement
 	| selection_statement
 	| while_statement
 	| redim_statement
+	| stop_statement
+	| using_statement
 	| try_statement
 	| synclock_statement
 	| jump_statement
@@ -3168,6 +3171,131 @@ redim_clauses
 redim_clause
 	: invocation_expression
 	  { $$ = $1; }
+	;
+
+stop_statement
+	: STOP
+	  {
+		// VB Stop is a debugger break. Bootstrap builds only need the
+		// control-flow shape, so keep it as an explicit no-op instead of
+		// pretending to hook a debugger.
+		$$ = EmptyStatement.Value;
+	  }
+	;
+
+using_statement
+	: USING using_resource_declarators end_of_stmt
+	  {
+		// The spec defines multi-resource declaration-form Using as
+		// nested Using statements with one read-only local per resource.
+		// Build that scope chain up front so later resources see earlier
+		// ones, while earlier initializers cannot see later locals.
+		oob_stack.Push (PrepareUsingStatementResources ((ArrayList) $2));
+		start_block ();
+	  }
+	  opt_statement_list
+	  END USING
+	  {
+		Block body = end_block ();
+		ArrayList resources = (ArrayList) oob_stack.Pop ();
+		$$ = FinishUsingStatementResources (resources, body);
+	  }
+	| USING expression end_of_stmt
+	  block
+	  END USING
+	  {
+		$$ = new Using ((Expression) $2, (Statement) $4, lexer.Location);
+	  }
+	;
+
+using_resource_declarators
+	: using_resource_declarator
+	  {
+		ArrayList decl = new ArrayList ();
+		decl.AddRange ((ArrayList) $1);
+		$$ = decl;
+	  }
+	| using_resource_declarators COMMA using_resource_declarator
+	  {
+		ArrayList decls = (ArrayList) $1;
+		decls.AddRange ((ArrayList) $3);
+		$$ = $1;
+	  }
+	;
+
+using_resource_declarator
+	: using_variable_names ASSIGN variable_initializer
+	  {
+		$$ = BuildUsingResourceDeclarators (
+			(ArrayList) $1, null, $3, lexer.Location);
+	  }
+	| using_variable_names using_nonnew_type_decl ASSIGN variable_initializer
+	  {
+		$$ = BuildUsingResourceDeclarators (
+			(ArrayList) $1, $2, $4, lexer.Location);
+	  }
+	| using_variable_names using_nonnew_type_decl
+	  {
+		$$ = BuildUsingResourceDeclarators (
+			(ArrayList) $1, $2, null, lexer.Location);
+	  }
+	| using_variable_names using_new_type_decl
+	  {
+		$$ = BuildUsingResourceDeclarators (
+			(ArrayList) $1, $2, null, lexer.Location);
+	  }
+	;
+
+using_variable_names
+	: using_variable_name
+	  {
+		ArrayList list = new ArrayList ();
+		list.Add ($1);
+		$$ = list;
+	  }
+	| using_variable_names COMMA using_variable_name
+	  {
+		ArrayList list = (ArrayList) $1;
+		list.Add ($3);
+		$$ = list;
+	  }
+	;
+
+using_variable_name
+	: identifier opt_type_character
+	  {
+		// Declaration-form Using resources must stay distinguishable from
+		// expression-form resource expressions like 'Using MakeResource()'.
+		// Do not admit the name-side array-rank syntax here; array resources
+		// are not valid disposable locals anyway, and allowing 'name()' would
+		// steal invocation expressions from the expression-form grammar.
+		$$ = new VarName ($1, $2, null);
+	  }
+	;
+
+using_nonnew_type_decl
+	: AS type
+	  {
+		$$ = (Expression) $2;
+	  }
+	| AS type rank_specifiers
+	  {
+		string dims = VariableDeclaration.BuildRanks ((ArrayList) $3, true, lexer.Location);
+		$$ = new ComposedCast ((Expression) $2, dims, lexer.Location);
+	  }
+	;
+
+using_new_type_decl
+	: AS NEW type
+	  {
+	  	New n = new New ((Expression)$3, null, lexer.Location);
+	  	$$ = (Expression) n;
+	  }
+	| AS NEW type OPEN_PARENS opt_argument_list CLOSE_PARENS
+	  {
+	  	New n = new New ((Expression)$3, (ArrayList) $5, lexer.Location);
+	  	$$ = (Expression) n;
+	  }
 	;
 
 // erase_statement
@@ -5386,6 +5514,131 @@ Block declare_local_constant (Expression dummy_type, ArrayList variable_declarat
 	}
 	
 	return implicit_block;
+}
+
+ArrayList BuildUsingResourceDeclarators (ArrayList names, object opt_type_decl, object opt_initializer, Location loc)
+{
+	ArrayList declarations = new ArrayList ();
+
+	if ((names.Count > 1) && (opt_initializer != null))
+		Report.Error (30671, loc,
+			"Multiple variables with single type can not have " +
+			"a explicit initialization" );
+
+	foreach (VarName vname in names)
+	{
+		string varname = (string) vname.Name;
+		current_rank_specifiers = (ArrayList) vname.Rank;
+		object varinit = opt_initializer;
+		Expression vartype;
+
+		if (vname.Type != null && opt_type_decl != null)
+			Report.Error (
+				30302, loc,
+				"Type character cannot be used with explicit type declaration" );
+
+		vartype = (opt_type_decl == null) ?
+			((vname.Type == null) ? TypeManager.system_object_expr : (Expression) vname.Type) :
+			(Expression) opt_type_decl;
+
+		if (current_rank_specifiers != null && varinit != null)
+		{
+			bool broken = false;
+			foreach (ArrayList exprs in current_rank_specifiers)
+			{
+				foreach (Expression expr in exprs)
+				{
+					if (!((Expression)expr is EmptyExpression))
+					{
+						Report.Error (
+							30672, loc,
+							"Array declared with explicit bound " +
+							" can not have explicit initialization");
+						broken = true;
+						break;
+					}
+				}
+				if (broken)
+					break;
+			}
+		}
+
+		if (current_rank_specifiers != null && !(vartype is New)) {
+			string dims = VariableDeclaration.BuildRanks (current_rank_specifiers, false, loc);
+			vartype = new ComposedCast (vartype, dims, loc);
+		}
+
+		if (vartype is New) {
+			if (varinit != null) {
+				Report.Error (30205, loc, "End of statement expected");
+			} else {
+				varinit = vartype;
+				vartype = ((New)vartype).RequestedType;
+			}
+		}
+
+		declarations.Add (new VariableDeclaration (varname, vartype, varinit, loc, null));
+	}
+
+	return declarations;
+}
+
+ArrayList PrepareUsingStatementResources (ArrayList variable_declarators)
+{
+	VariableDeclaration.FixupTypes (variable_declarators);
+
+	ArrayList resources = new ArrayList (variable_declarators.Count);
+	foreach (VariableDeclaration decl in variable_declarators) {
+		start_block ();
+
+		if (decl.expression_or_array_initializer == null) {
+			Report.Error (30830, decl.Location,
+				"'Using' resource variables must include an initializer");
+			resources.Add (new Pair (null, decl.Location));
+			continue;
+		}
+
+		LocalInfo vi = current_block.AddVariable (
+			decl.type, decl.identifier, current_local_parameters, decl.Location);
+
+		if (vi == null) {
+			resources.Add (new Pair (null, decl.Location));
+			continue;
+		}
+
+		vi.ReadOnly = true;
+
+		ArrayList var_entries = new ArrayList (1);
+		var_entries.Add (new DictionaryEntry (
+			// The synthesized initialization inside the Using node must write
+			// the resource once even though user code sees the local as
+			// read-only inside the block.
+			new LocalVariableReference (current_block, decl.identifier, decl.Location, vi, false),
+			decl.expression_or_array_initializer));
+
+		resources.Add (new Pair (
+			new DictionaryEntry (decl.type, var_entries), decl.Location));
+	}
+
+	return resources;
+}
+
+Statement FinishUsingStatementResources (ArrayList resources, Block body)
+{
+	Statement stmt = body;
+
+	for (int i = resources.Count - 1; i >= 0; --i) {
+		Pair resource = (Pair) resources [i];
+
+		if (resource.First != null)
+			current_block.AddStatement (new Using (resource.First, stmt, (Location) resource.Second));
+		else
+			current_block.AddStatement (stmt);
+
+		stmt = end_block ();
+	}
+
+	return stmt;
 }
 
 

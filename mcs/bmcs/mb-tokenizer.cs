@@ -276,6 +276,7 @@ namespace Mono.CSharp
 			keywords.Add ("typeof", Token.TYPEOF);
 			keywords.Add ("unicode", Token.UNICODE);
 			keywords.Add ("until", Token.UNTIL);
+			keywords.Add ("using", Token.USING);
 			keywords.Add ("variant", Token.VARIANT); // An unused VB.NET keyword
 			keywords.Add ("wend", Token.WEND); // An unused VB.NET keyword
 			keywords.Add ("when", Token.WHEN);
