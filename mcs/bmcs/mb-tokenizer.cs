@@ -175,7 +175,8 @@ namespace Mono.CSharp
 			keywords.Add ("default", Token.DEFAULT);
 			keywords.Add ("delegate", Token.DELEGATE);
 			keywords.Add ("dim", Token.DIM);
-			keywords.Add ("directcast", Token.DIRECTCAST);			
+			keywords.Add ("directcast", Token.DIRECTCAST);
+			keywords.Add ("trycast", Token.TRYCAST);
 			keywords.Add ("do", Token.DO);
 			keywords.Add ("double", Token.DOUBLE);
 			keywords.Add ("each", Token.EACH);

@@ -545,6 +545,7 @@ namespace Mono.CSharp
 %token DELEGATE	
 %token DIM
 %token DIRECTCAST
+%token TRYCAST
 %token DO	
 %token DOUBLE	
 %token EACH	
@@ -4694,6 +4695,14 @@ cast_expression
         : DIRECTCAST OPEN_PARENS expression COMMA type CLOSE_PARENS
 	  {
 	  	// TODO
+	  }
+	| TRYCAST OPEN_PARENS expression COMMA type CLOSE_PARENS
+	  {
+		// VB TryCast returns Nothing for a failed reference cast.
+		// Keep it separate from the C# 'as' node because VB TryCast is
+		// restricted to native CLR conversions and must reject value-typed
+		// operands instead of silently boxing them.
+		$$ = new VBTryCast ((Expression) $3, (Expression) $5, lexer.Location);
 	  }
 	| CTYPE OPEN_PARENS expression COMMA type CLOSE_PARENS
 	  {

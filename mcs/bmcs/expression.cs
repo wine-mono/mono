@@ -1282,6 +1282,111 @@ namespace Mono.CSharp {
 			return null;
 		}				
 	}
+
+	/// <summary>
+	///   Implements VB's TryCast expression.
+	/// </summary>
+	public class VBTryCast : Probe {
+		bool do_isinst = false;
+
+		public VBTryCast (Expression expr, Expression probe_type, Location l)
+			: base (expr, probe_type, l)
+		{
+		}
+
+		static bool IsReferenceTypeParameter (Type t)
+		{
+			if (!t.IsGenericParameter)
+				return false;
+
+			GenericConstraints gc = TypeManager.GetTypeParameterConstraints (t);
+			return (gc != null) && gc.IsReferenceType;
+		}
+
+		static void Error_NotReferenceType (Type t, Location loc)
+		{
+			Report.Error (30792, loc,
+				"'TryCast' requires a reference-typed operand and target; " +
+				"`{0}' is not known to be a reference type",
+				TypeManager.CSharpName (t));
+		}
+
+		static void Error_TypeParameterNeedsReferenceConstraint (Type t, Location loc)
+		{
+			Report.Error (30793, loc,
+				"'TryCast' operands of type parameter type `{0}' must have a reference-type constraint",
+				TypeManager.CSharpName (t));
+		}
+
+		static void Error_CannotConvertType (Type source, Type target, Location loc)
+		{
+			Report.Error (
+				39, loc, "TryCast cannot convert from `" +
+				TypeManager.CSharpName (source) + "' to `" +
+				TypeManager.CSharpName (target) + "'");
+		}
+
+		public override Expression DoResolve (EmitContext ec)
+		{
+			Expression e = base.DoResolve (ec);
+			if (e == null)
+				return null;
+
+			type = probe_type;
+			eclass = ExprClass.Value;
+
+			Type etype = expr.Type;
+
+			if (!probe_type.IsGenericParameter && TypeManager.IsValueType (probe_type)) {
+				Error_NotReferenceType (probe_type, loc);
+				return null;
+			}
+
+			if (etype.IsGenericParameter && !IsReferenceTypeParameter (etype)) {
+				Error_TypeParameterNeedsReferenceConstraint (etype, loc);
+				return null;
+			}
+
+			if (probe_type.IsGenericParameter && !IsReferenceTypeParameter (probe_type)) {
+				Error_TypeParameterNeedsReferenceConstraint (probe_type, loc);
+				return null;
+			}
+
+			if (!etype.IsGenericParameter && TypeManager.IsValueType (etype)) {
+				Error_NotReferenceType (etype, loc);
+				return null;
+			}
+
+			// VB TryCast is restricted to native CLR conversions and maps to
+			// isinst.  Accept identity and widening reference conversions, then
+			// fall back to narrowing reference conversions for the runtime test.
+			e = Convert.WideningConversionStandard (ec, expr, probe_type, loc);
+			if (e != null) {
+				expr = e;
+				do_isinst = false;
+				return this;
+			}
+
+			if (Convert.NarrowingReferenceConversionExists (etype, probe_type)) {
+				if (etype.IsGenericParameter)
+					expr = new BoxedCast (expr, etype);
+
+				do_isinst = true;
+				return this;
+			}
+
+			Error_CannotConvertType (etype, probe_type, loc);
+			return null;
+		}
+
+		public override void Emit (EmitContext ec)
+		{
+			expr.Emit (ec);
+
+			if (do_isinst)
+				ec.ig.Emit (OpCodes.Isinst, probe_type);
+		}
+	}
 	
 	/// <summary>
 	///   This represents a typecast in the source language.
