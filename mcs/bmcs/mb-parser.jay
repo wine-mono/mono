@@ -3970,43 +3970,43 @@ object_creation_expression
 	;
 	
 
-// array_creation_expression
-// 	: object_creation_expression opt_rank_specifiers array_initializer
-// 	  {
-// 	  	New n = (New) $1;
-// 	  	ArrayList dims = new ArrayList();
-	  	
-// 	  	if (n.Arguments != null) {
-// 		  	foreach (Argument a in n.Arguments) {
-// 		  		dims.Add (a.Expr);
-// 		  	}
-// 		}
-			
-// 	  	Expression atype = n.RequestedType;
+array_creation_expression
+	: object_creation_expression array_initializer
+	  {
+		// Reuse object_creation_expression for the shared 'New T(...)'
+		// prefix, then reinterpret it as an array creation once a
+		// trailing initializer appears. The argument list already
+		// preserves VB's omitted-bound forms like '(,)' as
+		// EmptyExpression entries, so we can distinguish
+		// 'New T(1,2) {...}' from 'New T(,) {...}' here without a
+		// second array-only prefix grammar.
+		New n = (New) $1;
+		ArrayList dims = new ArrayList ();
 
-// 		if ($2 != null)
-// 			atype = DecomposeQI (atype.ToString () + VariableDeclaration.BuildRanks ((ArrayList)$2, true, lexer.Location), lexer.Location);
+		if (n.Arguments != null) {
+			foreach (Argument a in n.Arguments)
+				dims.Add (a.Expr);
+		}
 
-// 		ArrayList init = (ArrayList) $3;
-// 		if (init.Count == 0)
-// 			init = null;
-  	
-// 	  	if (VariableDeclaration.IndexesSpecifiedInRank(dims)) {
-// 	  		VariableDeclaration.VBFixIndexList (ref dims);
-// 	  		$$ = new ArrayCreation (atype, dims, "", init, lexer.Location); 
-// 	  	}
-// 	  	else
-// 	  	{
-// 	  		string rank = VariableDeclaration.BuildRank (dims);
-// 	  		$$ = new ArrayCreation (atype, rank, (ArrayList) $3, lexer.Location); 
-// 	  	}
-// 	  	//Console.WriteLine ("Creating a new array of type " + (atype.ToString()) + " with rank '" + dims + "'");
-// 	  }
-// 	;	
+		ArrayList init = (ArrayList) $2;
+		if (init.Count == 0)
+			init = null;
+
+		if (VariableDeclaration.IndexesSpecifiedInRank (dims)) {
+			// VB array bounds are upper bounds, but ArrayCreation
+			// consumes lengths.
+			VariableDeclaration.VBFixIndexList (ref dims);
+			$$ = new ArrayCreation (n.RequestedType, dims, "", init, lexer.Location);
+		} else {
+			string rank = VariableDeclaration.BuildRank (dims);
+			$$ = new ArrayCreation (n.RequestedType, rank, init, lexer.Location);
+		}
+	  }
+	;	
 
 new_expression
 	: object_creation_expression
-// 	| array_creation_expression
+	| array_creation_expression
 	;
 
 declaration_statement
