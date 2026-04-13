@@ -205,6 +205,13 @@ namespace Mono.CSharp
 		// inside a With block resolve against the topmost entry.
 		Stack with_stack;
 
+		// Name of the implicit return local for the currently parsed
+		// Function or Get accessor body.  Used to apply the VB rule that
+		// invocation and AddressOf contexts skip that local and keep
+		// looking for a method/property member with the same name.
+		string current_return_name;
+		bool current_method_is_shared;
+
 		static public int yacc_verbose_flag;
 
 		// Name of the file we are parsing
@@ -1867,6 +1874,8 @@ func_declaration
 					    lexer.Location);
 
 		current_local_parameters = (Parameters) $5;
+		current_return_name = (string) $2;
+		current_method_is_shared = (current_modifiers & Modifiers.STATIC) != 0;
 
 		$$ = method;
 		iterator_container = method;
@@ -1909,6 +1918,8 @@ func_declaration
 		method.Block = (ToplevelBlock) b;
 		current_container.AddMethod (method);
 
+		current_return_name = null;
+		current_method_is_shared = false;
 		current_local_parameters = null;
 		iterator_container = null;
 	  }
@@ -2663,6 +2674,8 @@ get_accessor_declaration
 	  		Report.Error (30023, "'WriteOnly' properties cannot have a 'Get' accessor");
 	  
 		current_local_parameters = get_parameters;
+		current_return_name = get_implicit_value_parameter_name;
+		current_method_is_shared = (current_modifiers & Modifiers.STATIC) != 0;
 		
 		lexer.PropertyParsing = false;
 		
@@ -2682,6 +2695,8 @@ get_accessor_declaration
 		$$ = new Accessor ((ToplevelBlock) $9, (int) $2,
 				   (Attributes) $1, lexer.Location);
 
+		current_return_name = null;
+		current_method_is_shared = false;
 		current_local_parameters = null;
 		lexer.PropertyParsing = true;
 	  }
@@ -4874,7 +4889,8 @@ invocation_expression
 			Location l = lexer.Location;
 			Report.Error (1, l, "Parse error");
 		}
-		$$ = new Invocation ((Expression) $1, (ArrayList) $3, lexer.Location);
+		Expression prim = DisambiguateReturnNameInvocation ((Expression) $1);
+		$$ = new Invocation (prim, (ArrayList) $3, lexer.Location);
 	  }
 	| CALL primary_expression OPEN_PARENS opt_argument_list CLOSE_PARENS
 	  {
@@ -4882,8 +4898,8 @@ invocation_expression
 			Location l = lexer.Location;
 			Report.Error (1, l, "THIS IS CRAZY");
 		}
-		$$ = new Invocation ((Expression) $2, (ArrayList) $3, lexer.Location);
-//		Console.WriteLine ("Invocation: {0} with {1} arguments", $2, ($3 != null) ? ((ArrayList) $3).Count : 0);
+		Expression prim = DisambiguateReturnNameInvocation ((Expression) $2);
+		$$ = new Invocation (prim, (ArrayList) $3, lexer.Location);
 	  }
 	;
 	
@@ -4951,7 +4967,8 @@ argument
 	  }
 	| ADDRESSOF expression
 	  {
-		$$ = new Argument ((Expression) $2, Argument.AType.AddressOf);
+		Expression aoexpr = DisambiguateReturnNameInvocation ((Expression) $2);
+		$$ = new Argument (aoexpr, Argument.AType.AddressOf);
 	  }
 	;
 
@@ -5285,14 +5302,9 @@ assignment_expression
 			Binary.Operator.ExclusiveOr, (Expression) $1, (Expression) $4, l); */
 	  }
 	| prefixed_unary_expression ASSIGN ADDRESSOF expression
-	  { 
-// 		ArrayList args = new ArrayList();
-// 		Argument arg = new Argument ((Expression) $4, Argument.AType.Expression);
-// 		args.Add (arg);
-		
-// 		New n = new New ((Expression) $1, (ArrayList) args, lexer.Location);
-// 		n.isDelegate = true;
-		$$ = new Assign ((Expression) $1, (Expression) $4, lexer.Location);
+	  {
+		Expression aorhs = DisambiguateReturnNameInvocation ((Expression) $4);
+		$$ = new Assign ((Expression) $1, aorhs, lexer.Location);
 	  }
 	;
 
@@ -5777,6 +5789,24 @@ Statement FinishUsingStatementResources (ArrayList resources, Block body)
 	}
 
 	return stmt;
+}
+
+Expression DisambiguateReturnNameInvocation (Expression primary)
+{
+	if (current_return_name == null)
+		return primary;
+
+	SimpleName sn = primary as SimpleName;
+	if (sn == null || sn.Name != current_return_name)
+		return primary;
+
+	Expression target;
+	if (current_method_is_shared)
+		target = new SimpleName (current_class.Name, sn.Location);
+	else
+		target = new This (sn.Location);
+
+	return new MemberAccess (target, sn.Name, sn.Arguments, sn.Location);
 }
 
 
