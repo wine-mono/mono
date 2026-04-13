@@ -385,7 +385,7 @@ public partial class TypeManager {
 
 	// <remarks>
 	//   Maps PropertyBuilder to a Type array that contains
-	//   the arguments to the indexer
+	//   the arguments to a parameterized property or indexer.
 	// </remarks>
 	static Hashtable indexer_arguments;
 
@@ -2574,11 +2574,10 @@ public partial class TypeManager {
 		}
 
 	/// <summary>
-	///    Returns the argument types for an indexer based on its PropertyInfo
+	///    Returns the argument types for a parameterized property or indexer.
 	///
-	///    For dynamic indexers, we use the compiler provided types, for
-	///    indexers from existing assemblies we load them from GetParameters,
-	///    and insert them into the cache
+	///    For dynamic properties, we use the compiler provided types. For
+	///    existing assemblies we load them from GetParameters and cache them.
 	/// </summary>
 	static public Type [] GetArgumentTypes (PropertyInfo indexer)
 	{
@@ -2704,6 +2703,11 @@ public partial class TypeManager {
 	
 	static public bool RegisterProperty (PropertyBuilder pb, MethodBase get, MethodBase set)
 	{
+		return RegisterProperty (pb, get, set, NoTypes);
+	}
+
+	static public bool RegisterProperty (PropertyBuilder pb, MethodBase get, MethodBase set, Type[] args)
+	{
 		if (properties == null)
 			properties = new Hashtable ();
 
@@ -2712,18 +2716,19 @@ public partial class TypeManager {
 
 		properties.Add (pb, new Pair (get, set));
 
+		// PropertyBuilder.GetIndexParameters does not give us the source-side
+		// signature during binding, so cache parameterized named properties and
+		// indexers here.
+		if (args != null && args.Length != 0)
+			indexer_arguments [pb] = args;
+
 		return true;
 	}
 
 	static public bool RegisterIndexer (PropertyBuilder pb, MethodBase get,
                                             MethodBase set, Type[] args)
 	{
-		if (!RegisterProperty (pb, get,set))
-			return false;
-
-		indexer_arguments.Add (pb, args);
-
-		return true;
+		return RegisterProperty (pb, get, set, args);
 	}
 
 	public static bool CheckStructCycles (TypeContainer tc, Hashtable seen)

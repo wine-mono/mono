@@ -6354,6 +6354,32 @@ namespace Mono.CSharp {
 			return (new ParameterizedPropertyAccess (property, Arguments, loc)).ResolveLValue (ec, right_side);
 		}
 
+		ArrayList ExtractIndexExpressions ()
+		{
+			ArrayList idx_args = new ArrayList (Arguments == null ? 0 : Arguments.Count);
+			if (Arguments == null)
+				return idx_args;
+
+			foreach (Argument arg in Arguments)
+				idx_args.Add (arg.Expr);
+
+			return idx_args;
+		}
+
+		Expression ResolveValueIndexInvocation (EmitContext ec)
+		{
+			// VB uses the same postfix-parentheses surface syntax for invocation
+			// and index expressions.  Once overload resolution proves the target is
+			// a value rather than a method group or delegate, re-run it through
+			// ElementAccess so arrays and default properties share one binding path.
+			return (new ElementAccess (expr, ExtractIndexExpressions (), loc)).Resolve (ec);
+		}
+
+		Expression ResolveValueIndexInvocationLValue (EmitContext ec, Expression right_side)
+		{
+			return (new ElementAccess (expr, ExtractIndexExpressions (), loc)).ResolveLValue (ec, right_side);
+		}
+
 		public override Expression DoResolve (EmitContext ec)
 		{
 			expr = ResolveInvocationTarget (ec);
@@ -6372,6 +6398,8 @@ namespace Mono.CSharp {
 					if (IsDelegate)
 						return (new DelegateInvocation (
 							this.expr, Arguments, loc)).Resolve (ec);
+
+					return ResolveValueIndexInvocation (ec);
 				}
 			}
 
@@ -6466,6 +6494,9 @@ namespace Mono.CSharp {
 			PropertyExpr property = expr as PropertyExpr;
 			if (property != null)
 				return ResolvePropertyInvocationLValue (ec, property, right_side);
+
+			if (!(expr is MethodGroupExpr) && expr.Type != null && !TypeManager.IsDelegateType (expr.Type))
+				return ResolveValueIndexInvocationLValue (ec, right_side);
 
 			return base.DoResolveLValue (ec, right_side);
 		}

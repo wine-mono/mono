@@ -6186,9 +6186,7 @@ namespace Mono.CSharp {
 			protected virtual InternalParameters GetParameterInfo (EmitContext ec)
 			{
 				if (parameters == null) {
-					Parameter [] parms = new Parameter [1];
-					parms [0] = new Parameter (method.Type, "Screwed", Parameter.Modifier.NONE, null);
-					parameters = new Parameters (parms, null, method.Location);
+					parameters = Parameters.EmptyReadOnlyParameters;
 				}
 				
 				Type [] types = parameters.GetParameterInfo (ec);
@@ -6215,6 +6213,15 @@ namespace Mono.CSharp {
 			public override Type ReturnType {
 				get {
 					return method.MemberType;
+				}
+			}
+
+			public override Type[] ParameterTypes {
+				get {
+					if (parameters == null || method.ParameterTypes == null)
+						return TypeManager.NoTypes;
+
+					return method.ParameterTypes;
 				}
 			}
 
@@ -6305,7 +6312,14 @@ namespace Mono.CSharp {
 
 			public override Type[] ParameterTypes {
 				get {
-					return new Type[] { method.MemberType };
+					if (parameters == null || method.ParameterTypes == null)
+						return new Type[] { method.MemberType };
+
+					int top = method.ParameterTypes.Length;
+					Type [] types = new Type [top + 1];
+					method.ParameterTypes.CopyTo (types, 0);
+					types [top] = method.MemberType;
+					return types;
 				}
 			}
 
@@ -6719,7 +6733,7 @@ namespace Mono.CSharp {
 				 Parameters set_params, Accessor set_block, Location loc)
 			: base (ds, type, mod,
 				is_iface ? AllowedInterfaceModifiers : AllowedModifiers,
-				is_iface, name, Parameters.EmptyReadOnlyParameters, attrs,
+				is_iface, name, get_params, attrs,
 				loc)
 		{
 			if (get_block == null)
@@ -6731,6 +6745,39 @@ namespace Mono.CSharp {
 				Set = new SetMethod (this, set_params);
 			else
 				Set = new SetMethod (this, set_block, set_params);
+		}
+
+		void DefineAccessorParameters ()
+		{
+			int param_idx = 1;
+			Parameter [] fixed_parameters = Parameters.FixedParameters;
+			if (fixed_parameters != null) {
+				for (int i = 0; i < fixed_parameters.Length; ++i, ++param_idx) {
+					if (!Get.IsDummy)
+						GetBuilder.DefineParameter (
+							param_idx, fixed_parameters [i].Attributes, fixed_parameters [i].Name);
+
+					if (!Set.IsDummy)
+						SetBuilder.DefineParameter (
+							param_idx, fixed_parameters [i].Attributes, fixed_parameters [i].Name);
+				}
+			}
+
+			Parameter array_parameter = Parameters.ArrayParameter;
+			if (array_parameter != null) {
+				if (!Get.IsDummy)
+					GetBuilder.DefineParameter (
+						param_idx, array_parameter.Attributes, array_parameter.Name);
+
+				if (!Set.IsDummy)
+					SetBuilder.DefineParameter (
+						param_idx, array_parameter.Attributes, array_parameter.Name);
+
+				param_idx++;
+			}
+
+			if (!Set.IsDummy)
+				SetBuilder.DefineParameter (param_idx, ParameterAttributes.None, "value");
 		}
 
 		public override bool Define ()
@@ -6771,9 +6818,13 @@ namespace Mono.CSharp {
 				SetBuilder = Set.Define (Parent);
 				if (SetBuilder == null)
 					return false;
-
-				SetBuilder.DefineParameter (1, ParameterAttributes.None, "value"); 
 			}
+
+			// Named VB parameterized properties carry their own parameter list, not
+			// the default-property metadata used for indexers.  Define the accessor
+			// signatures from the property declaration so source properties and
+			// reflected properties bind through the same accessor shape.
+			DefineAccessorParameters ();
 
 			// FIXME - PropertyAttributes.HasDefault ?
 			
@@ -6782,8 +6833,10 @@ namespace Mono.CSharp {
 				prop_attr |= PropertyAttributes.RTSpecialName |
 			PropertyAttributes.SpecialName;
 
+				Type [] property_parameters = ParameterTypes;
 				PropertyBuilder = Parent.TypeBuilder.DefineProperty (
-					Name, prop_attr, MemberType, null);
+					Name, prop_attr, MemberType,
+					property_parameters.Length == 0 ? null : property_parameters);
 				
 				if (!Get.IsDummy)
 					PropertyBuilder.SetGetMethod (GetBuilder);
@@ -6791,7 +6844,7 @@ namespace Mono.CSharp {
 				if (!Set.IsDummy)
 					PropertyBuilder.SetSetMethod (SetBuilder);
 
-				TypeManager.RegisterProperty (PropertyBuilder, GetBuilder, SetBuilder);
+				TypeManager.RegisterProperty (PropertyBuilder, GetBuilder, SetBuilder, property_parameters);
 			return true;
 		}
 
