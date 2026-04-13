@@ -4709,6 +4709,23 @@ primary_expression
 	//| element_access
 	| new_expression
 	| cast_expression
+	| if_ternary_expression
+	;
+
+// VB's If expression has both the normal 3-argument conditional form
+// and the 2-argument null-coalescing form.  The semantic difference
+// from IIf is handled in expression.cs: only the taken branch is
+// evaluated, and the 2-argument form must evaluate its first operand
+// exactly once.
+if_ternary_expression
+	: IF OPEN_PARENS expression COMMA expression COMMA expression CLOSE_PARENS
+	  {
+		$$ = new Conditional ((Expression) $3, (Expression) $5, (Expression) $7, lexer.Location);
+	  }
+	| IF OPEN_PARENS expression COMMA expression CLOSE_PARENS
+	  {
+		$$ = new VBIfCoalesce ((Expression) $3, (Expression) $5, lexer.Location);
+	  }
 	;
 
 with_member_access

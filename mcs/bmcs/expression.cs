@@ -4352,6 +4352,107 @@ namespace Mono.CSharp {
 			}
 		}
 
+		internal static bool ResolveVBDominantType (EmitContext ec, ref Expression left,
+			ref Expression right, Location loc, bool if_operator, out Type result_type)
+		{
+			Type left_type = left.Type;
+			Type right_type = right.Type;
+			Expression conv;
+
+			result_type = null;
+
+			if (left_type == TypeManager.null_type && right_type == TypeManager.null_type) {
+				result_type = TypeManager.object_type;
+				left = Convert.WideningConversion (ec, left, result_type, loc);
+				right = Convert.WideningConversion (ec, right, result_type, loc);
+				return left != null && right != null;
+			}
+
+			if (left_type == TypeManager.null_type) {
+				left = Convert.WideningConversion (ec, left, right_type, loc);
+				if (left == null) {
+					ReportDominantTypeError (173, if_operator, loc, left_type, right_type);
+					return false;
+				}
+
+				result_type = right_type;
+				return true;
+			}
+
+			if (right_type == TypeManager.null_type) {
+				right = Convert.WideningConversion (ec, right, left_type, loc);
+				if (right == null) {
+					ReportDominantTypeError (173, if_operator, loc, left_type, right_type);
+					return false;
+				}
+
+				result_type = left_type;
+				return true;
+			}
+
+			if (left_type == right_type) {
+				result_type = left_type;
+				return true;
+			}
+
+			conv = Convert.WideningConversion (ec, left, right_type, loc);
+			if (conv != null) {
+				if (Convert.WideningConversion (ec, right, left_type, loc) != null) {
+					ReportDominantTypeError (172, if_operator, loc, left_type, right_type);
+					return false;
+				}
+
+				left = conv;
+				result_type = right_type;
+				return true;
+			}
+
+			conv = Convert.WideningConversion (ec, right, left_type, loc);
+			if (conv != null) {
+				right = conv;
+				result_type = left_type;
+				return true;
+			}
+
+			ReportDominantTypeError (173, if_operator, loc, left_type, right_type);
+			return false;
+		}
+
+		static void ReportDominantTypeError (int code, bool if_operator, Location loc,
+			Type left_type, Type right_type)
+		{
+			if (if_operator) {
+				if (code == 172) {
+					Report.Error (172, loc,
+						"Operator 'If' cannot compute the result type because `" +
+						TypeManager.CSharpName (left_type) + "' and `" +
+						TypeManager.CSharpName (right_type) +
+						"' convert implicitly to each other");
+				} else {
+					Report.Error (173, loc,
+						"Operator 'If': no implicit conversion between `" +
+						TypeManager.CSharpName (left_type) + "' and `" +
+						TypeManager.CSharpName (right_type) + "'");
+				}
+
+				return;
+			}
+
+			if (code == 172) {
+				Report.Error (172, loc,
+					"Can not compute type of conditional expression as `" +
+					TypeManager.CSharpName (left_type) + "' and `" +
+					TypeManager.CSharpName (right_type) +
+					"' convert implicitly to each other");
+			} else {
+				Report.Error (173, loc,
+					"The type of the conditional expression can not be computed " +
+					"because there is no implicit conversion from `" +
+					TypeManager.CSharpName (left_type) + "' and `" +
+					TypeManager.CSharpName (right_type) + "'");
+			}
+		}
+
 		public override Expression DoResolve (EmitContext ec)
 		{
 			expr = expr.Resolve (ec);
@@ -4377,43 +4478,8 @@ namespace Mono.CSharp {
 				return null;
 
 			eclass = ExprClass.Value;
-			if (trueExpr.Type == falseExpr.Type)
-				type = trueExpr.Type;
-			else {
-				Expression conv;
-				Type true_type = trueExpr.Type;
-				Type false_type = falseExpr.Type;
-
-				//
-				// First, if an implicit conversion exists from trueExpr
-				// to falseExpr, then the result type is of type falseExpr.Type
-				//
-				conv = Convert.WideningConversion (ec, trueExpr, false_type, loc);
-				if (conv != null){
-					//
-					// Check if both can convert implicitl to each other's type
-					//
-					if (Convert.WideningConversion (ec, falseExpr, true_type, loc) != null){
-						Error (172,
-						       "Can not compute type of conditional expression " +
-						       "as `" + TypeManager.CSharpName (trueExpr.Type) +
-						       "' and `" + TypeManager.CSharpName (falseExpr.Type) +
-						       "' convert implicitly to each other");
-						return null;
-					}
-					type = false_type;
-					trueExpr = conv;
-				} else if ((conv = Convert.WideningConversion(ec, falseExpr, true_type,loc))!= null){
-					type = true_type;
-					falseExpr = conv;
-				} else {
-					Error (173, "The type of the conditional expression can " +
-					       "not be computed because there is no implicit conversion" +
-					       " from `" + TypeManager.CSharpName (trueExpr.Type) + "'" +
-					       " and `" + TypeManager.CSharpName (falseExpr.Type) + "'");
-					return null;
-				}
-			}
+			if (!ResolveVBDominantType (ec, ref trueExpr, ref falseExpr, loc, false, out type))
+				return null;
 
 			// Dead code optimalization
 			if (expr is BoolConstant){
@@ -4440,6 +4506,151 @@ namespace Mono.CSharp {
 			ig.MarkLabel (end_target);
 		}
 
+	}
+
+	class VBIfCachedLeft : Expression {
+		LocalTemporary temp;
+		MethodInfo nullable_value;
+
+		public VBIfCachedLeft (LocalTemporary temp, Type type, MethodInfo nullable_value)
+		{
+			this.temp = temp;
+			this.nullable_value = nullable_value;
+			this.type = nullable_value == null ? type : TypeManager.GetTypeArguments (type) [0];
+			eclass = ExprClass.Value;
+			loc = Location.Null;
+		}
+
+		public override Expression DoResolve (EmitContext ec)
+		{
+			return this;
+		}
+
+		public override void Emit (EmitContext ec)
+		{
+			if (nullable_value == null) {
+				temp.Emit (ec);
+				return;
+			}
+
+			temp.AddressOf (ec, AddressOp.LoadStore);
+			ec.ig.EmitCall (OpCodes.Call, nullable_value, null);
+		}
+	}
+
+	//
+	// VB9's two-argument If(a, b) evaluates a once and returns it when it
+	// is non-Nothing; otherwise it returns b.  Nullable value types need a
+	// cached HasValue/Value check instead of the reference-typed dup/brtrue
+	// shape used by the earlier bootstrap patch.
+	//
+	public class VBIfCoalesce : Expression {
+		Expression left, right;
+		Expression true_expr, false_expr;
+		LocalTemporary left_temp;
+		MethodInfo nullable_has_value;
+		bool left_is_nullable;
+
+		public VBIfCoalesce (Expression left, Expression right, Location l)
+		{
+			this.left = left;
+			this.right = right;
+			loc = l;
+		}
+
+		public override Expression DoResolve (EmitContext ec)
+		{
+			left = left.Resolve (ec);
+			if (left == null)
+				return null;
+
+			right = right.Resolve (ec);
+			if (right == null)
+				return null;
+
+			if (left.Type == TypeManager.null_type) {
+				Expression null_expr = left;
+				Expression fallback = right;
+
+				if (!Conditional.ResolveVBDominantType (ec, ref null_expr, ref fallback,
+					loc, true, out type))
+					return null;
+
+				return fallback;
+			}
+
+			if (TypeManager.IsNullableType (left.Type)) {
+				Type nullable_type = left.Type;
+				PropertyInfo has_value_pi = nullable_type.GetProperty ("HasValue");
+				PropertyInfo value_pi = nullable_type.GetProperty ("Value");
+
+				left_is_nullable = true;
+				nullable_has_value = has_value_pi.GetGetMethod (false);
+				left_temp = new LocalTemporary (ec, nullable_type);
+
+				if (right.Type != TypeManager.null_type &&
+				    right.Type.IsValueType &&
+				    !TypeManager.IsNullableType (right.Type)) {
+					Expression lifted_left = new VBIfCachedLeft (
+						left_temp, nullable_type, value_pi.GetGetMethod (false));
+					Expression lifted_right = right;
+
+					if (!Conditional.ResolveVBDominantType (ec, ref lifted_left,
+						ref lifted_right, loc, true, out type))
+						return null;
+
+					true_expr = lifted_left;
+					false_expr = lifted_right;
+					eclass = ExprClass.Value;
+					return this;
+				}
+			} else if (left.Type.IsValueType) {
+				Report.Error (33, loc,
+					"Operator 'If' with a two-argument form requires its first " +
+					"operand to be a reference type or Nullable(Of T); got '" +
+					TypeManager.CSharpName (left.Type) + "'");
+				return null;
+			} else {
+				left_temp = new LocalTemporary (ec, left.Type);
+			}
+
+			Expression cached_left = new VBIfCachedLeft (left_temp, left.Type, null);
+			Expression fallback_expr = right;
+
+			if (!Conditional.ResolveVBDominantType (ec, ref cached_left, ref fallback_expr,
+				loc, true, out type))
+				return null;
+
+			true_expr = cached_left;
+			false_expr = fallback_expr;
+			eclass = ExprClass.Value;
+			return this;
+		}
+
+		public override void Emit (EmitContext ec)
+		{
+			ILGenerator ig = ec.ig;
+			Label false_target = ig.DefineLabel ();
+			Label end_target = ig.DefineLabel ();
+
+			left.Emit (ec);
+			left_temp.Store (ec);
+
+			if (left_is_nullable) {
+				left_temp.AddressOf (ec, AddressOp.LoadStore);
+				ig.EmitCall (OpCodes.Call, nullable_has_value, null);
+				ig.Emit (OpCodes.Brfalse, false_target);
+			} else {
+				left_temp.Emit (ec);
+				ig.Emit (OpCodes.Brfalse, false_target);
+			}
+
+			true_expr.Emit (ec);
+			ig.Emit (OpCodes.Br, end_target);
+			ig.MarkLabel (false_target);
+			false_expr.Emit (ec);
+			ig.MarkLabel (end_target);
+		}
 	}
 
 	/// <summary>
