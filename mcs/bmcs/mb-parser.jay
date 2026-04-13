@@ -3497,6 +3497,7 @@ while_statement
 
 selection_statement
 	: if_statement
+	| select_statement
 	;
 
 // if_statement
@@ -3549,6 +3550,35 @@ if_statement
 		$$ = new If ((Expression) $2, (Statement) $5, (Statement) $6, l);
 	  }
 
+	// Single-line If-Then, no trailing end_of_stmt: the outer
+	// statement_list rule consumes the EOL between statements.
+	// Using THEN (not opt_then) makes the single-line form
+	// distinguishable from the block forms above after 1-token
+	// lookahead: 'THEN <EOL>' goes to block, 'THEN <stmt>' here.
+	| IF boolean_expression THEN line_if_body
+	  {
+		$$ = new If ((Expression) $2, (Statement) $4, lexer.Location);
+	  }
+	| IF boolean_expression THEN line_if_body ELSE line_if_body
+	  {
+		$$ = new If ((Expression) $2, (Statement) $4, (Statement) $6, lexer.Location);
+	  }
+	;
+
+line_if_body
+	: begin_block line_statement_list end_block
+	  { $$ = $3; }
+	;
+
+// VB line If uses the same colon-separated statement-list shape
+// as an ordinary logical line, but it does not consume a trailing
+// end_of_stmt of its own.  Using COLON here lets:
+//   If x Then Foo() : Bar() Else Baz()
+// parse as one line If statement instead of truncating the true
+// branch after the first statement.
+line_statement_list
+	: statement
+	| line_statement_list COLON statement
 	;
 
 else_if_statement_rest
@@ -3622,6 +3652,168 @@ opt_then
 	| THEN
 	;
 	
+
+// VB Select Case is NOT a C-style switch: the case clauses can
+// be arbitrary runtime expressions, ranges (Case x To y), or
+// comparisons (Case Is > x).  vbnc's own reference implementation
+// (mono-basic/vbnc/.../CaseClause.ResolveCode) lowers each case
+// clause to a runtime comparison expression against a cached
+// copy of the selector and chains them with OrElse / ElseIf.
+// We do the same, but defer all lowering to the VBSelect
+// statement's Resolve() - see statement.cs - because the
+// selector's runtime type isn't known at parse time.
+//
+// VB's grammar makes the "Case" keyword after "Select" optional,
+// but a trailing "Case Else" section can appear at most once and
+// only after all ordinary Case sections.  We model that ordering
+// directly here instead of accepting arbitrary order and repairing
+// it later.
+select_statement
+	: SELECT opt_case expression end_of_stmt
+	  {
+		oob_stack.Push (lexer.Location);
+	  }
+	  opt_case_sections
+	  END SELECT
+	  {
+		Location sel_loc = (Location) oob_stack.Pop ();
+		ArrayList sections = (ArrayList) $6;
+		$$ = new VBSelect ((Expression) $3, sections, sel_loc);
+	  }
+	;
+
+opt_case_sections
+	: /* empty */ 	{ $$ = new ArrayList (); }
+	| case_statement_sections opt_case_else_section
+	  {
+		ArrayList sections = (ArrayList) $1;
+		if ($2 != null)
+			sections.Add ($2);
+		$$ = sections;
+	  }
+	| case_else_section
+	  {
+		ArrayList sections = new ArrayList (1);
+		sections.Add ($1);
+		$$ = sections;
+	  }
+	;
+
+case_statement_sections
+	: case_statement_sections case_statement_section
+	  {
+		ArrayList sections = (ArrayList) $1;
+		sections.Add ($2);
+		$$ = sections;
+	  }
+	| case_statement_section
+	  {
+		ArrayList sections = new ArrayList (4);
+		sections.Add ($1);
+		$$ = sections;
+	  }
+	;
+
+ends
+	: end_of_stmt
+	| ends end_of_stmt
+	;
+
+// A case_section produces a VBSelectSection (list of case
+// clauses, body block).  A null clause list marks Case Else.
+case_statement_section
+	: CASE case_clauses ends
+	  {
+		start_block();
+	  }
+	  opt_statement_list
+	  {
+		Block body = end_block();
+		while (body.Implicit)
+			body = body.Parent;
+		$$ = new VBSelectSection ((ArrayList) $2, body);
+	  }
+	;
+
+opt_case_else_section
+	: /* empty */ { $$ = null; }
+	| case_else_section { $$ = $1; }
+	;
+
+case_else_section
+	: CASE ELSE ends
+	  {
+		start_block();
+	  }
+	  opt_statement_list
+	  {
+		Block body = end_block();
+		while (body.Implicit)
+			body = body.Parent;
+		$$ = new VBSelectSection (null, body);
+	  }
+	;
+
+
+case_clauses
+	: case_clause
+	  {
+		ArrayList clauses = new ArrayList ();
+		clauses.Add ($1);
+		$$ = clauses;
+	  }
+	| case_clauses COMMA case_clause
+	  {
+		ArrayList clauses = (ArrayList) $1;
+		clauses.Add ($3);
+		$$ = clauses;
+	  }
+	;
+
+// Each case_clause returns a VBCaseClause descriptor; the
+// cached selector's type isn't known yet, so we just record
+// the raw expressions and let VBSelect.Resolve build the
+// Binary predicates at semantic time.
+case_clause
+	: expression
+	  {
+		$$ = new VBCaseClause (VBCaseClause.K_Equal,
+			(Expression) $1, null, Binary.Operator.Equality);
+	  }
+	| expression TO expression
+	  {
+		$$ = new VBCaseClause (VBCaseClause.K_Range,
+			(Expression) $1, (Expression) $3,
+			Binary.Operator.Equality);
+	  }
+	| IS comparison_operator expression
+	  {
+		$$ = new VBCaseClause (VBCaseClause.K_Compare,
+			(Expression) $3, null,
+			(Binary.Operator) $2);
+	  }
+	| comparison_operator expression
+	  {
+		// 'Is' is optional.
+		$$ = new VBCaseClause (VBCaseClause.K_Compare,
+			(Expression) $2, null,
+			(Binary.Operator) $1);
+	  }
+	;
+
+comparison_operator
+	: OP_LT		{ $$ = Binary.Operator.LessThan; }
+	| OP_GT		{ $$ = Binary.Operator.GreaterThan; }
+	| OP_LE		{ $$ = Binary.Operator.LessThanOrEqual; }
+	| OP_GE		{ $$ = Binary.Operator.GreaterThanOrEqual; }
+	| OP_NE		{ $$ = Binary.Operator.Inequality; }
+	| ASSIGN	{ $$ = Binary.Operator.Equality; }
+	;
+
+opt_case
+	: /* empty */
+	| CASE
+	;
 
 expression_statement
 	: statement_expression 

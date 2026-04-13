@@ -4759,9 +4759,176 @@ namespace Mono.CSharp {
 				EmitCollectionForeach (ec);
 			else
 				EmitArrayForeach (ec);
-			
+
 			ec.LoopBegin = old_begin;
 			ec.LoopEnd = old_end;
+		}
+	}
+
+	//
+	// VB.NET's Select Case is NOT a C-style switch.  Case
+	// clauses can be arbitrary runtime expressions, ranges
+	// (Case x To y) or comparisons (Case Is > x), and the
+	// selector is evaluated exactly once even when multiple
+	// case clauses reference it.  See the
+	// mono-basic/vbnc/.../CaseClause.ResolveCode reference
+	// implementation for the semantics we follow.
+	//
+	// We lower Select Case to: evaluate selector into a
+	// synthetic LocalBuilder, then run an if/elseif chain
+	// where each case section's condition is the disjunction
+	// of its case-clause predicates against that cached
+	// selector, with Case Else producing the final 'else'.
+	//
+	// This lowering is performed at Resolve() time rather
+	// than in the parser because the selector's type isn't
+	// known until semantic analysis.  Using a synthetic
+	// Object-typed local in the parser would force the
+	// comparisons through bmcs's Object-operand runtime
+	// helper path (ObjectType.ObjTst), which is broken in
+	// the mono 1.2.6 Microsoft.VisualBasic we bootstrap
+	// against and produces wrong results for integer and
+	// string comparisons.
+	//
+	public class VBCaseClause {
+		public const int K_Equal   = 0; // Case expr
+		public const int K_Range   = 1; // Case lo To hi
+		public const int K_Compare = 2; // Case [Is] <op> expr
+
+		public int Kind;
+		public Expression Expr1;
+		public Expression Expr2;
+		public Binary.Operator CompareOp;
+
+		public VBCaseClause (int kind, Expression e1, Expression e2, Binary.Operator op)
+		{
+			Kind = kind;
+			Expr1 = e1;
+			Expr2 = e2;
+			CompareOp = op;
+		}
+	}
+
+	public class VBSelectSection {
+		// null Clauses means 'Case Else'
+		public ArrayList Clauses;
+		public Block Body;
+
+		public VBSelectSection (ArrayList clauses, Block body)
+		{
+			Clauses = clauses;
+			Body = body;
+		}
+	}
+
+	public class VBSelect : Statement {
+		Expression Selector;
+		ArrayList Sections;
+
+		// Filled in by Resolve():
+		Expression selector_resolved;
+		LocalBuilder temp_builder;
+		Type temp_type;
+		Statement chain;
+
+		public VBSelect (Expression selector, ArrayList sections, Location l)
+		{
+			Selector = selector;
+			Sections = sections;
+			loc = l;
+		}
+
+		// A fresh LocalTemporary per reference so nothing is
+		// shared between the multiple Binary operands that
+		// load the cached selector.
+		Expression MakeTempRef ()
+		{
+			return new LocalTemporary (temp_builder, temp_type);
+		}
+
+		Expression BuildPredicate (VBCaseClause c)
+		{
+			switch (c.Kind) {
+			case VBCaseClause.K_Equal:
+				return new Binary (Binary.Operator.Equality,
+					MakeTempRef (), c.Expr1, loc);
+			case VBCaseClause.K_Range: {
+				Expression lo_p = new Binary (
+					Binary.Operator.GreaterThanOrEqual,
+					MakeTempRef (), c.Expr1, loc);
+				Expression hi_p = new Binary (
+					Binary.Operator.LessThanOrEqual,
+					MakeTempRef (), c.Expr2, loc);
+				return new Binary (
+					Binary.Operator.LogicalAndAlso,
+					lo_p, hi_p, loc);
+			}
+			case VBCaseClause.K_Compare:
+				return new Binary (c.CompareOp,
+					MakeTempRef (), c.Expr1, loc);
+			}
+			throw new Exception ("VBSelect: unknown VBCaseClause kind");
+		}
+
+		public override bool Resolve (EmitContext ec)
+		{
+			selector_resolved = Selector.Resolve (ec);
+			if (selector_resolved == null)
+				return false;
+
+			temp_type = selector_resolved.Type;
+			// Allocate the backing local once.  Fresh
+			// LocalTemporary wrappers below will all reference
+			// it, so Store/Emit always hit the same slot.
+			temp_builder = ec.ig.DeclareLocal (temp_type);
+
+			// Build the if/elseif chain from back to front so
+			// each step wraps the previously-built 'else' branch.
+			Statement tail = null;
+			for (int i = Sections.Count - 1; i >= 0; i--) {
+				VBSelectSection sec = (VBSelectSection) Sections [i];
+
+				if (sec.Clauses == null) {
+					// The parser keeps Case Else, if present,
+					// as the final section only.
+					tail = sec.Body;
+					continue;
+				}
+
+				// OR the case-clause predicates together.
+				Expression pred = null;
+				foreach (VBCaseClause cc in sec.Clauses) {
+					Expression p = BuildPredicate (cc);
+					pred = pred == null
+						? p
+						: new Binary (
+							Binary.Operator.LogicalOrElse,
+							pred, p, loc);
+				}
+
+				tail = tail == null
+					? new If (pred, sec.Body, loc)
+					: new If (pred, sec.Body, tail, loc);
+			}
+
+			chain = tail;
+
+			if (chain != null && !chain.Resolve (ec))
+				return false;
+
+			return true;
+		}
+
+		protected override void DoEmit (EmitContext ec)
+		{
+			ILGenerator ig = ec.ig;
+
+			// Evaluate the selector exactly once, cache it.
+			selector_resolved.Emit (ec);
+			ig.Emit (OpCodes.Stloc, temp_builder);
+
+			if (chain != null)
+				chain.Emit (ec);
 		}
 	}
 }
