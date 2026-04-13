@@ -230,6 +230,11 @@ namespace Mono.CSharp
 		///   to be passed to sub/constructor  
 		Attributes current_attributes;				
 
+		///   Owner-level attributes temporarily saved while parsing a
+		///   parameter list so parameter attributes do not overwrite the
+		///   enclosing method/property attributes through opt_attributes.
+		Attributes parameter_owner_attributes;
+
 		///   This is used by the attributes parser to syntactically
 		///   validate the attribute rules  
 		bool allow_global_attribs = true;
@@ -998,7 +1003,15 @@ imports_term
 opt_params
 	: /* empty */	{ $$ = Parameters.EmptyReadOnlyParameters; }
 	| OPEN_PARENS CLOSE_PARENS	{ $$ = Parameters.EmptyReadOnlyParameters; }
-	| OPEN_PARENS opt_formal_parameter_list CLOSE_PARENS	{ $$ = $2; }
+	| OPEN_PARENS
+	  {
+		parameter_owner_attributes = current_attributes;
+	  }
+	  opt_formal_parameter_list CLOSE_PARENS
+	  {
+		current_attributes = parameter_owner_attributes;
+		$$ = $3;
+	  }
 	;
 
 opt_attributes
@@ -2577,9 +2590,14 @@ opt_property_parameters
 	  {
 	  	$$ = Parameters.EmptyReadOnlyParameters;
 	  }
-	| OPEN_PARENS opt_formal_parameter_list CLOSE_PARENS
+	| OPEN_PARENS
 	  {
-	  	$$ = $2;
+		parameter_owner_attributes = current_attributes;
+	  }
+	  opt_formal_parameter_list CLOSE_PARENS
+	  {
+		current_attributes = parameter_owner_attributes;
+	  	$$ = $3;
 	  }
 	;
 	
@@ -3032,6 +3050,12 @@ parameter
 	  	}
 		if ((pm & Parameter.Modifier.PARAMS) != 0 && ptype.ToString ().IndexOf('[') < 0)
 	  		Report.Error (30050, lexer.Location, "ParamArray parameters must be an array type");
+
+		// opt_attributes updates current_attributes as a side effect.
+		// Restore the enclosing member/property attributes after every
+		// parameter so parameter attributes do not leak outward.
+		current_attributes = parameter_owner_attributes;
+
 		$$ = new Parameter (ptype, (string) $3, pm,
 					(Attributes) $1, (Expression) $7, opt_parm);
 	  }
