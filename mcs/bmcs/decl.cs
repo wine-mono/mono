@@ -1177,16 +1177,24 @@ namespace Mono.CSharp {
 				//
 				// Now check the using clause list
 				//
+				// Accept both TypeExpr and Namespace matches. The original
+				// code dropped Namespace matches, breaking base-type
+				// references like 'Inherits Generic.List(Of Type)' under
+				// 'Imports System.Collections'.
 				FullNamedExpression match = null;
 				foreach (Namespace using_ns in ns.GetUsingTable ()) {
 					match = LookupInterfaceOrClass (using_ns.Name, name, out error);
 					if (error)
 						return null;
 
-					if ((match != null) && (match is TypeExpr)) {
-						Type matched = ((TypeExpr) match).Type;
-						if (!CheckAccessLevel (matched))
+					if (match != null) {
+						if (match is TypeExpr) {
+							Type matched = ((TypeExpr) match).Type;
+							if (!CheckAccessLevel (matched))
+								continue;
+						} else if (!(match is Namespace)) {
 							continue;
+						}
 						if (t != null){
 							Error_AmbiguousTypeReference (loc, name, t.FullName, match.FullName);
 							return null;

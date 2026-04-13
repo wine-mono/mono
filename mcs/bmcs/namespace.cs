@@ -481,10 +481,16 @@ namespace Mono.CSharp {
 			//
 			// Check using entries.
 			//
+			// Accept both TypeExpr and Namespace matches. The original code
+			// only accepted TypeExpr, which dropped sub-namespace matches
+			// and broke VB-style partial namespace resolution like
+			// 'Imports System.Collections' + 'Generic.List(Of T)', where
+			// 'Generic' resolves to the sub-namespace
+			// System.Collections.Generic rather than a type.
 			FullNamedExpression t = null, match = null;
 			foreach (Namespace using_ns in GetUsingTable ()) {
 				match = using_ns.Lookup (ds, name, loc);
-				if ((match != null) && (match is TypeExpr)) {
+				if (match != null && (match is TypeExpr || match is Namespace)) {
 					if (t != null) {
 						DeclSpace.Error_AmbiguousTypeReference (loc, name, t.FullName, match.FullName);
 						return null;
