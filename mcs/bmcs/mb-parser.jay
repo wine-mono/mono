@@ -4063,19 +4063,25 @@ variable_declarator
 				}
 	  		}
 			
-	  		/*
-	  		Check for a declaration like Dim a(2) or Dim a(2,3)
-	  		If this is the case, we must generate an ArrayCreationExpression
-	  		and, in case, add the initializer after the array has been created.
-	  		*/
-// 	  		if (VariableDeclaration.IsArrayDecl (this)) {	
-// 				if (VariableDeclaration.IndexesSpecified(current_rank_specifiers)) {   
-// 					a_dims = (ArrayList) current_rank_specifiers;
-// 					VariableDeclaration.VBFixIndexLists (ref a_dims);
-// 					varinit = VariableDeclaration.BuildArrayCreator(vartype, a_dims, (ArrayList) varinit, lexer.Location);
-// 				}
-// 				vartype = DecomposeQI (vartype.ToString() + VariableDeclaration.BuildRanks (current_rank_specifiers, false, lexer.Location), lexer.Location);
-// 			}
+			// Handle the prefix array-on-name form: 'Dim values() As
+			// Integer' puts the rank specifier on the name side of the
+			// declaration.  The name-side grammar below only accepts
+			// empty ranks like () or (,), so wrapping here is limited to
+			// the forms we can lower correctly.
+			//
+			// Per the VB spec, a declaration cannot specify an array
+			// modifier on both the variable name and the type name in the
+			// same declaration. Reject 'values() As Integer()' instead of
+			// silently building an array-of-array type here.
+			if (current_rank_specifiers != null && !(vartype is New)) {
+				string t = vartype.ToString ();
+				if (t.IndexOf ('[') >= 0)
+					Report.Error (31087, lexer.Location, "Array types specified in too many places");
+				else {
+					string dims = VariableDeclaration.BuildRanks (current_rank_specifiers, false, lexer.Location);
+					vartype = new ComposedCast (vartype, dims, lexer.Location);
+				}
+			}
 
 			if (vartype is New) {
 				if (varinit != null) {
@@ -4169,12 +4175,45 @@ opt_type_decl
 		
 opt_array_name_modifier
 	: /* empty */ 				{ $$ = null; }
-// 	| array_type_modifier			{ $$ = $1;   }
+	| empty_rank_specifiers			{ $$ = $1;   }
 	;
-	
-// array_type_modifier
-// 	: rank_specifiers		{ $$ = $1; }
-// 	;
+
+empty_rank_specifiers
+	: empty_rank_specifier
+	  {
+		  ArrayList rs = new ArrayList();
+		  rs.Add ($1);
+		  $$ = rs;
+	  }
+	| empty_rank_specifiers empty_rank_specifier
+	  {
+		  ArrayList rs = (ArrayList) $1;
+		  rs.Add ($2);
+		  $$ = rs;
+	  }
+	;
+
+empty_rank_specifier
+	: OPEN_PARENS empty_dim_specifiers CLOSE_PARENS
+	  {
+		$$ = $2;
+	  }
+	;
+
+empty_dim_specifiers
+	: /* empty */
+	  {
+	  	ArrayList ds = new ArrayList();
+	  	ds.Add (new EmptyExpression());
+	  	$$ = ds;
+	  }
+	| empty_dim_specifiers COMMA
+	  {
+		ArrayList ds = (ArrayList) $1;
+	  	ds.Add (new EmptyExpression());
+	  	$$ = ds;
+	  }
+	;
 	
 opt_variable_initializer
 	: /* empty */ 			{ $$ = null; }
