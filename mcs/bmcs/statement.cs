@@ -4931,4 +4931,228 @@ namespace Mono.CSharp {
 				chain.Emit (ec);
 		}
 	}
+
+	public class VBReDimClause {
+		public readonly Expression Target;
+		public readonly ArrayList Bounds;
+
+		public VBReDimClause (Expression target, ArrayList bounds)
+		{
+			Target = target;
+			Bounds = bounds;
+		}
+	}
+
+	public class VBReDim : Statement {
+		ArrayList clauses;
+		bool preserve;
+		ArrayList resolved;
+
+		class Resolved {
+			public Expression Target;
+			public Expression OldSource;
+			public Expression Source;
+			public Type ArrayType;
+		}
+
+		static MethodInfo array_copy_method;
+		static MethodInfo array_length_getter;
+		static MethodInfo math_min_method;
+
+		public VBReDim (ArrayList clauses, bool preserve, Location l)
+		{
+			this.clauses = clauses;
+			this.preserve = preserve;
+			loc = l;
+		}
+
+		static void EnsurePreserveHelpers ()
+		{
+			if (array_copy_method != null)
+				return;
+
+			Type array_type = typeof (System.Array);
+			array_copy_method = array_type.GetMethod ("Copy",
+				new Type [] { array_type, array_type, typeof (int) });
+			array_length_getter = array_type.GetProperty ("Length").GetGetMethod ();
+			math_min_method = typeof (System.Math).GetMethod ("Min",
+				new Type [] { typeof (int), typeof (int) });
+		}
+
+		public override bool Resolve (EmitContext ec)
+		{
+			resolved = new ArrayList ();
+
+			foreach (VBReDimClause clause in clauses) {
+				Expression target = clause.Target.ResolveLValue (ec, new EmptyExpression ());
+				if (target == null)
+					return false;
+
+				if (target.Type == TypeManager.object_type) {
+					Report.Error (30828, loc,
+						"'ReDim' on Object-typed targets is not supported by this bootstrap compiler");
+					return false;
+				}
+
+				if (!target.Type.IsArray) {
+					Report.Error (30049, loc,
+						"'ReDim' statement requires an array target");
+					return false;
+				}
+
+				int rank = target.Type.GetArrayRank ();
+				if (clause.Bounds.Count != rank) {
+					Report.Error (30415, loc,
+						"'ReDim' bound count ({0}) does not match array rank ({1})",
+						clause.Bounds.Count, rank);
+					return false;
+				}
+
+				if (preserve) {
+					if (rank != 1) {
+						Report.Error (30829, loc,
+							"'ReDim Preserve' is only supported for one-dimensional arrays by this bootstrap compiler");
+						return false;
+					}
+
+					if (!(target is LocalVariableReference) &&
+					    !(target is ParameterReference)) {
+						Report.Error (30827, loc,
+							"'ReDim Preserve' is only supported on simple local or parameter arrays by this bootstrap compiler");
+						return false;
+					}
+				}
+
+				ArrayList resolved_bounds = new ArrayList (rank);
+				foreach (Expression bound in clause.Bounds) {
+					Expression rb = bound.Resolve (ec);
+					if (rb == null)
+						return false;
+
+					rb = Convert.WideningConversionRequired (ec, rb, TypeManager.int32_type, loc);
+					if (rb == null)
+						return false;
+
+					resolved_bounds.Add (rb);
+				}
+
+				Expression source = new VBReDimNewArray (
+					TypeManager.GetElementType (target.Type), target.Type, resolved_bounds, loc);
+				source = source.Resolve (ec);
+				if (source == null)
+					return false;
+
+				Resolved r = new Resolved ();
+				r.Target = target;
+				r.OldSource = preserve ? target : null;
+				r.Source = source;
+				r.ArrayType = target.Type;
+				resolved.Add (r);
+			}
+
+			if (preserve)
+				EnsurePreserveHelpers ();
+
+			return true;
+		}
+
+		protected override void DoEmit (EmitContext ec)
+		{
+			ILGenerator ig = ec.ig;
+
+			foreach (Resolved r in resolved) {
+				if (!preserve) {
+					Assign assign = new Assign (r.Target, r.Source, loc);
+					ExpressionStatement es = (ExpressionStatement) assign.Resolve (ec);
+					if (es != null)
+						es.EmitStatement (ec);
+					continue;
+				}
+
+				LocalTemporary old_temp = new LocalTemporary (ec, r.ArrayType);
+				r.OldSource.Emit (ec);
+				old_temp.Store (ec);
+
+				LocalTemporary new_temp = new LocalTemporary (ec, r.ArrayType);
+				r.Source.Emit (ec);
+				new_temp.Store (ec);
+
+				Label skip_copy = ig.DefineLabel ();
+				old_temp.Emit (ec);
+				ig.Emit (OpCodes.Brfalse, skip_copy);
+
+				old_temp.Emit (ec);
+				new_temp.Emit (ec);
+				old_temp.Emit (ec);
+				ig.Emit (OpCodes.Callvirt, array_length_getter);
+				new_temp.Emit (ec);
+				ig.Emit (OpCodes.Callvirt, array_length_getter);
+				ig.Emit (OpCodes.Call, math_min_method);
+				ig.Emit (OpCodes.Call, array_copy_method);
+				ig.MarkLabel (skip_copy);
+
+				Assign preserve_assign = new Assign (r.Target, new_temp, loc);
+				ExpressionStatement pes = (ExpressionStatement) preserve_assign.Resolve (ec);
+				if (pes != null)
+					pes.EmitStatement (ec);
+			}
+		}
+	}
+
+	public class VBReDimNewArray : Expression {
+		Type element_type;
+		ArrayList bounds;
+		MethodInfo multi_ctor;
+
+		public VBReDimNewArray (Type element_type, Type array_type, ArrayList bounds, Location loc)
+		{
+			this.element_type = element_type;
+			this.bounds = bounds;
+			this.type = array_type;
+			this.loc = loc;
+			this.eclass = ExprClass.Value;
+		}
+
+		public override Expression DoResolve (EmitContext ec)
+		{
+			if (bounds.Count > 1) {
+				ModuleBuilder mb = CodeGen.Module.Builder;
+				Type[] arg_types = new Type [bounds.Count];
+				for (int i = 0; i < arg_types.Length; i++)
+					arg_types [i] = TypeManager.int32_type;
+
+				multi_ctor = mb.GetArrayMethod (type, ".ctor",
+					CallingConventions.HasThis, null, arg_types);
+				if (multi_ctor == null) {
+					Report.Error (-6, loc,
+						"ReDim: cannot find multi-dimensional array constructor for " +
+						TypeManager.CSharpName (type));
+					return null;
+				}
+			}
+
+			return this;
+		}
+
+		public override void Emit (EmitContext ec)
+		{
+			ILGenerator ig = ec.ig;
+
+			if (multi_ctor == null) {
+				((Expression) bounds [0]).Emit (ec);
+				ig.Emit (OpCodes.Ldc_I4_1);
+				ig.Emit (OpCodes.Add);
+				ig.Emit (OpCodes.Newarr, element_type);
+				return;
+			}
+
+			foreach (Expression bound in bounds) {
+				bound.Emit (ec);
+				ig.Emit (OpCodes.Ldc_I4_1);
+				ig.Emit (OpCodes.Add);
+			}
+
+			ig.Emit (OpCodes.Newobj, multi_ctor);
+		}
+	}
 }

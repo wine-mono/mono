@@ -3077,6 +3077,7 @@ embedded_statement
 	: expression_statement
 	| selection_statement
 	| while_statement
+	| redim_statement
 	| try_statement
 	| synclock_statement
 	| jump_statement
@@ -3110,51 +3111,64 @@ embedded_statement
 // 	;
 	
 	
-// array_handling_statement
-// 	: redim_statement
-// 	| erase_statement
-// 	;
-	
-// redim_statement
-// 	: REDIM opt_preserve redim_clauses
-// 	  {
-// 	  	ArrayList list = (ArrayList) $3;
-// 		ReDim r = new ReDim (list, (bool) $2, lexer.Location);
-// 		$$ = r;
+// VB ReDim clauses parse as invocations here because
+// 'target(bound, ...)' shares the same surface syntax.  We unpack
+// them into target/bounds pairs and let semantic analysis decide
+// whether the target is a real array lvalue.
+redim_statement
+	: REDIM opt_preserve redim_clauses
+	  {
+		ArrayList raw = (ArrayList) $3;
+		ArrayList clauses = new ArrayList (raw.Count);
+		foreach (Expression e in raw) {
+			if (!(e is Invocation)) {
+				Report.Error (30049, lexer.Location,
+					"'ReDim' clause must be of the form 'target(bound)'");
+				continue;
+			}
 
-// 	  }
-// 	;
-	
-// opt_preserve
-// 	: /* empty */ 	{ $$ = false; }
-// 	| PRESERVE	{ $$ = true;  }
-// 	;
-	
-// redim_clauses
-// 	: redim_clause
-// 	  {
-// 		ArrayList clauses = new ArrayList ();
+			Invocation inv = (Invocation) e;
+			if (inv.Arguments == null || inv.Arguments.Count == 0) {
+				Report.Error (30049, lexer.Location,
+					"'ReDim' clause must specify at least one bound");
+				continue;
+			}
 
-// 		clauses.Add ($1);
-// 		$$ = clauses;
-// 	  }
-// 	| redim_clauses COMMA redim_clause
-// 	  {
-// 		ArrayList clauses = (ArrayList) ($1);
-// 		clauses.Add ($2);
+			ArrayList bounds = new ArrayList (inv.Arguments.Count);
+			foreach (Argument a in inv.Arguments)
+				bounds.Add (a.Expr);
 
-// 		$$ = clauses;
-// 	  }
-// 	;
+			clauses.Add (new VBReDimClause (inv.expr, bounds));
+		}
 
-// redim_clause
-// 	: invocation_expression
-// 	  {
-// 	  	Invocation i = (Invocation) $1;
-// 		RedimClause rc = new RedimClause (i.expr, i.Arguments);
-// 		$$ = rc;
-// 	  }
-// 	;
+		$$ = new VBReDim (clauses, (bool) $2, lexer.Location);
+	  }
+	;
+
+opt_preserve
+	: /* empty */ 	{ $$ = false; }
+	| PRESERVE	{ $$ = true;  }
+	;
+
+redim_clauses
+	: redim_clause
+	  {
+		ArrayList clauses = new ArrayList (2);
+		clauses.Add ($1);
+		$$ = clauses;
+	  }
+	| redim_clauses COMMA redim_clause
+	  {
+		ArrayList clauses = (ArrayList) $1;
+		clauses.Add ($3);
+		$$ = clauses;
+	  }
+	;
+
+redim_clause
+	: invocation_expression
+	  { $$ = $1; }
+	;
 
 // erase_statement
 // 	: ERASE erase_clauses
