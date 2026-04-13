@@ -29,118 +29,86 @@ namespace Mono.CSharp {
 		//   (short, short)   (Happens with enumerations with underlying short type)
 		//   (ushort, ushort) (Happens with enumerations with underlying short type)
 		//
+		static Constant ConvertConstantToType (Constant constant, Type target_type, Location loc)
+		{
+			if (constant.Type == target_type)
+				return constant;
+
+			if (target_type == TypeManager.double_type)
+				return constant.ToDouble (loc);
+
+			if (target_type == TypeManager.float_type)
+				return constant.ToFloat (loc);
+
+			if (target_type == TypeManager.decimal_type) {
+				Constant integral = Convert.ConvertIntegralConstant (constant, target_type);
+				if (integral != null)
+					return integral;
+
+				return constant.ToDecimal (loc);
+			}
+
+			if (TypeManager.IsFixedNumericType (target_type))
+				return Convert.ConvertIntegralConstant (constant, target_type);
+
+			return null;
+		}
+
+		static int ComparePromotedConstants (Constant left, Constant right)
+		{
+			return ((IComparable) left.GetValue ()).CompareTo (right.GetValue ());
+		}
+
+		static Constant FoldShiftConstant (Constant left, int shift, bool is_left_shift)
+		{
+			if (left is ByteConstant) {
+				byte value = ((ByteConstant) left).Value;
+				return new ByteConstant (is_left_shift ? (byte) (value << shift) : (byte) (value >> shift));
+			}
+
+			if (left is SByteConstant) {
+				sbyte value = ((SByteConstant) left).Value;
+				return new SByteConstant (is_left_shift ? (sbyte) (value << shift) : (sbyte) (value >> shift));
+			}
+
+			if (left is UShortConstant) {
+				ushort value = ((UShortConstant) left).Value;
+				return new UShortConstant (is_left_shift ? (ushort) (value << shift) : (ushort) (value >> shift));
+			}
+
+			if (left is ShortConstant) {
+				short value = ((ShortConstant) left).Value;
+				return new ShortConstant (is_left_shift ? (short) (value << shift) : (short) (value >> shift));
+			}
+
+			if (left is UIntConstant) {
+				uint value = ((UIntConstant) left).Value;
+				return new UIntConstant (is_left_shift ? value << shift : value >> shift);
+			}
+
+			if (left is IntConstant) {
+				int value = ((IntConstant) left).Value;
+				return new IntConstant (is_left_shift ? value << shift : value >> shift);
+			}
+
+			if (left is ULongConstant) {
+				ulong value = ((ULongConstant) left).Value;
+				return new ULongConstant (is_left_shift ? value << shift : value >> shift);
+			}
+
+			if (left is LongConstant) {
+				long value = ((LongConstant) left).Value;
+				return new LongConstant (is_left_shift ? value << shift : value >> shift);
+			}
+
+			return null;
+		}
+
 		static void DoConstantNumericPromotions (EmitContext ec, Binary.Operator oper,
 							 ref Constant left, ref Constant right,
 							 Location loc)
 		{
-			if (left is DoubleConstant || right is DoubleConstant){
-				//
-				// If either side is a double, convert the other to a double
-				//
-				if (!(left is DoubleConstant))
-					left = left.ToDouble (loc);
-
-				if (!(right is DoubleConstant))
-					right = right.ToDouble (loc);
-				return;
-			} else if (left is FloatConstant || right is FloatConstant) {
-				//
-				// If either side is a float, convert the other to a float
-				//
-				if (!(left is FloatConstant))
-					left = left.ToFloat (loc);
-
-				if (!(right is FloatConstant))
-					right = right.ToFloat (loc);
-;				return;
-			} else if (left is ULongConstant || right is ULongConstant){
-				//
-				// If either operand is of type ulong, the other operand is
-				// converted to type ulong.  or an error ocurrs if the other
-				// operand is of type sbyte, short, int or long
-				//
-#if WRONG
-				Constant match, other;
-#endif
-					
-				if (left is ULongConstant){
-#if WRONG
-					other = right;
-					match = left;
-#endif
-					if (!(right is ULongConstant))
-						right = right.ToULong (loc);
-				} else {
-#if WRONG
-					other = left;
-					match = right;
-#endif
-					left = left.ToULong (loc);
-				}
-
-#if WRONG
-				if (other is SByteConstant || other is ShortConstant ||
-				    other is IntConstant || other is LongConstant){
-					Binary.Error_OperatorAmbiguous
-						(loc, oper, other.Type, match.Type);
-					left = null;
-					right = null;
-				}
-#endif
-				return;
-			} else if (left is LongConstant || right is LongConstant){
-				//
-				// If either operand is of type long, the other operand is converted
-				// to type long.
-				//
-				if (!(left is LongConstant))
-					left = left.ToLong (loc);
-				else if (!(right is LongConstant))
-					right = right.ToLong (loc);
-				return;
-			} else if (left is UIntConstant || right is UIntConstant){
-				//
-				// If either operand is of type uint, and the other
-				// operand is of type sbyte, short or int, the operands are
-				// converted to type long.
-				//
-				Constant other;
-				if (left is UIntConstant)
-					other = right;
-				else
-					other = left;
-
-				// Nothing to do.
-				if (other is UIntConstant)
-					return;
-
-				IntConstant ic = other as IntConstant;
-				if (ic != null){
-					if (ic.Value >= 0){
-						if (left == other)
-							left = new UIntConstant ((uint) ic.Value);
-						else
-							right = new UIntConstant ((uint) ic.Value);
-						return;
-					}
-				}
-				
-				if (other is SByteConstant || other is ShortConstant || ic != null){
-					left = left.ToLong (loc);
-					right = right.ToLong (loc);
-				} else {
-					left = left.ToUInt (loc);
-					right = left.ToUInt (loc);
-				}
-
-				return;
-			} else if (left is DecimalConstant || right is DecimalConstant) {
-				if (!(left is DecimalConstant))
-					left = left.ToDecimal (loc);
-				else if (!(right is DecimalConstant))
-					right = right.ToDecimal (loc);
-				return;
-			} else if (left is EnumConstant || right is EnumConstant){
+			if (left is EnumConstant || right is EnumConstant){
 				//
 				// If either operand is an enum constant, the other one must
 				// be implicitly convertable to that enum's underlying type.
@@ -174,17 +142,39 @@ namespace Mono.CSharp {
 
 				DoConstantNumericPromotions (ec, oper, ref left, ref right, loc);
 				return;
-
-			} else {
-				//
-				// Force conversions to int32
-				//
-				if (!(left is IntConstant))
-					left = left.ToInt (loc);
-				if (!(right is IntConstant))
-					right = right.ToInt (loc);
 			}
-			return;
+
+			Type target_type = null;
+
+			if (oper == Binary.Operator.Division) {
+				if (left is DoubleConstant || right is DoubleConstant)
+					target_type = TypeManager.double_type;
+				else if (left is FloatConstant || right is FloatConstant)
+					target_type = TypeManager.float_type;
+				else if (left is DecimalConstant || right is DecimalConstant)
+					target_type = TypeManager.decimal_type;
+				else if (TypeManager.IsFixedNumericType (left.Type) &&
+					 TypeManager.IsFixedNumericType (right.Type))
+					target_type = TypeManager.double_type;
+			} else {
+				if (left is DoubleConstant || right is DoubleConstant)
+					target_type = TypeManager.double_type;
+				else if (left is FloatConstant || right is FloatConstant)
+					target_type = TypeManager.float_type;
+				else if (left is DecimalConstant || right is DecimalConstant)
+					target_type = TypeManager.decimal_type;
+				else
+					target_type = TypeManager.GetVBBinaryIntegralResultType (oper, left.Type, right.Type);
+			}
+
+			if (target_type == null) {
+				left = null;
+				right = null;
+				return;
+			}
+
+			left = ConvertConstantToType (left, target_type, loc);
+			right = ConvertConstantToType (right, target_type, loc);
 		}
 
 		static void Error_CompileTimeOverflow (Location loc)
@@ -287,6 +277,26 @@ namespace Mono.CSharp {
 						return v;
 					else
 						return new EnumConstant (v, result_type);
+				} else if (left is ByteConstant){
+					ByteConstant v;
+					byte res = (byte) (((ByteConstant)left).Value |
+							   ((ByteConstant)right).Value);
+
+					v = new ByteConstant (res);
+					if (result_type == null)
+						return v;
+					else
+						return new EnumConstant (v, result_type);
+				} else if (left is SByteConstant){
+					SByteConstant v;
+					sbyte res = (sbyte) (((SByteConstant)left).Value |
+							     ((SByteConstant)right).Value);
+
+					v = new SByteConstant (res);
+					if (result_type == null)
+						return v;
+					else
+						return new EnumConstant (v, result_type);
 				}
 				break;
 				
@@ -352,6 +362,26 @@ namespace Mono.CSharp {
 						return v;
 					else
 						return new EnumConstant (v, result_type);
+				} else if (left is ByteConstant){
+					ByteConstant v;
+					byte res = (byte) (((ByteConstant)left).Value &
+							   ((ByteConstant)right).Value);
+
+					v = new ByteConstant (res);
+					if (result_type == null)
+						return v;
+					else
+						return new EnumConstant (v, result_type);
+				} else if (left is SByteConstant){
+					SByteConstant v;
+					sbyte res = (sbyte) (((SByteConstant)left).Value &
+							     ((SByteConstant)right).Value);
+
+					v = new SByteConstant (res);
+					if (result_type == null)
+						return v;
+					else
+						return new EnumConstant (v, result_type);
 				}
 				break;
 
@@ -413,6 +443,26 @@ namespace Mono.CSharp {
 							    ((ShortConstant)right).Value);
 					
 					v = new ShortConstant (res);
+					if (result_type == null)
+						return v;
+					else
+						return new EnumConstant (v, result_type);
+				} else if (left is ByteConstant){
+					ByteConstant v;
+					byte res = (byte) (((ByteConstant)left).Value ^
+							   ((ByteConstant)right).Value);
+
+					v = new ByteConstant (res);
+					if (result_type == null)
+						return v;
+					else
+						return new EnumConstant (v, result_type);
+				} else if (left is SByteConstant){
+					SByteConstant v;
+					sbyte res = (sbyte) (((SByteConstant)left).Value ^
+							     ((SByteConstant)right).Value);
+
+					v = new SByteConstant (res);
 					if (result_type == null)
 						return v;
 					else
@@ -520,6 +570,50 @@ namespace Mono.CSharp {
 									 ((UIntConstant) right).Value);
 						
 						result = new UIntConstant (res);
+					} else if (left is UShortConstant){
+						ushort res;
+
+						if (ec.ConstantCheckState)
+							res = checked ((ushort) (((UShortConstant) left).Value +
+								       ((UShortConstant) right).Value));
+						else
+							res = unchecked ((ushort) (((UShortConstant) left).Value +
+									 ((UShortConstant) right).Value));
+
+						result = new UShortConstant (res);
+					} else if (left is ShortConstant){
+						short res;
+
+						if (ec.ConstantCheckState)
+							res = checked ((short) (((ShortConstant) left).Value +
+								       ((ShortConstant) right).Value));
+						else
+							res = unchecked ((short) (((ShortConstant) left).Value +
+									 ((ShortConstant) right).Value));
+
+						result = new ShortConstant (res);
+					} else if (left is ByteConstant){
+						byte res;
+
+						if (ec.ConstantCheckState)
+							res = checked ((byte) (((ByteConstant) left).Value +
+								       ((ByteConstant) right).Value));
+						else
+							res = unchecked ((byte) (((ByteConstant) left).Value +
+									 ((ByteConstant) right).Value));
+
+						result = new ByteConstant (res);
+					} else if (left is SByteConstant){
+						sbyte res;
+
+						if (ec.ConstantCheckState)
+							res = checked ((sbyte) (((SByteConstant) left).Value +
+								       ((SByteConstant) right).Value));
+						else
+							res = unchecked ((sbyte) (((SByteConstant) left).Value +
+									 ((SByteConstant) right).Value));
+
+						result = new SByteConstant (res);
 					} else if (left is IntConstant){
 						int res;
 
@@ -638,6 +732,50 @@ namespace Mono.CSharp {
 									 ((UIntConstant) right).Value);
 						
 						result = new UIntConstant (res);
+					} else if (left is UShortConstant){
+						ushort res;
+
+						if (ec.ConstantCheckState)
+							res = checked ((ushort) (((UShortConstant) left).Value -
+								       ((UShortConstant) right).Value));
+						else
+							res = unchecked ((ushort) (((UShortConstant) left).Value -
+									 ((UShortConstant) right).Value));
+
+						result = new UShortConstant (res);
+					} else if (left is ShortConstant){
+						short res;
+
+						if (ec.ConstantCheckState)
+							res = checked ((short) (((ShortConstant) left).Value -
+								       ((ShortConstant) right).Value));
+						else
+							res = unchecked ((short) (((ShortConstant) left).Value -
+									 ((ShortConstant) right).Value));
+
+						result = new ShortConstant (res);
+					} else if (left is ByteConstant){
+						byte res;
+
+						if (ec.ConstantCheckState)
+							res = checked ((byte) (((ByteConstant) left).Value -
+								       ((ByteConstant) right).Value));
+						else
+							res = unchecked ((byte) (((ByteConstant) left).Value -
+									 ((ByteConstant) right).Value));
+
+						result = new ByteConstant (res);
+					} else if (left is SByteConstant){
+						sbyte res;
+
+						if (ec.ConstantCheckState)
+							res = checked ((sbyte) (((SByteConstant) left).Value -
+								       ((SByteConstant) right).Value));
+						else
+							res = unchecked ((sbyte) (((SByteConstant) left).Value -
+									 ((SByteConstant) right).Value));
+
+						result = new SByteConstant (res);
 					} else if (left is IntConstant){
 						int res;
 
@@ -729,9 +867,53 @@ namespace Mono.CSharp {
 								((UIntConstant) right).Value);
 						else
 							res = unchecked (((UIntConstant) left).Value *
-								((UIntConstant) right).Value);
+									 ((UIntConstant) right).Value);
 						
 						return new UIntConstant (res);
+					} else if (left is UShortConstant){
+						ushort res;
+
+						if (ec.ConstantCheckState)
+							res = checked ((ushort) (((UShortConstant) left).Value *
+								       ((UShortConstant) right).Value));
+						else
+							res = unchecked ((ushort) (((UShortConstant) left).Value *
+									 ((UShortConstant) right).Value));
+
+						return new UShortConstant (res);
+					} else if (left is ShortConstant){
+						short res;
+
+						if (ec.ConstantCheckState)
+							res = checked ((short) (((ShortConstant) left).Value *
+								       ((ShortConstant) right).Value));
+						else
+							res = unchecked ((short) (((ShortConstant) left).Value *
+									 ((ShortConstant) right).Value));
+
+						return new ShortConstant (res);
+					} else if (left is ByteConstant){
+						byte res;
+
+						if (ec.ConstantCheckState)
+							res = checked ((byte) (((ByteConstant) left).Value *
+								       ((ByteConstant) right).Value));
+						else
+							res = unchecked ((byte) (((ByteConstant) left).Value *
+									 ((ByteConstant) right).Value));
+
+						return new ByteConstant (res);
+					} else if (left is SByteConstant){
+						sbyte res;
+
+						if (ec.ConstantCheckState)
+							res = checked ((sbyte) (((SByteConstant) left).Value *
+								       ((SByteConstant) right).Value));
+						else
+							res = unchecked ((sbyte) (((SByteConstant) left).Value *
+									 ((SByteConstant) right).Value));
+
+						return new SByteConstant (res);
 					} else if (left is IntConstant){
 						int res;
 
@@ -918,6 +1100,50 @@ namespace Mono.CSharp {
 									 ((UIntConstant) right).Value);
 						
 						return new UIntConstant (res);
+					} else if (left is UShortConstant){
+						ushort res;
+
+						if (ec.ConstantCheckState)
+							res = checked ((ushort) (((UShortConstant) left).Value %
+								       ((UShortConstant) right).Value));
+						else
+							res = unchecked ((ushort) (((UShortConstant) left).Value %
+									 ((UShortConstant) right).Value));
+
+						return new UShortConstant (res);
+					} else if (left is ShortConstant){
+						short res;
+
+						if (ec.ConstantCheckState)
+							res = checked ((short) (((ShortConstant) left).Value %
+								       ((ShortConstant) right).Value));
+						else
+							res = unchecked ((short) (((ShortConstant) left).Value %
+									 ((ShortConstant) right).Value));
+
+						return new ShortConstant (res);
+					} else if (left is ByteConstant){
+						byte res;
+
+						if (ec.ConstantCheckState)
+							res = checked ((byte) (((ByteConstant) left).Value %
+								       ((ByteConstant) right).Value));
+						else
+							res = unchecked ((byte) (((ByteConstant) left).Value %
+									 ((ByteConstant) right).Value));
+
+						return new ByteConstant (res);
+					} else if (left is SByteConstant){
+						sbyte res;
+
+						if (ec.ConstantCheckState)
+							res = checked ((sbyte) (((SByteConstant) left).Value %
+								       ((SByteConstant) right).Value));
+						else
+							res = unchecked ((sbyte) (((SByteConstant) left).Value %
+									 ((SByteConstant) right).Value));
+
+						return new SByteConstant (res);
 					} else if (left is IntConstant){
 						int res;
 
@@ -929,6 +1155,17 @@ namespace Mono.CSharp {
 									 ((IntConstant) right).Value);
 
 						return new IntConstant (res);
+					} else if (left is DecimalConstant) {
+						decimal res;
+
+						if (ec.ConstantCheckState)
+							res = checked (((DecimalConstant) left).Value %
+								((DecimalConstant) right).Value);
+						else
+							res = unchecked (((DecimalConstant) left).Value %
+								((DecimalConstant) right).Value);
+
+						return new DecimalConstant (res);
 					} else {
 						throw new Exception ( "Unexepected modulus input: " + left);
 					}
@@ -950,21 +1187,9 @@ namespace Mono.CSharp {
 				}
 				int lshift_val = ic.Value;
 
-				IntConstant lic;
-				if ((lic = left.ConvertToInt ()) != null)
-					return new IntConstant (lic.Value << lshift_val);
-
-				UIntConstant luic;
-				if ((luic = left.ConvertToUInt ()) != null)
-					return new UIntConstant (luic.Value << lshift_val);
-
-				LongConstant llc;
-				if ((llc = left.ConvertToLong ()) != null)
-					return new LongConstant (llc.Value << lshift_val);
-
-				ULongConstant lulc;
-				if ((lulc = left.ConvertToULong ()) != null)
-					return new ULongConstant (lulc.Value << lshift_val);
+				result = FoldShiftConstant (left, lshift_val, true);
+				if (result != null)
+					return result;
 
 				Binary.Error_OperatorCannotBeApplied (loc, "<<", lt, rt);
 				break;
@@ -980,21 +1205,9 @@ namespace Mono.CSharp {
 				}
 				int rshift_val = sic.Value;
 
-				IntConstant ric;
-				if ((ric = left.ConvertToInt ()) != null)
-					return new IntConstant (ric.Value >> rshift_val);
-
-				UIntConstant ruic;
-				if ((ruic = left.ConvertToUInt ()) != null)
-					return new UIntConstant (ruic.Value >> rshift_val);
-
-				LongConstant rlc;
-				if ((rlc = left.ConvertToLong ()) != null)
-					return new LongConstant (rlc.Value >> rshift_val);
-
-				ULongConstant rulc;
-				if ((rulc = left.ConvertToULong ()) != null)
-					return new ULongConstant (rulc.Value >> rshift_val);
+				result = FoldShiftConstant (left, rshift_val, false);
+				if (result != null)
+					return result;
 
 				Binary.Error_OperatorCannotBeApplied (loc, ">>", lt, rt);
 				break;
@@ -1046,29 +1259,7 @@ namespace Mono.CSharp {
 				if (left == null || right == null)
 					return null;
 
-				bool_res = false;
-				if (left is DoubleConstant)
-					bool_res = ((DoubleConstant) left).Value ==
-						((DoubleConstant) right).Value;
-				else if (left is FloatConstant)
-					bool_res = ((FloatConstant) left).Value ==
-						((FloatConstant) right).Value;
-				else if (left is ULongConstant)
-					bool_res = ((ULongConstant) left).Value ==
-						((ULongConstant) right).Value;
-				else if (left is LongConstant)
-					bool_res = ((LongConstant) left).Value ==
-						((LongConstant) right).Value;
-				else if (left is UIntConstant)
-					bool_res = ((UIntConstant) left).Value ==
-						((UIntConstant) right).Value;
-				else if (left is IntConstant)
-					bool_res = ((IntConstant) left).Value ==
-						((IntConstant) right).Value;
-				else
-					return null;
-
-				return new BoolConstant (bool_res);
+				return new BoolConstant (ComparePromotedConstants (left, right) == 0);
 
 			case Binary.Operator.Inequality:
 				if (left is BoolConstant && right is BoolConstant){
@@ -1099,145 +1290,35 @@ namespace Mono.CSharp {
 				if (left == null || right == null)
 					return null;
 
-				bool_res = false;
-				if (left is DoubleConstant)
-					bool_res = ((DoubleConstant) left).Value !=
-						((DoubleConstant) right).Value;
-				else if (left is FloatConstant)
-					bool_res = ((FloatConstant) left).Value !=
-						((FloatConstant) right).Value;
-				else if (left is ULongConstant)
-					bool_res = ((ULongConstant) left).Value !=
-						((ULongConstant) right).Value;
-				else if (left is LongConstant)
-					bool_res = ((LongConstant) left).Value !=
-						((LongConstant) right).Value;
-				else if (left is UIntConstant)
-					bool_res = ((UIntConstant) left).Value !=
-						((UIntConstant) right).Value;
-				else if (left is IntConstant)
-					bool_res = ((IntConstant) left).Value !=
-						((IntConstant) right).Value;
-				else
-					return null;
-
-				return new BoolConstant (bool_res);
+				return new BoolConstant (ComparePromotedConstants (left, right) != 0);
 
 			case Binary.Operator.LessThan:
 				DoConstantNumericPromotions (ec, oper, ref left, ref right, loc);
 				if (left == null || right == null)
 					return null;
 
-				bool_res = false;
-				if (left is DoubleConstant)
-					bool_res = ((DoubleConstant) left).Value <
-						((DoubleConstant) right).Value;
-				else if (left is FloatConstant)
-					bool_res = ((FloatConstant) left).Value <
-						((FloatConstant) right).Value;
-				else if (left is ULongConstant)
-					bool_res = ((ULongConstant) left).Value <
-						((ULongConstant) right).Value;
-				else if (left is LongConstant)
-					bool_res = ((LongConstant) left).Value <
-						((LongConstant) right).Value;
-				else if (left is UIntConstant)
-					bool_res = ((UIntConstant) left).Value <
-						((UIntConstant) right).Value;
-				else if (left is IntConstant)
-					bool_res = ((IntConstant) left).Value <
-						((IntConstant) right).Value;
-				else
-					return null;
-
-				return new BoolConstant (bool_res);
+				return new BoolConstant (ComparePromotedConstants (left, right) < 0);
 				
 			case Binary.Operator.GreaterThan:
 				DoConstantNumericPromotions (ec, oper, ref left, ref right, loc);
 				if (left == null || right == null)
 					return null;
 
-				bool_res = false;
-				if (left is DoubleConstant)
-					bool_res = ((DoubleConstant) left).Value >
-						((DoubleConstant) right).Value;
-				else if (left is FloatConstant)
-					bool_res = ((FloatConstant) left).Value >
-						((FloatConstant) right).Value;
-				else if (left is ULongConstant)
-					bool_res = ((ULongConstant) left).Value >
-						((ULongConstant) right).Value;
-				else if (left is LongConstant)
-					bool_res = ((LongConstant) left).Value >
-						((LongConstant) right).Value;
-				else if (left is UIntConstant)
-					bool_res = ((UIntConstant) left).Value >
-						((UIntConstant) right).Value;
-				else if (left is IntConstant)
-					bool_res = ((IntConstant) left).Value >
-						((IntConstant) right).Value;
-				else
-					return null;
-
-				return new BoolConstant (bool_res);
+				return new BoolConstant (ComparePromotedConstants (left, right) > 0);
 
 			case Binary.Operator.GreaterThanOrEqual:
 				DoConstantNumericPromotions (ec, oper, ref left, ref right, loc);
 				if (left == null || right == null)
 					return null;
 
-				bool_res = false;
-				if (left is DoubleConstant)
-					bool_res = ((DoubleConstant) left).Value >=
-						((DoubleConstant) right).Value;
-				else if (left is FloatConstant)
-					bool_res = ((FloatConstant) left).Value >=
-						((FloatConstant) right).Value;
-				else if (left is ULongConstant)
-					bool_res = ((ULongConstant) left).Value >=
-						((ULongConstant) right).Value;
-				else if (left is LongConstant)
-					bool_res = ((LongConstant) left).Value >=
-						((LongConstant) right).Value;
-				else if (left is UIntConstant)
-					bool_res = ((UIntConstant) left).Value >=
-						((UIntConstant) right).Value;
-				else if (left is IntConstant)
-					bool_res = ((IntConstant) left).Value >=
-						((IntConstant) right).Value;
-				else
-					return null;
-
-				return new BoolConstant (bool_res);
+				return new BoolConstant (ComparePromotedConstants (left, right) >= 0);
 
 			case Binary.Operator.LessThanOrEqual:
 				DoConstantNumericPromotions (ec, oper, ref left, ref right, loc);
 				if (left == null || right == null)
 					return null;
 
-				bool_res = false;
-				if (left is DoubleConstant)
-					bool_res = ((DoubleConstant) left).Value <=
-						((DoubleConstant) right).Value;
-				else if (left is FloatConstant)
-					bool_res = ((FloatConstant) left).Value <=
-						((FloatConstant) right).Value;
-				else if (left is ULongConstant)
-					bool_res = ((ULongConstant) left).Value <=
-						((ULongConstant) right).Value;
-				else if (left is LongConstant)
-					bool_res = ((LongConstant) left).Value <=
-						((LongConstant) right).Value;
-				else if (left is UIntConstant)
-					bool_res = ((UIntConstant) left).Value <=
-						((UIntConstant) right).Value;
-				else if (left is IntConstant)
-					bool_res = ((IntConstant) left).Value <=
-						((IntConstant) right).Value;
-				else
-					return null;
-
-				return new BoolConstant (bool_res);
+				return new BoolConstant (ComparePromotedConstants (left, right) <= 0);
 			}
 					
 			return null;

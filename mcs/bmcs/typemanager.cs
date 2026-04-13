@@ -126,37 +126,36 @@ public partial class TypeManager {
 	static public Type msvbcs_comparemethod_type;
 
 	//
-	// Unlike C#, VB.NET doesn't understand "signed byte",
-	// "unsigned short" and "unsigned int" as primitive types. The
-	// NotDefinedAsPrimitiveType just exists to accomodate this fact.
+	// Older bmcs treated SByte / UShort / UInteger / ULong as
+	// "not primitive" placeholders.  VB 2005+ does recognize
+	// them as intrinsic numeric types, and the operator tables
+	// below rely on that.
 	//
-
-	static Type not_defined_as_primitive_type = typeof (NotDefinedAsPrimitiveType);
 
 	public static Type sbyte_type {
 		get {
-			return not_defined_as_primitive_type;
+			return _sbyte_type;
 		}
 
 	}
 
 	public static Type ushort_type {
 		get {
-			return not_defined_as_primitive_type;
+			return _ushort_type;
 		}
 
 	}
 
 	public static Type uint32_type {
 		get {
-			return not_defined_as_primitive_type;
+			return _uint32_type;
 		}
 
 	}
 
 	public static Type uint64_type {
 		get {
-			return not_defined_as_primitive_type;
+			return _uint64_type;
 		}
 
 	}
@@ -328,6 +327,7 @@ public partial class TypeManager {
 	static public MethodInfo math_pow_double_double;
 
 	static public MethodInfo decimal_add_decimal_decimal;
+	static public MethodInfo decimal_negate_decimal;
 	static public MethodInfo decimal_subtract_decimal_decimal;
 	static public MethodInfo decimal_multiply_decimal_decimal;
 	static public MethodInfo decimal_divide_decimal_decimal;
@@ -1427,9 +1427,13 @@ public partial class TypeManager {
 
 		relative_type_order = new Hashtable ();
 		relative_type_order[TypeManager.bool_type] = 1;
+		relative_type_order[TypeManager.sbyte_type] = 1;
 		relative_type_order[TypeManager.byte_type] = 1;
+		relative_type_order[TypeManager.ushort_type] = 2;
 		relative_type_order[TypeManager.short_type] = 2;
+		relative_type_order[TypeManager.uint32_type] = 3;
 		relative_type_order[TypeManager.int32_type] = 3;
+		relative_type_order[TypeManager.uint64_type] = 4;
 		relative_type_order[TypeManager.int64_type] = 4;
 		relative_type_order[TypeManager.decimal_type] = 5;
 		relative_type_order[TypeManager.float_type] = 6;
@@ -1551,8 +1555,11 @@ public partial class TypeManager {
 			math_type, "Pow", double_double_arg);
 
 		Type [] decimal_decimal_arg = { decimal_type, decimal_type };
+		Type [] decimal_unary_arg = { decimal_type };
 		decimal_add_decimal_decimal = GetMethod (
 			decimal_type, "Add", decimal_decimal_arg);
+		decimal_negate_decimal = GetMethod (
+			decimal_type, "Negate", decimal_unary_arg);
 		decimal_subtract_decimal_decimal = GetMethod (
 			decimal_type, "Subtract", decimal_decimal_arg);
 		decimal_multiply_decimal_decimal = GetMethod (
@@ -1994,11 +2001,166 @@ public partial class TypeManager {
 
 	public static bool IsFixedNumericType (Type type)
 	{
-		if (type == byte_type || type == short_type ||
-		    type == int32_type || type == int64_type) 
+		if (type == sbyte_type || type == byte_type ||
+		    type == short_type || type == ushort_type ||
+		    type == int32_type || type == uint32_type ||
+		    type == int64_type || type == uint64_type)
 			return true;
 
 		return false;
+	}
+
+	public static bool IsUnsignedType (Type type)
+	{
+		return type == byte_type || type == ushort_type ||
+			type == uint32_type || type == uint64_type;
+	}
+
+	static bool TryGetVBIntegralRank (Type type, out int rank, out bool is_unsigned)
+	{
+		is_unsigned = false;
+
+		if (type == sbyte_type) {
+			rank = 8;
+			return true;
+		}
+
+		if (type == byte_type) {
+			rank = 8;
+			is_unsigned = true;
+			return true;
+		}
+
+		if (type == short_type) {
+			rank = 16;
+			return true;
+		}
+
+		if (type == ushort_type) {
+			rank = 16;
+			is_unsigned = true;
+			return true;
+		}
+
+		if (type == int32_type) {
+			rank = 32;
+			return true;
+		}
+
+		if (type == uint32_type) {
+			rank = 32;
+			is_unsigned = true;
+			return true;
+		}
+
+		if (type == int64_type) {
+			rank = 64;
+			return true;
+		}
+
+		if (type == uint64_type) {
+			rank = 64;
+			is_unsigned = true;
+			return true;
+		}
+
+		rank = 0;
+		return false;
+	}
+
+	static Type GetVBIntegralType (int rank, bool is_unsigned)
+	{
+		switch (rank) {
+		case 8:
+			return is_unsigned ? byte_type : sbyte_type;
+		case 16:
+			return is_unsigned ? ushort_type : short_type;
+		case 32:
+			return is_unsigned ? uint32_type : int32_type;
+		case 64:
+			return is_unsigned ? uint64_type : int64_type;
+		default:
+			return null;
+		}
+	}
+
+	static Type GetNextVBSignedType (int rank, Binary.Operator oper)
+	{
+		switch (rank) {
+		case 8:
+			return short_type;
+		case 16:
+			return int32_type;
+		case 32:
+			return int64_type;
+		case 64:
+			if (oper == Binary.Operator.IntegerDivision ||
+			    oper == Binary.Operator.BitwiseAnd ||
+			    oper == Binary.Operator.BitwiseOr ||
+			    oper == Binary.Operator.ExclusiveOr)
+				return int64_type;
+
+			return decimal_type;
+		default:
+			return null;
+		}
+	}
+
+	// VB defines explicit operator-result tables for mixed signed and
+	// unsigned integral arithmetic.  We centralize that policy here so
+	// runtime binding and constant folding stay in sync.
+	public static Type GetVBBinaryIntegralResultType (Binary.Operator oper, Type left, Type right)
+	{
+		int left_rank, right_rank;
+		bool left_unsigned, right_unsigned;
+
+		if (!TryGetVBIntegralRank (left, out left_rank, out left_unsigned))
+			return null;
+
+		if (!TryGetVBIntegralRank (right, out right_rank, out right_unsigned))
+			return null;
+
+		if (left == right)
+			return left;
+
+		if (left_unsigned == right_unsigned) {
+			if (left_rank > right_rank)
+				return left;
+
+			return right;
+		}
+
+		int signed_rank = left_unsigned ? right_rank : left_rank;
+		int unsigned_rank = left_unsigned ? left_rank : right_rank;
+
+		if (signed_rank > unsigned_rank)
+			return GetVBIntegralType (signed_rank, false);
+
+		return GetNextVBSignedType (unsigned_rank, oper);
+	}
+
+	public static Type GetVBUnaryMinusResultType (Type type)
+	{
+		if (type == sbyte_type)
+			return sbyte_type;
+		if (type == byte_type)
+			return short_type;
+		if (type == short_type)
+			return short_type;
+		if (type == ushort_type)
+			return int32_type;
+		if (type == int32_type)
+			return int32_type;
+		if (type == uint32_type)
+			return int64_type;
+		if (type == int64_type)
+			return int64_type;
+		if (type == uint64_type)
+			return decimal_type;
+		if (type == float_type || type == double_type || type == decimal_type)
+			return type;
+
+		return null;
 	}
 
 	public static bool IsFloatingNumericType (Type type)

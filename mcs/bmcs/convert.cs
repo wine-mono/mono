@@ -543,14 +543,16 @@ namespace Mono.CSharp {
 							       OpCodes.Conv_R4);
 			} else if (expr_type == TypeManager.uint64_type){
 				//
-				// From ulong to float, double
+				// From ulong to float, double, decimal
 				//
 				if (real_target_type == TypeManager.double_type)
 					return new OpcodeCast (expr, target_type, OpCodes.Conv_R_Un,
 							       OpCodes.Conv_R8);
 				if (real_target_type == TypeManager.float_type)
 					return new OpcodeCast (expr, target_type, OpCodes.Conv_R_Un,
-							       OpCodes.Conv_R4);	
+							       OpCodes.Conv_R4);
+				if (real_target_type == TypeManager.decimal_type)
+					return new ImplicitNew (ec, "System", "Decimal", loc, expr);
 			} else if (expr_type == TypeManager.int64_type){
 				//
 				// From long/ulong to float, double
@@ -1438,6 +1440,116 @@ namespace Mono.CSharp {
 			return null;
 		}
 
+		static bool TryGetIntegralConstantValue (Constant const_expr, out decimal value)
+		{
+			if (const_expr is ByteConstant) {
+				value = ((ByteConstant) const_expr).Value;
+				return true;
+			}
+
+			if (const_expr is SByteConstant) {
+				value = ((SByteConstant) const_expr).Value;
+				return true;
+			}
+
+			if (const_expr is ShortConstant) {
+				value = ((ShortConstant) const_expr).Value;
+				return true;
+			}
+
+			if (const_expr is UShortConstant) {
+				value = ((UShortConstant) const_expr).Value;
+				return true;
+			}
+
+			if (const_expr is IntConstant) {
+				value = ((IntConstant) const_expr).Value;
+				return true;
+			}
+
+			if (const_expr is UIntConstant) {
+				value = ((UIntConstant) const_expr).Value;
+				return true;
+			}
+
+			if (const_expr is LongConstant) {
+				value = ((LongConstant) const_expr).Value;
+				return true;
+			}
+
+			if (const_expr is ULongConstant) {
+				value = new decimal (((ULongConstant) const_expr).Value);
+				return true;
+			}
+
+			value = 0;
+			return false;
+		}
+
+		// VB allows integral constant expressions to convert to any narrower
+		// integral type when the value fits.  Keep that policy in one place so
+		// binding and constant folding do not drift apart.
+		public static Constant ConvertIntegralConstant (Constant const_expr, Type target_type)
+		{
+			decimal value;
+
+			if (!TryGetIntegralConstantValue (const_expr, out value))
+				return null;
+
+			if (target_type == TypeManager.sbyte_type) {
+				if (value >= sbyte.MinValue && value <= sbyte.MaxValue)
+					return new SByteConstant ((sbyte) value);
+				return null;
+			}
+
+			if (target_type == TypeManager.byte_type) {
+				if (value >= byte.MinValue && value <= byte.MaxValue)
+					return new ByteConstant ((byte) value);
+				return null;
+			}
+
+			if (target_type == TypeManager.short_type) {
+				if (value >= short.MinValue && value <= short.MaxValue)
+					return new ShortConstant ((short) value);
+				return null;
+			}
+
+			if (target_type == TypeManager.ushort_type) {
+				if (value >= ushort.MinValue && value <= ushort.MaxValue)
+					return new UShortConstant ((ushort) value);
+				return null;
+			}
+
+			if (target_type == TypeManager.int32_type) {
+				if (value >= int.MinValue && value <= int.MaxValue)
+					return new IntConstant ((int) value);
+				return null;
+			}
+
+			if (target_type == TypeManager.uint32_type) {
+				if (value >= uint.MinValue && value <= uint.MaxValue)
+					return new UIntConstant ((uint) value);
+				return null;
+			}
+
+			if (target_type == TypeManager.int64_type) {
+				if (value >= long.MinValue && value <= long.MaxValue)
+					return new LongConstant ((long) value);
+				return null;
+			}
+
+			if (target_type == TypeManager.uint64_type) {
+				if (value >= 0 && value <= ulong.MaxValue)
+					return new ULongConstant ((ulong) value);
+				return null;
+			}
+
+			if (target_type == TypeManager.decimal_type)
+				return new DecimalConstant (value);
+
+			return null;
+		}
+
 		/// <summary>
 		///   Attempts to perform an implicit constant conversion of the IntConstant
 		///   into a different data type using casts (See Implicit Constant
@@ -1450,27 +1562,13 @@ namespace Mono.CSharp {
 			Type const_expr_type = const_expr.Type;
 			Location loc = const_expr.Location;
 
-			if (target_type == TypeManager.byte_type){
-				if (const_expr_type == TypeManager.short_type ||
-					const_expr_type == TypeManager.int32_type ||
-					const_expr_type == TypeManager.int64_type)
-						return const_expr.ToByte (loc);
-			}
-
-			if (target_type == TypeManager.short_type){
-				if (const_expr_type == TypeManager.int32_type ||
-					const_expr_type == TypeManager.int64_type)
-						return const_expr.ToShort (loc);
-			}
-
-			if (target_type == TypeManager.int32_type){
-				if (const_expr_type == TypeManager.int64_type)
-					return const_expr.ToInt (loc);
-			} 
+			ret_expr = ConvertIntegralConstant (const_expr, target_type);
+			if (ret_expr != null)
+				return ret_expr;
 
 			if (target_type == TypeManager.float_type) {
 				if (const_expr_type == TypeManager.double_type)
-					return const_expr.ToDouble (loc);
+					return const_expr.ToFloat (loc);
 			}
 			
 			return null;

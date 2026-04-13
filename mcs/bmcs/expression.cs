@@ -195,18 +195,14 @@ namespace Mono.CSharp {
 			else if (expr is UIntConstant){
 				uint value = ((UIntConstant) expr).Value;
 
-				if (value < 2147483649)
-					return new IntConstant (-(int)value);
-				else
-					e = new LongConstant (-value);
+				e = new LongConstant (-((long) value));
 			}
 			else if (expr is LongConstant)
 				e = new LongConstant (-((LongConstant) expr).Value);
 			else if (expr is ULongConstant){
 				ulong value = ((ULongConstant) expr).Value;
 
-				if (value < 9223372036854775809)
-					return new LongConstant(-(long)value);
+				e = new DecimalConstant (-(decimal) value);
 			}
 			else if (expr is FloatConstant)
 				e = new FloatConstant (-((FloatConstant) expr).Value);
@@ -215,13 +211,13 @@ namespace Mono.CSharp {
 			else if (expr is DecimalConstant)
 				e = new DecimalConstant (-((DecimalConstant) expr).Value);
 			else if (expr is ShortConstant)
-				e = new IntConstant (-((ShortConstant) expr).Value);
+				e = new ShortConstant ((short) (-((ShortConstant) expr).Value));
 			else if (expr is UShortConstant)
 				e = new IntConstant (-((UShortConstant) expr).Value);
 			else if (expr is SByteConstant)
-				e = new IntConstant (-((SByteConstant) expr).Value);
+				e = new SByteConstant ((sbyte) (-((SByteConstant) expr).Value));
 			else if (expr is ByteConstant)
-				e = new IntConstant (-((ByteConstant) expr).Value);
+				e = new ShortConstant ((short) (-((ByteConstant) expr).Value));
 			return e;
 		}
 
@@ -241,6 +237,17 @@ namespace Mono.CSharp {
 				return true;
 				
 			case Operator.UnaryNegation:
+				if (ec.ConstantCheckState) {
+					if ((e is SByteConstant && ((SByteConstant) e).Value == SByte.MinValue) ||
+					    (e is ShortConstant && ((ShortConstant) e).Value == Int16.MinValue) ||
+					    (e is IntConstant && ((IntConstant) e).Value == Int32.MinValue) ||
+					    (e is LongConstant && ((LongConstant) e).Value == Int64.MinValue)) {
+						Report.Error (220, loc, "The operation overflows at compile time in checked mode");
+						result = null;
+						return false;
+					}
+				}
+
 				result = TryReduceNegative (e);
 				return result != null;
 				
@@ -507,61 +514,18 @@ namespace Mono.CSharp {
 						return unary.Expr;
 				}
 
-				//
-				// perform numeric promotions to int,
-				// long, double.
-				//
-				//
-				// The following is inneficient, because we call
-				// WideningConversion too many times.
-				//
-				// It is also not clear if we should convert to Float
-				// or Double initially.
-				//
-				if (expr_type == TypeManager.uint32_type){
-					//
-					// FIXME: handle exception to this rule that
-					// permits the int value -2147483648 (-2^31) to
-					// bt wrote as a decimal interger literal
-					//
-					type = TypeManager.int64_type;
-					Expr = Convert.WideningConversion (ec, Expr, type, loc);
-					return this;
-				}
+				type = TypeManager.GetVBUnaryMinusResultType (expr_type);
+				if (type != null) {
+					if (type != expr_type) {
+						expr = Convert.ImplicitVBConversion (ec, Expr, type, loc);
+						if (expr == null) {
+							Error23 (expr_type);
+							return null;
+						}
 
-				if (expr_type == TypeManager.uint64_type){
-					//
-					// FIXME: Handle exception of `long value'
-					// -92233720368547758087 (-2^63) to be wrote as
-					// decimal integer literal.
-					//
-					Error23 (expr_type);
-					return null;
-				}
+						Expr = expr;
+					}
 
-				if (expr_type == TypeManager.float_type){
-					type = expr_type;
-					return this;
-				}
-				
-				expr = Convert.WideningConversion (ec, Expr, TypeManager.int32_type, loc);
-				if (expr != null){
-					Expr = expr;
-					type = expr.Type;
-					return this;
-				} 
-
-				expr = Convert.WideningConversion (ec, Expr, TypeManager.int64_type, loc);
-				if (expr != null){
-					Expr = expr;
-					type = expr.Type;
-					return this;
-				}
-
-				expr = Convert.WideningConversion (ec, Expr, TypeManager.double_type, loc);
-				if (expr != null){
-					Expr = expr;
-					type = expr.Type;
 					return this;
 				}
 				
@@ -576,6 +540,9 @@ namespace Mono.CSharp {
 
 		public override Expression DoResolve (EmitContext ec)
 		{
+			if (Oper == Operator.UnaryNegation && Expr is OverflowIntegerLiteral)
+				return ((OverflowIntegerLiteral) Expr).ResolveUnaryNegation (ec);
+
 			if (Oper == Operator.AddressOf)
 				Expr = Expr.ResolveLValue (ec, new EmptyExpression ());
 			else
@@ -610,6 +577,12 @@ namespace Mono.CSharp {
 				throw new Exception ("This should be caught by Resolve");
 				
 			case Operator.UnaryNegation:
+				if (type == TypeManager.decimal_type) {
+					Expr.Emit (ec);
+					ig.Emit (OpCodes.Call, TypeManager.decimal_negate_decimal);
+					break;
+				}
+
 				if (ec.CheckState) {
 					ig.Emit (OpCodes.Ldc_I4_0);
 					if (type == TypeManager.int64_type)
@@ -620,6 +593,11 @@ namespace Mono.CSharp {
 				Expr.Emit (ec);
 				ig.Emit (OpCodes.Neg);
 				}
+
+				if (type == TypeManager.sbyte_type)
+					ig.Emit (ec.CheckState ? OpCodes.Conv_Ovf_I1 : OpCodes.Conv_I1);
+				else if (type == TypeManager.short_type)
+					ig.Emit (ec.CheckState ? OpCodes.Conv_Ovf_I2 : OpCodes.Conv_I2);
 				
 				break;
 				
@@ -2329,8 +2307,7 @@ namespace Mono.CSharp {
 
 		static bool is_unsigned (Type t)
 		{
-			return (t == TypeManager.uint32_type || t == TypeManager.uint64_type ||
-				t == TypeManager.short_type || t == TypeManager.byte_type);
+			return TypeManager.IsUnsignedType (t);
 		}
 
 		static bool is_user_defined (Type t)
@@ -2394,11 +2371,13 @@ namespace Mono.CSharp {
 
 			if (type == TypeManager.byte_type)
 				mask = 0x7;
-			else if (type == TypeManager.short_type)
+			else if (type == TypeManager.sbyte_type)
+				mask = 0x7;
+			else if (type == TypeManager.short_type || type == TypeManager.ushort_type)
 			 	mask = 0xf;
-			else if (type == TypeManager.int32_type)
+			else if (type == TypeManager.int32_type || type == TypeManager.uint32_type)
 			 	mask = 0x1f;
-			else if (type == TypeManager.int64_type)
+			else if (type == TypeManager.int64_type || type == TypeManager.uint64_type)
 			 	mask = 0x3f;
 			else
 				throw new Exception ("This should not happen");
@@ -3167,6 +3146,7 @@ namespace Mono.CSharp {
 			}
 
 			bool is_int32_or_int64_type = (Type == TypeManager.int32_type) || (Type == TypeManager.int64_type);
+			bool use_unsigned_compare = TypeManager.IsUnsignedType (left.Type);
 			
 			switch (oper){
 			case Operator.Multiply:
@@ -3210,7 +3190,7 @@ namespace Mono.CSharp {
 				break;
 
 			case Operator.RightShift:
-				opcode = OpCodes.Shr;
+				opcode = TypeManager.IsUnsignedType (Type) ? OpCodes.Shr_Un : OpCodes.Shr;
 				break;
 				
 			case Operator.LeftShift:
@@ -3230,22 +3210,22 @@ namespace Mono.CSharp {
 				break;
 
 			case Operator.LessThan:
-				opcode = OpCodes.Clt;
+				opcode = use_unsigned_compare ? OpCodes.Clt_Un : OpCodes.Clt;
 				break;
 
 			case Operator.GreaterThan:
-				opcode = OpCodes.Cgt;
+				opcode = use_unsigned_compare ? OpCodes.Cgt_Un : OpCodes.Cgt;
 				break;
 
 			case Operator.LessThanOrEqual:
-				ig.Emit (OpCodes.Cgt);
+				ig.Emit (use_unsigned_compare ? OpCodes.Cgt_Un : OpCodes.Cgt);
 				ig.Emit (OpCodes.Ldc_I4_0);
 				
 				opcode = OpCodes.Ceq;
 				break;
 
 			case Operator.GreaterThanOrEqual:
-				ig.Emit (OpCodes.Clt);
+				ig.Emit (use_unsigned_compare ? OpCodes.Clt_Un : OpCodes.Clt);
 				ig.Emit (OpCodes.Ldc_I4_0);
 				
 				opcode = OpCodes.Ceq;
@@ -3276,8 +3256,14 @@ namespace Mono.CSharp {
 			if (type == TypeManager.byte_type)
 				ig.Emit (ec.CheckState && ! IsShiftExpression ? OpCodes.Conv_Ovf_U1 : OpCodes.Conv_U1);
 
+			if (type == TypeManager.sbyte_type)
+				ig.Emit (ec.CheckState && ! IsShiftExpression ? OpCodes.Conv_Ovf_I1 : OpCodes.Conv_I1);
+
 			if (type == TypeManager.short_type)
-				ig.Emit (ec.CheckState &&  ! IsShiftExpression ? OpCodes.Conv_Ovf_I2 : OpCodes.Conv_I2);		
+				ig.Emit (ec.CheckState &&  ! IsShiftExpression ? OpCodes.Conv_Ovf_I2 : OpCodes.Conv_I2);
+
+			if (type == TypeManager.ushort_type)
+				ig.Emit (ec.CheckState && ! IsShiftExpression ? OpCodes.Conv_Ovf_U2 : OpCodes.Conv_U2);
 		}
 
 		Expression ResolveVisualBasicOperator (EmitContext ec)
@@ -3515,7 +3501,8 @@ namespace Mono.CSharp {
 				//Console.WriteLine ("		STEP " + step + ":");
 				//Console.WriteLine ("		" + "<" + target_left_expr_type + ", " + target_right_expr_type + ">");
 				
-				if ((target_left_expr_type == target_right_expr_type) && 
+				if ((target_left_expr_type == target_right_expr_type) &&
+				    !(oper == Operator.Division && TypeManager.IsFixedNumericType (target_left_expr_type)) &&
 				    IsOperatorDefinedForType (target_left_expr_type)) {
 
 					if (target_left_expr_type == TypeManager.null_type) {
@@ -3740,7 +3727,7 @@ namespace Mono.CSharp {
 			return null;
 		}
 
-		static Type GetWiderOfTypes (Type t1, Type t2)
+		Type GetWiderOfTypes (Type t1, Type t2)
 		{
 			// char array and Nothing should be handled here ?
 
@@ -3767,6 +3754,24 @@ namespace Mono.CSharp {
 				else
 					return null;
 			}
+
+			if (oper == Operator.Division) {
+				if (t1 == TypeManager.double_type || t2 == TypeManager.double_type)
+					return TypeManager.double_type;
+
+				if (t1 == TypeManager.float_type || t2 == TypeManager.float_type)
+					return TypeManager.float_type;
+
+				if (t1 == TypeManager.decimal_type || t2 == TypeManager.decimal_type)
+					return TypeManager.decimal_type;
+
+				if (TypeManager.IsFixedNumericType (t1) && TypeManager.IsFixedNumericType (t2))
+					return TypeManager.double_type;
+			}
+
+			Type integral_type = TypeManager.GetVBBinaryIntegralResultType (oper, t1, t2);
+			if (integral_type != null)
+				return integral_type;
 
 			object order1 = TypeManager.relative_type_order[t1];
 			if (order1 == null)
@@ -3816,7 +3821,13 @@ namespace Mono.CSharp {
 
 			left = target_left_expr;
 			right = target_right_expr;
-			type = target_type;
+			if (oper == Operator.Equality || oper == Operator.Inequality ||
+			    oper == Operator.LessThan || oper == Operator.LessThanOrEqual ||
+			    oper == Operator.GreaterThan || oper == Operator.GreaterThanOrEqual ||
+			    oper == Operator.Like)
+				type = TypeManager.bool_type;
+			else
+				type = target_type;
 			return true;
 		}
 

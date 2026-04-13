@@ -1065,6 +1065,11 @@ namespace Mono.CSharp {
 			return new FloatConstant (Value);
 		}
 
+		public override DecimalConstant ConvertToDecimal ()
+		{
+			return new DecimalConstant (new System.Decimal (Value));
+		}
+
 		public override ULongConstant ConvertToULong ()
 		{
 			return this;
@@ -1536,5 +1541,4 @@ namespace Mono.CSharp {
 	}
 
 }
-
 

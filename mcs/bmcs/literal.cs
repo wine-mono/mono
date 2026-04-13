@@ -225,6 +225,30 @@ namespace Mono.CSharp {
 			return this;
 		}
 	}
+
+	public class ShortLiteral : ShortConstant {
+		public ShortLiteral (short l) : base (l)
+		{
+		}
+
+		public override Expression DoResolve (EmitContext ec)
+		{
+			type = TypeManager.short_type;
+			return this;
+		}
+	}
+
+	public class UShortLiteral : UShortConstant {
+		public UShortLiteral (ushort l) : base (l)
+		{
+		}
+
+		public override Expression DoResolve (EmitContext ec)
+		{
+			type = TypeManager.ushort_type;
+			return this;
+		}
+	}
 	
 	public class LongLiteral : LongConstant {
 		public LongLiteral (long l) : base (l)
@@ -248,6 +272,67 @@ namespace Mono.CSharp {
 		{
 			type = TypeManager.uint64_type;
 			return this;
+		}
+	}
+
+	// VB allows the minimum signed value with an explicit S/I/L type suffix
+	// only through unary negation, e.g. -32768S.  We keep the overflowing
+	// positive magnitude around until Unary resolves the enclosing '-'.
+	public class OverflowIntegerLiteral : Expression {
+		readonly SignedMinValueMagnitude magnitude;
+
+		public OverflowIntegerLiteral (SignedMinValueMagnitude magnitude, Location loc)
+		{
+			this.magnitude = magnitude;
+			this.loc = loc;
+			eclass = ExprClass.Value;
+		}
+
+		Type GetTargetType ()
+		{
+			switch (magnitude.target_type_code) {
+			case TypeCode.Int16:
+				return TypeManager.short_type;
+			case TypeCode.Int32:
+				return TypeManager.int32_type;
+			case TypeCode.Int64:
+				return TypeManager.int64_type;
+			default:
+				throw new InvalidOperationException ();
+			}
+		}
+
+		public Expression ResolveUnaryNegation (EmitContext ec)
+		{
+			Expression literal;
+
+			switch (magnitude.target_type_code) {
+			case TypeCode.Int16:
+				literal = new ShortLiteral (Int16.MinValue);
+				break;
+			case TypeCode.Int32:
+				literal = new IntLiteral (Int32.MinValue);
+				break;
+			case TypeCode.Int64:
+				literal = new LongLiteral (Int64.MinValue);
+				break;
+			default:
+				throw new InvalidOperationException ();
+			}
+
+			return literal.Resolve (ec);
+		}
+
+		public override Expression DoResolve (EmitContext ec)
+		{
+			Error (221, "Constant value `" + magnitude.magnitude + "' cannot be converted to a `" +
+			       TypeManager.CSharpName (GetTargetType ()) + "'");
+			return null;
+		}
+
+		public override void Emit (EmitContext ec)
+		{
+			throw new InvalidOperationException ();
 		}
 	}
 	

@@ -23,6 +23,22 @@ namespace Mono.CSharp
 	/// <summary>
 	///    Tokenizer for MonoBASIC source code. 
 	/// </summary>
+
+	// Decimal literals like 32768S are only valid as the operand of unary
+	// minus, where VB treats the whole expression as Short.MinValue.  The
+	// tokenizer preserves that magnitude so the parser can hand it to the
+	// unary-negation resolver instead of rejecting it too early.
+	public sealed class SignedMinValueMagnitude
+	{
+		public readonly TypeCode target_type_code;
+		public readonly ulong magnitude;
+
+		public SignedMinValueMagnitude (TypeCode target_type_code, ulong magnitude)
+		{
+			this.target_type_code = target_type_code;
+			this.magnitude = magnitude;
+		}
+	}
 	
 	public class Tokenizer : yyParser.yyInput
 	{
@@ -75,6 +91,22 @@ namespace Mono.CSharp
 		static Hashtable keywords;
 		static NumberStyles styles;
 		static NumberFormatInfo csharp_format_info;
+
+		enum IntegerLiteralBase {
+			Decimal,
+			Hexadecimal,
+			Octal
+		}
+
+		enum IntegerLiteralType {
+			Default,
+			Short,
+			Integer,
+			Long,
+			UShort,
+			UInteger,
+			ULong
+		}
 		
 		//
 		// Values for the associated token returned
@@ -282,6 +314,10 @@ namespace Mono.CSharp
 			keywords.Add ("true", Token.TRUE);
 			keywords.Add ("try", Token.TRY);
 			keywords.Add ("typeof", Token.TYPEOF);
+			keywords.Add ("sbyte", Token.SBYTE);
+			keywords.Add ("uinteger", Token.UINTEGER);
+			keywords.Add ("ulong", Token.ULONG);
+			keywords.Add ("ushort", Token.USHORT);
 			keywords.Add ("unicode", Token.UNICODE);
 			keywords.Add ("until", Token.UNTIL);
 			keywords.Add ("using", Token.USING);
@@ -549,12 +585,15 @@ namespace Mono.CSharp
 			
 			switch (c){
 			case 'F': case 'f':
+			case '!':
 				t =  Token.LITERAL_SINGLE;
 				break;
 			case 'R': case 'r':
+			case '#':
 				t = Token.LITERAL_DOUBLE;
 				break;
 			case 'D': case 'd':
+			case '@':
 				 t= Token.LITERAL_DECIMAL;
 				break;
 			default:
@@ -564,39 +603,163 @@ namespace Mono.CSharp
 			return t;
 		}
 
-		int integer_type_suffix (int c)
+		static ulong ParseOctalDigits (string digits)
 		{
-			int t;
-			
-			try {
-			
-				switch (c){
+			ulong value = 0;
+
+			foreach (char digit in digits) {
+				checked {
+					value = value * 8 + (ulong) (digit - '0');
+				}
+			}
+
+			return value;
+		}
+
+		static ulong ParseUnsignedIntegerLiteral (string digits, IntegerLiteralBase literalBase)
+		{
+			switch (literalBase) {
+			case IntegerLiteralBase.Decimal:
+				return UInt64.Parse (digits, NumberStyles.None, CultureInfo.InvariantCulture);
+			case IntegerLiteralBase.Hexadecimal:
+				return UInt64.Parse (digits, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture);
+			case IntegerLiteralBase.Octal:
+				return ParseOctalDigits (digits);
+			default:
+				throw new InvalidOperationException ();
+			}
+		}
+
+		static object ParseTypedIntegerLiteral (string digits, IntegerLiteralBase literalBase, IntegerLiteralType literalType)
+		{
+			ulong raw = ParseUnsignedIntegerLiteral (digits, literalBase);
+
+			switch (literalType) {
+			case IntegerLiteralType.Short:
+				if (literalBase == IntegerLiteralBase.Decimal) {
+					if (raw > (ulong) Int16.MaxValue) {
+						if (raw == ((ulong) Int16.MaxValue) + 1)
+							return new SignedMinValueMagnitude (TypeCode.Int16, raw);
+						throw new OverflowException ("Integer literal is too large for Short");
+					}
+					return (short) raw;
+				}
+
+				if (raw > UInt16.MaxValue)
+					throw new OverflowException ("Integer literal does not fit in a 16-bit Short bit-pattern");
+				return unchecked ((short) ((ushort) raw));
+
+			case IntegerLiteralType.Integer:
+				if (literalBase == IntegerLiteralBase.Decimal) {
+					if (raw > (ulong) Int32.MaxValue) {
+						if (raw == ((ulong) Int32.MaxValue) + 1)
+							return new SignedMinValueMagnitude (TypeCode.Int32, raw);
+						throw new OverflowException ("Integer literal is too large for Integer");
+					}
+					return (int) raw;
+				}
+
+				if (raw > UInt32.MaxValue)
+					throw new OverflowException ("Integer literal does not fit in a 32-bit Integer bit-pattern");
+				return unchecked ((int) ((uint) raw));
+
+			case IntegerLiteralType.Long:
+				if (literalBase == IntegerLiteralBase.Decimal) {
+					if (raw > Int64.MaxValue) {
+						if (raw == ((ulong) Int64.MaxValue) + 1)
+							return new SignedMinValueMagnitude (TypeCode.Int64, raw);
+						throw new OverflowException ("Integer literal is too large for Long");
+					}
+					return (long) raw;
+				}
+
+				return unchecked ((long) raw);
+
+			case IntegerLiteralType.UShort:
+				if (raw > UInt16.MaxValue)
+					throw new OverflowException ("Integer literal is too large for UShort");
+				return (ushort) raw;
+
+			case IntegerLiteralType.UInteger:
+				if (raw > UInt32.MaxValue)
+					throw new OverflowException ("Integer literal is too large for UInteger");
+				return (uint) raw;
+
+			case IntegerLiteralType.ULong:
+				return raw;
+
+			default:
+				throw new InvalidOperationException ();
+			}
+		}
+
+		static object ParseDefaultIntegerLiteral (string digits, IntegerLiteralBase literalBase)
+		{
+			ulong raw = ParseUnsignedIntegerLiteral (digits, literalBase);
+
+			if (literalBase == IntegerLiteralBase.Decimal) {
+				if (raw <= Int32.MaxValue)
+					return (int) raw;
+
+				if (raw <= Int64.MaxValue)
+					return (long) raw;
+
+				throw new OverflowException ("Integer literal is too large for Integer or Long");
+			}
+
+			if (raw <= UInt32.MaxValue)
+				return unchecked ((int) ((uint) raw));
+
+			return unchecked ((long) raw);
+		}
+
+		int integer_type_suffix (int c, string digits, IntegerLiteralBase literalBase)
+		{
+			IntegerLiteralType literalType = IntegerLiteralType.Default;
+
+			switch (c) {
+			case 'S': case 's':
+				getChar ();
+				literalType = IntegerLiteralType.Short;
+				break;
+			case 'I': case 'i':
+				getChar ();
+				literalType = IntegerLiteralType.Integer;
+				break;
+			case 'L': case 'l':
+				getChar ();
+				literalType = IntegerLiteralType.Long;
+				break;
+			case 'U': case 'u':
+				getChar ();
+				switch (peekChar ()) {
 				case 'S': case 's':
-					t =  Token.LITERAL_INTEGER; // SHORT ?
-					val = ((IConvertible)val).ToInt16(null);
+					getChar ();
+					literalType = IntegerLiteralType.UShort;
 					break;
 				case 'I': case 'i':
-					t = Token.LITERAL_INTEGER;
-					val = ((IConvertible)val).ToInt32(null);
+					getChar ();
+					literalType = IntegerLiteralType.UInteger;
 					break;
 				case 'L': case 'l':
-					 t= Token.LITERAL_INTEGER; // LONG ?
-					 val = ((IConvertible)val).ToInt64(null);
+					getChar ();
+					literalType = IntegerLiteralType.ULong;
 					break;
 				default:
-					if ((long)val <= System.Int32.MaxValue &&
-						(long)val >= System.Int32.MinValue) {
-						val = ((IConvertible)val).ToInt32(null);
-						return Token.LITERAL_INTEGER;
-					} else {
-						val = ((IConvertible)val).ToInt64(null);
-						return Token.LITERAL_INTEGER; // LONG ?
-					}
+					val = "'U' integer suffix must be followed by S, I, or L";
+					return Token.ERROR;
 				}
-				getChar ();
-				return t;
+				break;
+			}
+
+			try {
+				if (literalType == IntegerLiteralType.Default)
+					val = ParseDefaultIntegerLiteral (digits, literalBase);
+				else
+					val = ParseTypedIntegerLiteral (digits, literalBase, literalType);
+				return Token.LITERAL_INTEGER;
 			} catch (Exception e) {
-				val = e.ToString();
+				val = e.Message;
 				return Token.ERROR;
 			}
 		}
@@ -632,7 +795,7 @@ namespace Mono.CSharp
 			return t;
 		}
 
-		long hex_digits ()
+		string hex_digits ()
 		{
 			StringBuilder hexNumber = new StringBuilder ();
 			
@@ -647,40 +810,43 @@ namespace Mono.CSharp
 				} else
 					break;
 			}
-			return System.Int64.Parse (hexNumber.ToString(), NumberStyles.HexNumber);
+			return hexNumber.ToString ();
 		}
 
-		long octal_digits ()
+		string octal_digits ()
 		{
-			long valueToReturn = 0;
+			StringBuilder octalNumber = new StringBuilder ();
 			
 			int d;
 
 			while ((d = peekChar ()) != -1){
 				char e = (char)d;			
 				if (Char.IsDigit (e) && (e < '8')){
-					valueToReturn *= 8;
-					valueToReturn += (d - (int)'0');
+					octalNumber.Append (e);
 					getChar ();
 				} else
 					break;
 			}
 			
-			return valueToReturn;
+			return octalNumber.ToString ();
 		}
 
 		int handle_integer_literal_in_other_bases(int peek)
 		{
 			if (peek == 'h' || peek == 'H'){
+				string digits;
+
 				getChar ();
-				val = hex_digits ();
-				return integer_type_suffix (peekChar ());
+				digits = hex_digits ();
+				return integer_type_suffix (peekChar (), digits, IntegerLiteralBase.Hexadecimal);
 			}
 			
 			if (peek == 'o' || peek == 'O'){
+				string digits;
+
 				getChar ();
-				val = octal_digits ();
-				return integer_type_suffix (peekChar ());
+				digits = octal_digits ();
+				return integer_type_suffix (peekChar (), digits, IntegerLiteralBase.Octal);
 			}
 			
 			return Token.NONE;
@@ -713,8 +879,7 @@ namespace Mono.CSharp
 				} else {
 					putback ('.');
 					number.Length -= 1;
-					val = System.Int64.Parse(number.ToString());
-					return integer_type_suffix('.');
+					return integer_type_suffix ('.', number.ToString (), IntegerLiteralBase.Decimal);
 				}
 			}
 			
@@ -739,8 +904,7 @@ namespace Mono.CSharp
 
 			type = real_type_suffix (c);
 			if (type == Token.NONE && !is_real){
-				val = System.Int64.Parse(number.ToString());
-				return integer_type_suffix(c);
+				return integer_type_suffix (c, number.ToString (), IntegerLiteralBase.Decimal);
 			}
 			
 			return adjust_real (type);

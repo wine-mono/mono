@@ -640,7 +640,11 @@ namespace Mono.CSharp
 %token SET
 %token SHADOWS
 %token SHARED
-%token SHORT	
+%token SHORT
+%token SBYTE
+%token USHORT
+%token UINTEGER
+%token ULONG
 %token SINGLE
 %token SIZEOF	
 %token STATIC	
@@ -4830,11 +4834,19 @@ integer_literal
 		object v = lexer.Value;
 
 		if (v is int)
-			$$ = new IntLiteral ((Int32)v); 
-// 		else if (v is short)
-// 			$$ = new ShortLiteral ((Int16)v);
+			$$ = new IntLiteral ((Int32)v);
+		else if (v is short)
+			$$ = new ShortLiteral ((Int16)v);
+		else if (v is ushort)
+			$$ = new UShortLiteral ((UInt16)v);
+		else if (v is uint)
+			$$ = new UIntLiteral ((UInt32)v);
 		else if (v is long)
 			$$ = new LongLiteral ((Int64)v);
+		else if (v is ulong)
+			$$ = new ULongLiteral ((UInt64)v);
+		else if (v is SignedMinValueMagnitude)
+			$$ = new OverflowIntegerLiteral ((SignedMinValueMagnitude) v, lexer.Location);
 		else
 			Console.WriteLine ("OOPS.  Unexpected result from scanner");
 			
@@ -5413,9 +5425,13 @@ numeric_type
 integral_type
 	:
 	| BYTE		{ $$ = TypeManager.system_byte_expr; }
+	| SBYTE		{ $$ = TypeManager.system_sbyte_expr; }
 	| SHORT		{ $$ = TypeManager.system_int16_expr; }
+	| USHORT	{ $$ = TypeManager.system_uint16_expr; }
 	| INTEGER	{ $$ = TypeManager.system_int32_expr; }
+	| UINTEGER	{ $$ = TypeManager.system_uint32_expr; }
 	| LONG		{ $$ = TypeManager.system_int64_expr; }
+	| ULONG		{ $$ = TypeManager.system_uint64_expr; }
 	;
 	
 floating_point_type
