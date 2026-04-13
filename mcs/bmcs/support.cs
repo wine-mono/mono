@@ -48,8 +48,12 @@ namespace Mono.CSharp {
 			if (count < 0)
 				return;
 
-			if (mb.Mono_IsInflatedMethod) {
-				MethodInfo generic = mb.GetGenericMethodDefinition ();
+			// The old pre-RTM API only reduced constructed generic
+			// methods here.  Generic method definitions must stay
+			// as-is; otherwise Invocation.GetParameterData(definition)
+			// recurses back into ReflectionParameters(definition).
+			if (mb.IsGenericMethod && !((MethodInfo) mb).IsGenericMethodDefinition) {
+				MethodInfo generic = ((MethodInfo)mb).GetGenericMethodDefinition ();
 				gpd = Invocation.GetParameterData (generic);
 
 				last_arg_is_params = gpd.HasParams;

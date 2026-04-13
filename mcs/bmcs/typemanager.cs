@@ -1061,7 +1061,8 @@ public partial class TypeManager {
 			}
 			sb.Append (">");
 			return sb.ToString ();
-		} else if (t.HasGenericArguments && !t.IsGenericInstance) {
+		} else if (TypeManager.HasGenericArguments (t) &&
+			   (!t.IsGenericType || t.IsGenericTypeDefinition)) {
 			Type[] tparam = t.GetGenericArguments ();
 
 			StringBuilder sb = new StringBuilder (name);
@@ -2019,7 +2020,7 @@ public partial class TypeManager {
 
 	public static bool IsDelegateType (Type t)
 	{
-		if (t.IsGenericInstance)
+		if (t.IsGenericType)
 			t = t.GetGenericTypeDefinition ();
 
 		if (t.IsSubclassOf (TypeManager.delegate_type))
@@ -2135,7 +2136,7 @@ public partial class TypeManager {
 		if (type.Equals (parent))
 			return true;
 
-		if ((type is TypeBuilder) && type.IsGenericTypeDefinition && parent.IsGenericInstance) {
+		if ((type is TypeBuilder) && type.IsGenericTypeDefinition && parent.IsGenericType) {
 			//
 			// `a' is a generic type definition's TypeBuilder and `b' is a
 			// generic instance of the same type.
@@ -2159,7 +2160,7 @@ public partial class TypeManager {
 			return true;
 		}
 
-		if (type.IsGenericInstance && parent.IsGenericInstance) {
+		if (type.IsGenericType && parent.IsGenericType) {
 			if (type.GetGenericTypeDefinition () != parent.GetGenericTypeDefinition ())
 				return false;
 
@@ -2880,7 +2881,7 @@ public partial class TypeManager {
 	/// </remarks>
 	public static string IndexerPropertyName (Type t)
 	{
-		if (t.IsGenericInstance)
+		if (t.IsGenericType)
 			t = t.GetGenericTypeDefinition ();
 
 		if (t is TypeBuilder) {

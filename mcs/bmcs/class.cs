@@ -265,7 +265,12 @@ namespace Mono.CSharp {
 			//
 			void CheckPairedOperators ()
 			{
-				Hashtable pairs = new Hashtable (null, null);
+				// .NET 2.0 RTM added an IDictionary/IEqualityComparer overload
+				// that conflicts with the original
+				// IHashCodeProvider/IComparer one, making `new Hashtable
+				// (null, null)` ambiguous. The original intent is just "no
+				// custom comparer" which is the default ctor.
+				Hashtable pairs = new Hashtable ();
 				Operator true_op = null;
 				Operator false_op = null;
 				bool has_equality_or_inequality = false;
@@ -1437,7 +1442,7 @@ namespace Mono.CSharp {
 
 			Type parent = ptype;
 			if (parent != null) {
-				if (parent.IsGenericInstance)
+				if (parent.IsGenericType)
 					parent = parent.GetGenericTypeDefinition ();
 
 				TypeContainer ptc = TypeManager.LookupTypeContainer (parent);
@@ -4058,7 +4063,11 @@ namespace Mono.CSharp {
 			MethodBuilder mb = null;
 			if (GenericMethod != null) {
 				string mname = MemberName.GetMethodName ();
-				mb = Parent.TypeBuilder.DefineGenericMethod (mname, flags);
+				// Pre-RTM Mono had a DefineGenericMethod(name, attrs) wrapper;
+				// in RTM you use DefineMethod and then DefineGenericParameters
+				// on the resulting MethodBuilder (which GenericMethod.Define
+				// does for us).
+				mb = Parent.TypeBuilder.DefineMethod (mname, flags);
 				if (!GenericMethod.Define (mb, ReturnType))
 					return false;
 			}

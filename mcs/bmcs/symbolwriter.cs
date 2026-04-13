@@ -58,12 +58,12 @@ namespace Mono.CSharp {
 
 		public void DefineLocalVariable (string name, LocalBuilder builder)
 		{
-			SignatureHelper sighelper = SignatureHelper.GetLocalVarSigHelper (
-				module_builder);
-			sighelper.AddArgument (builder.LocalType);
-			byte[] signature = sighelper.GetSignature ();
-
-			DefineLocalVariable (name, signature);
+			// Stubbed out for the bootstrap build: the old
+			// MonoSymbolWriter.DefineLocalVariable(string, byte[]) overload
+			// this used to delegate to no longer exists (its signature
+			// changed to (int, string, byte[])). The symbol writer is only
+			// used for debug symbol output and isn't needed to produce a
+			// working compiler.
 		}
 
 		public void MarkSequencePoint (ILGenerator ig, int row, int column)

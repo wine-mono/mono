@@ -594,8 +594,8 @@ namespace Mono.CSharp {
 				}
 
 				MethodBase mb = implementing;
-				if (mb.Mono_IsInflatedMethod)
-					mb = mb.GetGenericMethodDefinition ();
+				if (mb.IsGenericMethod && !((MethodInfo) mb).IsGenericMethodDefinition)
+					mb = ((MethodInfo)mb).GetGenericMethodDefinition ();
 
 				int pos = type.GenericParameterPosition;
 				ParameterData pd = Invocation.GetParameterData (mb);
@@ -841,7 +841,7 @@ namespace Mono.CSharp {
 					return null;
 				if (t.IsGenericParameter)
 					return dargs [t.GenericParameterPosition];
-				if (t.IsGenericInstance) {
+				if (t.IsGenericType) {
 					t = t.GetGenericTypeDefinition ();
 					t = t.MakeGenericType (dargs);
 				}
@@ -1654,8 +1654,10 @@ namespace Mono.CSharp {
 		static void InitGenericCoreTypes ()
 		{
 			activator_type = CoreLookupType ("System.Activator");
-			new_constraint_attr_type = CoreLookupType (
-				"System.Runtime.CompilerServices.NewConstraintAttribute");
+			// NewConstraintAttribute is a pre-RTM type that doesn't exist
+			// in .NET 2.0 RTM. The `new()` constraint is now encoded via
+			// GenericParameterAttributes.DefaultConstructorConstraint.
+			new_constraint_attr_type = null;
 
 			generic_ienumerator_type = CoreLookupType ("System.Collections.Generic.IEnumerator", 1);
 			generic_ienumerable_type = CoreLookupType ("System.Collections.Generic.IEnumerable", 1);
@@ -1683,7 +1685,20 @@ namespace Mono.CSharp {
 
 		public static TypeContainer LookupGenericTypeContainer (Type t)
 		{
-			while (t.IsGenericInstance)
+			// Pre-RTM generics had Type.IsGenericInstance meaning
+			// "this is a constructed generic type, e.g. List<int>",
+			// so the original 'while (t.IsGenericInstance)
+			// t = t.GetGenericTypeDefinition ()' loop reduced a
+			// constructed generic to its definition in one step
+			// and then exited.  The RTM rename from IsGenericInstance
+			// to IsGenericType changes the semantics: IsGenericType
+			// is also true for the generic type definition itself,
+			// and Type.GetGenericTypeDefinition on a definition
+			// returns the same Type object, so a naive rename turns
+			// this into an infinite loop whenever 't' is already a
+			// generic type definition.  Reduce in a single step and
+			// only when 't' is actually a constructed instance.
+			if (t.IsGenericType && !t.IsGenericTypeDefinition)
 				t = t.GetGenericTypeDefinition ();
 
 			return LookupTypeContainer (t);
@@ -1762,7 +1777,7 @@ namespace Mono.CSharp {
 		//
 		public static bool IsIEnumerable (Type array, Type enumerator)
 		{
-			if (!array.IsArray || !enumerator.IsGenericInstance)
+			if (!array.IsArray || !enumerator.IsGenericType)
 				return false;
 
 			if (enumerator.GetGenericTypeDefinition () != generic_ienumerable_type)
@@ -1777,7 +1792,7 @@ namespace Mono.CSharp {
 			if (a.Equals (b))
 				return true;
 
-			if ((a is TypeBuilder) && a.IsGenericTypeDefinition && b.IsGenericInstance) {
+			if ((a is TypeBuilder) && a.IsGenericTypeDefinition && b.IsGenericType) {
 				//
 				// `a' is a generic type definition's TypeBuilder and `b' is a
 				// generic instance of the same type.
@@ -1811,7 +1826,7 @@ namespace Mono.CSharp {
 				return true;
 			}
 
-			if ((b is TypeBuilder) && b.IsGenericTypeDefinition && a.IsGenericInstance)
+			if ((b is TypeBuilder) && b.IsGenericTypeDefinition && a.IsGenericType)
 				return IsEqual (b, a);
 
 			if (a.IsGenericParameter && b.IsGenericParameter) {
@@ -1826,7 +1841,7 @@ namespace Mono.CSharp {
 				return IsEqual (a.GetElementType (), b.GetElementType ());
 			}
 
-			if (a.IsGenericInstance && b.IsGenericInstance) {
+			if (a.IsGenericType && b.IsGenericType) {
 				if (a.GetGenericTypeDefinition () != b.GetGenericTypeDefinition ())
 					return false;
 
@@ -1867,7 +1882,7 @@ namespace Mono.CSharp {
 				//    class X<T,U> : I<T>, I<U>
 				//    class X<T> : I<T>, I<float>
 				// 
-				if (b.IsGenericParameter || !b.IsGenericInstance) {
+				if (b.IsGenericParameter || !b.IsGenericType) {
 					int pos = a.GenericParameterPosition;
 					Type[] args = a.DeclaringMethod != null ? method_infered : class_infered;
 					if (args [pos] == null) {
@@ -1912,7 +1927,7 @@ namespace Mono.CSharp {
 			// become equal).
 			//
 
-			if (a.IsGenericInstance || b.IsGenericInstance)
+			if (a.IsGenericType || b.IsGenericType)
 				return MayBecomeEqualGenericInstances (a, b, class_infered, method_infered);
 
 			//
@@ -1943,7 +1958,7 @@ namespace Mono.CSharp {
 		public static bool MayBecomeEqualGenericInstances (Type a, Type b,
 								   Type[] class_infered, Type[] method_infered)
 		{
-			if (!a.IsGenericInstance || !b.IsGenericInstance)
+			if (!a.IsGenericType || !b.IsGenericType)
 				return false;
 			if (a.GetGenericTypeDefinition () != b.GetGenericTypeDefinition ())
 				return false;
@@ -1971,9 +1986,9 @@ namespace Mono.CSharp {
 			int tcount = GetNumberOfTypeArguments (type);
 			int pcount = GetNumberOfTypeArguments (parent);
 
-			if (type.IsGenericInstance)
+			if (type.IsGenericType)
 				type = type.GetGenericTypeDefinition ();
-			if (parent.IsGenericInstance)
+			if (parent.IsGenericType)
 				parent = parent.GetGenericTypeDefinition ();
 
 			if (tcount != pcount)
@@ -2048,7 +2063,7 @@ namespace Mono.CSharp {
 			if (pt.IsByRef && at.IsByRef)
 				return InferType (pt.GetElementType (), at.GetElementType (), infered);
 			ArrayList list = new ArrayList ();
-			if (at.IsGenericInstance)
+			if (at.IsGenericType)
 				list.Add (at);
 			else {
 				for (Type bt = at.BaseType; bt != null; bt = bt.BaseType)
@@ -2060,7 +2075,7 @@ namespace Mono.CSharp {
 			bool found_one = false;
 
 			foreach (Type type in list) {
-				if (!type.IsGenericInstance)
+				if (!type.IsGenericType)
 					continue;
 
 				Type[] infered_types = new Type [infered.Length];
@@ -2275,7 +2290,7 @@ namespace Mono.CSharp {
 
 		public static bool IsNullableType (Type t)
 		{
-			if (!t.IsGenericInstance)
+			if (!t.IsGenericType)
 				return false;
 
 			Type gt = t.GetGenericTypeDefinition ();

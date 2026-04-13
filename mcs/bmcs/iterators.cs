@@ -987,7 +987,7 @@ namespace Mono.CSharp {
 				return true;
 			}
 
-			if (!t.IsGenericInstance)
+			if (!t.IsGenericType)
 				return false;
 
 			Type[] args = TypeManager.GetTypeArguments (t);

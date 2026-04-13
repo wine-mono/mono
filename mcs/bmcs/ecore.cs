@@ -2979,7 +2979,15 @@ namespace Mono.CSharp {
 			ArrayList list = new ArrayList ();
 			foreach (MethodBase mb in Methods) {
 				MethodInfo mi = mb as MethodInfo;
-				if ((mi == null) || !mi.HasGenericParameters)
+				// We only want open generic method definitions here.
+				// A mechanical HasGenericParameters -> IsGenericMethod rename
+				// is too broad because it also matches already-instantiated
+				// generic methods.  Mono 1.2.6 MethodBuilder can report
+				// ContainsGenericParameters incorrectly for unbaked generic
+				// definitions, so keep IsGenericMethod as the broad gate and
+				// then reject the fully closed generic-method case.
+				if ((mi == null) || !mi.IsGenericMethod ||
+				    (!mi.IsGenericMethodDefinition && !mi.ContainsGenericParameters))
 					continue;
 
 				Type[] gen_params = mi.GetGenericArguments ();

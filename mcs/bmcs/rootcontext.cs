@@ -401,7 +401,9 @@ namespace Mono.CSharp {
 				"System.Runtime.InteropServices.DllImportAttribute",
 				"System.Runtime.CompilerServices.MethodImplAttribute",
 				"System.Runtime.InteropServices.MarshalAsAttribute",
-				"System.Runtime.CompilerServices.NewConstraintAttribute",
+				// NewConstraintAttribute was a pre-RTM name for the `new()`
+				// constraint marker; in RTM, `new()` is encoded via
+				// GenericParameterAttributes flags and there's no attribute.
 				"System.Diagnostics.ConditionalAttribute",
 				"System.ObsoleteAttribute",
 				"System.ParamArrayAttribute",

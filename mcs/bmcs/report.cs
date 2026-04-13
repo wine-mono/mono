@@ -292,8 +292,21 @@ namespace Mono.CSharp {
 			} else {
 				MethodBase mb = mi as MethodBase;
 				if (mb != null) {
-					while (mb.Mono_IsInflatedMethod)
-						mb = mb.GetGenericMethodDefinition ();
+					// Reduce a constructed generic method to its
+					// definition in a single step.  In the pre-RTM
+					// API MethodBase.Mono_IsInflatedMethod was true
+					// only for the inflated (constructed) form, so
+					// the original 'while (mb.Mono_IsInflatedMethod)'
+					// loop terminated on the first iteration.  The
+					// RTM-rename target MethodInfo.IsGenericMethod
+					// is true for generic method definitions as
+					// well, and GetGenericMethodDefinition returns
+					// the current MethodInfo when called on a
+					// definition - a mechanical while-loop rename
+					// would spin forever the moment an error was
+					// reported against a generic method definition.
+					if (mb.IsGenericMethod && !mb.IsGenericMethodDefinition)
+						mb = ((MethodInfo)mb).GetGenericMethodDefinition ();
 					IMethodData md = TypeManager.GetMethod (mb);
 					SymbolRelatedToPreviousError (md.Location, md.GetSignatureForError (temp_ds));
 					return;

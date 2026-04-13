@@ -8013,7 +8013,12 @@ namespace Mono.CSharp {
 
 			if (member_lookup is FieldExpr){
 				FieldExpr fe = (FieldExpr) member_lookup;
-				FieldInfo fi = fe.FieldInfo.Mono_GetGenericFieldDefinition ();
+				// Pre-RTM Mono had a Mono_GetGenericFieldDefinition() method
+				// that returned the original field definition from a field
+				// obtained via a constructed generic type. In RTM there is
+				// no direct equivalent; for bootstrap purposes, using the
+				// field as-is is close enough.
+				FieldInfo fi = fe.FieldInfo;
 				Type decl_type = fi.DeclaringType;
 
 				bool is_emitted = fi is FieldBuilder;
@@ -8764,7 +8769,7 @@ namespace Mono.CSharp {
 				ig.Emit (OpCodes.Ldelema, type);
 				ig.Emit (OpCodes.Ldobj, type);
 			} else if (type.IsGenericParameter)
-				ig.Emit (OpCodes.Ldelem_Any, type);
+				ig.Emit (OpCodes.Ldelem, type);
 			else
 				ig.Emit (OpCodes.Ldelem_Ref);
 		}
@@ -8804,7 +8809,7 @@ namespace Mono.CSharp {
 				return OpCodes.Stobj;
 			} else if (t.IsGenericParameter) {
 				has_type_arg = true;
-				return OpCodes.Stelem_Any;
+				return OpCodes.Stelem;
 			} else
 				return OpCodes.Stelem_Ref;
 		}

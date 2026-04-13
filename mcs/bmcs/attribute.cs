@@ -1554,7 +1554,11 @@ namespace Mono.CSharp {
 				return ds.IsClsCompliaceRequired (ds.Parent);
 			}
 
-			if (type.IsGenericParameter || type.IsGenericInstance)
+			// The pre-RTM IsGenericInstance check meant "constructed
+			// generic only".  RTM IsGenericType is broader and is also
+			// true for generic type definitions, which still need their
+			// own CLS/obsolete metadata examined.
+			if (type.IsGenericParameter || (type.IsGenericType && !type.IsGenericTypeDefinition))
 				return false;
 
 			object[] CompliantAttribute = type.GetCustomAttributes (TypeManager.cls_compliant_attribute_type, false);
@@ -1579,7 +1583,7 @@ namespace Mono.CSharp {
 			ObsoleteAttribute result = null;
 			if (type.IsByRef || type.IsArray || type.IsPointer) {
 				result = GetObsoleteAttribute (TypeManager.GetElementType (type));
-			} else if (type.IsGenericParameter || type.IsGenericInstance)
+			} else if (type.IsGenericParameter || (type.IsGenericType && !type.IsGenericTypeDefinition))
 				return null;
 			else {
 				DeclSpace type_ds = TypeManager.LookupDeclSpace (type);
@@ -1630,7 +1634,8 @@ namespace Mono.CSharp {
 			if (type_obsolete != null)
 				return (ObsoleteAttribute)type_obsolete;
 
-			if ((mi.DeclaringType is TypeBuilder) || mi.DeclaringType.IsGenericInstance)
+			if ((mi.DeclaringType is TypeBuilder) ||
+			    (mi.DeclaringType.IsGenericType && !mi.DeclaringType.IsGenericTypeDefinition))
 				return null;
 
 			ObsoleteAttribute oa = System.Attribute.GetCustomAttribute (mi, TypeManager.obsolete_attribute_type, false) as ObsoleteAttribute;
@@ -1662,7 +1667,8 @@ namespace Mono.CSharp {
 			if (excluded != null)
 				return excluded == TRUE ? true : false;
 
-			if (mb.Mono_IsInflatedMethod)
+			MethodInfo mi = mb as MethodInfo;
+			if (mi != null && mi.IsGenericMethod && !mi.IsGenericMethodDefinition)
 				return false;
 			
 			ConditionalAttribute[] attrs = mb.GetCustomAttributes (TypeManager.conditional_attribute_type, true) as ConditionalAttribute[];

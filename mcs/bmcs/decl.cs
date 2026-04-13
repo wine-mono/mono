@@ -771,7 +771,7 @@ namespace Mono.CSharp {
 			else
 				tb = TypeBuilder;
 
-			if (check_type.IsGenericInstance)
+			if (check_type.IsGenericType)
 				check_type = check_type.GetGenericTypeDefinition ();
 
 			if (check_type == tb)
