@@ -201,6 +201,10 @@ namespace Mono.CSharp
 		///
 		Stack switch_stack;
 
+		// Active 'With ... End With' targets.  Leading-dot member accesses
+		// inside a With block resolve against the topmost entry.
+		Stack with_stack;
+
 		static public int yacc_verbose_flag;
 
 		// Name of the file we are parsing
@@ -669,6 +673,7 @@ namespace Mono.CSharp
 %token CLOSE_BRACE   "}"
 %token CLOSE_PARENS  ")"
 %token DOT           "."
+%token DOT_WITH      /* synthetic: leading '.' inside a With block */
 %token COMMA         ","
 %token COLON         ":"
 
@@ -3081,6 +3086,7 @@ embedded_statement
 	| redim_statement
 	| stop_statement
 	| using_statement
+	| with_statement
 	| try_statement
 	| synclock_statement
 	| jump_statement
@@ -3096,22 +3102,27 @@ embedded_statement
 // 	;        
 // */
 
-// with_statement
-// 	: WITH expression end_of_stmt /* was : WITH qualified_identifier end_of_stmt */
-// 	  {
-// 	  	// was : Expression e = DecomposeQI ((string) $2, lexer.Location);
-// 	  	Expression e = (Expression) $2;
-// 		with_stack.Push(e);
-// 		start_block();
-// 	  }
-// 	  opt_statement_list
-// 	  END WITH
-// 	  {
-// 	  	Block b = end_block();
-// 		with_stack.Pop();
-// 		$$ = b;
-// 	  }
-// 	;
+with_statement
+	: WITH
+	  {
+		// The tokenizer has to know we are entering a With body before it
+		// lexes the first body token, otherwise a leading '.' on the first
+		// line would already be tokenized as an ordinary DOT.
+		lexer.with_depth++;
+		oob_stack.Push (lexer.Location);
+	  }
+	  expression end_of_stmt
+	  {
+		with_stack.Push (new WithTarget ((Expression) $3, lexer.Location));
+	  }
+	  block
+	  END WITH
+	  {
+		lexer.with_depth--;
+		WithTarget target = (WithTarget) with_stack.Pop ();
+		$$ = new VBWith (target, (Statement) $6, (Location) oob_stack.Pop ());
+	  }
+	;
 	
 	
 // VB ReDim clauses parse as invocations here because
@@ -4632,10 +4643,36 @@ primary_expression
 	  }
 	| get_type_expression
 	| member_access
+	| with_member_access
 	| invocation_expression
 	//| element_access
 	| new_expression
 	| cast_expression
+	;
+
+with_member_access
+	: DOT_WITH identifier opt_type_args
+	  {
+		if (with_stack == null || with_stack.Count == 0) {
+			Report.Error (30157, lexer.Location,
+				"Leading '.' member access is only valid inside a 'With' block");
+			$$ = null;
+		} else {
+			string id_name = (string) $2;
+			if (id_name.ToUpper () == "NEW")
+				id_name = ".ctor";
+
+			// The receiver is a WithTarget-backed proxy expression rather than
+			// the raw target expression.  VB requires the With target to be
+			// evaluated once on entry; reusing the raw tree here would repeat
+			// side effects and would mishandle mutable structure lvalues.
+			$$ = new MemberAccess (
+				new WithReceiver ((WithTarget) with_stack.Peek (), lexer.Location),
+				id_name,
+				(TypeArguments) $3,
+				lexer.Location);
+		}
+	  }
 	;
 
 
@@ -4693,14 +4730,6 @@ member_access
 		}
 		else
 		{
-// 			if (with_stack.Count > 0) {
-// 				Expression e = (Expression) with_stack.Peek();
-// 				$$ = new MemberAccess (e, (string) $3, lexer.Location);
-// 			}
-// 			else
-// 			{
-// 				// OOps
-// 			}
 		}
 	  }
 /*	| primary_expression DOT NEW
@@ -4713,14 +4742,6 @@ member_access
 			$$ = new MemberAccess ((Expression) $1, (string) $3, (TypeArguments) $4, lexer.Location);
 		else
 		{
-// 			if (with_stack.Count > 0) {
-// 				Expression e = (Expression) with_stack.Peek();
-// 				$$ = new MemberAccess (e, (string) $3, lexer.Location);
-// 			}
-// 			else
-// 			{
-// 				// OOps
-// 			}
 		}
 	  }
 	;
@@ -6056,6 +6077,7 @@ public CSharpParser (SeekableStreamReader reader, SourceFile file, ArrayList def
 	current_container.NamespaceEntry = current_namespace;
 	oob_stack = new Stack ();
 	switch_stack = new Stack ();
+	with_stack = new Stack ();
 
 	lexer = new Tokenizer (reader, file, defines);
 

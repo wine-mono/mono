@@ -36,6 +36,12 @@ namespace Mono.CSharp
 		bool handle_get_set = false;
 		bool cant_have_a_type_character = false;
 
+		// Nesting depth of active With blocks.  When greater than zero,
+		// a '.' that starts a fresh expression is rewritten to DOT_WITH so
+		// the parser can accept VB's implicit receiver form without making
+		// '.' a primary-expression starter everywhere.
+		public int with_depth = 0;
+
 		public int ExpandedTabsSize = 4; 
 
 		public string location {
@@ -862,9 +868,41 @@ namespace Mono.CSharp
 				}
 			}
 
+			if (current_token == Token.DOT &&
+			    with_depth > 0 &&
+			    !IsExpressionContinuation (lastToken)) {
+				current_token = Token.DOT_WITH;
+			}
+
 			// Console.WriteLine ("Token = " + val);
 
 			return current_token;
+		}
+
+		static bool IsExpressionContinuation (int tok)
+		{
+			switch (tok) {
+			case Token.IDENTIFIER:
+			case Token.CLOSE_PARENS:
+			case Token.CLOSE_BRACKET:
+			case Token.CLOSE_BRACE:
+			case Token.LITERAL_INTEGER:
+			case Token.LITERAL_DOUBLE:
+			case Token.LITERAL_SINGLE:
+			case Token.LITERAL_DECIMAL:
+			case Token.LITERAL_STRING:
+			case Token.LITERAL_CHARACTER:
+			case Token.LITERAL_DATE:
+			case Token.ME:
+			case Token.MYBASE:
+			case Token.MYCLASS:
+			case Token.TRUE:
+			case Token.FALSE:
+			case Token.NOTHING:
+				return true;
+			default:
+				return false;
+			}
 		}
 
 		private string GetIdentifier()

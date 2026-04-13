@@ -4089,6 +4089,220 @@ namespace Mono.CSharp {
 		}
 	}
 
+	public class WithTarget {
+		Expression original_expr;
+		Expression resolved_expr;
+		Type target_type;
+		LocalBuilder temp_builder;
+		bool stores_address;
+		bool is_resolved;
+		bool resolve_failed;
+
+		public readonly Location Location;
+
+		public WithTarget (Expression expr, Location l)
+		{
+			original_expr = expr;
+			Location = l;
+		}
+
+		public Type TargetType {
+			get {
+				return target_type;
+			}
+		}
+
+		public bool StoresAddress {
+			get {
+				return stores_address;
+			}
+		}
+
+		public bool Resolve (EmitContext ec)
+		{
+			if (is_resolved)
+				return !resolve_failed;
+
+			is_resolved = true;
+
+			resolved_expr = original_expr.Resolve (ec, ResolveFlags.VariableOrValue);
+			if (resolved_expr == null) {
+				resolve_failed = true;
+				return false;
+			}
+
+			switch (resolved_expr.eclass) {
+			case ExprClass.Value:
+			case ExprClass.Variable:
+			case ExprClass.PropertyAccess:
+			case ExprClass.IndexerAccess:
+				break;
+			default:
+				resolved_expr.Error_UnexpectedKind ("value", Location);
+				resolve_failed = true;
+				return false;
+			}
+
+			target_type = resolved_expr.Type;
+			stores_address = target_type.IsValueType && (resolved_expr is IMemoryLocation);
+			return true;
+		}
+
+		public void EmitStore (EmitContext ec)
+		{
+			if (temp_builder != null)
+				throw new Exception ("With target already emitted");
+
+			Type temp_type = stores_address ?
+				TypeManager.GetReferenceType (target_type) :
+				target_type;
+			temp_builder = ec.GetTemporaryLocal (temp_type);
+
+			if (stores_address)
+				((IMemoryLocation) resolved_expr).AddressOf (ec, AddressOp.Load);
+			else
+				resolved_expr.Emit (ec);
+
+			ec.ig.Emit (OpCodes.Stloc, temp_builder);
+		}
+
+		public void Emit (EmitContext ec)
+		{
+			if (temp_builder == null)
+				throw new Exception ("With target has not been emitted");
+
+			ec.ig.Emit (OpCodes.Ldloc, temp_builder);
+			if (stores_address)
+				Expression.LoadFromPtr (ec.ig, target_type);
+		}
+
+		public void AddressOf (EmitContext ec, AddressOp mode)
+		{
+			if (!stores_address)
+				throw new Exception ("With target does not store an address");
+
+			if (temp_builder == null)
+				throw new Exception ("With target has not been emitted");
+
+			ec.ig.Emit (OpCodes.Ldloc, temp_builder);
+		}
+
+		public void Release (EmitContext ec)
+		{
+			if (temp_builder == null)
+				return;
+
+			Type temp_type = stores_address ?
+				TypeManager.GetReferenceType (target_type) :
+				target_type;
+			ec.FreeTemporaryLocal (temp_builder, temp_type);
+			temp_builder = null;
+		}
+	}
+
+	public class WithReceiver : Expression {
+		WithTarget target;
+
+		public WithReceiver (WithTarget target, Location l)
+		{
+			this.target = target;
+			loc = l;
+		}
+
+		public override Expression DoResolve (EmitContext ec)
+		{
+			if (!target.Resolve (ec))
+				return null;
+
+			Expression receiver;
+			if (target.StoresAddress)
+				receiver = new WithAddressReceiver (target, loc);
+			else
+				receiver = new WithValueReceiver (target, loc);
+
+			return receiver.Resolve (ec);
+		}
+
+		public override void Emit (EmitContext ec)
+		{
+			throw new Exception ("Should not happen");
+		}
+	}
+
+	class WithValueReceiver : Expression {
+		protected readonly WithTarget target;
+
+		public WithValueReceiver (WithTarget target, Location l)
+		{
+			this.target = target;
+			loc = l;
+		}
+
+		public override Expression DoResolve (EmitContext ec)
+		{
+			if (!target.Resolve (ec))
+				return null;
+
+			type = target.TargetType;
+			eclass = target.TargetType.IsValueType ? ExprClass.Value : ExprClass.Variable;
+			return this;
+		}
+
+		public override void Emit (EmitContext ec)
+		{
+			target.Emit (ec);
+		}
+	}
+
+	class WithAddressReceiver : WithValueReceiver, IMemoryLocation {
+		public WithAddressReceiver (WithTarget target, Location l)
+			: base (target, l)
+		{
+		}
+
+		public override Expression DoResolve (EmitContext ec)
+		{
+			Expression e = base.DoResolve (ec);
+			if (e == null)
+				return null;
+
+			eclass = ExprClass.Variable;
+			return this;
+		}
+
+		public void AddressOf (EmitContext ec, AddressOp mode)
+		{
+			target.AddressOf (ec, mode);
+		}
+	}
+
+	public class VBWith : Statement {
+		WithTarget target;
+		Statement statement;
+
+		public VBWith (WithTarget target, Statement statement, Location l)
+		{
+			this.target = target;
+			this.statement = statement;
+			loc = l;
+		}
+
+		public override bool Resolve (EmitContext ec)
+		{
+			if (!target.Resolve (ec))
+				return false;
+
+			return statement.Resolve (ec);
+		}
+
+		protected override void DoEmit (EmitContext ec)
+		{
+			target.EmitStore (ec);
+			statement.Emit (ec);
+			target.Release (ec);
+		}
+	}
+
 	/// <summary>
 	///   Implementation of the foreach C# statement
 	/// </summary>
