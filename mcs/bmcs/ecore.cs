@@ -3457,6 +3457,18 @@ namespace Mono.CSharp {
 				return is_static;
 			}
 		}
+
+		public MethodInfo Getter {
+			get {
+				return getter;
+			}
+		}
+
+		public MethodInfo Setter {
+			get {
+				return setter;
+			}
+		}
 		
 		public Type DeclaringType {
 			get {
@@ -3574,15 +3586,15 @@ namespace Mono.CSharp {
 			return true;
 		}
 		
-		override public Expression DoResolve (EmitContext ec)
+		internal bool ResolveGetterAccess (EmitContext ec, bool allow_index_arguments)
 		{
 			if (getter != null){
-				if (TypeManager.GetArgumentTypes (getter).Length != 0){
+				if (!allow_index_arguments && TypeManager.GetArgumentTypes (getter).Length != 0){
 					Report.Error (
 						117, loc, "`{0}' does not contain a " +
 						"definition for `{1}'.", getter.DeclaringType,
 						Name);
-					return null;
+					return false;
 				}
 			}
 
@@ -3594,23 +3606,23 @@ namespace Mono.CSharp {
 				// the caller routine.  This only avoids double error reporting.
 				//
 				if (setter == null)
-					return null;
+					return false;
 				
 				Report.Error (154, loc, 
 					      "The property `" + PropertyInfo.Name +
 					      "' can not be used in " +
 					      "this context because it lacks a get accessor");
-				return null;
+				return false;
 			} 
 
 			bool must_do_cs1540_check;
 			if (!IsAccessorAccessible (ec.ContainerType, getter, out must_do_cs1540_check)) {
 				Report.Error (122, loc, "'{0}.get' is inaccessible due to its protection level", PropertyInfo.Name);
-				return null;
+				return false;
 			}
 
 			if (!InstanceResolve (ec, must_do_cs1540_check))
-				return null;
+				return false;
 
 			//
 			// Only base will allow this invocation to happen.
@@ -3618,13 +3630,13 @@ namespace Mono.CSharp {
 			if (IsBase && getter.IsAbstract){
 				Report.Error (205, loc, "Cannot call an abstract base property: " +
 					      PropertyInfo.DeclaringType + "." +PropertyInfo.Name);
-				return null;
+				return false;
 			}
 
-			return this;
+			return true;
 		}
 
-		override public Expression DoResolveLValue (EmitContext ec, Expression right_side)
+		internal bool ResolveSetterAccess (EmitContext ec, bool allow_index_arguments)
 		{
 			if (setter == null){
 				//
@@ -3634,31 +3646,31 @@ namespace Mono.CSharp {
 				// the caller routine.  This only avoids double error reporting.
 				//
 				if (getter == null)
-					return null;
+					return false;
 				
 				Report.Error (154, loc, 
 					      "The property `" + PropertyInfo.Name +
 					      "' can not be used in " +
 					      "this context because it lacks a set accessor");
-				return null;
+				return false;
 			}
 
-			if (TypeManager.GetArgumentTypes (setter).Length != 1){
+			if (!allow_index_arguments && TypeManager.GetArgumentTypes (setter).Length != 1){
 				Report.Error (
 					117, loc, "`{0}' does not contain a " +
-					"definition for `{1}'.", getter.DeclaringType,
+					"definition for `{1}'.", setter.DeclaringType,
 					Name);
-				return null;
+				return false;
 			}
 
 			bool must_do_cs1540_check;
 			if (!IsAccessorAccessible (ec.ContainerType, setter, out must_do_cs1540_check)) {
 				Report.Error (122, loc, "'{0}.set' is inaccessible due to its protection level", PropertyInfo.Name);
-				return null;
+				return false;
 			}
 
 			if (!InstanceResolve (ec, must_do_cs1540_check))
-				return null;
+				return false;
 			
 			//
 			// Only base will allow this invocation to happen.
@@ -3666,7 +3678,7 @@ namespace Mono.CSharp {
 			if (IsBase && setter.IsAbstract){
 				Report.Error (205, loc, "Cannot call an abstract base property: " +
 					      PropertyInfo.DeclaringType + "." +PropertyInfo.Name);
-				return null;
+				return false;
 			}
 
 			//
@@ -3675,8 +3687,24 @@ namespace Mono.CSharp {
 			if (instance_expr != null && instance_expr.Type.IsValueType && !(instance_expr is IMemoryLocation)) {
 				// FIXME: Provide better error reporting.
 				Error (1612, "Cannot modify expression because it is not a variable.");
-				return null;
+				return false;
 			}
+
+			return true;
+		}
+
+		override public Expression DoResolve (EmitContext ec)
+		{
+			if (!ResolveGetterAccess (ec, false))
+				return null;
+
+			return this;
+		}
+
+		override public Expression DoResolveLValue (EmitContext ec, Expression right_side)
+		{
+			if (!ResolveSetterAccess (ec, false))
+				return null;
 
 			return this;
 		}

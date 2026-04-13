@@ -6301,18 +6301,64 @@ namespace Mono.CSharp {
 			return null;
 		}
 
-		public override Expression DoResolve (EmitContext ec)
+		Expression ResolveInvocationTarget (EmitContext ec)
 		{
-			//
-			// First, resolve the expression that is used to
-			// trigger the invocation
-			//
 			if (expr is ConstructedType)
 				expr = ((ConstructedType) expr).GetSimpleName (ec);
 
-			expr = expr.Resolve (ec, ResolveFlags.VariableOrValue | ResolveFlags.MethodGroup);
+			MemberAccess member_access = expr as MemberAccess;
+			if (member_access != null)
+				return member_access.ResolveForInvocation (ec);
+
+			BaseAccess base_access = expr as BaseAccess;
+			if (base_access != null)
+				return base_access.ResolveForInvocation (ec);
+
+			return expr.Resolve (ec, ResolveFlags.VariableOrValue | ResolveFlags.MethodGroup);
+		}
+
+		Expression ResolvePropertyInvocation (EmitContext ec, PropertyExpr property)
+		{
+			if (Arguments != null){
+				foreach (Argument a in Arguments){
+					if (!a.Resolve (ec, loc))
+						return null;
+					}
+			}
+
+			// VB reclassifies property groups through invocation syntax:
+			// Foo.Prop() is a plain property access, while Foo.Chars(i)
+			// binds the property's indexed accessor rather than a method call.
+			if (Arguments == null || Arguments.Count == 0)
+				return property.Resolve (ec);
+
+			return (new ParameterizedPropertyAccess (property, Arguments, loc)).Resolve (ec);
+		}
+
+		Expression ResolvePropertyInvocationLValue (EmitContext ec, PropertyExpr property, Expression right_side)
+		{
+			if (Arguments != null){
+				foreach (Argument a in Arguments){
+					if (!a.Resolve (ec, loc))
+						return null;
+				}
+			}
+
+			if (Arguments == null || Arguments.Count == 0)
+				return property.ResolveLValue (ec, right_side);
+
+			return (new ParameterizedPropertyAccess (property, Arguments, loc)).ResolveLValue (ec, right_side);
+		}
+
+		public override Expression DoResolve (EmitContext ec)
+		{
+			expr = ResolveInvocationTarget (ec);
 			if (expr == null)
 				return null;
+
+			PropertyExpr property = expr as PropertyExpr;
+			if (property != null)
+				return ResolvePropertyInvocation (ec, property);
 
 			if (!(expr is MethodGroupExpr)) {
 				Type expr_type = expr.Type;
@@ -6405,6 +6451,19 @@ namespace Mono.CSharp {
 
 			eclass = ExprClass.Value;
 			return this;
+		}
+
+		public override Expression DoResolveLValue (EmitContext ec, Expression right_side)
+		{
+			expr = ResolveInvocationTarget (ec);
+			if (expr == null)
+				return null;
+
+			PropertyExpr property = expr as PropertyExpr;
+			if (property != null)
+				return ResolvePropertyInvocationLValue (ec, property, right_side);
+
+			return base.DoResolveLValue (ec, right_side);
 		}
 
 		// <summary>
@@ -8579,7 +8638,7 @@ namespace Mono.CSharp {
 		}
 		
 		public virtual Expression DoResolve (EmitContext ec, Expression right_side,
-						     ResolveFlags flags)
+						     ResolveFlags flags, bool preserve_property_group)
 		{
 			if (type != null)
 				throw new Exception ();
@@ -8720,6 +8779,11 @@ namespace Mono.CSharp {
 				return mg.ResolveGeneric (ec, args);
 			}
 
+			// Invocation needs the raw PropertyExpr so it can distinguish
+			// empty-paren property access from indexed property access.
+			if (preserve_property_group && right_side == null && member_lookup is PropertyExpr)
+				return member_lookup;
+
 			// The following DoResolve/DoResolveLValue will do the definite assignment
 			// check.
 
@@ -8733,12 +8797,17 @@ namespace Mono.CSharp {
 
 		public override Expression DoResolve (EmitContext ec)
 		{
-			return DoResolve (ec, null, ResolveFlags.VariableOrValue | ResolveFlags.Type);
+			return DoResolve (ec, null, ResolveFlags.VariableOrValue | ResolveFlags.Type, false);
 		}
 
 		public override Expression DoResolveLValue (EmitContext ec, Expression right_side)
 		{
-			return DoResolve (ec, right_side, ResolveFlags.VariableOrValue | ResolveFlags.Type);
+			return DoResolve (ec, right_side, ResolveFlags.VariableOrValue | ResolveFlags.Type, false);
+		}
+
+		public Expression ResolveForInvocation (EmitContext ec)
+		{
+			return DoResolve (ec, null, ResolveFlags.VariableOrValue | ResolveFlags.Type, true);
 		}
 
 		public override FullNamedExpression ResolveAsTypeStep (EmitContext ec)
@@ -9718,6 +9787,103 @@ namespace Mono.CSharp {
 		}
 	}
 
+	public class ParameterizedPropertyAccess : Expression, IAssignMethod {
+		readonly PropertyExpr property;
+		readonly ArrayList arguments;
+		MethodInfo getter;
+		MethodInfo setter;
+		ArrayList set_arguments;
+		bool prepared;
+		LocalTemporary temp;
+
+		public ParameterizedPropertyAccess (PropertyExpr property, ArrayList arguments, Location loc)
+		{
+			this.property = property;
+			this.arguments = arguments;
+			this.loc = loc;
+		}
+
+		public override Expression DoResolve (EmitContext ec)
+		{
+			// Resolve through the property's accessor metadata instead of
+			// pretending the getter is an ordinary method-group call.
+			if (!property.ResolveGetterAccess (ec, true))
+				return null;
+
+			getter = property.Getter;
+			if (getter == null)
+				return null;
+
+			if (!Invocation.VerifyArgumentsCompat (ec, arguments, arguments.Count, getter, false, null, false, loc))
+				return null;
+
+			type = property.Type;
+			eclass = ExprClass.PropertyAccess;
+			return this;
+		}
+
+		public override Expression DoResolveLValue (EmitContext ec, Expression right_side)
+		{
+			if (!property.ResolveSetterAccess (ec, true))
+				return null;
+
+			setter = property.Setter;
+			if (setter == null)
+				return null;
+
+			set_arguments = (ArrayList) arguments.Clone ();
+			set_arguments.Add (new Argument (right_side, Argument.AType.Expression));
+			if (!Invocation.VerifyArgumentsCompat (ec, set_arguments, set_arguments.Count, setter, false, null, false, loc))
+				return null;
+
+			type = property.Type;
+			eclass = ExprClass.PropertyAccess;
+			return this;
+		}
+
+		public void Emit (EmitContext ec, bool leave_copy)
+		{
+			Invocation.EmitCall (ec, property.IsBase, getter.IsStatic, property.InstanceExpression,
+					     getter, arguments, loc, prepared, false);
+			if (leave_copy) {
+				ec.ig.Emit (OpCodes.Dup);
+				temp = new LocalTemporary (ec, Type);
+				temp.Store (ec);
+			}
+		}
+
+		public override void Emit (EmitContext ec)
+		{
+			Emit (ec, false);
+		}
+
+		public void EmitAssign (EmitContext ec, Expression source, bool leave_copy, bool prepare_for_load)
+		{
+			prepared = prepare_for_load;
+			Argument value_argument = (Argument) set_arguments[set_arguments.Count - 1];
+
+			if (prepared) {
+				source.Emit (ec);
+				if (leave_copy) {
+					ec.ig.Emit (OpCodes.Dup);
+					temp = new LocalTemporary (ec, Type);
+					temp.Store (ec);
+				}
+			} else if (leave_copy) {
+				temp = new LocalTemporary (ec, Type);
+				source.Emit (ec);
+				temp.Store (ec);
+				value_argument.Expr = temp;
+			}
+
+			Invocation.EmitCall (ec, property.IsBase, setter.IsStatic, property.InstanceExpression,
+					     setter, set_arguments, loc, false, prepared);
+
+			if (temp != null)
+				temp.Emit (ec);
+		}
+	}
+
 	/// <summary>
 	///   The base operator for method names
 	/// </summary>
@@ -9745,6 +9911,11 @@ namespace Mono.CSharp {
 			if (!(c is MethodGroupExpr))
 				return c.Resolve (ec);
 			return c;
+		}
+
+		public Expression ResolveForInvocation (EmitContext ec)
+		{
+			return CommonResolve (ec);
 		}
 
 		public override Expression DoResolveLValue (EmitContext ec, Expression right_side)
