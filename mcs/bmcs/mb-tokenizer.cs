@@ -905,7 +905,11 @@ namespace Mono.CSharp
 		
 		private bool is_whitespace(int c)
 		{
-			return (c == ' ' || c == '\t' || c == '\v' || c == '\r' || c == 0xa0);
+			// 0xFEFF is the BOM (U+FEFF); treat it like whitespace so
+			// files that start with a BOM, or have one embedded by a
+			// concatenating build step, do not trip the tokenizer.
+			// 0xA0 is non-breaking space.
+			return (c == ' ' || c == '\t' || c == '\v' || c == '\r' || c == 0xa0 || c == 0xfeff);
 		}
 
 		private void GobbleWhiteSpaces ()

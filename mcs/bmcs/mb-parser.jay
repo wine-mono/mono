@@ -1297,18 +1297,23 @@ type_spec_declaration
 	;
 
 class_declaration
-	: CLASS identifier logical_end_of_line 
+	: CLASS identifier opt_type_params logical_end_of_line
 	  {
 		if (implicit_modifiers && ((current_modifiers & Modifiers.STATIC) != 0))
 			current_modifiers = (current_modifiers & ~Modifiers.STATIC);
 
-		MemberName name = MakeName (new MemberName ((string) $2));
+		TypeArguments type_args = (TypeArguments) $3;
+		MemberName name = (type_args == null)
+			? MakeName (new MemberName ((string) $2))
+			: MakeName (new MemberName ((string) $2, type_args));
 		int mod_flags = current_modifiers;
 
 
 		current_class = new Class (current_namespace, current_container, name,
 					   mod_flags, (Attributes) current_attributes, lexer.Location);
 
+		if (type_args != null)
+			current_class.SetParameterInfo (null);
 
 		current_container = current_class;
 		RootContext.Tree.RecordDecl (name.GetName (true), current_class);
@@ -1316,8 +1321,10 @@ class_declaration
 	  opt_inherits opt_implements
 
 	  {
-		ArrayList bases = (ArrayList) $5;
-		ArrayList ifaces = (ArrayList) $6;
+		// Position shift: opt_type_params added as $3, so opt_inherits
+		// is now $6 and opt_implements is now $7.
+		ArrayList bases = (ArrayList) $6;
+		ArrayList ifaces = (ArrayList) $7;
 
 		if (ifaces != null){
 			if (bases != null)	
@@ -2946,7 +2953,7 @@ opt_raise_event_args
 embedded_statement
 	: expression_statement
 	| selection_statement
-// 	| iteration_statement
+	| while_statement
 	| try_statement
 	| synclock_statement
 	| jump_statement
@@ -4121,11 +4128,17 @@ opt_type_spec
 	;
 		
 opt_type_with_ranks
-	: opt_type_spec	
-// 	| AS type rank_specifiers 
-// 	  {
-// // 		$$ = DecomposeQI ($2.ToString() + VariableDeclaration.BuildRanks ((ArrayList)$3, true, lexer.Location), lexer.Location);
-// 	  }
+	: opt_type_spec
+	| AS type rank_specifiers
+	  {
+		// 'As SomeType(, ,)' in a field/local/parameter declaration
+		// means an array of SomeType with the given rank specifier.
+		// Wrap the base type in a ComposedCast whose 'dim' string is
+		// '[]', '[,]', etc. so the existing type-resolution machinery
+		// builds the right array Type.
+		string dims = VariableDeclaration.BuildRanks ((ArrayList) $3, true, lexer.Location);
+		$$ = new ComposedCast ((Expression) $2, dims, lexer.Location);
+	  }
 	;
 	
 opt_type_decl
