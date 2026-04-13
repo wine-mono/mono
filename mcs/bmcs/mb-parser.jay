@@ -1986,7 +1986,7 @@ struct_member_declarator
 	| constant_declaration
 	| constructor_declaration
 	| method_declaration
-// 	| property_declaration
+	| property_declaration
 	| event_declaration
 	| type_spec_declaration
 
