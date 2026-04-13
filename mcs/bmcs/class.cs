@@ -3842,6 +3842,10 @@ namespace Mono.CSharp {
 		/// <summary>
 		///   Modifiers allowed in a class declaration
 		/// </summary>
+		// SHADOWS is VB's hiding modifier; OVERLOADS is an explicit
+		// marker that this is an overloaded version (C# has no direct
+		// equivalent and emits overload resolution automatically, so
+		// we accept but don't act on it).
 		const int AllowedModifiers =
 			Modifiers.NEW |
 			Modifiers.PUBLIC |
@@ -3854,11 +3858,12 @@ namespace Mono.CSharp {
 			Modifiers.OVERRIDE |
 			Modifiers.ABSTRACT |
 		        Modifiers.UNSAFE |
-			Modifiers.METHOD_YIELDS | 
+			Modifiers.METHOD_YIELDS |
+			Modifiers.SHADOWS |
 			Modifiers.EXTERN;
 
 		const int AllowedInterfaceModifiers =
-			Modifiers.NEW | Modifiers.UNSAFE;
+			Modifiers.NEW | Modifiers.UNSAFE | Modifiers.SHADOWS;
 
 		//
 		// return_type can be "null" for VOID values.
@@ -6659,6 +6664,11 @@ namespace Mono.CSharp {
 	}
 			
 	public class Property : PropertyBase, IIteratorContainer {
+		// READONLY and WRITEONLY are VB-specific modifiers that select a
+		// get-only or set-only property respectively; DEFAULT marks a
+		// VB default property (indexer equivalent); SHADOWS is VB's
+		// hiding modifier.  None of these were accepted by the gmcs-
+		// derived AllowedModifiers set.
 		const int AllowedModifiers =
 			Modifiers.NEW |
 			Modifiers.PUBLIC |
@@ -6672,10 +6682,18 @@ namespace Mono.CSharp {
 		        Modifiers.UNSAFE |
 			Modifiers.EXTERN |
 			Modifiers.METHOD_YIELDS |
+			Modifiers.READONLY |
+			Modifiers.WRITEONLY |
+			Modifiers.DEFAULT |
+			Modifiers.SHADOWS |
 			Modifiers.VIRTUAL;
 
 		const int AllowedInterfaceModifiers =
-			Modifiers.NEW;
+			Modifiers.NEW |
+			Modifiers.READONLY |
+			Modifiers.WRITEONLY |
+			Modifiers.DEFAULT |
+			Modifiers.SHADOWS;
 
 		public Property (TypeContainer parent, Expression type, int mod_flags,
 				 bool is_iface, MemberName name, Attributes attrs,

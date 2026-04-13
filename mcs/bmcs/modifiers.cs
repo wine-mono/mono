@@ -32,10 +32,15 @@ namespace Mono.CSharp {
 		private const int TOP      = 0x20000;
 
 		//
-		// We use this internally to flag that the method contains an iterator
+		// Internal flags, above TOP so they're invisible to Check().
+		// Previously these collided with SHADOWS (0x08000) and
+		// DEFAULT (0x10000), which caused any VB "Shadows Property"
+		// to be treated as an iterator and any "Default" property to
+		// be treated as a generic method - both of which produced
+		// nonsensical errors.
 		//
-		public const int METHOD_YIELDS = 0x8000;
-		public const int METHOD_GENERIC = 0x10000;
+		public const int METHOD_YIELDS = 0x40000;
+		public const int METHOD_GENERIC = 0x80000;
 
 		public const int Accessibility =
 			PUBLIC | PROTECTED | INTERNAL | PRIVATE;
@@ -45,7 +50,7 @@ namespace Mono.CSharp {
 		static public string Name (int i)
 		{
 			string s = "";
-			
+
 			switch (i) {
 			case Modifiers.NEW:
 				s = "new"; break;
@@ -75,6 +80,14 @@ namespace Mono.CSharp {
 				s = "volatile"; break;
 			case Modifiers.UNSAFE:
 				s = "unsafe"; break;
+			case Modifiers.WRITEONLY:
+				s = "writeonly"; break;
+			case Modifiers.SHADOWS:
+				s = "shadows"; break;
+			case Modifiers.DEFAULT:
+				s = "default"; break;
+			case Modifiers.NONVIRTUAL:
+				s = "nonvirtual"; break;
 			}
 
 			return s;

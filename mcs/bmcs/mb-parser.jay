@@ -2440,7 +2440,9 @@ get_accessor_declaration
 	  end_block
 	  END GET logical_end_of_line
 	  {
-		$$ = new Accessor ((ToplevelBlock) $8, (int) current_modifiers, 
+		// See comment in set_accessor_declaration below: accessor
+		// modifiers are distinct from property-level modifiers.
+		$$ = new Accessor ((ToplevelBlock) $8, 0,
 				   (Attributes) $1, lexer.Location);
 
 		current_local_parameters = null;
@@ -2471,7 +2473,12 @@ set_accessor_declaration
 	  end_block
 	  END SET logical_end_of_line
 	  {
-		$$ = new Accessor ((ToplevelBlock) $8, (int) current_modifiers, 
+		// Accessor modifiers are a distinct set from property-level
+		// modifiers; ReadOnly / WriteOnly live on the Property.  Passing
+		// current_modifiers here would leak property-level flags into
+		// the accessor and trip Modifiers.Check (which has a much
+		// smaller allowed set for accessors).
+		$$ = new Accessor ((ToplevelBlock) $8, 0,
 				   (Attributes) $1, lexer.Location);
 		current_local_parameters = null;
 		lexer.PropertyParsing = true;
@@ -3489,7 +3496,6 @@ while_statement
 
 selection_statement
 	: if_statement
-// 	| select_statement
 	;
 
 // if_statement
@@ -3504,11 +3510,11 @@ selection_statement
 // FIXME: The lexer.Location that is calculated may have to replaced with the most correct one
 
 if_statement
-	: IF boolean_expression opt_then end_of_stmt 
+	: IF boolean_expression opt_then end_of_stmt
 	  block
 	  END IF
-	  { 
-		oob_stack.Push (lexer.Location);	  
+	  {
+		oob_stack.Push (lexer.Location);
 		Location l = (Location) oob_stack.Pop ();
 
 		$$ = new If ((Expression) $2, (Statement) $5, l);
@@ -3519,28 +3525,29 @@ if_statement
 		}
 
 	  }
-	  
-	| IF boolean_expression opt_then end_of_stmt 
+
+	| IF boolean_expression opt_then end_of_stmt
 	  block
-	  ELSE end_of_stmt 
+	  ELSE end_of_stmt
 	  block
 	  END IF
 	  {
-		oob_stack.Push (lexer.Location);	  
+		oob_stack.Push (lexer.Location);
 		Location l = (Location) oob_stack.Pop ();
 
 		$$ = new If ((Expression) $2, (Statement) $5, (Statement) $8, l);
-	  }	
-	
-	| IF boolean_expression opt_then end_of_stmt 
+	  }
+
+	| IF boolean_expression opt_then end_of_stmt
 	  block
-	  else_if_statement_rest 
+	  else_if_statement_rest
 	  {
-		oob_stack.Push (lexer.Location);	  
+		oob_stack.Push (lexer.Location);
 		Location l = (Location) oob_stack.Pop ();
 
 		$$ = new If ((Expression) $2, (Statement) $5, (Statement) $6, l);
-	  }	
+	  }
+
 	;
 
 else_if_statement_rest
@@ -3614,135 +3621,6 @@ opt_then
 	| THEN
 	;
 	
-
-// select_statement
-// 	: SELECT opt_case expression end_of_stmt
-// 	  { 
-// 		oob_stack.Push (lexer.Location);
-// 		switch_stack.Push (current_block);
-// 	  }	
-// 	  opt_case_sections
-// 	  END SELECT 
-// 	  {
-// 		$$ = new Switch ((Expression) $3, (ArrayList) $6, (Location) oob_stack.Pop ());
-// 		current_block = (Block) switch_stack.Pop ();
-// 	  }	  
-// 	;
-
-// opt_case_sections
-// 	: /* empty */ 	{ $$ = null; }
-// 	| case_sections { $$ = $1; }
-// 	;
-	
-// case_sections
-// 	: case_sections case_section
-// 	  {
-// 		ArrayList sections = (ArrayList) $1;
-
-// 		sections.Add ($2);
-// 		$$ = sections;
-// 	  }
-// 	| case_section
-// 	  {
-// 		ArrayList sections = new ArrayList (4);
-
-// 		sections.Add ($1);
-// 		$$ = sections;
-// 	  }
-// 	;
-
-// ends 
-// 	: end_of_stmt
-// 	| ends end_of_stmt
-// 	;
-	
-
-// case_section
-// 	: CASE case_clauses ends
-// 	  { 
-// 	  	start_block();
-// 	  }
-// 	  opt_statement_list
-// 	  {
-// 	  	//Block topmost = current_block;
-// 		Block topmost = end_block();
-		
-// 		while (topmost.Implicit)
-// 			topmost = topmost.Parent;
-			
-// 		// FIXME: This is a horrible hack which MUST go			
-// 		topmost.statements.Add (new Break (lexer.Location));
-// 	  	$$ = new SwitchSection ((ArrayList) $2, topmost);
-// 	  }
-// 	| CASE ELSE ends
-// 	    /* FIXME: we should somehow flag an error 
-// 	       (BC30321 'Case' cannot follow a 'Case Else' 
-// 	       in the same 'Select' statement.) 
-// 	       if Case Else is not the last of the Case clauses
-// 	    */
-// 	  { 
-// 	  	start_block();
-// 	  }	
-// 	  opt_statement_list
-// 	  { 
-// 	  	//Block topmost = current_block;
-// 		Block topmost = end_block();
-
-// 		while (topmost.Implicit)
-// 			topmost = topmost.Parent;
-			
-// 		// FIXME: This is a horrible hack which MUST go			
-// 		topmost.statements.Add (new Break (lexer.Location));
-		
-// 		ArrayList a = new ArrayList();
-// 		a.Add (new SwitchLabel (null, lexer.Location));			
-// 	  	$$ = new SwitchSection ((ArrayList) a, topmost);	  	
-// 	  }
-// 	;	  
-	
-
-case_clauses
-	: case_clause
-	  {
-		ArrayList labels = new ArrayList ();
-
-		labels.Add ($1);
-		$$ = labels;
-	  }	
-	| case_clauses COMMA case_clause
-	  {
-		ArrayList labels = (ArrayList) ($1);
-		labels.Add ($2);
-
-		$$ = labels;
-	  }	
-	;
-	
-case_clause
-	: opt_is comparison_operator expression
-	| expression
-	  {
-	  	$$ = new SwitchLabel ((Expression) $1, lexer.Location);
-	  }
-	;
-	
-opt_is 
-	: /* empty */
-	| IS
-	;
-
-comparison_operator
-	: OP_LT
-	| OP_GT
-	| OP_LE
-	| OP_NE
-	/*| OP_EQ */
-	;
-
-opt_case
-	: /* empty */
-	| CASE
-	;
 
 expression_statement
 	: statement_expression 
@@ -4449,15 +4327,15 @@ cast_expression
         : DIRECTCAST OPEN_PARENS expression COMMA type CLOSE_PARENS
 	  {
 	  	// TODO
-	  } 
+	  }
 	| CTYPE OPEN_PARENS expression COMMA type CLOSE_PARENS
 	  {
 		  $$ = new Cast ((Expression) $5, (Expression) $3, lexer.Location);
-	  } 	
+	  }
         | cast_operator OPEN_PARENS expression CLOSE_PARENS
 	  {
 		  $$ = new Cast ((Expression) $1, (Expression) $3, lexer.Location);
-	  }  	
+	  }
 	;
 	
 cast_operator
