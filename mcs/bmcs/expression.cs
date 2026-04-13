@@ -2444,20 +2444,17 @@ namespace Mono.CSharp {
 						return null;
 					}
 					
-					// try to fold it in on the left
+					// Fold (a + b) + c into StringConcat(a, b, c).
+					//
+					// The original code guarded this with 'if (type == null)'
+					// to avoid double-appending on a second Resolve, but
+					// 'type' is already assigned by the time this branch
+					// runs, so the guard was never true and every chained
+					// string addition past the first pair silently dropped
+					// its right operand.
 					if (left is StringConcat) {
-
-						//
-						// We have to test here for not-null, since we can be doubly-resolved
-						// take care of not appending twice
-						//
-						if (type == null){
-							type = TypeManager.string_type;
-							((StringConcat) left).Append (ec, right);
-							return left.Resolve (ec);
-						} else {
-							return left;
-						}
+						((StringConcat) left).Append (ec, right);
+						return left;
 					}
 
 					// Otherwise, start a new concat expression
@@ -3280,20 +3277,14 @@ namespace Mono.CSharp {
 
 				if (Type == TypeManager.string_type) {
 
-					// try to fold it in on the left
+					// Fold (a & b) & c or (a + b) + c into one StringConcat.
+					//
+					// As above, the old 'if (type == null)' guard was dead
+					// here, so chained concatenations kept the left half and
+					// silently discarded every later operand.
 					if (left is StringConcat) {
-
-						//
-						// We have to test here for not-null, since we can be doubly-resolved
-						// take care of not appending twice
-						//
-						if (type == null){
-							type = TypeManager.string_type;
-							((StringConcat) left).Append (ec, right);
-							return left.Resolve (ec);
-						} else {
-							return left;
-						}
+						((StringConcat) left).Append (ec, right);
+						return left;
 					}
 
 					// Otherwise, start a new concat expression
