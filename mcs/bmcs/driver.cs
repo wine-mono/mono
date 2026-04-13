@@ -173,7 +173,8 @@ namespace Mono.CSharp
 			}
 
 			SeekableStreamReader reader = new SeekableStreamReader (input, encoding, using_default_encoder);
-				
+
+			Location.Push (file);
 			parser = new CSharpParser (reader, file, defines);
 			try {
 				parser.parse ();

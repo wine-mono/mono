@@ -149,12 +149,14 @@ namespace Mono.CSharp {
 			return (SourceFile) source_list [index - 1];
 		}
 
-/*
+		// Set by driver.parse() before handing a SourceFile to the
+		// tokenizer/parser so newly-created Location(row) values encode
+		// the correct source index.  Despite the name this is a setter,
+		// not a stack push.
 		static public void Push (SourceFile file)
 		{
 			current_source = file.Index;
 		}
-*/		
 
 		// <remarks>
 		//   If we're compiling with debugging support, this is called between parsing
