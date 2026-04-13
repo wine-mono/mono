@@ -4349,7 +4349,7 @@ primary_expression
 	| parenthesized_expression
 	| this_access
 	| base_access
-	| qualified_identifier
+	| type_name
 	  {
 		$$ = ((MemberName) $1).GetTypeExpression (lexer.Location);
 	  }
@@ -4406,13 +4406,13 @@ parenthesized_expression
 	;
 
 member_access
-	: primary_expression DOT identifier
+	: primary_expression DOT identifier opt_type_args
 	  {
 	  	if ($1 != null) {
 	  		string id_name = (string)$3;
 	  		if (id_name.ToUpper() == "NEW")
 	  			id_name = ".ctor";
-			$$ = new MemberAccess ((Expression) $1, id_name, lexer.Location);
+			$$ = new MemberAccess ((Expression) $1, id_name, (TypeArguments) $4, lexer.Location);
 		}
 		else
 		{
@@ -4430,10 +4430,10 @@ member_access
 	  {
 		$$ = new MemberAccess ((Expression) $1, (string) ".ctor", lexer.Location);
 	  }	  */
-	| predefined_type DOT identifier
+	| predefined_type DOT identifier opt_type_args
 	  {
 	  	if ($1 != null)
-			$$ = new MemberAccess ((Expression) $1, (string) $3, lexer.Location);
+			$$ = new MemberAccess ((Expression) $1, (string) $3, (TypeArguments) $4, lexer.Location);
 		else
 		{
 // 			if (with_stack.Count > 0) {
