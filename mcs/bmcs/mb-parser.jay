@@ -899,6 +899,9 @@ identifier
 	| COMPARE
 	| EXPLICIT
 	| OFF
+	| ASSEMBLY	/* Contextual in VB: ordinary declarations such as
+			   'Property Assembly() As ...' still use it as a
+			   regular identifier. */
 	;
 
 type_character
@@ -1170,7 +1173,12 @@ attribute
 attribute_target_specifier
 	:  ASSEMBLY	{ $$ = "assembly"; }
 	| MODULE	{ $$ = "module"; }
-	| namespace_or_type_name
+	/* Only Assembly and Module are valid VB global-attribute
+	   targets. The old namespace_or_type_name fallback existed just
+	   to steer invalid targets into a custom error path, but it also
+	   reintroduced a reduce/reduce conflict once ASSEMBLY was allowed
+	   as a contextual identifier. Let invalid targets fall out as
+	   ordinary parse errors instead. */
 	;
 	
 			
