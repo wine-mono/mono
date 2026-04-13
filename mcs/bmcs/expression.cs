@@ -9653,10 +9653,12 @@ namespace Mono.CSharp {
 	/// </summary>
 	public class BaseAccess : Expression {
 		public string member;
+		TypeArguments args;
 		
-		public BaseAccess (string member, Location l)
+		public BaseAccess (string member, TypeArguments args, Location l)
 		{
 			this.member = member;
+			this.args = args;
 			loc = l;
 		}
 
@@ -9711,6 +9713,12 @@ namespace Mono.CSharp {
 			member_lookup = MemberLookup (ec, ec.ContainerType, null, base_type,
 						      member, AllMemberTypes, AllBindingFlags,
 						      loc);
+			if ((member_lookup == null) && (args != null)) {
+				string lookup_id = MemberName.MakeName (member, args);
+				member_lookup = MemberLookup (ec, ec.ContainerType, null, base_type,
+							      lookup_id, AllMemberTypes,
+							      AllBindingFlags, loc);
+			}
 			if (member_lookup == null) {
 				MemberLookupFailed (
 					ec, base_type, base_type, member, null, loc);
@@ -9724,7 +9732,35 @@ namespace Mono.CSharp {
 			else
 				left = ec.GetThis (loc);
 			
+			if (args != null) {
+				string full_name = base_type + "." + member;
+
+				if (member_lookup is FieldExpr) {
+					Report.Error (307, loc, "The field `{0}' cannot " +
+						      "be used with type arguments", full_name);
+					return null;
+				} else if (member_lookup is EventExpr) {
+					Report.Error (307, loc, "The event `{0}' cannot " +
+						      "be used with type arguments", full_name);
+					return null;
+				} else if (member_lookup is PropertyExpr) {
+					Report.Error (307, loc, "The property `{0}' cannot " +
+						      "be used with type arguments", full_name);
+					return null;
+				}
+			}
+
 			e = MemberAccess.ResolveMemberAccess (ec, member_lookup, left, loc, null);
+			if ((e != null) && (args != null)) {
+				MethodGroupExpr mg = e as MethodGroupExpr;
+				if (mg == null)
+					throw new InternalErrorException ();
+
+				e = mg.ResolveGeneric (ec, args);
+			}
+
+			if (e == null)
+				return null;
 
 			if (e is PropertyExpr){
 				PropertyExpr pe = (PropertyExpr) e;
