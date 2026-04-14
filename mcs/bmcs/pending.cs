@@ -333,6 +333,73 @@ namespace Mono.CSharp {
 			InterfaceMethod (t, null, ret_type, args,
 					 clear_one ? Operation.ClearOne : Operation.ClearAll, mi);
 		}
+
+		static string GetImplementedLookupName (string method_name, string interface_member_name)
+		{
+			string accessor_prefix = String.Empty;
+
+			if (method_name.StartsWith ("get_"))
+				accessor_prefix = "get_";
+			else if (method_name.StartsWith ("set_"))
+				accessor_prefix = "set_";
+			else if (method_name.StartsWith ("add_"))
+				accessor_prefix = "add_";
+			else if (method_name.StartsWith ("remove_"))
+				accessor_prefix = "remove_";
+
+			return accessor_prefix + interface_member_name;
+		}
+
+		bool HasVBImplementsReservation (ArrayList members, Type iface_type, string method_name)
+		{
+			if (members == null)
+				return false;
+
+			foreach (object member_obj in members) {
+				MemberBase member = member_obj as MemberBase;
+				if (member == null)
+					continue;
+
+				if (member.ResolvedImplementsClauses != null) {
+					foreach (MemberBase.VBImplementsMember vb_member in member.ResolvedImplementsClauses) {
+						if (vb_member.InterfaceType != iface_type)
+							continue;
+
+						if (GetImplementedLookupName (method_name, vb_member.MemberName) == method_name)
+							return true;
+					}
+				}
+
+				if (member.ImplementsClauses != null) {
+					foreach (MemberName iface_member in member.ImplementsClauses) {
+						if (iface_member == null || iface_member.Left == null)
+							continue;
+
+						if (GetImplementedLookupName (method_name, iface_member.Name) != method_name)
+							continue;
+
+						string raw_iface_name = iface_member.Left.GetName ();
+						string raw_iface_type_name = iface_member.Left.GetTypeName ();
+
+						if (String.Equals (raw_iface_name, iface_type.FullName, StringComparison.OrdinalIgnoreCase) ||
+						    String.Equals (raw_iface_type_name, iface_type.FullName, StringComparison.OrdinalIgnoreCase) ||
+						    String.Equals (raw_iface_name, iface_type.Name, StringComparison.OrdinalIgnoreCase) ||
+						    String.Equals (raw_iface_type_name, iface_type.Name, StringComparison.OrdinalIgnoreCase))
+							return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		bool IsReservedByVBImplements (Type iface_type, string method_name)
+		{
+			return HasVBImplementsReservation (container.Methods, iface_type, method_name) ||
+				HasVBImplementsReservation (container.Properties, iface_type, method_name) ||
+				HasVBImplementsReservation (container.Events, iface_type, method_name) ||
+				HasVBImplementsReservation (container.Indexers, iface_type, method_name);
+		}
 		
 		/// <remarks>
 		///   If a method in Type `t' (or null to look in all interfaces
@@ -385,6 +452,12 @@ namespace Mono.CSharp {
 						if (mname != tm.get_indexer_name && mname != tm.set_indexer_name)
 							continue;
 					} else if ((need_proxy == null) && (name != mname))
+						continue;
+
+					// A member that names an interface slot with VB's Implements
+					// clause must own that slot even if another public same-name
+					// member would otherwise match it implicitly.
+					if (t == null && name != null && IsReservedByVBImplements (tm.type, mname))
 						continue;
 
 					if (!TypeManager.IsEqual (ret_type, m.ReturnType)){

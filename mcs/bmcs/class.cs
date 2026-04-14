@@ -5021,6 +5021,53 @@ namespace Mono.CSharp {
 			return accessor_prefix + interface_member_name;
 		}
 
+		static MethodInfo[] GetInterfaceMethods (Type interface_type)
+		{
+			if (interface_type is TypeBuilder) {
+				TypeContainer iface = TypeManager.LookupInterface (interface_type);
+				if (iface != null)
+					return iface.GetMethods ();
+			}
+
+			return interface_type.GetMethods ();
+		}
+
+		static MethodInfo ResolveVBImplementsTarget (Type interface_type, string lookup_name, Type return_type, Type[] parameter_types)
+		{
+			MethodInfo[] methods = GetInterfaceMethods (interface_type);
+
+			foreach (MethodInfo iface_method in methods) {
+				if (iface_method == null)
+					continue;
+
+				if (TypeManager.GetMethodName (iface_method) != lookup_name)
+					continue;
+
+				if (!TypeManager.IsEqual (return_type, iface_method.ReturnType)) {
+					if (!((return_type == null && iface_method.ReturnType == TypeManager.void_type) ||
+					      (iface_method.ReturnType == null && return_type == TypeManager.void_type)))
+						continue;
+				}
+
+				Type[] iface_args = TypeManager.GetArgumentTypes (iface_method);
+				if (iface_args.Length != parameter_types.Length)
+					continue;
+
+				bool mismatch = false;
+				for (int i = 0; i < iface_args.Length; i++) {
+					if (!TypeManager.IsEqual (iface_args [i], parameter_types [i])) {
+						mismatch = true;
+						break;
+					}
+				}
+
+				if (!mismatch)
+					return iface_method;
+			}
+
+			return null;
+		}
+
 		MethodBuilder DefineVBImplementsProxy (TypeContainer container, MethodInfo iface_method, Type[] parameter_types)
 		{
 			string proxy_name = iface_method.DeclaringType.FullName + "." + iface_method.Name;
@@ -5078,7 +5125,11 @@ namespace Mono.CSharp {
 
 					foreach (MemberBase.VBImplementsMember vb_member in member.ResolvedImplementsClauses) {
 						string lookup_name = GetImplementedLookupName (name, vb_member.MemberName);
-						MethodInfo impl = container.Pending.IsInterfaceMethod (
+						// A VB Implements clause names the exact interface slot.
+						// Resolve it from the interface itself so a same-name public
+						// member in the type does not consume the pending slot first
+						// and make the explicit Implements member fail spuriously.
+						MethodInfo impl = ResolveVBImplementsTarget (
 							vb_member.InterfaceType, lookup_name, method.ReturnType, ParameterTypes);
 
 						if (impl == null) {
