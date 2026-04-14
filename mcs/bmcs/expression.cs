@@ -2860,7 +2860,13 @@ namespace Mono.CSharp {
 					Type underlying_type = TypeManager.EnumToUnderlying (enum_type);
 					
 					if (underlying_type != other_type){
-						temp = Convert.WideningConversion (ec, lie ? right : left, underlying_type, loc);
+						Expression other_expr = lie ? right : left;
+						temp = Convert.WideningConversion (ec, other_expr, underlying_type, loc);
+						if (temp == null) {
+							Constant constant = other_expr as Constant;
+							if (constant != null)
+								temp = Convert.WideningConstantConversions (underlying_type, constant);
+						}
 						if (temp != null){
 							if (lie)
 								right = temp;
@@ -3413,6 +3419,13 @@ namespace Mono.CSharp {
 				return ret_expr;
 
 			errors = Report.Errors;
+			ret_expr = TryResolveEnumArithmetic (ec);
+			if (Report.Errors > errors)
+				return null;
+			if (ret_expr != null)
+				return ret_expr;
+
+			errors = Report.Errors;
 			CheckArguments (ec);
 			if (Report.Errors > errors)
 				return null;
@@ -3595,6 +3608,63 @@ namespace Mono.CSharp {
 				return new HelperMethodInvocation (ec, Location, TypeManager.object_type, HelperMethod, left, right);
 
 			return new HelperMethodInvocation (ec, Location, TypeManager.object_type, HelperMethod,  left, right);
+		}
+
+		Expression TryResolveEnumArithmetic (EmitContext ec)
+		{
+			if (oper != Operator.Addition && oper != Operator.Subtraction)
+				return null;
+
+			Type l = left.Type;
+			Type r = right.Type;
+			bool lie = TypeManager.IsEnumType (l);
+			bool rie = TypeManager.IsEnumType (r);
+
+			if (!lie && !rie)
+				return null;
+
+			if (lie && rie) {
+				if (oper != Operator.Subtraction || l != r) {
+					Error_OperatorCannotBeApplied ();
+					return null;
+				}
+
+				Type underlying = TypeManager.EnumToUnderlying (l);
+				left = Convert.WideningConversion (ec, left, underlying, loc);
+				right = Convert.WideningConversion (ec, right, underlying, loc);
+				if (left == null || right == null) {
+					Error_OperatorCannotBeApplied ();
+					return null;
+				}
+
+				type = underlying;
+				return this;
+			}
+
+			Type enum_type = lie ? l : r;
+			Type underlying_type = TypeManager.EnumToUnderlying (enum_type);
+			Expression other_expr = lie ? right : left;
+			Expression converted = Convert.WideningConversion (ec, other_expr, underlying_type, loc);
+			if (converted == null) {
+				// VB allows a fitting integral constant here even when the
+				// enum's underlying type is narrower than Int32.
+				Constant constant = other_expr as Constant;
+				if (constant != null)
+					converted = Convert.WideningConstantConversions (underlying_type, constant);
+			}
+
+			if (converted == null) {
+				Error_OperatorCannotBeApplied ();
+				return null;
+			}
+
+			if (lie)
+				right = converted;
+			else
+				left = converted;
+
+			type = enum_type;
+			return this;
 		}
 
 		void CheckArguments (EmitContext ec)
@@ -3923,20 +3993,39 @@ namespace Mono.CSharp {
 
 		}
 
+		Type GetComparisonPromotionType (Type t, Type other)
+		{
+			if (!IsRelationalExpression)
+				return t;
+
+			if (!TypeManager.IsEnumType (t))
+				return t;
+
+			// Mixed enum/numeric comparisons follow the enum's underlying
+			// integral type. Keep enum/enum comparisons on the enum path so
+			// different enum types still fail instead of silently collapsing
+			// to their shared underlying primitive type.
+			if (TypeManager.IsEnumType (other))
+				return t;
+
+			return TypeManager.EnumToUnderlying (t);
+		}
+
 		bool DoOperandPromotions (EmitContext ec, Expression target_left_expr, Expression target_right_expr)
 		{
 			Type l = target_left_expr.Type;
 			Type r = target_right_expr.Type;
-			
-			Type target_type = GetWiderOfTypes(l, r);
+
+			Type target_type = GetWiderOfTypes (
+				GetComparisonPromotionType (l, r),
+				GetComparisonPromotionType (r, l));
 
 			//Console.WriteLine ("		DoingOperandPromotions");
 			//Console.WriteLine ("         left => " + l + " right => " + r);
 			//Console.WriteLine ("		target_type => " + target_type);
 
-			if (target_type == null) {
-				throw new Exception ("Types " + l + " " + r +" cannot be compared");
-			}
+			if (target_type == null)
+				return false;
 
 			if (r != target_type) {
 				target_right_expr = Convert.ImplicitVBConversion (ec, target_right_expr, target_type, Location);
