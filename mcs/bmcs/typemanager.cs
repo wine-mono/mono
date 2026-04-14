@@ -1534,23 +1534,26 @@ public partial class TypeManager {
 	//
 	public static void InitVisualBasicHelperTypes ()
 	{
-		msvbcs_object_type = CoreLookupType ("Microsoft.VisualBasic.CompilerServices.ObjectType");
-		msvbcs_boolean_type = CoreLookupType ("Microsoft.VisualBasic.CompilerServices.BooleanType");
-		msvbcs_byte_type = CoreLookupType ("Microsoft.VisualBasic.CompilerServices.ByteType");
-		msvbcs_short_type = CoreLookupType ("Microsoft.VisualBasic.CompilerServices.ShortType");
-		msvbcs_integer_type = CoreLookupType ("Microsoft.VisualBasic.CompilerServices.IntegerType");
-		msvbcs_long_type = CoreLookupType ("Microsoft.VisualBasic.CompilerServices.LongType");
-		msvbcs_decimal_type = CoreLookupType ("Microsoft.VisualBasic.CompilerServices.DecimalType");
-		msvbcs_single_type = CoreLookupType ("Microsoft.VisualBasic.CompilerServices.SingleType");
-		msvbcs_double_type = CoreLookupType ("Microsoft.VisualBasic.CompilerServices.DoubleType");
+		// These helpers come from Microsoft.VisualBasic.dll when it is
+		// referenced, but they may also be part of the current compilation
+		// when bmcs is building the VB runtime itself with -noconfig.
+		msvbcs_object_type = LookupTypeDirect ("Microsoft.VisualBasic.CompilerServices.ObjectType");
+		msvbcs_boolean_type = LookupTypeDirect ("Microsoft.VisualBasic.CompilerServices.BooleanType");
+		msvbcs_byte_type = LookupTypeDirect ("Microsoft.VisualBasic.CompilerServices.ByteType");
+		msvbcs_short_type = LookupTypeDirect ("Microsoft.VisualBasic.CompilerServices.ShortType");
+		msvbcs_integer_type = LookupTypeDirect ("Microsoft.VisualBasic.CompilerServices.IntegerType");
+		msvbcs_long_type = LookupTypeDirect ("Microsoft.VisualBasic.CompilerServices.LongType");
+		msvbcs_decimal_type = LookupTypeDirect ("Microsoft.VisualBasic.CompilerServices.DecimalType");
+		msvbcs_single_type = LookupTypeDirect ("Microsoft.VisualBasic.CompilerServices.SingleType");
+		msvbcs_double_type = LookupTypeDirect ("Microsoft.VisualBasic.CompilerServices.DoubleType");
 
-		msvbcs_char_type = CoreLookupType ("Microsoft.VisualBasic.CompilerServices.CharType");
-		msvbcs_chararray_type = CoreLookupType ("Microsoft.VisualBasic.CompilerServices.CharArrayType");
-		msvbcs_date_type = CoreLookupType ("Microsoft.VisualBasic.CompilerServices.DateType");
-		msvbcs_string_type = CoreLookupType ("Microsoft.VisualBasic.CompilerServices.StringType");
-		msvb_strings_type = CoreLookupType ("Microsoft.VisualBasic.Strings");
+		msvbcs_char_type = LookupTypeDirect ("Microsoft.VisualBasic.CompilerServices.CharType");
+		msvbcs_chararray_type = LookupTypeDirect ("Microsoft.VisualBasic.CompilerServices.CharArrayType");
+		msvbcs_date_type = LookupTypeDirect ("Microsoft.VisualBasic.CompilerServices.DateType");
+		msvbcs_string_type = LookupTypeDirect ("Microsoft.VisualBasic.CompilerServices.StringType");
+		msvb_strings_type = LookupTypeDirect ("Microsoft.VisualBasic.Strings");
 
-		msvbcs_comparemethod_type = CoreLookupType ("Microsoft.VisualBasic.CompareMethod");
+		msvbcs_comparemethod_type = LookupTypeDirect ("Microsoft.VisualBasic.CompareMethod");
 	}
 
 	//
@@ -1761,6 +1764,9 @@ public partial class TypeManager {
 	//
 	public static void InitVisualBasicCodeHelpers ()
 	{
+		if (msvbcs_object_type == null)
+			return;
+
 		Type [] object_arg = { object_type };
 		Type [] boolean_arg = { bool_type };
 		Type [] byte_arg = { byte_type };
