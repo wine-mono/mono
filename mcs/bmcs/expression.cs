@@ -5358,6 +5358,9 @@ namespace Mono.CSharp {
 
 			public Type Type {
 				get {
+					if (ArgType == AType.NoArg)
+						return null;
+
 					if (implicit_byref_type != null)
 						return implicit_byref_type;
 
@@ -5393,8 +5396,15 @@ namespace Mono.CSharp {
 				get { return implicit_byref_type != null && implicit_byref_is_out; }
 			}
 
+			public bool IsOmitted {
+				get { return ArgType == AType.NoArg; }
+			}
+
 			public bool VerifyValueUseAssigned (EmitContext ec, Location loc)
 			{
+				if (IsOmitted)
+					return true;
+
 				if (!deferred_flow_analysis || IsImplicitOut)
 					return true;
 
@@ -5419,6 +5429,9 @@ namespace Mono.CSharp {
 
 	        public static string FullDesc (Argument a)
 			{
+				if (a.IsOmitted)
+					return "<omitted>";
+
 				if (a.ArgType == AType.ArgList)
 					return "__arglist";
 
@@ -5568,6 +5581,9 @@ namespace Mono.CSharp {
 		
 		public bool Resolve (EmitContext ec, Location loc)
 		{
+			if (IsOmitted)
+				return true;
+
 			if (ArgType == AType.Ref) {
 				Expr = Expr.Resolve (ec);
 				if (Expr == null)
@@ -5780,7 +5796,7 @@ namespace Mono.CSharp {
 			}
 		}
 
-		static bool IsOptionalParameter (MethodBase mb, ParameterData pd, int pos)
+		public static bool IsOptionalParameter (MethodBase mb, ParameterData pd, int pos)
 		{
 			if ((pd.ParameterModifier (pos) & Parameter.Modifier.OPTIONAL) != 0)
 				return true;
@@ -5811,7 +5827,7 @@ namespace Mono.CSharp {
 			return count;
 		}
 
-		static bool CanMatchOptionalArgumentCount (MethodBase mb, ParameterData pd, int arg_count)
+		public static bool CanMatchOptionalArgumentCount (MethodBase mb, ParameterData pd, int arg_count)
 		{
 			return arg_count <= pd.Count && arg_count >= GetRequiredParameterCount (mb, pd);
 		}
@@ -5869,6 +5885,46 @@ namespace Mono.CSharp {
 					new TypeExpression (parameter_type, loc), loc).Resolve (ec);
 
 			return NullLiteral.Null;
+		}
+
+		static bool IsOmittedOptionalArgument (MethodBase mb, ParameterData pd, Argument a, int pos)
+		{
+			if (!a.IsOmitted)
+				return false;
+
+			return IsOptionalParameter (mb, pd, pos);
+		}
+
+		public static ArrayList MaterializeOptionalArguments (EmitContext ec, MethodBase mb, ArrayList arguments, Location loc)
+		{
+			// VB permits omitted arguments in positional calls. Keep the omitted
+			// slot inert through overload selection, then replace it with the
+			// parameter's default value once the target member is known.
+			ParameterData pd = GetParameterData (mb);
+
+			if (arguments == null) {
+				if (pd.Count == 0)
+					return null;
+
+				arguments = new ArrayList ();
+			}
+
+			int supplied = arguments.Count < pd.Count ? arguments.Count : pd.Count;
+			for (int i = 0; i < supplied; ++i) {
+				Argument a = (Argument) arguments [i];
+				if (!a.IsOmitted)
+					continue;
+
+				Expression default_value = GetOptionalArgumentValue (ec, mb, pd, i, loc);
+				arguments [i] = new Argument (default_value, Argument.AType.Expression);
+			}
+
+			for (int i = arguments.Count; i < pd.Count; ++i) {
+				Expression default_value = GetOptionalArgumentValue (ec, mb, pd, i, loc);
+				arguments.Add (new Argument (default_value, Argument.AType.Expression));
+			}
+
+			return arguments;
 		}
 
 		/// <summary>
@@ -6039,6 +6095,14 @@ namespace Mono.CSharp {
 
 				if (!ct.Equals (bt))
 					is_equal = false;
+
+				if (a.IsOmitted) {
+					if (!IsOptionalParameter (candidate, candidate_pd, j) ||
+					    !IsOptionalParameter (best, best_pd, j))
+						return false;
+
+					continue;
+				}
 
 				Type better = BetterConversion (ec, a, ct, bt, loc);
 				// for each argument, the conversion to 'ct' should be no worse than 
@@ -6231,6 +6295,8 @@ namespace Mono.CSharp {
 			for (int i = 0; i < fixed_argument_count; ++i) {
 
 				Argument a = (Argument) arguments [i];
+				if (IsOmittedOptionalArgument (candidate, pd, a, i))
+					continue;
 
 				Parameter.Modifier a_mod = a.GetParameterModifier () &
 					(unchecked (~(Parameter.Modifier.OUT | Parameter.Modifier.REF)));
@@ -6271,6 +6337,8 @@ namespace Mono.CSharp {
 
 			for (int i = pd_count - 1; i < arg_count; i++) {
 				Argument a = (Argument) arguments [i];
+				if (a.IsOmitted)
+					return false;
 				
 				if (!Convert.WideningConversionExists (ec, a.Expr, element_type))
 					return false;
@@ -6306,6 +6374,8 @@ namespace Mono.CSharp {
 				i--;
 
 					Argument a = (Argument) arguments [i];
+					if (IsOmittedOptionalArgument (candidate, pd, a, i))
+						continue;
 
 					Parameter.Modifier a_mod = a.GetParameterModifier () &
 						unchecked (~(Parameter.Modifier.OUT | Parameter.Modifier.REF));
@@ -6654,6 +6724,8 @@ namespace Mono.CSharp {
 			
 			for (int j = 0; j < arg_count; j++) {
 				Argument a = (Argument) Arguments [j];
+				if (IsOmittedOptionalArgument (method, pd, a, j))
+					continue;
 				Expression a_expr = a.Expr;
 					Type parameter_type = pd.ParameterType (j);
 					Parameter.Modifier pm = pd.ParameterModifier (j);
@@ -6930,19 +7002,7 @@ namespace Mono.CSharp {
 
 		void AddMissingOptionalArguments (EmitContext ec)
 		{
-			ParameterData pd = GetParameterData (method);
-			int supplied = Arguments != null ? Arguments.Count : 0;
-
-			if (supplied >= pd.Count || !CanMatchOptionalArgumentCount (method, pd, supplied))
-				return;
-
-			if (Arguments == null)
-				Arguments = new ArrayList ();
-
-			for (int i = supplied; i < pd.Count; ++i) {
-				Expression default_value = GetOptionalArgumentValue (ec, method, pd, i, loc);
-				Arguments.Add (new Argument (default_value, Argument.AType.Expression));
-			}
+			Arguments = MaterializeOptionalArguments (ec, method, Arguments, loc);
 		}
 
 		public override Expression DoResolve (EmitContext ec)
@@ -10471,6 +10531,8 @@ namespace Mono.CSharp {
 			if (!Invocation.VerifyArgumentsCompat (ec, arguments, arguments.Count, getter, false, null, false, loc))
 				return null;
 
+			Invocation.MaterializeOptionalArguments (ec, getter, arguments, loc);
+
 			type = property.Type;
 			eclass = ExprClass.PropertyAccess;
 			return this;
@@ -10489,6 +10551,8 @@ namespace Mono.CSharp {
 			set_arguments.Add (new Argument (right_side, Argument.AType.Expression));
 			if (!Invocation.VerifyArgumentsCompat (ec, set_arguments, set_arguments.Count, setter, false, null, false, loc))
 				return null;
+
+			Invocation.MaterializeOptionalArguments (ec, setter, set_arguments, loc);
 
 			type = property.Type;
 			eclass = ExprClass.PropertyAccess;

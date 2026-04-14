@@ -2172,7 +2172,12 @@ namespace Mono.CSharp {
 			if (pd.ParameterModifier (pd_count - 1) != Parameter.Modifier.PARAMS)
 				return false;
 			
-			if (pd_count - 1 > arg_count)
+			int required_fixed_count = pd_count - 1;
+			while (required_fixed_count > 0 &&
+			       Invocation.IsOptionalParameter (method, pd, required_fixed_count - 1))
+				required_fixed_count--;
+
+			if (required_fixed_count > arg_count)
 				return false;
 			
 			if (pd_count == 1 && arg_count == 0)
@@ -2187,9 +2192,12 @@ namespace Mono.CSharp {
 			// less than or equal to the argument count.
 			//
 			for (int i = 0; i < pd_count - 1; ++i) {
+				if (i >= arg_count)
+					continue;
+
 				Argument a = (Argument) arguments [i];
 
-				if ((a.Expr is NullLiteral) || (a.Expr is MethodGroupExpr))
+				if (a.IsOmitted || (a.Expr is NullLiteral) || (a.Expr is MethodGroupExpr))
 					continue;
 
 				Type pt = pd.ParameterType (i);
@@ -2204,7 +2212,7 @@ namespace Mono.CSharp {
 			for (int i = pd_count - 1; i < arg_count; i++) {
 				Argument a = (Argument) arguments [i];
 
-				if ((a.Expr is NullLiteral) || (a.Expr is MethodGroupExpr))
+				if (a.IsOmitted || (a.Expr is NullLiteral) || (a.Expr is MethodGroupExpr))
 					continue;
 
 				if (!InferType (element_type, a.Type, infered_types))
@@ -2256,7 +2264,7 @@ namespace Mono.CSharp {
 				arg_count = 0;
 
 			ParameterData pd = Invocation.GetParameterData (method);
-			if (arg_count != pd.Count)
+			if (!Invocation.CanMatchOptionalArgumentCount (method, pd, arg_count))
 				return false;
 
 			Type[] method_args = method.GetGenericArguments ();
@@ -2276,11 +2284,12 @@ namespace Mono.CSharp {
 			Type[] param_types = new Type [pd.Count];
 			Type[] arg_types = new Type [pd.Count];
 
-			for (int i = 0; i < arg_count; i++) {
+			for (int i = 0; i < pd.Count; i++)
 				param_types [i] = pd.ParameterType (i);
 
+			for (int i = 0; i < arg_count; i++) {
 				Argument a = (Argument) arguments [i];
-				if ((a.Expr is NullLiteral) || (a.Expr is MethodGroupExpr))
+				if (a.IsOmitted || (a.Expr is NullLiteral) || (a.Expr is MethodGroupExpr))
 					continue;
 
 				arg_types [i] = a.Type;
