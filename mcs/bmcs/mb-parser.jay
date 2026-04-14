@@ -6609,7 +6609,12 @@ private void ReportError9998()
 
 public CSharpParser (SeekableStreamReader reader, SourceFile file, ArrayList defines)
 {
-	current_namespace = new NamespaceEntry (null, file, null, Location.Null);
+	string root_namespace = RootContext.RootNamespace;
+	current_namespace = new NamespaceEntry (
+		null,
+		file,
+		(root_namespace != null && root_namespace.Length > 0) ? root_namespace : null,
+		Location.Null);
 	this.name = file.Name;
 	this.file = file;
 	current_container = RootContext.Tree.Types;

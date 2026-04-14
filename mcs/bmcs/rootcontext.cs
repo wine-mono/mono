@@ -144,6 +144,12 @@ namespace Mono.CSharp {
 		static public bool StricterTypeChecking = false;
 
 		//
+		// Optional project-level root namespace. When set, all top-level
+		// declarations in a source file live underneath this namespace.
+		//
+		static public string RootNamespace = "";
+
+		//
 		// The default character comparison mode
 		//
 
@@ -723,4 +729,3 @@ namespace Mono.CSharp {
 	}
 }
 	      
-

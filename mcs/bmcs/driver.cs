@@ -925,6 +925,15 @@ namespace Mono.CSharp
 				}
 				
 				return true;
+
+			case "--rootnamespace":
+				if ((i + 1) >= args.Length){
+					Usage ();
+					Environment.Exit (1);
+				}
+
+				RootContext.RootNamespace = args [++i];
+				return true;
 				
 			}
 
@@ -1262,6 +1271,14 @@ namespace Mono.CSharp
 					Environment.Exit (1);
 				}
 				RootContext.MainClass = value;
+				return true;
+
+			case "/rootnamespace":
+				if (value == ""){
+					Report.Error (5, arg + " requires an argument");
+					Environment.Exit (1);
+				}
+				RootContext.RootNamespace = value;
 				return true;
 
 			case "/nostdlib":

@@ -352,8 +352,19 @@ namespace Mono.CSharp {
 
 		public NamespaceEntry ImplicitParent {
 			get {
-				if (parent == null)
-					return null;
+				if (parent == null) {
+					if (ns == null || ns.Parent == null)
+						return null;
+
+					// Files parsed under a VB project root namespace still need
+					// lookup fallback to the global namespace.  Without this,
+					// simple names like `Microsoft' or explicit `vbnc.Foo' only
+					// search inside the rooted namespace entry and never reach
+					// Namespace.Root.
+					if (implicit_parent == null)
+						implicit_parent = new NamespaceEntry (null, file, ns.Parent);
+					return implicit_parent;
+				}
 				if (implicit_parent == null) {
 					implicit_parent = (parent.NS == ns.Parent)
 						? parent
