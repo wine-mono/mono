@@ -6951,7 +6951,12 @@ namespace Mono.CSharp {
 			if (cmi == null || arguments == null || arguments.Count != 1)
 				return null;
 
-			if (cmi.DeclaringType != TypeManager.msvb_strings_type ||
+			// When bootstrapping Microsoft.VisualBasic itself, Strings.Chr/ChrW
+			// come from the in-progress source type, not the already-loaded
+			// runtime type object. Match by the canonical full name so the
+			// const-expression fold works in both cases.
+			if (cmi.DeclaringType == null ||
+			    cmi.DeclaringType.FullName != "Microsoft.VisualBasic.Strings" ||
 			    cmi.ReturnType != TypeManager.char_type)
 				return null;
 
