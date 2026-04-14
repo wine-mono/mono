@@ -975,6 +975,12 @@ namespace Mono.CSharp
 					return Token.HASH;
 				} 
 			case '&':
+				/*
+				 * Compound concatenation must win over the legacy long type
+				 * character. Otherwise `x &= y` is tokenized as `x& = y`.
+				 */
+				if (d == '=')
+					return Token.OP_CONCAT;
 				if (!cant_have_a_type_character)
 					return Token.LONGTYPECHAR;
 				t = handle_integer_literal_in_other_bases(d);
