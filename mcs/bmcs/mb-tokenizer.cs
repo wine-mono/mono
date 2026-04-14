@@ -114,6 +114,467 @@ namespace Mono.CSharp
 		StringBuilder number;
 		int putback_char = -1;
 		Object val;
+
+		sealed class PreprocessorIfFrame
+		{
+			public readonly bool ParentActive;
+			public bool BranchActive;
+			public bool AnyTaken;
+			public bool SeenElse;
+
+			public PreprocessorIfFrame (bool parentActive, bool branchActive)
+			{
+				ParentActive = parentActive;
+				BranchActive = branchActive;
+				AnyTaken = branchActive;
+				SeenElse = false;
+			}
+		}
+
+		sealed class PreprocessorExpressionParser
+		{
+			enum TokenKind
+			{
+				End,
+				Identifier,
+				String,
+				Number,
+				True,
+				False,
+				Not,
+				And,
+				AndAlso,
+				Or,
+				OrElse,
+				Xor,
+				OpenParen,
+				CloseParen,
+				Equals,
+				NotEquals,
+				Less,
+				LessOrEquals,
+				Greater,
+				GreaterOrEquals,
+				Plus,
+				Minus,
+				Then,
+				Error
+			}
+
+			readonly string text;
+			readonly Hashtable symbols;
+			readonly Tokenizer tokenizer;
+			readonly Location loc;
+			int pos;
+			TokenKind token;
+			object token_value;
+			string token_text;
+
+			public PreprocessorExpressionParser (Tokenizer tokenizer, string text, Hashtable symbols, Location loc)
+			{
+				this.tokenizer = tokenizer;
+				this.text = text;
+				this.symbols = symbols;
+				this.loc = loc;
+				NextToken ();
+			}
+
+			public object ParseExpression (bool allow_then)
+			{
+				object value = ParseXorExpression ();
+				if (allow_then && token == TokenKind.Then)
+					NextToken ();
+
+				if (token != TokenKind.End)
+					Error (30201, "Expression expected.");
+
+				return value;
+			}
+
+			void NextToken ()
+			{
+				SkipWhitespace ();
+				token_value = null;
+				token_text = null;
+
+				if (pos >= text.Length) {
+					token = TokenKind.End;
+					return;
+				}
+
+				char c = text [pos];
+				switch (c) {
+				case '(':
+					pos++;
+					token = TokenKind.OpenParen;
+					return;
+				case ')':
+					pos++;
+					token = TokenKind.CloseParen;
+					return;
+				case '+':
+					pos++;
+					token = TokenKind.Plus;
+					return;
+				case '-':
+					pos++;
+					token = TokenKind.Minus;
+					return;
+				case '=':
+					pos++;
+					token = TokenKind.Equals;
+					return;
+				case '<':
+					pos++;
+					if (pos < text.Length) {
+						if (text [pos] == '=') {
+							pos++;
+							token = TokenKind.LessOrEquals;
+							return;
+						}
+
+						if (text [pos] == '>') {
+							pos++;
+							token = TokenKind.NotEquals;
+							return;
+						}
+					}
+
+					token = TokenKind.Less;
+					return;
+				case '>':
+					pos++;
+					if (pos < text.Length && text [pos] == '=') {
+						pos++;
+						token = TokenKind.GreaterOrEquals;
+						return;
+					}
+
+					token = TokenKind.Greater;
+					return;
+				case '"':
+					token = TokenKind.String;
+					token_value = ReadStringLiteral ();
+					return;
+				}
+
+				if (Char.IsDigit (c) || (c == '.' && pos + 1 < text.Length && Char.IsDigit (text [pos + 1]))) {
+					token = TokenKind.Number;
+					token_value = ReadNumberLiteral ();
+					return;
+				}
+
+				if (Tokenizer.is_identifier_start_character (c)) {
+					string ident = ReadIdentifier ();
+					token_text = ident;
+					switch (ident.ToLower ()) {
+					case "true":
+						token = TokenKind.True;
+						token_value = true;
+						return;
+					case "false":
+						token = TokenKind.False;
+						token_value = false;
+						return;
+					case "not":
+						token = TokenKind.Not;
+						return;
+					case "and":
+						token = TokenKind.And;
+						return;
+					case "andalso":
+						token = TokenKind.AndAlso;
+						return;
+					case "or":
+						token = TokenKind.Or;
+						return;
+					case "orelse":
+						token = TokenKind.OrElse;
+						return;
+					case "xor":
+						token = TokenKind.Xor;
+						return;
+					case "then":
+						token = TokenKind.Then;
+						return;
+					default:
+						token = TokenKind.Identifier;
+						return;
+					}
+				}
+
+				token = TokenKind.Error;
+				Error (30201, "Expression expected.");
+			}
+
+			void SkipWhitespace ()
+			{
+				while (pos < text.Length && Char.IsWhiteSpace (text [pos]))
+					pos++;
+			}
+
+			string ReadIdentifier ()
+			{
+				int start = pos;
+				pos++;
+				while (pos < text.Length && Tokenizer.is_identifier_part_character (text [pos]))
+					pos++;
+				return text.Substring (start, pos - start);
+			}
+
+			object ReadStringLiteral ()
+			{
+				StringBuilder sb = new StringBuilder ();
+				pos++;
+				while (pos < text.Length) {
+					char c = text [pos++];
+					if (c == '"') {
+						if (pos < text.Length && text [pos] == '"') {
+							sb.Append ('"');
+							pos++;
+							continue;
+						}
+
+						return sb.ToString ();
+					}
+
+					sb.Append (c);
+				}
+
+				Error (30201, "Expression expected.");
+				return String.Empty;
+			}
+
+			object ReadNumberLiteral ()
+			{
+				int start = pos;
+				bool seen_decimal = false;
+				while (pos < text.Length) {
+					char c = text [pos];
+					if (Char.IsDigit (c)) {
+						pos++;
+						continue;
+					}
+
+					if (c == '.' && !seen_decimal) {
+						seen_decimal = true;
+						pos++;
+						continue;
+					}
+
+					break;
+				}
+
+				return Double.Parse (text.Substring (start, pos - start), NumberStyles.Any, CultureInfo.InvariantCulture);
+			}
+
+			object ParseXorExpression ()
+			{
+				object left = ParseOrExpression ();
+				while (token == TokenKind.Xor) {
+					NextToken ();
+					left = ToBoolean (left) ^ ToBoolean (ParseOrExpression ());
+				}
+
+				return left;
+			}
+
+			object ParseOrExpression ()
+			{
+				object left = ParseAndExpression ();
+				while (token == TokenKind.Or || token == TokenKind.OrElse) {
+					NextToken ();
+					left = ToBoolean (left) || ToBoolean (ParseAndExpression ());
+				}
+
+				return left;
+			}
+
+			object ParseAndExpression ()
+			{
+				object left = ParseNotExpression ();
+				while (token == TokenKind.And || token == TokenKind.AndAlso) {
+					NextToken ();
+					left = ToBoolean (left) && ToBoolean (ParseNotExpression ());
+				}
+
+				return left;
+			}
+
+			object ParseNotExpression ()
+			{
+				if (token == TokenKind.Not) {
+					NextToken ();
+					return !ToBoolean (ParseNotExpression ());
+				}
+
+				return ParseComparisonExpression ();
+			}
+
+			object ParseComparisonExpression ()
+			{
+				object left = ParseUnaryExpression ();
+				TokenKind op = token;
+				switch (op) {
+				case TokenKind.Equals:
+				case TokenKind.NotEquals:
+				case TokenKind.Less:
+				case TokenKind.LessOrEquals:
+				case TokenKind.Greater:
+				case TokenKind.GreaterOrEquals:
+					NextToken ();
+					return Compare (left, ParseUnaryExpression (), op);
+				default:
+					return left;
+				}
+			}
+
+			object ParseUnaryExpression ()
+			{
+				if (token == TokenKind.Plus) {
+					NextToken ();
+					return ToNumber (ParseUnaryExpression ());
+				}
+
+				if (token == TokenKind.Minus) {
+					NextToken ();
+					return -ToNumber (ParseUnaryExpression ());
+				}
+
+				return ParsePrimaryExpression ();
+			}
+
+			object ParsePrimaryExpression ()
+			{
+				object value;
+				switch (token) {
+				case TokenKind.Identifier:
+					string name = token_text;
+					NextToken ();
+					if (symbols.ContainsKey (name))
+						return symbols [name];
+					return false;
+				case TokenKind.String:
+				case TokenKind.Number:
+				case TokenKind.True:
+				case TokenKind.False:
+					value = token_value;
+					NextToken ();
+					return value;
+				case TokenKind.OpenParen:
+					NextToken ();
+					value = ParseXorExpression ();
+					if (token != TokenKind.CloseParen)
+						Error (30201, "Expression expected.");
+					NextToken ();
+					return value;
+				default:
+					Error (30201, "Expression expected.");
+					return false;
+				}
+			}
+
+			bool Compare (object left, object right, TokenKind op)
+			{
+				if (left is string || right is string) {
+					string lhs = ToStringValue (left);
+					string rhs = ToStringValue (right);
+					int cmp = String.CompareOrdinal (lhs, rhs);
+					switch (op) {
+					case TokenKind.Equals:
+						return cmp == 0;
+					case TokenKind.NotEquals:
+						return cmp != 0;
+					case TokenKind.Less:
+						return cmp < 0;
+					case TokenKind.LessOrEquals:
+						return cmp <= 0;
+					case TokenKind.Greater:
+						return cmp > 0;
+					case TokenKind.GreaterOrEquals:
+						return cmp >= 0;
+					}
+				}
+
+				double lhs_num = ToNumber (left);
+				double rhs_num = ToNumber (right);
+				switch (op) {
+				case TokenKind.Equals:
+					return lhs_num == rhs_num;
+				case TokenKind.NotEquals:
+					return lhs_num != rhs_num;
+				case TokenKind.Less:
+					return lhs_num < rhs_num;
+				case TokenKind.LessOrEquals:
+					return lhs_num <= rhs_num;
+				case TokenKind.Greater:
+					return lhs_num > rhs_num;
+				case TokenKind.GreaterOrEquals:
+					return lhs_num >= rhs_num;
+				default:
+					return false;
+				}
+			}
+
+			static bool ToBoolean (object value)
+			{
+				if (value is bool)
+					return (bool) value;
+
+				if (value is string)
+					return ((string) value).Length != 0;
+
+				return ToNumber (value) != 0;
+			}
+
+			static double ToNumber (object value)
+			{
+				if (value is bool)
+					return (bool) value ? -1 : 0;
+
+				if (value is double)
+					return (double) value;
+
+				if (value is int)
+					return (int) value;
+
+				if (value is long)
+					return (long) value;
+
+				if (value is string) {
+					double parsed;
+					if (Double.TryParse ((string) value, NumberStyles.Any, CultureInfo.InvariantCulture, out parsed))
+						return parsed;
+				}
+
+				return 0;
+			}
+
+			static string ToStringValue (object value)
+			{
+				if (value == null)
+					return String.Empty;
+
+				if (value is bool)
+					return (bool) value ? "True" : "False";
+
+				if (value is double)
+					return ((double) value).ToString (CultureInfo.InvariantCulture);
+
+				return value.ToString ();
+			}
+
+			void Error (int code, string message)
+			{
+				Report.Error (code, loc, message);
+				throw new ApplicationException (message);
+			}
+		}
+
+		Hashtable pp_symbols = new Hashtable (StringComparer.OrdinalIgnoreCase);
+		ArrayList pp_if_stack = new ArrayList ();
+		int pp_region_depth = 0;
+		bool pp_external_source = false;
 		
 		//
 		// Details about the error encoutered by the tokenizer
@@ -125,28 +586,6 @@ namespace Mono.CSharp
 				return error_details;
 			}
 		}
-
-// 		public string Source {
-// 			get {
-// 				return file_name;
-// 			}
-
-// 			set {
-// 				file_name = value;
-// 				ref_name = value;
-// 				//Location.SetCurrentSource(file_name);
-// 			}
-// 		}
-
-// 		public string EffectiveSource {
-// 			get {
-// 				return ref_name;
-// 			}
-// 			set {
-// 				ref_name = value;
-// 				//Location.SetCurrentSource(ref_name);
-// 			}
-// 		}
 
 		public int Line {
 			get {
@@ -356,9 +795,64 @@ namespace Mono.CSharp
 
 			reader = input;
 
+			SeedPreprocessorSymbols (defines);
+
 			// putback an EOL at the beginning of a stream. This is a convenience that 
 			// allows pre-processor directives to be added to the beginning of a vb file.
 			putback('\n');
+		}
+
+		void SeedPreprocessorSymbols (ArrayList defines)
+		{
+			if (defines == null)
+				return;
+
+			foreach (string raw_define in defines) {
+				if (raw_define == null)
+					continue;
+
+				string define = raw_define.Trim ();
+				if (define.Length == 0)
+					continue;
+
+				int equals = define.IndexOf ('=');
+				if (equals < 0) {
+					pp_symbols [define] = true;
+					continue;
+				}
+
+				string name = define.Substring (0, equals).Trim ();
+				string value = define.Substring (equals + 1).Trim ();
+				if (!IsValidIdentifier (name))
+					continue;
+
+				pp_symbols [name] = ParseDefinedConstantValue (value);
+			}
+		}
+
+		object ParseDefinedConstantValue (string text)
+		{
+			if (text == null || text.Length == 0)
+				return true;
+
+			if (text.Length >= 2 && text [0] == '"' && text [text.Length - 1] == '"') {
+				string inner = text.Substring (1, text.Length - 2);
+				inner = inner.Replace ("\\\"", "\"");
+				inner = inner.Replace ("\"\"", "\"");
+				return inner;
+			}
+
+			if (String.Compare (text, "True", true, CultureInfo.InvariantCulture) == 0)
+				return true;
+
+			if (String.Compare (text, "False", true, CultureInfo.InvariantCulture) == 0)
+				return false;
+
+			double parsed;
+			if (Double.TryParse (text, NumberStyles.Any, CultureInfo.InvariantCulture, out parsed))
+				return parsed;
+
+			return text;
 		}
 
 		bool is_keyword (string name)
@@ -379,6 +873,7 @@ namespace Mono.CSharp
 		
 		public Location Location {
 			get {
+				Location.Push (ref_name);
 				return new Location (ref_line);
 			}
 		}
@@ -990,6 +1485,450 @@ namespace Mono.CSharp
 		int pending_token = 0;
 		object pending_val = null;
 
+		bool IsPreprocessorSkipping ()
+		{
+			if (pp_if_stack.Count == 0)
+				return false;
+
+			return !((PreprocessorIfFrame) pp_if_stack [pp_if_stack.Count - 1]).BranchActive;
+		}
+
+		string ReadPhysicalDirectiveLine ()
+		{
+			StringBuilder sb = new StringBuilder ();
+			int c;
+			while (!IsEOL (c = getChar ())) {
+				sb.Append ((char) c);
+				col++;
+			}
+
+			return sb.ToString ();
+		}
+
+		static string StripDirectiveComment (string line)
+		{
+			bool in_string = false;
+			StringBuilder sb = new StringBuilder ();
+			for (int i = 0; i < line.Length; ++i) {
+				char c = line [i];
+				if (c == '"') {
+					if (in_string && i + 1 < line.Length && line [i + 1] == '"') {
+						sb.Append ("\"\"");
+						i++;
+						continue;
+					}
+
+					in_string = !in_string;
+					sb.Append (c);
+					continue;
+				}
+
+				if (!in_string && c == '\'')
+					break;
+
+				sb.Append (c);
+			}
+
+			return sb.ToString ();
+		}
+
+		string ReadDirectiveText ()
+		{
+			StringBuilder sb = new StringBuilder ();
+			for (;;) {
+				string physical = StripDirectiveComment (ReadPhysicalDirectiveLine ());
+				string trimmed = physical.TrimEnd ();
+				if (trimmed.EndsWith ("_")) {
+					sb.Append (trimmed.Substring (0, trimmed.Length - 1));
+					sb.Append (' ');
+					continue;
+				}
+
+				sb.Append (physical);
+				return sb.ToString ().Trim ();
+			}
+		}
+
+		static void SkipWhitespace (string text, ref int pos)
+		{
+			while (pos < text.Length && Char.IsWhiteSpace (text [pos]))
+				pos++;
+		}
+
+		static string ReadDirectiveKeyword (string text, ref int pos)
+		{
+			SkipWhitespace (text, ref pos);
+			int start = pos;
+			while (pos < text.Length && is_identifier_part_character (text [pos]))
+				pos++;
+
+			if (start == pos)
+				return null;
+
+			return text.Substring (start, pos - start);
+		}
+
+		static bool TryReadDirectiveStringLiteral (string text, ref int pos, out string value)
+		{
+			value = null;
+			SkipWhitespace (text, ref pos);
+			if (pos >= text.Length || text [pos] != '"')
+				return false;
+
+			StringBuilder sb = new StringBuilder ();
+			pos++;
+			while (pos < text.Length) {
+				char c = text [pos++];
+				if (c == '"') {
+					if (pos < text.Length && text [pos] == '"') {
+						sb.Append ('"');
+						pos++;
+						continue;
+					}
+
+					value = sb.ToString ();
+					return true;
+				}
+
+				sb.Append (c);
+			}
+
+			return false;
+		}
+
+		static bool TryReadDirectiveIntegerLiteral (string text, ref int pos, out int value)
+		{
+			value = 0;
+			SkipWhitespace (text, ref pos);
+			int start = pos;
+			if (pos < text.Length && (text [pos] == '+' || text [pos] == '-'))
+				pos++;
+
+			while (pos < text.Length && Char.IsDigit (text [pos]))
+				pos++;
+
+			if (start == pos || (start + 1 == pos && (text [start] == '+' || text [start] == '-')))
+				return false;
+
+			return Int32.TryParse (text.Substring (start, pos - start), out value);
+		}
+
+		bool HandlePreprocessorDirective ()
+		{
+			Location directive_location = Location;
+			string text = ReadDirectiveText ();
+			int pos = 0;
+			string keyword = ReadDirectiveKeyword (text, ref pos);
+			if (keyword == null) {
+				Report.Error (30203, directive_location, "Identifier expected.");
+				return true;
+			}
+
+			string lower_keyword = keyword.ToLower ();
+			switch (lower_keyword) {
+			case "if":
+				HandlePreprocessorIf (directive_location, text.Substring (pos));
+				return true;
+			case "elseif":
+				HandlePreprocessorElseIf (directive_location, text.Substring (pos));
+				return true;
+			case "else":
+				HandlePreprocessorElse (directive_location, text.Substring (pos));
+				return true;
+			case "endif":
+				SkipWhitespace (text, ref pos);
+				if (pos != text.Length)
+					Report.Error (29999, directive_location, "Unrecognized Pre-Processor statement");
+				HandlePreprocessorEndIf (directive_location);
+				return true;
+			}
+
+			if (lower_keyword == "end") {
+				int end_pos = pos;
+				string end_keyword = ReadDirectiveKeyword (text, ref end_pos);
+				if (end_keyword != null && end_keyword.ToLower () == "if") {
+					HandlePreprocessorEndDirective (directive_location, text, ref pos);
+					return true;
+				}
+			}
+
+			if (IsPreprocessorSkipping ())
+				return true;
+
+			switch (lower_keyword) {
+			case "end":
+				HandlePreprocessorEndDirective (directive_location, text, ref pos);
+				return true;
+			case "const":
+				HandlePreprocessorConst (directive_location, text, ref pos);
+				return true;
+			case "region":
+				HandlePreprocessorRegion (directive_location, text, ref pos);
+				return true;
+			case "externalsource":
+				HandleExternalSourceDirective (directive_location, text.Substring (pos));
+				return true;
+			default:
+				Report.Error (29999, directive_location, "Unrecognized Pre-Processor statement");
+				return true;
+			}
+		}
+
+		void HandlePreprocessorIf (Location loc, string expression_text)
+		{
+			bool parent_active = pp_if_stack.Count == 0 || ((PreprocessorIfFrame) pp_if_stack [pp_if_stack.Count - 1]).BranchActive;
+			bool branch_active = false;
+			try {
+				object condition = new PreprocessorExpressionParser (this, expression_text, pp_symbols, loc).ParseExpression (true);
+				branch_active = parent_active && ToPreprocessorBoolean (condition);
+			} catch (ApplicationException) {
+				branch_active = false;
+			}
+
+			pp_if_stack.Add (new PreprocessorIfFrame (parent_active, branch_active));
+		}
+
+		void HandlePreprocessorRegion (Location loc, string text, ref int pos)
+		{
+			string region_name;
+			if (!TryReadDirectiveStringLiteral (text, ref pos, out region_name)) {
+				Report.Error (30217, loc, "String constant expected.");
+				return;
+			}
+
+			SkipWhitespace (text, ref pos);
+			if (pos != text.Length) {
+				Report.Error (29999, loc, "Unrecognized Pre-Processor statement");
+				return;
+			}
+
+			pp_region_depth++;
+		}
+
+		void HandlePreprocessorElseIf (Location loc, string expression_text)
+		{
+			if (pp_if_stack.Count == 0) {
+				Report.Error (30014, loc, "#ElseIf must be preceded by a matching #If or #ElseIf");
+				return;
+			}
+
+			PreprocessorIfFrame frame = (PreprocessorIfFrame) pp_if_stack [pp_if_stack.Count - 1];
+			if (frame.SeenElse) {
+				Report.Error (32030, loc, "#ElseIf cannot follow #Else as part of #If block");
+				frame.BranchActive = false;
+				return;
+			}
+
+			if (!frame.ParentActive || frame.AnyTaken) {
+				frame.BranchActive = false;
+				return;
+			}
+
+			try {
+				object condition = new PreprocessorExpressionParser (this, expression_text, pp_symbols, loc).ParseExpression (true);
+				frame.BranchActive = ToPreprocessorBoolean (condition);
+				frame.AnyTaken = frame.BranchActive;
+			} catch (ApplicationException) {
+				frame.BranchActive = false;
+			}
+		}
+
+		void HandlePreprocessorElse (Location loc, string trailing_text)
+		{
+			if (pp_if_stack.Count == 0) {
+				Report.Error (30028, loc, "#Else must be preceded by a matching #If or #ElseIf");
+				return;
+			}
+
+			if (trailing_text.Trim ().Length != 0)
+				Report.Error (29999, loc, "Unrecognized Pre-Processor statement");
+
+			PreprocessorIfFrame frame = (PreprocessorIfFrame) pp_if_stack [pp_if_stack.Count - 1];
+			if (frame.SeenElse) {
+				Report.Error (30028, loc, "#Else must be preceded by a matching #If or #ElseIf");
+				frame.BranchActive = false;
+				return;
+			}
+
+			frame.SeenElse = true;
+			frame.BranchActive = frame.ParentActive && !frame.AnyTaken;
+			frame.AnyTaken = frame.AnyTaken || frame.BranchActive;
+		}
+
+		void HandlePreprocessorEndIf (Location loc)
+		{
+			if (pp_if_stack.Count == 0) {
+				Report.Error (30013, loc, "#ElseIf, #Else or #End If must be preceded by a matching #If");
+				return;
+			}
+
+			pp_if_stack.RemoveAt (pp_if_stack.Count - 1);
+		}
+
+		void HandlePreprocessorEndDirective (Location loc, string text, ref int pos)
+		{
+			string keyword = ReadDirectiveKeyword (text, ref pos);
+			if (keyword == null) {
+				Report.Error (29999, loc, "Unrecognized Pre-Processor statement");
+				return;
+			}
+
+			switch (keyword.ToLower ()) {
+			case "if":
+				SkipWhitespace (text, ref pos);
+				if (pos != text.Length) {
+					Report.Error (29999, loc, "Unrecognized Pre-Processor statement");
+					return;
+				}
+				HandlePreprocessorEndIf (loc);
+				return;
+			case "region":
+				SkipWhitespace (text, ref pos);
+				if (pos != text.Length) {
+					Report.Error (29999, loc, "Unrecognized Pre-Processor statement");
+					return;
+				}
+				if (pp_region_depth > 0)
+					pp_region_depth--;
+				else
+					Report.Error (30205, loc, "'#End Region' must be preceded  by a matching '#Region'");
+				return;
+			case "externalsource":
+				if (!pp_external_source)
+					Report.Error (30578, loc, "'#End ExternalSource' must be preceded by a matching '#ExternalSource'");
+				else {
+					pp_external_source = false;
+					ref_name = file_name;
+					ref_line = line;
+					Location.Push (ref_name);
+				}
+
+				SkipWhitespace (text, ref pos);
+				if (pos != text.Length)
+					Report.Error (29999, loc, "Unrecognized Pre-Processor statement");
+				return;
+			default:
+				Report.Error (29999, loc, "Unrecognized Pre-Processor statement");
+				return;
+			}
+		}
+
+		void HandleExternalSourceDirective (Location loc, string trailing_text)
+		{
+			if (pp_external_source) {
+				Report.Error (30580, loc, "#ExternalSource directives may not be nested");
+				return;
+			}
+
+			int pos = 0;
+			SkipWhitespace (trailing_text, ref pos);
+			if (pos >= trailing_text.Length || trailing_text [pos] != '(') {
+				Report.Error (29999, loc, "Unrecognized Pre-Processor statement");
+				return;
+			}
+
+			pos++;
+
+			string mapped_name;
+			if (!TryReadDirectiveStringLiteral (trailing_text, ref pos, out mapped_name)) {
+				Report.Error (30217, loc, "String constant expected.");
+				return;
+			}
+
+			SkipWhitespace (trailing_text, ref pos);
+			if (pos >= trailing_text.Length || trailing_text [pos] != ',') {
+				Report.Error (29999, loc, "Unrecognized Pre-Processor statement");
+				return;
+			}
+
+			pos++;
+
+			int mapped_line;
+			if (!TryReadDirectiveIntegerLiteral (trailing_text, ref pos, out mapped_line)) {
+				Report.Error (29999, loc, "Unrecognized Pre-Processor statement");
+				return;
+			}
+
+			SkipWhitespace (trailing_text, ref pos);
+			if (pos >= trailing_text.Length || trailing_text [pos] != ')') {
+				Report.Error (29999, loc, "Unrecognized Pre-Processor statement");
+				return;
+			}
+
+			pos++;
+			SkipWhitespace (trailing_text, ref pos);
+			if (pos != trailing_text.Length) {
+				Report.Error (29999, loc, "Unrecognized Pre-Processor statement");
+				return;
+			}
+
+			ref_name = Location.LookupFile (mapped_name);
+			file_name.HasLineDirective = true;
+			ref_name.HasLineDirective = true;
+			// ReadDirectiveText consumes the directive line's terminating EOL
+			// before we process the directive, but the next source line must
+			// still map to the directive's declared starting line.
+			ref_line = mapped_line;
+			Location.Push (ref_name);
+			pp_external_source = true;
+		}
+
+		void HandlePreprocessorConst (Location loc, string text, ref int pos)
+		{
+			string name = ReadDirectiveKeyword (text, ref pos);
+			if (name == null) {
+				Report.Error (30203, loc, "Identifier expected.");
+				return;
+			}
+
+			SkipWhitespace (text, ref pos);
+			if (pos >= text.Length || text [pos] != '=') {
+				Report.Error (30249, loc, "'=' expected.");
+				return;
+			}
+
+			pos++;
+			if (IsPreprocessorSkipping ())
+				return;
+
+			try {
+				object value = new PreprocessorExpressionParser (this, text.Substring (pos), pp_symbols, loc).ParseExpression (false);
+				pp_symbols [name] = value;
+			} catch (ApplicationException) {
+			}
+		}
+
+		static bool ToPreprocessorBoolean (object value)
+		{
+			if (value is bool)
+				return (bool) value;
+
+			if (value is string)
+				return ((string) value).Length != 0;
+
+			if (value is double)
+				return (double) value != 0;
+
+			if (value is int)
+				return (int) value != 0;
+
+			if (value is long)
+				return (long) value != 0;
+
+			return value != null;
+		}
+
+		void SkipInactiveLine ()
+		{
+			while (current_token != Token.EOL &&
+			       current_token != Token.EOF &&
+			       current_token != 0) {
+				current_token = xtoken ();
+				if (current_token == Token.REM)
+					current_token = DropComments ();
+			}
+		}
+
 		public int token ()
 		{
 			if (pending_token != 0) {
@@ -1001,6 +1940,7 @@ namespace Mono.CSharp
 			}
 
 			int lastToken = current_token;
+		restart:
 			do
 			{
 				current_token = xtoken ();
@@ -1009,6 +1949,21 @@ namespace Mono.CSharp
 				if (current_token == Token.REM)
 					current_token = DropComments();
 			} while (lastToken == Token.EOL && current_token == Token.EOL);
+
+			if (current_token == Token.HASH) {
+				HandlePreprocessorDirective ();
+				lastToken = Token.EOL;
+				goto restart;
+			}
+
+			if (IsPreprocessorSkipping () && current_token != Token.EOF) {
+				SkipInactiveLine ();
+				if (current_token == Token.EOF || current_token == 0)
+					return Token.EOF;
+
+				lastToken = Token.EOL;
+				goto restart;
+			}
 
 			// Merge "( Of" into OPEN_PARENS_OF only when the Of token
 			// is on the same logical line. VB generic type-argument and
@@ -1152,6 +2107,14 @@ namespace Mono.CSharp
 				// Handle line continuation character
 				if (c == '_') 
 				{
+					// Conditional compilation skips inactive text after tokenization
+					// decides which branch is active.  Inactive lines must not be
+					// allowed to continue onto the next physical line first.
+					if (IsPreprocessorSkipping ()) {
+						error_details = "_";
+						return Token.ERROR;
+					}
+
 					int d = peekChar();
 					if (!is_identifier_part_character((char)d)) {
 						while ((c = getChar ()) != -1 && !IsEOL(c)) {}
@@ -1451,24 +2414,22 @@ namespace Mono.CSharp
 			return retval;
 		}
  
-		public void PositionCursorAtNextPreProcessorDirective()
-		{
-			int t;
-			
-			for(t = token(); t != Token.HASH && t != Token.EOF; t = token());
-
-			if(t == Token.EOF)
-				throw new ApplicationException("Unexpected EOF while looking for a pre-processor directive");
-			
-			if(t == Token.HASH) {
-				tokens_seen = false;
-				putback('#');
-			}
-		}
-
 		public void cleanup ()
 		{
-			// FIXME;
+			if (pp_if_stack.Count > 0) {
+				Report.Error (30012, Location, "#If must end with a matching #End If");
+				pp_if_stack.Clear ();
+			}
+
+			if (pp_external_source) {
+				Report.Error (30579, Location, "'#ExternalSource' directives must end with matching '#End ExternalSource'");
+				pp_external_source = false;
+			}
+
+			if (pp_region_depth > 0) {
+				Report.Error (30205, Location, "'#Region' directive must be followed by a matching '#End Region'");
+				pp_region_depth = 0;
+			}
 		}
 
 		public static void Cleanup () 
