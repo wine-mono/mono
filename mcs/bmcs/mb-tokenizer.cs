@@ -1936,13 +1936,24 @@ namespace Mono.CSharp
 
 		void SkipInactiveLine ()
 		{
-			while (current_token != Token.EOL &&
-			       current_token != Token.EOF &&
-			       current_token != 0) {
-				current_token = xtoken ();
-				if (current_token == Token.REM)
-					current_token = DropComments ();
+			// Once a branch is known to be inactive, the rest of the physical
+			// line must be discarded as raw text. Tokenizing it further can run
+			// label detection or leave a queued token (for example from `X: Y`
+			// or `name:=value`) that corrupts the next active line.
+			pending_token = 0;
+			pending_val = null;
+
+			int c;
+			while ((c = getChar ()) != -1) {
+				if (IsEOL (c)) {
+					current_token = Token.EOL;
+					return;
+				}
+
+				col++;
 			}
+
+			current_token = Token.EOF;
 		}
 
 		public int token ()
