@@ -3315,6 +3315,15 @@ namespace Mono.CSharp {
 			}
 		}
 
+		// mono-basic's vbruntime and vbnc tests use empty-body DllImport
+		// declarations in place of C#'s `extern`, and vbnc only rejects the
+		// attribute when the body is non-empty. We must remember whether the
+		// source body contained any user statements because an empty Function
+		// body grows implicit return-variable initialization and the final
+		// Return before attributes are emitted, so late block-shape checks are
+		// no longer enough to recognize the original empty-body declaration.
+		public bool IsEmptyDeclarationBody;
+
 		protected override bool CheckBase ()
 		{
 			if (!base.CheckBase ())
@@ -4001,9 +4010,19 @@ namespace Mono.CSharp {
 			}
 
 			if (a.Type == TypeManager.dllimport_type) {
-				const int extern_static = Modifiers.EXTERN | Modifiers.STATIC;
-				if ((ModFlags & extern_static) != extern_static) {
+				bool bodyless_dllimport = (Block != null) &&
+					(Block.statements != null) &&
+					(Block.statements.Count == 0);
+
+				if ((ModFlags & Modifiers.STATIC) == 0 ||
+				    (((ModFlags & Modifiers.EXTERN) == 0) && !bodyless_dllimport)) {
 					Report.Error (601, a.Location, "The DllImport attribute must be specified on a method marked `static' and `extern'");
+				} else if (bodyless_dllimport) {
+					// VB permits bodyless Shared methods with DllImport where the
+					// empty declaration stands in for C#'s `extern`. Normalize to
+					// the existing extern/PInvoke emission path here.
+					ModFlags |= Modifiers.EXTERN;
+					Block = null;
 				}
 
 				return;
@@ -5305,6 +5324,26 @@ namespace Mono.CSharp {
 		void DefineMethodBuilder (EmitContext ec, TypeContainer container, string method_name, Type[] ParameterTypes)
 		{
 			const int extern_static = Modifiers.EXTERN | Modifiers.STATIC;
+
+			MethodCore mc = method as MethodCore;
+			if (mc != null &&
+			    mc.IsEmptyDeclarationBody &&
+			    (modifiers & Modifiers.STATIC) != 0 &&
+			    (modifiers & Modifiers.EXTERN) == 0 &&
+			    method.OptAttributes != null) {
+				Attribute dllimport_attribute = method.OptAttributes.Search (TypeManager.dllimport_type, ec);
+				if (dllimport_attribute != null) {
+					// Match mono-basic's empty-body DllImport behavior by
+					// normalizing it to the existing extern/PInvoke path before
+					// builder selection. This has to happen here, not in
+					// ApplyAttributeBuilder(), because builder selection has
+					// already decided whether to emit a normal method or a
+					// P/Invoke stub by then.
+					modifiers |= Modifiers.EXTERN;
+					member.ModFlags |= Modifiers.EXTERN;
+					mc.Block = null;
+				}
+			}
 
 			if ((modifiers & extern_static) == extern_static) {
 

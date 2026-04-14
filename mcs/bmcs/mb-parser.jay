@@ -1710,13 +1710,14 @@ sub_declaration
 	  opt_statement_list
 	  end_block
 	  END SUB logical_end_of_line
-	  {
-		// Position shift: opt_type_args added as $3, so the mid-rule
-		// action is now at $5 and end_block at $11.
-			Method method = (Method) $5;
-			method.ImplementsClauses = (ArrayList) $7;
-			Block b = (Block) $11;
-		const int extern_abstract = (Modifiers.EXTERN | Modifiers.ABSTRACT);
+		  {
+			// Position shift: opt_type_args added as $3, so the mid-rule
+			// action is now at $5 and end_block at $11.
+				Method method = (Method) $5;
+				method.ImplementsClauses = (ArrayList) $7;
+				method.IsEmptyDeclarationBody = !((bool) $10);
+				Block b = (Block) $11;
+			const int extern_abstract = (Modifiers.EXTERN | Modifiers.ABSTRACT);
 
 		if (b == null){
 			if ((method.ModFlags & extern_abstract) == 0){
@@ -1799,12 +1800,13 @@ func_declaration
 	  }
 	  end_block
 	  END FUNCTION logical_end_of_line
-	  {
-		// Position shift: a new mid-rule after opt_statement_list moved
-		// end_block from $13 to $14.
-		Method method = (Method) $7;
-		Block b = (Block) $14;
-		const int extern_abstract = (Modifiers.EXTERN | Modifiers.ABSTRACT);
+		  {
+			// Position shift: a new mid-rule after opt_statement_list moved
+			// end_block from $13 to $14.
+			Method method = (Method) $7;
+			method.IsEmptyDeclarationBody = !((bool) $12);
+			Block b = (Block) $14;
+			const int extern_abstract = (Modifiers.EXTERN | Modifiers.ABSTRACT);
 
 		if (b == null){
 			if ((method.ModFlags & extern_abstract) == 0){
@@ -3042,8 +3044,8 @@ parameter_modifier
 	;	
 
 opt_statement_list
-	: /* empty */
-	| statement_list end_of_stmt
+	: /* empty */			{ $$ = false; }
+	| statement_list end_of_stmt	{ $$ = true; }
 	;
 
 statement_list
