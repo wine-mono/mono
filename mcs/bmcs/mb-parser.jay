@@ -5088,7 +5088,10 @@ this_access
 cast_expression
         : DIRECTCAST OPEN_PARENS expression COMMA type_in_expression CLOSE_PARENS
 	  {
-	  	// TODO
+		// DirectCast has its own CLR-native conversion rules. Keep it
+		// distinct from CType so Object->primitive casts remain real
+		// unbox operations instead of going through VB runtime helpers.
+		$$ = new VBDirectCast ((Expression) $5, (Expression) $3, lexer.Location);
 	  }
 	| TRYCAST OPEN_PARENS expression COMMA type_in_expression CLOSE_PARENS
 	  {

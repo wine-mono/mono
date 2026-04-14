@@ -1371,6 +1371,73 @@ namespace Mono.CSharp {
 				ec.ig.Emit (OpCodes.Isinst, probe_type);
 		}
 	}
+
+	/// <summary>
+	///   Implements VB's DirectCast expression.
+	/// </summary>
+	public class VBDirectCast : Expression {
+		Expression target_type;
+		Expression expr;
+
+		public VBDirectCast (Expression cast_type, Expression expr, Location loc)
+		{
+			this.target_type = cast_type;
+			this.expr = expr;
+			this.loc = loc;
+		}
+
+		static void Error_CannotConvertType (Type source, Type target, Location loc)
+		{
+			Report.Error (
+				39, loc, "DirectCast cannot convert from `" +
+				TypeManager.CSharpName (source) + "' to `" +
+				TypeManager.CSharpName (target) + "'");
+		}
+
+		public override Expression DoResolve (EmitContext ec)
+		{
+			expr = expr.Resolve (ec);
+			if (expr == null)
+				return null;
+
+			TypeExpr target = target_type.ResolveAsTypeTerminal (ec);
+			if (target == null)
+				return null;
+
+			type = target.Type;
+
+			CheckObsoleteAttribute (type);
+
+			if (type.IsAbstract && type.IsSealed) {
+				Report.Error (716, loc, "Cannot convert to static type '{0}'", TypeManager.CSharpName (type));
+				return null;
+			}
+
+			if (expr.Type.IsPointer) {
+				Report.Error (244, loc, "\"DirectCast\" is not valid on pointer types");
+				return null;
+			}
+
+			if (type.IsPointer && !ec.InUnsafe) {
+				UnsafeError (loc);
+				return null;
+			}
+
+			eclass = ExprClass.Value;
+
+			Expression e = Convert.DirectCastConversion (ec, expr, type, loc);
+			if (e != null)
+				return e;
+
+			Error_CannotConvertType (expr.Type, type, loc);
+			return null;
+		}
+
+		public override void Emit (EmitContext ec)
+		{
+			throw new Exception ("Should not happen");
+		}
+	}
 	
 	/// <summary>
 	///   This represents a typecast in the source language.

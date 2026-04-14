@@ -2522,6 +2522,47 @@ namespace Mono.CSharp {
 		}
 
 		/// <summary>
+		///   Implements VB's DirectCast conversion set.
+		///
+		///   DirectCast is intentionally narrower than CType: it keeps only the
+		///   CLR-native boxing, reference-cast and unboxing paths and must not
+		///   route Object through Microsoft.VisualBasic helper conversions or
+		///   user-defined operators.
+		/// </summary>
+		static public Expression DirectCastConversion (EmitContext ec, Expression expr,
+							      Type target_type, Location loc)
+		{
+			Type expr_type = expr.Type;
+			Expression e;
+
+			if (expr is NullLiteral) {
+				if (target_type.IsGenericParameter)
+					return TypeParameter_to_Null (expr, target_type, loc);
+
+				if (TypeManager.IsNullableType (target_type))
+					return new Nullable.NullableLiteral (target_type, loc);
+			}
+
+			if (expr_type.Equals (target_type) && !TypeManager.IsNullType (expr_type))
+				return expr;
+
+			e = WideningReferenceConversion (ec, expr, target_type);
+			if (e != null)
+				return e;
+
+			if (expr_type == TypeManager.object_type && target_type.IsValueType)
+				return new UnboxCast (expr, target_type);
+
+			if (expr_type != TypeManager.null_type) {
+				e = NarrowingReferenceConversion (expr, target_type);
+				if (e != null)
+					return e;
+			}
+
+			return null;
+		}
+
+		/// <summary>
 		///   Entry point for VB.NET specific implicit conversions
 		/// </summary>
 		static public Expression ImplicitVBConversion (EmitContext ec, Expression expr,
