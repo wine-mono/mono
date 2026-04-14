@@ -1442,8 +1442,7 @@ namespace Mono.CSharp {
 
 			Type parent = ptype;
 			if (parent != null) {
-				if (parent.IsGenericType)
-					parent = parent.GetGenericTypeDefinition ();
+				parent = TypeManager.DropGenericTypeArguments (parent);
 
 				TypeContainer ptc = TypeManager.LookupTypeContainer (parent);
 				if ((ptc != null) && !ptc.CheckRecursiveDefinition ())

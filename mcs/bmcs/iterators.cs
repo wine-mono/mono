@@ -994,7 +994,7 @@ namespace Mono.CSharp {
 			if (args.Length != 1)
 				return false;
 
-			Type gt = t.GetGenericTypeDefinition ();
+			Type gt = TypeManager.DropGenericTypeArguments (t);
 			if (gt == TypeManager.generic_ienumerable_type) {
 				iterator_type = args [0];
 				is_enumerable = true;
@@ -1009,4 +1009,3 @@ namespace Mono.CSharp {
 		}
 	}
 }
-

@@ -2259,10 +2259,24 @@ public partial class TypeManager {
 		return false;
 	}
 
+	// Reduce a constructed generic type to its generic definition
+	// without calling GetGenericTypeDefinition() on an unbaked
+	// TypeBuilder. For the emitted types bmcs is still building,
+	// the TypeBuilder already is the definition we want.
+	public static Type DropGenericTypeArguments (Type t)
+	{
+		if (!t.IsGenericType)
+			return t;
+
+		if (t is TypeBuilder || t.IsGenericTypeDefinition)
+			return t;
+
+		return t.GetGenericTypeDefinition ();
+	}
+
 	public static bool IsDelegateType (Type t)
 	{
-		if (t.IsGenericType)
-			t = t.GetGenericTypeDefinition ();
+		t = DropGenericTypeArguments (t);
 
 		if (t.IsSubclassOf (TypeManager.delegate_type))
 			return true;
@@ -2395,14 +2409,14 @@ public partial class TypeManager {
 			//
 			// We hit this via Closure.Filter() for gen-82.cs.
 			//
-			if (type != parent.GetGenericTypeDefinition ())
+			if (type != DropGenericTypeArguments (parent))
 				return false;
 
 			return true;
 		}
 
 		if (type.IsGenericType && parent.IsGenericType) {
-			if (type.GetGenericTypeDefinition () != parent.GetGenericTypeDefinition ())
+			if (DropGenericTypeArguments (type) != DropGenericTypeArguments (parent))
 				return false;
 
 			return true;
@@ -3127,8 +3141,7 @@ public partial class TypeManager {
 	/// </remarks>
 	public static string IndexerPropertyName (Type t)
 	{
-		if (t.IsGenericType)
-			t = t.GetGenericTypeDefinition ();
+		t = DropGenericTypeArguments (t);
 
 		if (t is TypeBuilder) {
 			TypeContainer tc = t.IsInterface ? LookupInterface (t) : LookupTypeContainer (t);

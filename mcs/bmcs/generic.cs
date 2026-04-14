@@ -842,7 +842,7 @@ namespace Mono.CSharp {
 				if (t.IsGenericParameter)
 					return dargs [t.GenericParameterPosition];
 				if (t.IsGenericType) {
-					t = t.GetGenericTypeDefinition ();
+					t = TypeManager.DropGenericTypeArguments (t);
 					t = t.MakeGenericType (dargs);
 				}
 
@@ -1103,7 +1103,7 @@ namespace Mono.CSharp {
 		public ConstructedType (Type t, TypeParameter[] type_params, Location l)
 			: this (type_params, l)
 		{
-			gt = t.GetGenericTypeDefinition ();
+			gt = TypeManager.DropGenericTypeArguments (t);
 
 			this.name = gt.FullName;
 			full_name = gt.FullName + "<" + args.ToString () + ">";
@@ -1112,7 +1112,7 @@ namespace Mono.CSharp {
 		public ConstructedType (Type t, TypeArguments args, Location l)
 			: this (args, l)
 		{
-			gt = t.GetGenericTypeDefinition ();
+			gt = TypeManager.DropGenericTypeArguments (t);
 
 			this.name = gt.FullName;
 			full_name = gt.FullName + "<" + args.ToString () + ">";
@@ -1344,7 +1344,7 @@ namespace Mono.CSharp {
 			DeclSpace ds;
 			Type nested = ec.DeclSpace.FindNestedType (loc, name, out ds);
 			if (nested != null) {
-				gt = nested.GetGenericTypeDefinition ();
+				gt = TypeManager.DropGenericTypeArguments (nested);
 
 				TypeArguments new_args = new TypeArguments (loc);
 				if (ds.IsGeneric) {
@@ -1381,7 +1381,7 @@ namespace Mono.CSharp {
 				return false;
 			}
 
-			gt = t.GetGenericTypeDefinition ();
+			gt = TypeManager.DropGenericTypeArguments (t);
 			return DoResolveType (ec);
 		}
 
@@ -1730,8 +1730,7 @@ namespace Mono.CSharp {
 			// this into an infinite loop whenever 't' is already a
 			// generic type definition.  Reduce in a single step and
 			// only when 't' is actually a constructed instance.
-			if (t.IsGenericType && !t.IsGenericTypeDefinition)
-				t = t.GetGenericTypeDefinition ();
+			t = TypeManager.DropGenericTypeArguments (t);
 
 			return LookupTypeContainer (t);
 		}
@@ -1812,7 +1811,7 @@ namespace Mono.CSharp {
 			if (!array.IsArray || !enumerator.IsGenericType)
 				return false;
 
-			if (enumerator.GetGenericTypeDefinition () != generic_ienumerable_type)
+			if (TypeManager.DropGenericTypeArguments (enumerator) != generic_ienumerable_type)
 				return false;
 
 			Type[] args = GetTypeArguments (enumerator);
@@ -1842,7 +1841,7 @@ namespace Mono.CSharp {
 				//
 				// We hit this via Closure.Filter() for gen-82.cs.
 				//
-				if (a != b.GetGenericTypeDefinition ())
+				if (a != TypeManager.DropGenericTypeArguments (b))
 					return false;
 
 				Type[] aparams = a.GetGenericArguments ();
@@ -1874,7 +1873,7 @@ namespace Mono.CSharp {
 			}
 
 			if (a.IsGenericType && b.IsGenericType) {
-				if (a.GetGenericTypeDefinition () != b.GetGenericTypeDefinition ())
+				if (TypeManager.DropGenericTypeArguments (a) != TypeManager.DropGenericTypeArguments (b))
 					return false;
 
 				Type[] aargs = a.GetGenericArguments ();
@@ -1992,7 +1991,7 @@ namespace Mono.CSharp {
 		{
 			if (!a.IsGenericType || !b.IsGenericType)
 				return false;
-			if (a.GetGenericTypeDefinition () != b.GetGenericTypeDefinition ())
+			if (TypeManager.DropGenericTypeArguments (a) != TypeManager.DropGenericTypeArguments (b))
 				return false;
 
 			return MayBecomeEqualGenericInstances (
@@ -2018,10 +2017,8 @@ namespace Mono.CSharp {
 			int tcount = GetNumberOfTypeArguments (type);
 			int pcount = GetNumberOfTypeArguments (parent);
 
-			if (type.IsGenericType)
-				type = type.GetGenericTypeDefinition ();
-			if (parent.IsGenericType)
-				parent = parent.GetGenericTypeDefinition ();
+			type = TypeManager.DropGenericTypeArguments (type);
+			parent = TypeManager.DropGenericTypeArguments (parent);
 
 			if (tcount != pcount)
 				return false;
@@ -2337,7 +2334,7 @@ namespace Mono.CSharp {
 			if (!t.IsGenericType)
 				return false;
 
-			Type gt = t.GetGenericTypeDefinition ();
+			Type gt = TypeManager.DropGenericTypeArguments (t);
 			return gt == generic_nullable_type;
 		}
 	}
