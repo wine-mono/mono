@@ -6779,6 +6779,11 @@ namespace Mono.CSharp {
 						return null;
 					}
 				}
+			} else if (method is ConstructorInfo) {
+				// VB constructor chaining (Me.New/MyBase.New/MyClass.New)
+				// binds as a constructor method group. The invocation still
+				// has a void result type for later pointer/flow checks.
+				type = TypeManager.void_type;
 			}
 
 			if (type.IsPointer){

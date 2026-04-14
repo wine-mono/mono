@@ -6324,7 +6324,12 @@ private ConstructorInitializer CheckConstructorInitializer (ref ArrayList s)
 					s.RemoveAt(0);
 				}
 			}
-			if (i.expr.ToString() == "Mono.MonoBASIC.This..ctor") {
+			MemberAccess ma = i.expr as MemberAccess;
+			if (ma != null && ma.Expr is This &&
+			    (ma.Identifier == "New" || ma.Identifier == ".ctor")) {
+				// Me.New/MyClass.New are parsed as member access on This.
+				// Detect them structurally here instead of relying on a
+				// fragile ToString() shape from the raw expression tree.
 				ci = new ConstructorThisInitializer (i.Arguments, current_local_parameters, lexer.Location); 
 				s.RemoveAt(0);
 			}
