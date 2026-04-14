@@ -104,6 +104,12 @@ namespace Mono.CSharp {
 			return Expr;
 		}
 
+		public override Expression ResolveForEventAccess (EmitContext ec)
+		{
+			Expr = Expr.ResolveForEventAccess (ec);
+			return Expr;
+		}
+
 		public override void Emit (EmitContext ec)
 		{
 			throw new Exception ("Should not happen");
@@ -8717,6 +8723,14 @@ namespace Mono.CSharp {
 							      Expression left, Location loc,
 							      Expression left_original)
 		{
+			return ResolveMemberAccess (ec, member_lookup, left, loc, left_original, false);
+		}
+
+		public static Expression ResolveMemberAccess (EmitContext ec, Expression member_lookup,
+							      Expression left, Location loc,
+							      Expression left_original,
+							      bool preserve_event_access)
+		{
 			bool left_is_type, left_is_explicit;
 
 			// If `left' is null, then we're called from SimpleNameResolve and this is
@@ -8823,6 +8837,11 @@ namespace Mono.CSharp {
 
 			if (member_lookup is EventExpr) {
 				EventExpr ee = (EventExpr) member_lookup;
+
+				if (preserve_event_access) {
+					ee.InstanceExpression = left;
+					return ee;
+				}
 				
 				//
 				// If the event is local to this class, we transform ourselves into
@@ -8855,9 +8874,9 @@ namespace Mono.CSharp {
 					
 					ee.InstanceExpression = left;
 
-					return ResolveMemberAccess (ec, ml, left, loc, left_original);
+						return ResolveMemberAccess (ec, ml, left, loc, left_original, false);
+					}
 				}
-			}
 
 			if (member_lookup is IMemberExpr) {
 				IMemberExpr me = (IMemberExpr) member_lookup;
@@ -8925,6 +8944,13 @@ namespace Mono.CSharp {
 		
 		public virtual Expression DoResolve (EmitContext ec, Expression right_side,
 						     ResolveFlags flags, bool preserve_property_group)
+		{
+			return DoResolve (ec, right_side, flags, preserve_property_group, false);
+		}
+
+		public virtual Expression DoResolve (EmitContext ec, Expression right_side,
+					     ResolveFlags flags, bool preserve_property_group,
+					     bool preserve_event_access)
 		{
 			if (type != null)
 				throw new Exception ();
@@ -9062,7 +9088,8 @@ namespace Mono.CSharp {
 				}
 			}
 			
-			member_lookup = ResolveMemberAccess (ec, member_lookup, expr, loc, original);
+			member_lookup = ResolveMemberAccess (ec, member_lookup, expr, loc, original,
+				preserve_event_access);
 			if (member_lookup == null)
 				return null;
 
@@ -9103,6 +9130,12 @@ namespace Mono.CSharp {
 		public Expression ResolveForInvocation (EmitContext ec)
 		{
 			return DoResolve (ec, null, ResolveFlags.VariableOrValue | ResolveFlags.Type, true);
+		}
+
+		public override Expression ResolveForEventAccess (EmitContext ec)
+		{
+			return DoResolve (ec, null, ResolveFlags.VariableOrValue | ResolveFlags.Type,
+				false, true);
 		}
 
 		public override FullNamedExpression ResolveAsTypeStep (EmitContext ec)
@@ -10225,6 +10258,18 @@ namespace Mono.CSharp {
 			return CommonResolve (ec);
 		}
 
+		public override Expression ResolveForEventAccess (EmitContext ec)
+		{
+			Expression c = CommonResolve (ec, true);
+			if (c == null)
+				return null;
+
+			if (!(c is MethodGroupExpr))
+				return c.ResolveForEventAccess (ec);
+
+			return c;
+		}
+
 		public override Expression DoResolveLValue (EmitContext ec, Expression right_side)
 		{
 			Expression c = CommonResolve (ec);
@@ -10242,6 +10287,11 @@ namespace Mono.CSharp {
 		}
 
 		Expression CommonResolve (EmitContext ec)
+		{
+			return CommonResolve (ec, false);
+		}
+
+		Expression CommonResolve (EmitContext ec, bool preserve_event_access)
 		{
 			Expression member_lookup;
 			Type current_type = ec.ContainerType;
@@ -10298,7 +10348,8 @@ namespace Mono.CSharp {
 				}
 			}
 
-			e = MemberAccess.ResolveMemberAccess (ec, member_lookup, left, loc, null);
+			e = MemberAccess.ResolveMemberAccess (ec, member_lookup, left, loc, null,
+				preserve_event_access);
 			if ((e != null) && (args != null)) {
 				MethodGroupExpr mg = e as MethodGroupExpr;
 				if (mg == null)

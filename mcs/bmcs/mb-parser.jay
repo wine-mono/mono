@@ -1837,13 +1837,14 @@ struct_member_declarations
 	;
 
 struct_member_declaration
-	: opt_modifiers
+	: opt_attributes
+	  opt_modifiers
 	  {
 		RejectInvalidPartialModifier (lexer.Location);
 	  }
 	  struct_member_declarator
 	  {
-		$$ = $3;
+		$$ = $4;
 	  }
 	;
 	
@@ -3022,27 +3023,27 @@ statement
 		  current_block.AddStatement ((Statement) $1);
 	    } 
 // 	  | labeled_statement 
-	  | ADDHANDLER prefixed_unary_expression COMMA ADDRESSOF expression
+	  | ADDHANDLER prefixed_unary_expression COMMA expression
 	    {
+		// VB AddHandler/RemoveHandler takes a delegate-valued expression,
+		// not just the bare `AddressOf method` form. Model it as its own
+		// statement so resolution can preserve event access and then call
+		// the event's add/remove accessor directly.
 		Location loc = lexer.Location;
 
-		ExpressionStatement expr = new CompoundAssign (Binary.Operator.Addition, 
-					 (Expression) $2, (Expression) $5, loc);
-
-		Statement stmt = new StatementExpression (expr, loc); 
+		Statement stmt = new EventSubscription ((Expression) $2,
+					 (Expression) $4, true, loc);
 
 		current_block.AddStatement (stmt);
 
 	    }
 
-	  | REMOVEHANDLER prefixed_unary_expression COMMA ADDRESSOF expression
+	  | REMOVEHANDLER prefixed_unary_expression COMMA expression
 	    {
 		Location loc = lexer.Location;
 
-		ExpressionStatement expr = new CompoundAssign (Binary.Operator.Subtraction, 
-					 (Expression) $2, (Expression) $5, loc);
-
-		Statement stmt = new StatementExpression (expr, loc); 
+		Statement stmt = new EventSubscription ((Expression) $2,
+					 (Expression) $4, false, loc);
 
 		current_block.AddStatement (stmt);
 

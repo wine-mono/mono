@@ -752,6 +752,51 @@ namespace Mono.CSharp {
 		}
 	}
 
+	public class EventSubscription : Statement {
+		Expression event_expr;
+		Expression handler_expr;
+		readonly bool is_add;
+		EventExpr resolved_event;
+
+		public EventSubscription (Expression eventExpr, Expression handlerExpr, bool isAdd, Location l)
+		{
+			event_expr = eventExpr;
+			handler_expr = handlerExpr;
+			is_add = isAdd;
+			loc = l;
+		}
+
+		public override bool Resolve (EmitContext ec)
+		{
+			// AddHandler/RemoveHandler operate on event access directly; preserving
+			// EventExpr here avoids the normal member-access rewrite that turns
+			// field-like events into backing-field access in expression contexts.
+			event_expr = event_expr.ResolveForEventAccess (ec);
+			if (event_expr == null)
+				return false;
+
+			resolved_event = event_expr as EventExpr;
+			if (resolved_event == null) {
+				Error (33001, "'{0}' requires an event access as its first operand",
+					is_add ? "AddHandler" : "RemoveHandler");
+				return false;
+			}
+
+			handler_expr = handler_expr.Resolve (ec);
+			if (handler_expr == null)
+				return false;
+
+			handler_expr = Convert.ImplicitVBConversionRequired (ec, handler_expr,
+				resolved_event.Type, loc);
+			return handler_expr != null;
+		}
+
+		protected override void DoEmit (EmitContext ec)
+		{
+			resolved_event.EmitAddOrRemove (ec, handler_expr, is_add);
+		}
+	}
+
 	/// <summary>
 	///   Implements the return statement
 	/// </summary>

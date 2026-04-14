@@ -441,6 +441,11 @@ namespace Mono.CSharp {
 			return Resolve (ec, ResolveFlags.VariableOrValue);
 		}
 
+		public virtual Expression ResolveForEventAccess (EmitContext ec)
+		{
+			return Resolve (ec);
+		}
+
 		/// <summary>
 		///   Resolves an expression for LValue assignment
 		/// </summary>
@@ -2346,6 +2351,11 @@ namespace Mono.CSharp {
 			return SimpleNameResolve (ec, null, false, false, true);
 		}
 
+		public override Expression ResolveForEventAccess (EmitContext ec)
+		{
+			return SimpleNameResolve (ec, null, false, false, false, true);
+		}
+
 
 		public Expression DoResolveAllowStatic (EmitContext ec, bool intermediate)
 		{
@@ -2374,14 +2384,24 @@ namespace Mono.CSharp {
 		Expression SimpleNameResolve (EmitContext ec, Expression right_side,
 					      bool allow_static, bool intermediate)
 		{
-			return SimpleNameResolve (ec, right_side, allow_static, intermediate, false);
+			return SimpleNameResolve (ec, right_side, allow_static, intermediate, false, false);
 		}
 
 		Expression SimpleNameResolve (EmitContext ec, Expression right_side,
 					      bool allow_static, bool intermediate,
 					      bool preserve_property_group)
 		{
-			Expression e = DoSimpleNameResolve (ec, right_side, allow_static, intermediate, preserve_property_group);
+			return SimpleNameResolve (ec, right_side, allow_static, intermediate,
+				preserve_property_group, false);
+		}
+
+		Expression SimpleNameResolve (EmitContext ec, Expression right_side,
+					      bool allow_static, bool intermediate,
+					      bool preserve_property_group,
+					      bool preserve_event_access)
+		{
+			Expression e = DoSimpleNameResolve (ec, right_side, allow_static, intermediate,
+				preserve_property_group, preserve_event_access);
 			if (e == null)
 				return null;
 
@@ -2476,7 +2496,9 @@ namespace Mono.CSharp {
 		///   Type is both an instance variable and a Type;  Type.GetType
 		///   is the static method not an instance method of type.
 		/// </remarks>
-		Expression DoSimpleNameResolve (EmitContext ec, Expression right_side, bool allow_static, bool intermediate, bool preserve_property_group)
+		Expression DoSimpleNameResolve (EmitContext ec, Expression right_side, bool allow_static,
+						bool intermediate, bool preserve_property_group,
+						bool preserve_event_access)
 		{
 			Expression e = null;
 
@@ -2560,7 +2582,7 @@ namespace Mono.CSharp {
 				return e;
 
 			if (e is IMemberExpr) {
-				e = MemberAccess.ResolveMemberAccess (ec, e, null, loc, this);
+				e = MemberAccess.ResolveMemberAccess (ec, e, null, loc, this, preserve_event_access);
 				if (e == null)
 					return null;
 
@@ -4078,14 +4100,17 @@ namespace Mono.CSharp {
 		public void EmitAddOrRemove (EmitContext ec, Expression source)
 		{
 			BinaryDelegate source_del = (BinaryDelegate) source;
-			Expression handler = source_del.Right;
-			
+			EmitAddOrRemove (ec, source_del.Right, source_del.IsAddition);
+		}
+
+		public void EmitAddOrRemove (EmitContext ec, Expression handler, bool add)
+		{
 			Argument arg = new Argument (handler, Argument.AType.Expression);
 			ArrayList args = new ArrayList ();
 				
 			args.Add (arg);
 			
-			if (source_del.IsAddition)
+			if (add)
 				Invocation.EmitCall (
 					ec, false, IsStatic, instance_expr, add_accessor, args, loc);
 			else
