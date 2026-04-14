@@ -37,10 +37,13 @@ namespace Mono.CSharp {
 		// DEFAULT (0x10000), which caused any VB "Shadows Property"
 		// to be treated as an iterator and any "Default" property to
 		// be treated as a generic method - both of which produced
-		// nonsensical errors.
+		// nonsensical errors.  PARTIAL stays above TOP because the VB
+		// parser handles where it is legal; the normal modifier checker
+		// should not reinterpret it on members or non-type declarations.
 		//
 		public const int METHOD_YIELDS = 0x40000;
 		public const int METHOD_GENERIC = 0x80000;
+		public const int PARTIAL = 0x100000;
 
 		public const int Accessibility =
 			PUBLIC | PROTECTED | INTERNAL | PRIVATE;
@@ -88,6 +91,8 @@ namespace Mono.CSharp {
 				s = "default"; break;
 			case Modifiers.NONVIRTUAL:
 				s = "nonvirtual"; break;
+			case Modifiers.PARTIAL:
+				s = "partial"; break;
 			}
 
 			return s;

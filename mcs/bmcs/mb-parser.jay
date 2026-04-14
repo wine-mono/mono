@@ -205,6 +205,12 @@ namespace Mono.CSharp
 		// inside a With block resolve against the topmost entry.
 		Stack with_stack;
 
+		// Class and structure declarations can enter through a merged
+		// PartialContainer while members still belong to the current source
+		// part.  Keep the outer parser state explicitly instead of trying
+		// to infer it from Parent links.
+		Stack type_stack;
+
 		// Name of the implicit return local for the currently parsed
 		// Function or Get accessor body.  Used to apply the VB rule that
 		// invocation and AddressOf contexts skip that local and keep
@@ -285,6 +291,17 @@ namespace Mono.CSharp
 // 		static public ArrayList ImportsList = null;
 
 		bool implicit_modifiers;
+
+		sealed class DeclaredTypeState {
+			public readonly TypeContainer Container;
+			public readonly TypeContainer Type;
+
+			public DeclaredTypeState (TypeContainer container, TypeContainer type)
+			{
+				Container = container;
+				Type = type;
+			}
+		}
 
 
 		/// <summary>
@@ -427,6 +444,7 @@ namespace Mono.CSharp
 %token WIDENING
 %token NARROWING
 %token OPTIONAL	
+%token PARTIAL
 %token OR
 %token ORELSE
 %token OVERLOADS
@@ -1144,6 +1162,8 @@ type_spec_declaration
 class_declaration
 	: CLASS identifier opt_type_params logical_end_of_line
 	  {
+		PushDeclaredTypeState ();
+
 		if (implicit_modifiers && ((current_modifiers & Modifiers.STATIC) != 0))
 			current_modifiers = (current_modifiers & ~Modifiers.STATIC);
 
@@ -1153,15 +1173,10 @@ class_declaration
 			: MakeName (new MemberName ((string) $2, type_args));
 		int mod_flags = current_modifiers;
 
-
-		current_class = new Class (current_namespace, current_container, name,
-					   mod_flags, (Attributes) current_attributes, lexer.Location);
-
-		if (type_args != null)
-			current_class.SetParameterInfo (null);
-
-		current_container = current_class;
-		RootContext.Tree.RecordDecl (name.GetName (true), current_class);
+		// VB only requires one declaration to spell out Partial, so
+		// every class declaration has to keep part-local bases and
+		// members available for a later merge candidate.
+		EnterPartialType (name, mod_flags, Kind.Class);
 	  }
 	  opt_inherits opt_implements
 
@@ -1186,16 +1201,11 @@ class_declaration
 			}
 			current_class.Bases = (ArrayList) bases;
 		}
-
-		current_class.Register ();
 	  }
 	  opt_class_member_declarations
 	  END CLASS logical_end_of_line
 	  {
-		$$ = current_class;
-
-		current_container = current_container.Parent;
-		current_class = current_container;
+		$$ = PopDeclaredTypeState ();
 	  }
 	;
 
@@ -1257,11 +1267,15 @@ modifier
 	| READONLY 			{ $$ = Modifiers.READONLY; }
 	| DEFAULT 			{ $$ = Modifiers.DEFAULT; }
 	| WRITEONLY			{ $$ = Modifiers.WRITEONLY; }
+	| PARTIAL			{ $$ = Modifiers.PARTIAL; }
 	;
 
 module_declaration
 	: MODULE identifier logical_end_of_line
 	  { 
+		PushDeclaredTypeState ();
+		RejectInvalidPartialModifier (lexer.Location);
+
 		MemberName name = MakeName(new MemberName ((string) $2));
 		current_class = new VBModule (current_namespace, current_container, name, 
 					    current_modifiers, current_attributes, lexer.Location);
@@ -1274,12 +1288,9 @@ module_declaration
 	  opt_module_member_declarations
 	  END MODULE logical_end_of_line
 	  {
-		$$ = current_class;
+		$$ = PopDeclaredTypeState ();
 // 	  	FIXME: ?????
 // 		TypeManager.AddStandardModule (current_class);
-
-		current_container = current_container.Parent;
-		current_class = current_container;
 	  }
 	;
 
@@ -1297,6 +1308,7 @@ module_member_declaration
 	:  opt_attributes
 	   opt_modifiers
 	   { 
+	   	RejectInvalidPartialModifier (lexer.Location);
 	   	current_modifiers = ((int)$2) | Modifiers.STATIC; 
 		bool explicit_static = (((int) $2 & Modifiers.STATIC) > 0);
 		implicit_modifiers = (!explicit_static);
@@ -1330,7 +1342,7 @@ constant_declaration
 		int modflags = (int) current_modifiers;
 		
 		// Structure members are Public by default			
-		if ((current_container is Struct) && (modflags == 0))
+		if (IsCurrentStructType () && (modflags == 0))
 			modflags = Modifiers.PUBLIC;			
 
 		ArrayList consts = (ArrayList) $2;
@@ -1366,12 +1378,18 @@ class_member_declarations
 class_member_declaration
 	:  opt_attributes
 	   opt_modifiers
+	   {
+		RejectInvalidPartialModifier (lexer.Location);
+	   }
 	   class_member_declarator
 	   {
-	   	$$ = $3;
+	   	$$ = $4;
 	   }
 	|  opt_attributes
 	   opt_modifiers
+	   {
+		RejectInvalidPartialModifier (lexer.Location);
+	   }
 	   MUSTOVERRIDE
 	   {
 		// Save the modifiers that appeared before MUSTOVERRIDE so a
@@ -1381,12 +1399,13 @@ class_member_declaration
 	   }
 	   opt_modifiers
 	   {
+		RejectInvalidPartialModifier (lexer.Location);
 		int pre = (int) oob_stack.Pop ();
 		current_modifiers = pre | (int) current_modifiers;
 	   }
 	   abstract_member_declarator
 	   {
-	   	$$ = $7;
+	   	$$ = $9;
 	   }
 	;
 
@@ -1619,7 +1638,7 @@ sub_declaration
 			? new MemberName ((string) $2)
 			: new MemberName ((string) $2, type_args);
 
-		if ((current_container is Struct) && (current_modifiers == 0))
+		if (IsCurrentStructType () && (current_modifiers == 0))
 			current_modifiers = Modifiers.PUBLIC;
 
 
@@ -1749,30 +1768,23 @@ struct_declaration
 	: STRUCTURE identifier logical_end_of_line
 	  opt_implement_clause
 	  { 
+		PushDeclaredTypeState ();
+
 		MemberName name = MakeName (new MemberName ((string) $2));
 
 		if (implicit_modifiers && ((current_modifiers & Modifiers.STATIC) != 0))
 			current_modifiers = (current_modifiers & ~Modifiers.STATIC);
 
-		current_class = new Struct (current_namespace, current_container, name, current_modifiers,
-					    current_attributes, lexer.Location);
-
-		current_container = current_class;
-		RootContext.Tree.RecordDecl (name.GetName (true), current_class);
+		EnterPartialType (name, current_modifiers, Kind.Struct);
 
 		if ($4 != null)
 			current_class.Bases = (ArrayList) $4;
-
-		current_class.Register ();
 	  }
 	  opt_struct_member_declarations
-	  {
-		$$ = current_class;
-
-		current_container = current_container.Parent;
-		current_class = current_container;
-	  }
 	  END STRUCTURE logical_end_of_line
+	  {
+		$$ = PopDeclaredTypeState ();
+	  }
 	;
 
 
@@ -1798,7 +1810,13 @@ struct_member_declarations
 
 struct_member_declaration
 	: opt_modifiers
+	  {
+		RejectInvalidPartialModifier (lexer.Location);
+	  }
 	  struct_member_declarator
+	  {
+		$$ = $3;
+	  }
 	;
 	
 struct_member_declarator	
@@ -1926,6 +1944,9 @@ enum_declaration
 	: ENUM identifier opt_type_spec logical_end_of_line
 	  opt_enum_member_declarations 
 	  { 
+		PushDeclaredTypeState ();
+		RejectInvalidPartialModifier (lexer.Location);
+
 		Location enum_location = lexer.Location;
 
 		Expression base_type = TypeManager.system_int32_expr;
@@ -1958,6 +1979,9 @@ enum_declaration
 
 	  }
 	  END ENUM logical_end_of_line
+	  {
+		$$ = PopDeclaredTypeState ();
+	  }
 	;
 
 opt_enum_member_declarations
@@ -2171,6 +2195,9 @@ interface_property_declaration
 interface_declaration
 	: INTERFACE identifier logical_end_of_line
 	  {
+		PushDeclaredTypeState ();
+		RejectInvalidPartialModifier (lexer.Location);
+
 		MemberName name = new MemberName ((string) $2);
 
 		current_class = new Interface (current_namespace, current_container, 
@@ -2188,10 +2215,7 @@ interface_declaration
 	  }
 	  interface_body
 	  {
-		$$ = current_class;
-
-		current_container = current_container.Parent;
-		current_class = current_container;
+		$$ = PopDeclaredTypeState ();
 	  }
 	  END INTERFACE logical_end_of_line
 	;
@@ -2369,7 +2393,7 @@ non_abstract_propery_declaration
 
 		// FIXME: Implements Clause needs to be taken care of.
 
-		if ((current_container is Struct) && (current_modifiers == 0))
+		if (IsCurrentStructType () && (current_modifiers == 0))
 			current_modifiers = Modifiers.PUBLIC;				
 
 
@@ -2608,7 +2632,7 @@ field_declaration
 // 			mod = mod | Modifiers.STATIC;
 			
 		// Structure members are Public by default			
-		if ((current_container is Struct) && (mod == 0))
+		if (IsCurrentStructType () && (mod == 0))
 			mod = Modifiers.PUBLIC;			
 		
 		if ((mod & Modifiers.Accessibility) == 0)
@@ -2671,41 +2695,51 @@ opt_dim_stmt
 		
 delegate_declaration
 	: DELEGATE SUB  
+	  {
+		PushDeclaredTypeState ();
+		RejectInvalidPartialModifier (lexer.Location);
+	  }
 	  identifier OPEN_PARENS 
 	  opt_formal_parameter_list
 	  CLOSE_PARENS 
 	  logical_end_of_line
 	  {
 		Location l = lexer.Location;
-		MemberName name = MakeName (new MemberName ((string) $3));
+		MemberName name = MakeName (new MemberName ((string) $4));
 
 		if (implicit_modifiers && ((current_modifiers & Modifiers.STATIC) != 0))
 			current_modifiers = (current_modifiers & ~Modifiers.STATIC);
 
 		Delegate del = new Delegate (current_namespace, current_container, TypeManager.system_void_expr,
-					     current_modifiers, name, (Parameters) $5, current_attributes, l);
+					     current_modifiers, name, (Parameters) $6, current_attributes, l);
 
 		current_container.AddDelegate (del);
 		RootContext.Tree.RecordDecl (name.GetName (true), del);
+		$$ = PopDeclaredTypeState ();
 	  }	
 	
 	| DELEGATE FUNCTION	  
+	  {
+		PushDeclaredTypeState ();
+		RejectInvalidPartialModifier (lexer.Location);
+	  }
 	  identifier OPEN_PARENS 
 	  opt_formal_parameter_list
 	  CLOSE_PARENS opt_type_with_ranks logical_end_of_line
 	  {
 		Location l = lexer.Location;
-		MemberName name = MakeName (new MemberName ((string) $3));
+		MemberName name = MakeName (new MemberName ((string) $4));
 
 		if (implicit_modifiers && ((current_modifiers & Modifiers.STATIC) != 0))
 			current_modifiers = (current_modifiers & ~Modifiers.STATIC);
 
-		Expression rettype = ($7 == null) ? TypeManager.system_object_expr : (Expression) $7;
+		Expression rettype = ($8 == null) ? TypeManager.system_object_expr : (Expression) $8;
 		Delegate del = new Delegate (current_namespace, current_container, rettype,
-					     current_modifiers, name, (Parameters) $5, current_attributes, l);
+					     current_modifiers, name, (Parameters) $6, current_attributes, l);
 
 		current_container.AddDelegate (del);
 		RootContext.Tree.RecordDecl (name.GetName (true), del);
+		$$ = PopDeclaredTypeState ();
 	  }	
 
 	;
@@ -5926,6 +5960,46 @@ static bool AlwaysAccept (MemberInfo m, object filterCriteria) {
 	return true;
 }
 
+void PushDeclaredTypeState ()
+{
+	type_stack.Push (new DeclaredTypeState (current_container, current_class));
+}
+
+TypeContainer PopDeclaredTypeState ()
+{
+	TypeContainer completed = current_container;
+	DeclaredTypeState state = (DeclaredTypeState) type_stack.Pop ();
+	current_container = state.Container;
+	current_class = state.Type;
+	return completed;
+}
+
+ClassPart EnterPartialType (MemberName name, int mod_flags, Kind kind)
+{
+	ClassPart part = PartialContainer.CreatePart (
+		current_namespace, current_container, name, mod_flags,
+		(Attributes) current_attributes, kind, lexer.Location);
+
+	current_class = part;
+	current_container = part.PartialContainer;
+	return part;
+}
+
+bool IsCurrentStructType ()
+{
+	return current_class != null && current_class.Kind == Kind.Struct;
+}
+
+void RejectInvalidPartialModifier (Location loc)
+{
+	if ((current_modifiers & Modifiers.PARTIAL) == 0)
+		return;
+
+	Report.Error (30001, loc,
+		"The Partial modifier is only valid on class and structure declarations");
+	current_modifiers &= ~Modifiers.PARTIAL;
+}
+
 private void ReportError9998()
 {
 	Report.Error (29998, lexer.Location, "This construct is only available in MonoBASIC extended syntax.");
@@ -5941,6 +6015,7 @@ public CSharpParser (SeekableStreamReader reader, SourceFile file, ArrayList def
 	oob_stack = new Stack ();
 	switch_stack = new Stack ();
 	with_stack = new Stack ();
+	type_stack = new Stack ();
 
 	lexer = new Tokenizer (reader, file, defines);
 }

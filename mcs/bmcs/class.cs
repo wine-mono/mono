@@ -1043,7 +1043,7 @@ namespace Mono.CSharp {
 			if (error)
 				return null;
 
-			if ((base_class != null) && (Kind == Kind.Class)){
+			if ((base_class != null) && (Kind == Kind.Class) && !(this is ClassPart)){
 				if (base_class is TypeParameterExpr){
 					Report.Error (
 						689, base_class.Location,
@@ -2603,63 +2603,101 @@ namespace Mono.CSharp {
 		
 	}
 
-	public class PartialContainer : TypeContainer {
+	public class PartialContainer : ClassOrStruct {
 
 		public readonly Namespace Namespace;
-		public readonly int OriginalModFlags;
 		public readonly int AllowedModifiers;
 		public readonly TypeAttributes DefaultTypeAttributes;
+		int source_modifiers;
+		bool has_partial_modifier;
+
+		void UpdateModifiers (int mod, Location loc)
+		{
+			mod &= ~Modifiers.PARTIAL;
+
+			int accmods;
+			if (Parent.Parent == null)
+				accmods = Modifiers.INTERNAL;
+			else
+				accmods = Modifiers.PRIVATE;
+
+			this.ModFlags = Modifiers.Check (AllowedModifiers, mod, accmods, loc);
+			if (Kind == Kind.Struct)
+				this.ModFlags |= Modifiers.SEALED;
+		}
+
+		static void ReportDuplicateType (Location loc, DeclSpace previous, string full_name)
+		{
+			Report.SymbolRelatedToPreviousError (
+				previous.Location, previous.GetSignatureForError ());
+			Report.Error (
+				101, loc, "There is already a definition for `" + full_name + "'");
+		}
 
 		static PartialContainer Create (NamespaceEntry ns, TypeContainer parent,
 						MemberName member_name, int mod_flags, Kind kind,
 						Location loc)
 		{
-			PartialContainer pc;
 			string full_name = member_name.GetName (true);
 			DeclSpace ds = (DeclSpace) RootContext.Tree.Decls [full_name];
 			if (ds != null) {
-				pc = ds as PartialContainer;
+				PartialContainer existing = ds as PartialContainer;
+				bool current_is_partial = (mod_flags & Modifiers.PARTIAL) != 0;
 
-				if (pc == null) {
-					Report.Error (
-						260, ds.Location, "Missing partial modifier " +
-						"on declaration of type `{0}'; another " +
-						"partial implementation of this type exists",
-						member_name.GetTypeName());
-
-					Report.LocationOfPreviousError (loc);
+				if (existing == null) {
+					ReportDuplicateType (loc, ds, full_name);
 					return null;
 				}
 
-				if (pc.Kind != kind) {
+				if (!existing.has_partial_modifier && !current_is_partial) {
+					ReportDuplicateType (loc, existing, full_name);
+					return null;
+				}
+
+				if (existing.Kind != kind) {
 					Report.Error (
 						261, loc, "Partial declarations of `{0}' " +
-						"must be all classes, all structs or " +
-						"all interfaces", member_name.GetTypeName ());
+						"must be all classes or all structures",
+						member_name.GetTypeName ());
+					Report.LocationOfPreviousError (existing.Location);
 					return null;
 				}
 
-				if (pc.OriginalModFlags != mod_flags) {
+				int existing_access = existing.source_modifiers & Modifiers.Accessibility;
+				int current_access = mod_flags & Modifiers.Accessibility;
+				if (existing_access != 0 && current_access != 0 &&
+				    existing_access != current_access) {
 					Report.Error (
 						262, loc, "Partial declarations of `{0}' " +
 						"have conflicting accessibility modifiers",
 						member_name.GetTypeName ());
+					Report.LocationOfPreviousError (existing.Location);
 					return null;
 				}
 
-				if (pc.IsGeneric) {
-					if (pc.CountTypeParameters != member_name.CountTypeArguments) {
+				if (existing.IsGeneric != (member_name.TypeArguments != null)) {
+					Report.Error (
+						264, loc, "Partial declarations of `{0}' " +
+						"must have the same type parameter names in " +
+						"the same order", member_name.GetTypeName ());
+					Report.LocationOfPreviousError (existing.Location);
+					return null;
+				}
+
+				if (existing.IsGeneric) {
+					if (existing.CountTypeParameters != member_name.CountTypeArguments) {
 						Report.Error (
 							264, loc, "Partial declarations of `{0}' " +
 							"must have the same type parameter names in " +
 							"the same order", member_name.GetTypeName ());
+						Report.LocationOfPreviousError (existing.Location);
 						return null;
 					}
 
-					string[] pc_names = pc.MemberName.TypeArguments.GetDeclarations ();
+					string[] pc_names = existing.MemberName.TypeArguments.GetDeclarations ();
 					string[] names = member_name.TypeArguments.GetDeclarations ();
 
-					for (int i = 0; i < pc.CountTypeParameters; i++) {
+					for (int i = 0; i < existing.CountTypeParameters; i++) {
 						if (pc_names [i] == names [i])
 							continue;
 
@@ -2667,19 +2705,25 @@ namespace Mono.CSharp {
 							264, loc, "Partial declarations of `{0}' " +
 							"must have the same type parameter names in " +
 							"the same order", member_name.GetTypeName ());
+						Report.LocationOfPreviousError (existing.Location);
 						return null;
 					}
 				}
 
-				return pc;
+				existing.source_modifiers |= mod_flags;
+				existing.has_partial_modifier |= current_is_partial;
+				existing.UpdateModifiers (existing.source_modifiers, loc);
+
+				return existing;
 			}
 
-			pc = new PartialContainer (ns, parent, member_name, mod_flags, kind, loc);
+			PartialContainer pc = new PartialContainer (ns, parent, member_name, mod_flags, kind, loc);
 			RootContext.Tree.RecordDecl (full_name, pc);
-			parent.AddType (pc);
 			pc.Register ();
-			// This is needed to define our type parameters; we define the constraints later.
-			pc.SetParameterInfo (null);
+			// The merged container owns the type parameter list; each part only
+			// contributes its own source-level constraints for consistency checks.
+			if (pc.IsGeneric)
+				pc.SetParameterInfo (null);
 			return pc;
 		}
 
@@ -2716,38 +2760,13 @@ namespace Mono.CSharp {
 				DefaultTypeAttributes = Struct.DefaultTypeAttributes;
 				break;
 
-			case Kind.Interface:
-				AllowedModifiers = Interface.AllowedModifiers;
-				DefaultTypeAttributes = Interface.DefaultTypeAttributes;
-				break;
-
 			default:
 				throw new InvalidOperationException ();
 			}
 
-			int accmods;
-			if (parent.Parent == null)
-				accmods = Modifiers.INTERNAL;
-			else
-				accmods = Modifiers.PRIVATE;
-
-			this.ModFlags = Modifiers.Check (AllowedModifiers, mod, accmods, l);
-			this.OriginalModFlags = mod;
-		}
-
-		public override void Register ()
-		{
-			if (Kind == Kind.Interface)
-				Parent.AddInterface (this);
-			else if (Kind == Kind.Class || Kind == Kind.Struct)
-				Parent.AddClassOrStruct (this);
-			else
-				throw new InvalidOperationException ();
-		}
-
-		public override PendingImplementation GetPendingImplementations ()
-		{
-			return PendingImplementation.GetPendingImplementations (this);
+			source_modifiers = mod;
+			has_partial_modifier = (mod & Modifiers.PARTIAL) != 0;
+			UpdateModifiers (source_modifiers, l);
 		}
 
 		ArrayList constraints_lists;
@@ -2830,6 +2849,20 @@ namespace Mono.CSharp {
 			return part;
 		}
 
+		public override TypeBuilder DefineType ()
+		{
+			if ((Kind == Kind.Class) &&
+			    (ModFlags & Modifiers.ABSTRACT) == Modifiers.ABSTRACT &&
+			    (ModFlags & (Modifiers.SEALED | Modifiers.STATIC)) != 0) {
+				Report.Error (418, Location,
+					      "'{0}': an abstract class cannot be sealed or static",
+					      GetSignatureForError ());
+				return null;
+			}
+
+			return base.DefineType ();
+		}
+
 		public override TypeAttributes TypeAttr {
 			get {
 				return base.TypeAttr | DefaultTypeAttributes;
@@ -2843,7 +2876,10 @@ namespace Mono.CSharp {
 
 		public ClassPart (NamespaceEntry ns, PartialContainer parent,
 				  int mod, Attributes attrs, Kind kind, Location l)
-			: base (ns, parent.Parent, parent.MemberName, attrs, kind, l)
+			// Keep the merged container as the lexical parent so generic type
+			// parameters declared on the first part stay visible while parsing
+			// later parts.
+			: base (ns, parent, parent.MemberName, attrs, kind, l)
 		{
 			this.PartialContainer = parent;
 			this.IsPartial = true;
@@ -2855,7 +2891,7 @@ namespace Mono.CSharp {
 				accmods = Modifiers.PRIVATE;
 
 			this.ModFlags = Modifiers.Check (
-				parent.AllowedModifiers, mod, accmods, l);
+				parent.AllowedModifiers, mod & ~Modifiers.PARTIAL, accmods, l);
 		}
 
 		public override void Register ()

@@ -713,6 +713,7 @@ namespace Mono.CSharp
 			keywords.Add ("on", Token.ON);
 			keywords.Add ("option", Token.OPTION);
 			keywords.Add ("optional", Token.OPTIONAL);
+			keywords.Add ("partial", Token.PARTIAL);
 			keywords.Add ("or", Token.OR);
 			keywords.Add ("orelse", Token.ORELSE);
 			keywords.Add ("overloads", Token.OVERLOADS);
