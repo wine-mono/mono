@@ -4536,6 +4536,8 @@ variable_declarator
 	  		else
 				vartype = ($2 == null) ? ((vname.Type == null) ? TypeManager.system_object_expr : (Expression) vname.Type ) : (Expression) $2;
 
+			Expression declared_type = vartype;
+
 			// if the variable is an array with explicit bound
 			// and having explicit initialization throw exception
 			if (current_rank_specifiers != null && varinit != null) 
@@ -4562,14 +4564,19 @@ variable_declarator
 			
 			// Handle the prefix array-on-name form: 'Dim values() As
 			// Integer' puts the rank specifier on the name side of the
-			// declaration.  The name-side grammar below only accepts
-			// empty ranks like () or (,), so wrapping here is limited to
-			// the forms we can lower correctly.
-			//
 			// Per the VB spec, a declaration cannot specify an array
 			// modifier on both the variable name and the type name in the
 			// same declaration. Reject 'values() As Integer()' instead of
 			// silently building an array-of-array type here.
+			//
+			// Name-side bounds also allocate the array in VB:
+			//   Dim buffer(1023) As Byte
+			// so synthesize that ArrayCreation before composing the final
+			// declared array type.
+			if (current_rank_specifiers != null && varinit == null && !(vartype is New))
+				varinit = VariableDeclaration.BuildArrayCreationFromDeclaration (
+					declared_type, current_rank_specifiers, lexer.Location);
+
 			if (current_rank_specifiers != null && !(vartype is New)) {
 				string t = vartype.ToString ();
 				if (t.IndexOf ('[') >= 0)
@@ -4672,7 +4679,19 @@ opt_type_decl
 		
 opt_array_name_modifier
 	: /* empty */ 				{ $$ = null; }
-	| empty_rank_specifiers			{ $$ = $1;   }
+	| rank_specifier opt_trailing_empty_rank_specifiers
+	  {
+		ArrayList rs = new ArrayList ();
+		rs.Add ($1);
+		if ($2 != null)
+			rs.AddRange ((ArrayList) $2);
+		$$ = rs;
+	  }
+	;
+
+opt_trailing_empty_rank_specifiers
+	: /* empty */				{ $$ = null; }
+	| empty_rank_specifiers			{ $$ = $1; }
 	;
 
 empty_rank_specifiers
@@ -6030,6 +6049,32 @@ public class VariableDeclaration {
 
 		string rank = BuildRank (dims);
 		return new ArrayCreation (requested_type, rank, varinit, l);
+	}
+
+	public static ArrayCreation BuildArrayCreationFromDeclaration (
+		Expression base_type, ArrayList rank_specifiers, Location l)
+	{
+		if (rank_specifiers == null || !IndexesSpecified (rank_specifiers))
+			return null;
+
+		ArrayList first_rank = (ArrayList) rank_specifiers [0];
+		Expression element_type = base_type;
+
+		if (rank_specifiers.Count > 1) {
+			ArrayList trailing_ranks = new ArrayList ();
+			for (int i = 1; i < rank_specifiers.Count; ++i)
+				trailing_ranks.Add (rank_specifiers [i]);
+
+			string dims = BuildRanks (trailing_ranks, true, l);
+			element_type = new ComposedCast (base_type, dims, l);
+		}
+
+		ArrayList args = new ArrayList (first_rank.Count);
+		foreach (Expression expr in first_rank)
+			args.Add (new Argument (expr, Argument.AType.Expression));
+
+		New n = new New (element_type, args, l);
+		return BuildArrayCreationFromObjectCreation (n, element_type, null, l);
 	}
 	
 	public static void FixupTypes (ArrayList vars)
