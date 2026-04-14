@@ -3011,6 +3011,15 @@ public partial class TypeManager {
 			return t;
 	
 		if (t is TypeBuilder) {
+			// While bmcs is still emitting an enum, TypeBuilder can report
+			// itself as the underlying system type. Fall back to the enum
+			// declaration metadata so conversions and codegen still see the
+			// primitive backing type.
+			DeclSpace ds = LookupDeclSpace (t);
+			Enum en = ds as Enum;
+			if (en != null && en.UnderlyingType != null)
+				return en.UnderlyingType;
+
 			// slow path needed to compile corlib
 			if (t == TypeManager.bool_type ||
 					t == TypeManager.byte_type ||

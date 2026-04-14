@@ -308,12 +308,16 @@ namespace Mono.CSharp {
 					if (mb.IsGenericMethod && !mb.IsGenericMethodDefinition)
 						mb = ((MethodInfo)mb).GetGenericMethodDefinition ();
 					IMethodData md = TypeManager.GetMethod (mb);
+					if (md == null)
+						return;
 					SymbolRelatedToPreviousError (md.Location, md.GetSignatureForError (temp_ds));
 					return;
 				}
 
 				string name = String.Concat (temp_ds.Name, ".", mi.Name);
 				MemberCore mc = temp_ds.GetDefinition (name);
+				if (mc == null)
+					return;
 				SymbolRelatedToPreviousError (mc);
 			}
 		}
