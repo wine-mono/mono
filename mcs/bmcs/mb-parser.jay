@@ -4315,26 +4315,27 @@ array_creation_expression
 		// 'New T(1,2) {...}' from 'New T(,) {...}' here without a
 		// second array-only prefix grammar.
 		New n = (New) $1;
-		ArrayList dims = new ArrayList ();
+		$$ = VariableDeclaration.BuildArrayCreationFromObjectCreation (
+			n, n.RequestedType, (ArrayList) $2, lexer.Location);
+	  }
+	| object_creation_expression empty_rank_specifiers array_initializer
+	  {
+		New n = (New) $1;
 
-		if (n.Arguments != null) {
-			foreach (Argument a in n.Arguments)
-				dims.Add (a.Expr);
-		}
+		// VB array creation allows one size-initialization modifier
+		// followed by zero or more empty array-type modifiers:
+		//   New Integer()() { ... }
+		//   New Integer(1)(,) { ... }
+		// Keep the trailing modifiers in the existing empty-rank
+		// grammar so the parser does not have to guess between
+		// array-type syntax and arbitrary invocation/index syntax.
+		string inner_dims = VariableDeclaration.BuildRanks (
+			(ArrayList) $2, true, lexer.Location);
+		Expression elem_type = new ComposedCast (
+			n.RequestedType, inner_dims, lexer.Location);
 
-		ArrayList init = (ArrayList) $2;
-		if (init.Count == 0)
-			init = null;
-
-		if (VariableDeclaration.IndexesSpecifiedInRank (dims)) {
-			// VB array bounds are upper bounds, but ArrayCreation
-			// consumes lengths.
-			VariableDeclaration.VBFixIndexList (ref dims);
-			$$ = new ArrayCreation (n.RequestedType, dims, "", init, lexer.Location);
-		} else {
-			string rank = VariableDeclaration.BuildRank (dims);
-			$$ = new ArrayCreation (n.RequestedType, rank, init, lexer.Location);
-		}
+		$$ = VariableDeclaration.BuildArrayCreationFromObjectCreation (
+			n, elem_type, (ArrayList) $3, lexer.Location);
 	  }
 	;	
 
@@ -5957,6 +5958,30 @@ public class VariableDeclaration {
 	{	
 		// FIXME : This is broken: only the first rank is parsed
 		return new ArrayCreation (vartype, (ArrayList) a_dims[0], "", varinit, l);
+	}
+
+	public static ArrayCreation BuildArrayCreationFromObjectCreation (
+		New n, Expression requested_type, ArrayList varinit, Location l)
+	{
+		ArrayList dims = new ArrayList ();
+
+		if (n.Arguments != null) {
+			foreach (Argument a in n.Arguments)
+				dims.Add (a.Expr);
+		}
+
+		if (varinit != null && varinit.Count == 0)
+			varinit = null;
+
+		if (IndexesSpecifiedInRank (dims)) {
+			// VB array bounds are upper bounds, but ArrayCreation
+			// consumes lengths.
+			VBFixIndexList (ref dims);
+			return new ArrayCreation (requested_type, dims, "", varinit, l);
+		}
+
+		string rank = BuildRank (dims);
+		return new ArrayCreation (requested_type, rank, varinit, l);
 	}
 	
 	public static void FixupTypes (ArrayList vars)
