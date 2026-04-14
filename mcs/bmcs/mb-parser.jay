@@ -1272,7 +1272,7 @@ modifier
 	| FRIEND			{ $$ = Modifiers.INTERNAL; }
 	| NOTINHERITABLE		{ $$ = Modifiers.SEALED; } 
 	| OVERRIDABLE			{ $$ = Modifiers.VIRTUAL; }
-	| NOTOVERRIDABLE		{ $$ = Modifiers.NONVIRTUAL; }
+	| NOTOVERRIDABLE		{ $$ = Modifiers.SEALED; }
 	| OVERRIDES 			{ $$ = Modifiers.OVERRIDE; }
 	| OVERLOADS			{ $$ = Modifiers.NEW; }
 	| SHADOWS			{ $$ = Modifiers.SHADOWS; }
