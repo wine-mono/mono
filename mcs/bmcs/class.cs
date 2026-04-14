@@ -6941,6 +6941,12 @@ namespace Mono.CSharp {
 			Set.UpdateName (this);
 		}
 
+		public override bool MarkForDuplicationCheck ()
+		{
+			caching_flags |= Flags.TestMethodDuplication;
+			return true;
+		}
+
 		protected override bool VerifyClsCompliance (DeclSpace ds)
 		{
 			if (!base.VerifyClsCompliance (ds))
