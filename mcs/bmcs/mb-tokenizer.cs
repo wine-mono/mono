@@ -642,6 +642,7 @@ namespace Mono.CSharp
 			keywords.Add ("cobj", Token.COBJ);
 			keywords.Add ("compare", Token.COMPARE); // Not a VB.NET Keyword
 			keywords.Add ("const", Token.CONST);
+			keywords.Add ("continue", Token.CONTINUE);
 			keywords.Add ("cshort", Token.CSHORT);
 			keywords.Add ("csng", Token.CSNG);
 			keywords.Add ("cstr", Token.CSTR);

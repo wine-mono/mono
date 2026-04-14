@@ -18,6 +18,14 @@ using System.Diagnostics;
 namespace Mono.CSharp {
 
 	using System.Collections;
+
+	// VB loop-control statements name the containing block kind.
+	// `For' covers both `For ... Next' and `For Each ... Next'.
+	public enum VBLoopKind {
+		Do,
+		For,
+		While
+	}
 	
 	public abstract class Statement {
 		public Location loc;
@@ -244,33 +252,50 @@ namespace Mono.CSharp {
 	public class Do : Statement {
 		public Expression expr;
 		public readonly Statement  EmbeddedStatement;
-		bool infinite;
+		readonly bool test_before;
+		readonly bool until_condition;
+		bool infinite, empty;
 		
-		public Do (Statement statement, Expression boolExpr, Location l)
+		public Do (Statement statement, Expression boolExpr, bool testBefore, bool untilCondition, Location l)
 		{
 			expr = boolExpr;
 			EmbeddedStatement = statement;
+			test_before = testBefore;
+			until_condition = untilCondition;
 			loc = l;
+		}
+
+		bool ContinueOnCondition (bool condition_value)
+		{
+			return until_condition ? !condition_value : condition_value;
 		}
 
 		public override bool Resolve (EmitContext ec)
 		{
 			bool ok = true;
 
-			ec.StartFlowBranching (FlowBranching.BranchingType.Loop, loc);
-
-			if (!EmbeddedStatement.Resolve (ec))
-				ok = false;
-
 			expr = Expression.ResolveBoolean (ec, expr, loc);
 			if (expr == null)
-				ok = false;
-			else if (expr is BoolConstant){
-				bool res = ((BoolConstant) expr).Value;
+				return false;
+
+			if (expr is BoolConstant) {
+				bool res = ContinueOnCondition (((BoolConstant) expr).Value);
+
+				if (test_before && !res) {
+					if (!EmbeddedStatement.ResolveUnreachable (ec, true))
+						return false;
+					empty = true;
+					return true;
+				}
 
 				if (res)
 					infinite = true;
 			}
+
+			ec.StartFlowBranching (VBLoopKind.Do, loc);
+
+			if (!EmbeddedStatement.Resolve (ec))
+				ok = false;
 
 			ec.CurrentBranching.Infinite = infinite;
 			ec.EndFlowBranching ();
@@ -280,30 +305,35 @@ namespace Mono.CSharp {
 		
 		protected override void DoEmit (EmitContext ec)
 		{
+			if (empty)
+				return;
+
 			ILGenerator ig = ec.ig;
 			Label loop = ig.DefineLabel ();
+			Label test = ig.DefineLabel ();
 			Label old_begin = ec.LoopBegin;
 			Label old_end = ec.LoopEnd;
 			
-			ec.LoopBegin = ig.DefineLabel ();
+			ec.LoopBegin = test;
 			ec.LoopEnd = ig.DefineLabel ();
-				
+			ec.PushVBLoop (VBLoopKind.Do, ec.LoopBegin, ec.LoopEnd);
+
+			if (test_before)
+				ig.Emit (OpCodes.Br, test);
+
 			ig.MarkLabel (loop);
 			EmbeddedStatement.Emit (ec);
-			ig.MarkLabel (ec.LoopBegin);
+			ig.MarkLabel (test);
 
-			//
-			// Dead code elimination
-			//
-			if (expr is BoolConstant){
-				bool res = ((BoolConstant) expr).Value;
-
+			if (expr is BoolConstant) {
+				bool res = ContinueOnCondition (((BoolConstant) expr).Value);
 				if (res)
-					ec.ig.Emit (OpCodes.Br, loop); 
+					ig.Emit (OpCodes.Br, loop);
 			} else
-				expr.EmitBranchable (ec, loop, true);
+				expr.EmitBranchable (ec, loop, !until_condition);
 			
 			ig.MarkLabel (ec.LoopEnd);
+			ec.PopVBLoop ();
 
 			ec.LoopBegin = old_begin;
 			ec.LoopEnd = old_end;
@@ -345,7 +375,7 @@ namespace Mono.CSharp {
 					infinite = true;
 			}
 
-			ec.StartFlowBranching (FlowBranching.BranchingType.Loop, loc);
+			ec.StartFlowBranching (VBLoopKind.While, loc);
 
 			if (!Statement.Resolve (ec))
 				ok = false;
@@ -367,6 +397,7 @@ namespace Mono.CSharp {
 			
 			ec.LoopBegin = ig.DefineLabel ();
 			ec.LoopEnd = ig.DefineLabel ();
+			ec.PushVBLoop (VBLoopKind.While, ec.LoopBegin, ec.LoopEnd);
 
 			//
 			// Inform whether we are infinite or not
@@ -396,6 +427,7 @@ namespace Mono.CSharp {
 				ig.MarkLabel (ec.LoopEnd);
 			}	
 
+			ec.PopVBLoop ();
 			ec.LoopBegin = old_begin;
 			ec.LoopEnd = old_end;
 		}
@@ -451,7 +483,7 @@ namespace Mono.CSharp {
 			} else
 				infinite = true;
 
-			ec.StartFlowBranching (FlowBranching.BranchingType.Loop, loc);
+			ec.StartFlowBranching (VBLoopKind.For, loc);
 			if (!infinite)
 				ec.CurrentBranching.CreateSibling ();
 
@@ -485,6 +517,7 @@ namespace Mono.CSharp {
 
 			ec.LoopBegin = ig.DefineLabel ();
 			ec.LoopEnd = ig.DefineLabel ();
+			ec.PushVBLoop (VBLoopKind.For, ec.LoopBegin, ec.LoopEnd);
 
 			ig.Emit (OpCodes.Br, test);
 			ig.MarkLabel (loop);
@@ -513,9 +546,183 @@ namespace Mono.CSharp {
 			} else
 				ig.Emit (OpCodes.Br, loop);
 			ig.MarkLabel (ec.LoopEnd);
+			ec.PopVBLoop ();
 
 			ec.LoopBegin = old_begin;
 			ec.LoopEnd = old_end;
+		}
+	}
+
+	// VB `For ... To ... [Step ...]' evaluates the initial value,
+	// limit, and step exactly once in textual order when the loop
+	// begins, and only then assigns the initial value to the loop
+	// control variable.  Reusing bmcs's C-like For node directly would
+	// re-evaluate the limit and step expressions every iteration, so
+	// cache the three expressions into temporaries and keep the
+	// loop-control test in one statement node.
+	public class VBFor : Statement {
+		readonly string identifier;
+		Expression start;
+		Expression limit;
+		Expression step;
+		readonly Statement statement;
+
+		Statement init_statement;
+		Statement increment_statement;
+		Expression test;
+		LocalTemporary start_temp;
+		LocalTemporary limit_temp;
+		LocalTemporary step_temp;
+
+		public VBFor (string identifier, Expression start, Expression limit,
+			Expression step, Statement statement, Location l)
+		{
+			this.identifier = identifier;
+			this.start = start;
+			this.limit = limit;
+			this.step = step;
+			this.statement = statement;
+			loc = l;
+		}
+
+		Expression ResolveCachedBound (EmitContext ec, Expression expr, Type loop_type)
+		{
+			expr = expr.Resolve (ec);
+			if (expr == null)
+				return null;
+
+			return Convert.ImplicitVBConversionRequired (ec, expr, loop_type, loc);
+		}
+
+		Expression BuildTest ()
+		{
+			Expression counter_for_pos = new SimpleName (identifier, loc);
+			Expression counter_for_neg = new SimpleName (identifier, loc);
+			Expression zero = new IntLiteral (0);
+
+			Expression pos_arm = new Binary (
+				Binary.Operator.LogicalAndAlso,
+				new Binary (Binary.Operator.GreaterThanOrEqual,
+					step_temp, zero, loc),
+				new Binary (Binary.Operator.LessThanOrEqual,
+					counter_for_pos, limit_temp, loc),
+				loc);
+			Expression neg_arm = new Binary (
+				Binary.Operator.LogicalAndAlso,
+				new Binary (Binary.Operator.LessThan,
+					step_temp, zero, loc),
+				new Binary (Binary.Operator.GreaterThanOrEqual,
+					counter_for_neg, limit_temp, loc),
+				loc);
+
+			return new Binary (Binary.Operator.LogicalOrElse, pos_arm, neg_arm, loc);
+		}
+
+		Statement BuildIncrement ()
+		{
+			CompoundAssign increment = new CompoundAssign (
+				Binary.Operator.Addition,
+				new SimpleName (identifier, loc), step_temp, loc);
+			return new StatementExpression (increment, loc);
+		}
+
+		public override bool Resolve (EmitContext ec)
+		{
+			bool ok = true;
+			Expression loop_control = new SimpleName (identifier, loc).ResolveLValue (
+				ec, EmptyExpression.Null);
+			Type loop_type = loop_control != null ? loop_control.Type : null;
+			if (loop_type == null)
+				return false;
+
+			start = ResolveCachedBound (ec, start, loop_type);
+			if (start == null)
+				ok = false;
+
+			limit = ResolveCachedBound (ec, limit, loop_type);
+			if (limit == null)
+				ok = false;
+
+			step = ResolveCachedBound (ec, step, loop_type);
+			if (step == null)
+				ok = false;
+
+			if (!ok)
+				return false;
+
+			start_temp = new LocalTemporary (ec, loop_type);
+			limit_temp = new LocalTemporary (ec, loop_type);
+			step_temp = new LocalTemporary (ec, loop_type);
+
+			init_statement = new StatementExpression (
+				new Assign (new SimpleName (identifier, loc), start_temp, loc), loc);
+			test = Expression.ResolveBoolean (ec, BuildTest (), loc);
+			if (test == null)
+				return false;
+
+			increment_statement = BuildIncrement ();
+
+			if (!init_statement.Resolve (ec))
+				return false;
+
+			ec.StartFlowBranching (VBLoopKind.For, loc);
+			ec.CurrentBranching.CreateSibling ();
+
+			if (!statement.Resolve (ec))
+				ok = false;
+
+			if (increment_statement != null && !increment_statement.Resolve (ec))
+				ok = false;
+
+			ec.EndFlowBranching ();
+
+			return ok;
+		}
+
+		protected override void DoEmit (EmitContext ec)
+		{
+			ILGenerator ig = ec.ig;
+			Label old_begin = ec.LoopBegin;
+			Label old_end = ec.LoopEnd;
+			Label loop = ig.DefineLabel ();
+			Label test_label = ig.DefineLabel ();
+
+			start.Emit (ec);
+			start_temp.Store (ec);
+
+			limit.Emit (ec);
+			limit_temp.Store (ec);
+
+			step.Emit (ec);
+			step_temp.Store (ec);
+
+			if (init_statement != null && init_statement != EmptyStatement.Value)
+				init_statement.Emit (ec);
+
+			ec.LoopBegin = ig.DefineLabel ();
+			ec.LoopEnd = ig.DefineLabel ();
+			ec.PushVBLoop (VBLoopKind.For, ec.LoopBegin, ec.LoopEnd);
+
+			ig.Emit (OpCodes.Br, test_label);
+			ig.MarkLabel (loop);
+			statement.Emit (ec);
+
+			ig.MarkLabel (ec.LoopBegin);
+			if (increment_statement != null && increment_statement != EmptyStatement.Value)
+				increment_statement.Emit (ec);
+
+			ig.MarkLabel (test_label);
+			test.EmitBranchable (ec, loop, true);
+
+			ig.MarkLabel (ec.LoopEnd);
+			ec.PopVBLoop ();
+
+			ec.LoopBegin = old_begin;
+			ec.LoopEnd = old_end;
+
+			start_temp.Release (ec);
+			limit_temp.Release (ec);
+			step_temp.Release (ec);
 		}
 	}
 	
@@ -966,6 +1173,152 @@ namespace Mono.CSharp {
 				ec.ig.Emit (OpCodes.Leave, begin);
 			else
 				ec.ig.Emit (OpCodes.Br, begin);
+		}
+	}
+
+	public abstract class VBLoopControlStatement : Statement {
+		protected readonly VBLoopKind loop_kind;
+		protected bool crossing_exc;
+
+		protected VBLoopControlStatement (VBLoopKind kind, Location l)
+		{
+			loop_kind = kind;
+			loc = l;
+		}
+
+		static FlowBranchingLoop FindInnermostLoop (FlowBranching branching)
+		{
+			for (; branching != null; branching = branching.Parent) {
+				FlowBranchingLoop loop = branching as FlowBranchingLoop;
+				if (loop != null)
+					return loop;
+			}
+
+			return null;
+		}
+
+		protected FlowBranchingLoop FindTargetLoop (EmitContext ec)
+		{
+			for (FlowBranching branching = ec.CurrentBranching; branching != null; branching = branching.Parent) {
+				FlowBranchingLoop loop = branching as FlowBranchingLoop;
+				if (loop == null || loop.Kind != loop_kind)
+					continue;
+
+				return loop;
+			}
+
+			return null;
+		}
+
+		protected bool CrossesTryCatchBoundary (EmitContext ec)
+		{
+			for (FlowBranching branching = ec.CurrentBranching; branching != null; branching = branching.Parent) {
+				FlowBranchingLoop loop = branching as FlowBranchingLoop;
+				if (loop != null && loop.Kind == loop_kind)
+					return false;
+
+				if (branching.Type == FlowBranching.BranchingType.Exception)
+					return true;
+			}
+
+			return false;
+		}
+
+		protected bool IsImmediateLoopTarget (EmitContext ec)
+		{
+			FlowBranchingLoop innermost = FindInnermostLoop (ec.CurrentBranching);
+			return innermost != null && innermost.Kind == loop_kind;
+		}
+
+		protected string LoopKeyword {
+			get { return loop_kind.ToString (); }
+		}
+	}
+
+	public class VBExitLoop : VBLoopControlStatement {
+		public VBExitLoop (VBLoopKind kind, Location l)
+			: base (kind, l)
+		{
+		}
+
+		public override bool Resolve (EmitContext ec)
+		{
+			FlowBranchingLoop target = FindTargetLoop (ec);
+			if (target == null) {
+				Error (139, "No enclosing `{0}' statement out of which to exit", LoopKeyword);
+				return false;
+			}
+
+			if (ec.CurrentBranching.InFinally (false)) {
+				Error (157, "Control can not leave the body of the finally block");
+				return false;
+			}
+
+			crossing_exc = CrossesTryCatchBoundary (ec);
+			if (crossing_exc)
+				ec.CurrentBranching.AddFinallyVector (ec.CurrentBranching.CurrentUsageVector);
+			else
+				target.AddBreakVector (ec.CurrentBranching.CurrentUsageVector);
+
+			ec.NeedReturnLabel ();
+
+			if (IsImmediateLoopTarget (ec))
+				ec.CurrentBranching.CurrentUsageVector.Break ();
+			else
+				ec.CurrentBranching.CurrentUsageVector.Goto ();
+
+			return true;
+		}
+
+		protected override void DoEmit (EmitContext ec)
+		{
+			Label continue_label, exit_label;
+			if (!ec.TryGetVBLoopLabels (loop_kind, out continue_label, out exit_label))
+				throw new InvalidOperationException ();
+
+			if (crossing_exc)
+				ec.ig.Emit (OpCodes.Leave, exit_label);
+			else
+				ec.ig.Emit (OpCodes.Br, exit_label);
+		}
+	}
+
+	public class VBContinueLoop : VBLoopControlStatement {
+		public VBContinueLoop (VBLoopKind kind, Location l)
+			: base (kind, l)
+		{
+		}
+
+		public override bool Resolve (EmitContext ec)
+		{
+			if (FindTargetLoop (ec) == null) {
+				Error (139, "No enclosing `{0}' statement to continue", LoopKeyword);
+				return false;
+			}
+
+			if (ec.CurrentBranching.InFinally (false)) {
+				Error (157, "Control can not leave the body of the finally block");
+				return false;
+			}
+
+			crossing_exc = CrossesTryCatchBoundary (ec);
+			if (crossing_exc)
+				ec.CurrentBranching.AddFinallyVector (ec.CurrentBranching.CurrentUsageVector);
+
+			ec.CurrentBranching.CurrentUsageVector.Goto ();
+			return true;
+		}
+
+		protected override void DoEmit (EmitContext ec)
+		{
+			Label continue_label, exit_label;
+			if (!ec.TryGetVBLoopLabels (loop_kind, out continue_label, out exit_label))
+				throw new InvalidOperationException ();
+
+			if (crossing_exc)
+				ec.ig.Emit (OpCodes.Leave, continue_label);
+			else
+				ec.ig.Emit (OpCodes.Br, continue_label);
 		}
 	}
 
@@ -4377,7 +4730,7 @@ namespace Mono.CSharp {
 
 			bool ok = true;
 
-			ec.StartFlowBranching (FlowBranching.BranchingType.Loop, loc);
+			ec.StartFlowBranching (VBLoopKind.For, loc);
 			ec.CurrentBranching.CreateSibling ();
 
  			//
@@ -4968,12 +5321,14 @@ namespace Mono.CSharp {
 			Label old_begin = ec.LoopBegin, old_end = ec.LoopEnd;
 			ec.LoopBegin = ig.DefineLabel ();
 			ec.LoopEnd = ig.DefineLabel ();
+			ec.PushVBLoop (VBLoopKind.For, ec.LoopBegin, ec.LoopEnd);
 			
 			if (hm != null)
 				EmitCollectionForeach (ec);
 			else
 				EmitArrayForeach (ec);
 
+			ec.PopVBLoop ();
 			ec.LoopBegin = old_begin;
 			ec.LoopEnd = old_end;
 		}

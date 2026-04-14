@@ -1350,10 +1350,17 @@ namespace Mono.CSharp
 	public class FlowBranchingLoop : FlowBranchingBlock
 	{
 		UsageVector break_origins;
+		public readonly VBLoopKind Kind;
 
 		public FlowBranchingLoop (FlowBranching parent, Block block, Location loc)
-			: base (parent, BranchingType.Loop, SiblingType.Conditional, block, loc)
+			: this (parent, block, loc, VBLoopKind.While)
 		{ }
+
+		public FlowBranchingLoop (FlowBranching parent, Block block, Location loc, VBLoopKind kind)
+			: base (parent, BranchingType.Loop, SiblingType.Conditional, block, loc)
+		{
+			Kind = kind;
+		}
 
 		public override void AddBreakVector (UsageVector vector)
 		{

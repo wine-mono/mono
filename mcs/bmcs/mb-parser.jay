@@ -215,8 +215,16 @@ namespace Mono.CSharp
 		// Function or Get accessor body.  Used to apply the VB rule that
 		// invocation and AddressOf contexts skip that local and keep
 		// looking for a method/property member with the same name.
+		enum ExitTargetKind {
+			None,
+			Sub,
+			Function,
+			Property
+		}
+
 		string current_return_name;
 		bool current_method_is_shared;
+		ExitTargetKind current_exit_target;
 
 		static public int yacc_verbose_flag;
 
@@ -370,7 +378,8 @@ namespace Mono.CSharp
 %token CLNG
 %token COBJ
 %token COMPARE	
-%token CONST	
+%token CONST
+%token CONTINUE
 %token CSHORT	
 %token CSNG
 %token CSTR
@@ -1653,6 +1662,7 @@ sub_declaration
 					    lexer.Location);
 
 		current_local_parameters = (Parameters) $4;
+		current_exit_target = ExitTargetKind.Sub;
 		$$ = method;
 
 		iterator_container = (IIteratorContainer) method;
@@ -1688,6 +1698,7 @@ sub_declaration
 		current_container.AddMethod (method);
 
 		current_local_parameters = null;
+		current_exit_target = ExitTargetKind.None;
 		iterator_container = null;
 	  }
 	;
@@ -1715,6 +1726,7 @@ func_declaration
 		current_local_parameters = (Parameters) $5;
 		current_return_name = (string) $2;
 		current_method_is_shared = (current_modifiers & Modifiers.STATIC) != 0;
+		current_exit_target = ExitTargetKind.Function;
 
 		$$ = method;
 		iterator_container = method;
@@ -1730,14 +1742,29 @@ func_declaration
 		ArrayList retval = new ArrayList ();
 		retval.Add (new VariableDeclaration ((string) $2, method.Type, lexer.Location));
 		declare_local_variables (method.Type, retval, lexer.Location);
+
+		// VB's implicit function variable starts at the default of the
+		// return type, and `End Function` returns its current value.
+		LocalVariableReference retvar = new LocalVariableReference (
+			current_block, (string) $2, lexer.Location);
+		Assign init = new Assign (retvar,
+			new DefaultValueExpression (method.Type, lexer.Location),
+			lexer.Location);
+		current_block.AddStatement (new StatementExpression (init, lexer.Location));
 	  }
 	  opt_statement_list
+	  {
+		LocalVariableReference retvar = new LocalVariableReference (
+			current_block, (string) $2, lexer.Location);
+		current_block.AddStatement (new Return (retvar, lexer.Location));
+	  }
 	  end_block
 	  END FUNCTION logical_end_of_line
 	  {
-		// Position shift: mid-rule 1 is now $7, end_block is now $13.
+		// Position shift: a new mid-rule after opt_statement_list moved
+		// end_block from $13 to $14.
 		Method method = (Method) $7;
-		Block b = (Block) $13;
+		Block b = (Block) $14;
 		const int extern_abstract = (Modifiers.EXTERN | Modifiers.ABSTRACT);
 
 		if (b == null){
@@ -1759,6 +1786,7 @@ func_declaration
 
 		current_return_name = null;
 		current_method_is_shared = false;
+		current_exit_target = ExitTargetKind.None;
 		current_local_parameters = null;
 		iterator_container = null;
 	  }
@@ -2525,6 +2553,7 @@ get_accessor_declaration
 		current_local_parameters = get_parameters;
 		current_return_name = get_implicit_value_parameter_name;
 		current_method_is_shared = (current_modifiers & Modifiers.STATIC) != 0;
+		current_exit_target = ExitTargetKind.Property;
 		
 		lexer.PropertyParsing = false;
 		
@@ -2533,19 +2562,35 @@ get_accessor_declaration
 	  {
 		ArrayList retval = new ArrayList ();
 		retval.Add (new VariableDeclaration (get_implicit_value_parameter_name, get_implicit_value_parameter_type, lexer.Location));
-		declare_local_variables (get_implicit_value_parameter_type, retval, lexer.Location);	
+		declare_local_variables (get_implicit_value_parameter_type, retval, lexer.Location);
+
+		LocalVariableReference retvar = new LocalVariableReference (
+			current_block, get_implicit_value_parameter_name, lexer.Location);
+		Assign init = new Assign (retvar,
+			new DefaultValueExpression (
+				get_implicit_value_parameter_type, lexer.Location),
+			lexer.Location);
+		current_block.AddStatement (new StatementExpression (init, lexer.Location));
 	  }
 	  opt_statement_list
+	  {
+		LocalVariableReference retvar = new LocalVariableReference (
+			current_block, get_implicit_value_parameter_name, lexer.Location);
+		current_block.AddStatement (new Return (retvar, lexer.Location));
+	  }
 	  end_block
 	  END GET logical_end_of_line
 	  {
 		// See comment in set_accessor_declaration below: accessor
 		// modifiers are distinct from property-level modifiers.
-		$$ = new Accessor ((ToplevelBlock) $9, (int) $2,
+		// Position shift: a new mid-rule after opt_statement_list moved
+		// end_block from $9 to $10.
+		$$ = new Accessor ((ToplevelBlock) $10, (int) $2,
 				   (Attributes) $1, lexer.Location);
 
 		current_return_name = null;
 		current_method_is_shared = false;
+		current_exit_target = ExitTargetKind.None;
 		current_local_parameters = null;
 		lexer.PropertyParsing = true;
 	  }
@@ -2566,6 +2611,7 @@ set_accessor_declaration
 
 		set_parameters.AppendParameter (implicit_value_parameter);
 		current_local_parameters = set_parameters;
+		current_exit_target = ExitTargetKind.Property;
 
 		lexer.PropertyParsing = false;
 	  }
@@ -2582,6 +2628,7 @@ set_accessor_declaration
 		$$ = new Accessor ((ToplevelBlock) $9, (int) $2,
 				   (Attributes) $1, lexer.Location);
 		current_local_parameters = null;
+		current_exit_target = ExitTargetKind.None;
 		lexer.PropertyParsing = true;
 	  }
 	;
@@ -2775,6 +2822,7 @@ constructor_declaration
 	: SUB NEW opt_params logical_end_of_line
 	  {
 	  	current_local_parameters = (Parameters) $3;
+		current_exit_target = ExitTargetKind.Sub;
 		$$ = new Constructor (current_class, current_container.Basename, 0, (Parameters) $3, 
 				      (ConstructorInitializer) null, lexer.Location);
 	  }
@@ -2793,6 +2841,7 @@ constructor_declaration
 
 		current_container.AddConstructor(c);
 		current_local_parameters = null;
+		current_exit_target = ExitTargetKind.None;
 	  }
 	  END SUB logical_end_of_line
 	;
@@ -3062,7 +3111,7 @@ opt_raise_event_args
 embedded_statement
 	: expression_statement
 	| selection_statement
-	| while_statement
+	| iteration_statement
 	| redim_statement
 	| stop_statement
 	| using_statement
@@ -3328,7 +3377,7 @@ jump_statement
 	| */return_statement
 	| goto_statement	
 	| throw_statement	
-// 	| exit_statement
+	| exit_statement
 // 	| yield_statement
 	;
 	        
@@ -3346,23 +3395,80 @@ throw_statement
 	  }
 	;	
 		        
-// exit_statement
-// 	: EXIT exit_type
-// 	  {
-// 	  	$$ = new Exit ((ExitType)$2, lexer.Location);	        
-// 	  }
-// 	;
-	
-// exit_type
-// 	: DO 		{ $$ = ExitType.DO;		}
-// 	| FOR 		{ $$ = ExitType.FOR;		}
-// 	| WHILE 	{ $$ = ExitType.WHILE;		}
-// 	| SELECT 	{ $$ = ExitType.SELECT;		}
-// 	| SUB 		{ $$ = ExitType.SUB;		}
-// 	| FUNCTION 	{ $$ = ExitType.FUNCTION;	}
-// 	| PROPERTY 	{ $$ = ExitType.PROPERTY;	}
-// 	| TRY		{ $$ = ExitType.TRY;		}
-// 	;
+exit_statement
+	: EXIT DO
+	  {
+		$$ = new VBExitLoop (VBLoopKind.Do, lexer.Location);
+	  }
+	| EXIT FOR
+	  {
+		$$ = new VBExitLoop (VBLoopKind.For, lexer.Location);
+	  }
+	| EXIT WHILE
+	  {
+		$$ = new VBExitLoop (VBLoopKind.While, lexer.Location);
+	  }
+	| EXIT SELECT
+	  {
+		Report.Error (30066, lexer.Location,
+			"'Exit Select' is not supported by this bootstrap compiler");
+		$$ = EmptyStatement.Value;
+	  }
+	| EXIT TRY
+	  {
+		Report.Error (30066, lexer.Location,
+			"'Exit Try' is not supported by this bootstrap compiler");
+		$$ = EmptyStatement.Value;
+	  }
+	| EXIT SUB
+	  {
+		if (current_exit_target != ExitTargetKind.Sub) {
+			Report.Error (30067, lexer.Location,
+				"'Exit Sub' is only valid inside a Sub or constructor body");
+			$$ = EmptyStatement.Value;
+		} else
+			$$ = new Return (null, lexer.Location);
+	  }
+	| EXIT FUNCTION
+	  {
+		if (current_exit_target != ExitTargetKind.Function) {
+			Report.Error (30067, lexer.Location,
+				"'Exit Function' is only valid inside a Function body");
+			$$ = EmptyStatement.Value;
+		} else
+			$$ = new Return (new SimpleName (current_return_name, lexer.Location),
+				lexer.Location);
+	  }
+	| EXIT PROPERTY
+	  {
+		if (current_exit_target != ExitTargetKind.Property) {
+			Report.Error (30067, lexer.Location,
+				"'Exit Property' is only valid inside a Property accessor");
+			$$ = EmptyStatement.Value;
+		} else {
+			Expression ret = current_return_name != null
+				? (Expression) new SimpleName (current_return_name, lexer.Location)
+				: null;
+			$$ = new Return (ret, lexer.Location);
+		}
+	  }
+	| CONTINUE continue_loop_kind
+	  {
+		$$ = new VBContinueLoop ((VBLoopKind) $2, lexer.Location);
+	  }
+	| CONTINUE SELECT
+	  {
+		Report.Error (30066, lexer.Location,
+			"'Continue Select' is not supported by this bootstrap compiler");
+		$$ = EmptyStatement.Value;
+	  }
+	| CONTINUE TRY
+	  {
+		Report.Error (30066, lexer.Location,
+			"'Continue Try' is not supported by this bootstrap compiler");
+		$$ = EmptyStatement.Value;
+	  }
+	;
 
 return_statement
 	: RETURN opt_expression 
@@ -3371,87 +3477,81 @@ return_statement
 	  }
 	;
 	        
-// iteration_statement
-// 	: while_statement
-// 	| do_statement
-// 	| for_statement
-// 	| foreach_statement
-// 	;
+iteration_statement
+	: while_statement
+	| do_statement
+	| for_statement
+	| foreach_statement
+	;
 
-// foreach_statement
-// 	: FOR EACH identifier opt_type_spec IN 
-// 	  {
-// 		oob_stack.Push (lexer.Location);
-// 	  }	  
-// 	  expression end_of_stmt
-// 	  {
-// 		Location l = lexer.Location;		
-// 		LocalVariableReference v = null;
-// 		VariableInfo vi;
+foreach_statement
+	: FOR EACH identifier opt_type_spec IN
+	  {
+		bool declared_loop_local = false;
+		if ($4 != null) {
+			start_block ();
+			LocalInfo li = current_block.AddVariable (
+				(Expression) $4, (string) $3, current_local_parameters, lexer.Location);
+			declared_loop_local = li != null;
+		}
 
-// 		if ($4 != null)	
-// 		{
-// 			start_block();
-// 			VariableDeclaration decl = new VariableDeclaration ((string) $3, 
-// 					(Expression) $4, null, lexer.Location, null);
-			
-// 			vi = current_block.AddVariable (
-// 				(Expression) $4, decl.identifier, current_local_parameters, decl.Location);
+		oob_stack.Push (lexer.Location);
+		oob_stack.Push ($3);
+		oob_stack.Push (declared_loop_local);
+	  }
+	  expression end_of_stmt
+	  {
+		Location l = lexer.Location;
+		LocalVariableReference v = null;
 
-// 			Expression expr;
-// 			if (decl.expression_or_array_initializer is Expression)
-// 				expr = (Expression) decl.expression_or_array_initializer;
-// 			else if (decl.expression_or_array_initializer == null) 
-// 				expr = null;
-// 			else 
-// 			{
-// 				ArrayList init = (ArrayList) decl.expression_or_array_initializer;
-// 				expr = new ArrayCreation ((Expression) $4, "", init, decl.Location);
-// 			}
-		
-// 			v = new LocalVariableReference (current_block, decl.identifier, l);
+		if ($4 != null) {
+			if ((bool) oob_stack.Peek ()) {
+				LocalInfo li = current_block.GetLocalInfo ((string) $3);
+				if (li != null && li.Block == current_block)
+					v = new LocalVariableReference (current_block, (string) $3, l, li, false);
+			}
+		} else {
+			LocalInfo li = current_block.GetLocalInfo ((string) $3);
+			if (li != null)
+				v = new LocalVariableReference (current_block, (string) $3, l, li, false);
+			else
+				Report.Error (451, l, "Name '" + (string) $3 + "' is not declared.");
+		}
 
-// 			if (expr != null) 
-// 			{
-// 				Assign a = new Assign (v, expr, decl.Location);
-// 				current_block.AddStatement (new StatementExpression (a, lexer.Location));
-// 			}
-// 		}
-// 		else
-// 		{
-// 			vi = current_block.GetVariableInfo ((string) $3);
+		oob_stack.Push (v);
+		start_block ();
+	  }
+	  opt_statement_list
+	  NEXT opt_identifier
+	  {
+		LocalVariableReference v = (LocalVariableReference) oob_stack.Pop ();
+		bool declared_loop_local = (bool) oob_stack.Pop ();
+		string loop_name = (string) oob_stack.Pop ();
+		Location l = (Location) oob_stack.Pop ();
+		Block foreach_block = end_block ();
+		string next_name = (string) $12;
 
-// 			if (vi != null) {
-// 				// Get a reference to this variable.
-// 				v = new LocalVariableReference (current_block, (string) $3, l, vi, false);
-// 			}
-// 			else
-// 				Report.Error (451, "Name '" + (string) $3 + "' is not declared.");
-// 		}
-		
-// 		oob_stack.Push (v);
-// 		start_block();	
-// 	  } 	  
-// 	  opt_statement_list
-// 	  NEXT opt_identifier
-// 	  {
-// 		LocalVariableReference v = (LocalVariableReference) oob_stack.Pop ();
-// 		Block foreach_block = end_block();
-// 		Location l = (Location) oob_stack.Pop ();
+		if (next_name != null && String.Compare (loop_name, next_name, true) != 0)
+			Report.Error (30070, lexer.Location,
+				"'Next {0}' does not match loop control variable '{1}'",
+				next_name, loop_name);
 
-// 		Foreach f = null;
-// 		if (v != null)
-// 			f = new Foreach (null, v, (Expression) $7, foreach_block, l);
-		
-// 		if ($4 != null)
-// 		{
-// 			current_block.AddStatement (f);
-// 			$$ = end_block ();
-// 		}
-// 		else
-// 			$$ = f;
-// 	  }	  
-// 	;
+		Foreach f = null;
+		if (v != null) {
+			Expression loop_type = (Expression) $4;
+			if (loop_type == null && v.local_info != null)
+				loop_type = v.local_info.Type;
+			f = new Foreach (loop_type, v, (Expression) $7, foreach_block, l);
+		}
+
+		if ($4 != null) {
+			if (declared_loop_local && f != null)
+				current_block.AddStatement (f);
+			$$ = end_block ();
+		} else
+			$$ = (Statement) (f != null ? (Statement) f : EmptyStatement.Value);
+	  }
+	;
 
 // yield_statement 
 // 	: YIELD expression
@@ -3648,50 +3748,50 @@ catch_args
         ;
 
 
-// do_statement
-// 	: DO opt_do_construct end_of_stmt
-// 	  {
-// 		start_block();
-// 		oob_stack.Push (lexer.Location);
-// 	  }	
-// 	  opt_statement_list
-// 	  LOOP opt_do_construct
-// 	  {
-// 	  	Expression t_before = (Expression) $2;
-// 		Expression t_after = (Expression) $7;
-// 		Expression t;
+do_statement
+	: DO opt_do_construct end_of_stmt
+	  {
+		oob_stack.Push (lexer.Location);
+		oob_stack.Push ($2);
+		start_block ();
+	  }
+	  opt_statement_list
+	  LOOP opt_do_construct
+	  {
+		Block body = end_block ();
+		object before = oob_stack.Pop ();
+		Location l = (Location) oob_stack.Pop ();
+		object after = $7;
 
-// 		if  ((t_before != null) && (t_after != null))
-// 			Report.Error (30238, "'Loop' cannot have a condition if matching 'Do' has one.");
+		if (before != null && after != null)
+			Report.Error (30238, l,
+				"'Loop' cannot have a condition if matching 'Do' has one.");
 
-// 		if ((t_before == null) && (t_after == null))
-// 			t = new BoolLiteral (true);
-// 		else
-// 			t = (t_before != null) ? t_before : t_after;
-			
-// 		DoOptions test_type = (t_before != null) ? DoOptions.TEST_BEFORE : DoOptions.TEST_AFTER;
-		
-// 		if (((do_type == DoOptions.WHILE) && (test_type == DoOptions.TEST_BEFORE)) ||
-// 		    ((do_type == DoOptions.UNTIL) && (test_type == DoOptions.TEST_AFTER)))
-// 			 t = new Unary (Unary.Operator.LogicalNot, (Expression) t, lexer.Location);
-			 
-// 		$$ = new Do ((Statement) end_block(), (Expression) t, test_type, lexer.Location);
-// 	  }
-// 	  ;
+		object cond_pair = before != null ? before : after;
+		bool test_before = before != null;
+		Expression cond;
+		bool until = false;
 
-// opt_do_construct
-// 	: /* empty */ { $$ = null; }
-// 	| while_or_until boolean_expression
-// 	  {
-// 		do_type = (DoOptions)$1;
-// 		$$ = (Expression) $2;
-// 	  }
-// 	;
+		if (cond_pair == null)
+			cond = new BoolLiteral (true);
+		else {
+			Pair p = (Pair) cond_pair;
+			bool is_until = (bool) p.First;
+			cond = (Expression) p.Second;
+			until = is_until;
+		}
 
-// while_or_until
-// 	: WHILE { $$ = DoOptions.WHILE; }
-// 	| UNTIL { $$ = DoOptions.UNTIL; }
-// 	;
+		$$ = new Do (body, cond, test_before, until, l);
+	  }
+	;
+
+opt_do_construct
+	: /* empty */ { $$ = null; }
+	| WHILE boolean_expression
+	  { $$ = new Pair (false, $2); }
+	| UNTIL boolean_expression
+	  { $$ = new Pair (true, $2); }
+	;
 
 while_statement
 	: WHILE
@@ -3709,54 +3809,57 @@ while_statement
 	}
 	;
 
-// for_statement
-// 	: FOR identifier opt_type_spec ASSIGN expression TO expression opt_step end_of_stmt
-// 	  {
-// 		if ($3 != null)
-// 		{
-// 			start_block();
-// 			ArrayList VarDeclaration = new ArrayList ();
-// 			VarDeclaration.Add (new VariableDeclaration ((string) $2, 
-// 				(Expression) $3, null, lexer.Location, null));
+for_statement
+	: FOR identifier opt_type_spec ASSIGN expression TO expression opt_step end_of_stmt
+	  {
+		bool declared_loop_local = false;
+		if ($3 != null) {
+			start_block ();
+			LocalInfo li = current_block.AddVariable (
+				(Expression) $3, (string) $2, current_local_parameters, lexer.Location);
+			declared_loop_local = li != null;
+		}
 
-// 			DictionaryEntry de = new DictionaryEntry (DecomposeQI("_local_vars_", lexer.Location), VarDeclaration);
-// 			Block b = declare_local_variables ((Expression) de.Key, (ArrayList) de.Value, lexer.Location);
-// 			current_block = b;
-// 		}
-// 		oob_stack.Push (lexer.Location);		
-// 		start_block();
-// 	  }
-// 	  opt_statement_list
-// 	  NEXT opt_identifier 
-// 	  {
-// 			Block inner_statement = end_block();
-// 			Location l = (Location) oob_stack.Pop ();
-// 			Expression for_var = (Expression) DecomposeQI ((string)$2, l);
-			
-//             Expression assign_expr = new Assign (for_var, (Expression) $5, l);
-//             Expression test_expr =  new Binary (Binary.Operator.LessThanOrEqual,
-//                                                             for_var, (Expression) $7, l);
-//             Expression step_expr = new Assign (for_var, (Expression) new Binary (Binary.Operator.Addition,
-//                                              for_var, (Expression) $8, l), l);
+		oob_stack.Push (lexer.Location);
+		oob_stack.Push ($2);
+		oob_stack.Push (declared_loop_local);
+		start_block ();
+	  }
+	  opt_statement_list
+	  NEXT opt_identifier
+	  {
+		Block inner_statement = end_block ();
+		bool declared_loop_local = (bool) oob_stack.Pop ();
+		string loop_name = (string) oob_stack.Pop ();
+		Location l = (Location) oob_stack.Pop ();
+		string next_name = (string) $13;
 
-//             Statement assign_stmt = new StatementExpression ((ExpressionStatement) assign_expr, l);
-//             Statement step_stmt = new StatementExpression ((ExpressionStatement) step_expr, l);
+		if (next_name != null && String.Compare (loop_name, next_name, true) != 0)
+			Report.Error (30070, lexer.Location,
+				"'Next {0}' does not match loop control variable '{1}'",
+				next_name, loop_name);
 
-//             For f = new For (assign_stmt, test_expr, step_stmt, inner_statement, l);
-// 			if ($3 != null)
-// 			{
-// 				current_block.AddStatement (f);
-// 				$$ = end_block();
-// 			}
-// 			else
-// 				$$ = f;
-// 	  }
-// 	;
+		VBFor f = new VBFor (loop_name, (Expression) $5, (Expression) $7,
+			(Expression) $8, inner_statement, l);
+		if ($3 != null) {
+			if (declared_loop_local)
+				current_block.AddStatement (f);
+			$$ = end_block ();
+		} else
+			$$ = f;
+	  }
+	;
 
-// opt_step
-// 	: /* empty */ 		{ $$ = new IntLiteral ((Int32) 1); }
-// 	| STEP expression 	{ $$ = $2; }
-// 	;
+opt_step
+	: /* empty */ 		{ $$ = new IntLiteral ((Int32) 1); }
+	| STEP expression 	{ $$ = $2; }
+	;
+
+continue_loop_kind
+	: DO		{ $$ = VBLoopKind.Do; }
+	| FOR		{ $$ = VBLoopKind.For; }
+	| WHILE		{ $$ = VBLoopKind.While; }
+	;
 
 selection_statement
 	: if_statement

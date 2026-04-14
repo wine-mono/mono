@@ -506,6 +506,12 @@ namespace Mono.CSharp {
 			return current_flow_branching;
 		}
 
+		public FlowBranching StartFlowBranching (VBLoopKind kind, Location loc)
+		{
+			current_flow_branching = new FlowBranchingLoop (CurrentBranching, null, loc, kind);
+			return current_flow_branching;
+		}
+
 		// <summary>
 		//   Starts a new code branching for block `block'.
 		// </summary>
@@ -862,6 +868,56 @@ namespace Mono.CSharp {
 			replacement.Add (o);
 			temporary_storage.Remove (t);
 			temporary_storage [t] = replacement;
+		}
+
+		sealed class VBLoopLabels {
+			public readonly VBLoopKind Kind;
+			public readonly Label ContinueLabel;
+			public readonly Label ExitLabel;
+
+			public VBLoopLabels (VBLoopKind kind, Label continue_label, Label exit_label)
+			{
+				Kind = kind;
+				ContinueLabel = continue_label;
+				ExitLabel = exit_label;
+			}
+		}
+
+		ArrayList vb_loop_stack;
+
+		public void PushVBLoop (VBLoopKind kind, Label continue_label, Label exit_label)
+		{
+			if (vb_loop_stack == null)
+				vb_loop_stack = new ArrayList ();
+
+			vb_loop_stack.Add (new VBLoopLabels (kind, continue_label, exit_label));
+		}
+
+		public void PopVBLoop ()
+		{
+			if (vb_loop_stack == null || vb_loop_stack.Count == 0)
+				throw new InvalidOperationException ();
+
+			vb_loop_stack.RemoveAt (vb_loop_stack.Count - 1);
+		}
+
+		public bool TryGetVBLoopLabels (VBLoopKind kind, out Label continue_label, out Label exit_label)
+		{
+			if (vb_loop_stack != null) {
+				for (int i = vb_loop_stack.Count - 1; i >= 0; --i) {
+					VBLoopLabels labels = (VBLoopLabels) vb_loop_stack [i];
+					if (labels.Kind != kind)
+						continue;
+
+					continue_label = labels.ContinueLabel;
+					exit_label = labels.ExitLabel;
+					return true;
+				}
+			}
+
+			continue_label = new Label ();
+			exit_label = new Label ();
+			return false;
 		}
 
 		/// <summary>
