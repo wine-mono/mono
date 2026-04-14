@@ -638,6 +638,7 @@ namespace Mono.CSharp
 			keywords.Add ("catch", Token.CATCH);
 			keywords.Add ("cbool", Token.CBOOL);
 			keywords.Add ("cbyte", Token.CBYTE);
+			keywords.Add ("csbyte", Token.CSBYTE);
 			keywords.Add ("cchar", Token.CCHAR);
 			keywords.Add ("cdate", Token.CDATE);
 			keywords.Add ("cdec", Token.CDEC);
@@ -650,6 +651,9 @@ namespace Mono.CSharp
 			keywords.Add ("compare", Token.COMPARE); // Not a VB.NET Keyword
 			keywords.Add ("const", Token.CONST);
 			keywords.Add ("continue", Token.CONTINUE);
+			keywords.Add ("cuint", Token.CUINT);
+			keywords.Add ("culng", Token.CULNG);
+			keywords.Add ("cushort", Token.CUSHORT);
 			keywords.Add ("cshort", Token.CSHORT);
 			keywords.Add ("csng", Token.CSNG);
 			keywords.Add ("cstr", Token.CSTR);

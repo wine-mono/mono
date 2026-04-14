@@ -368,6 +368,7 @@ namespace Mono.CSharp
 %token CATCH	
 %token CBOOL
 %token CBYTE
+%token CSBYTE
 %token CCHAR	
 %token CDATE
 %token CDEC
@@ -380,6 +381,9 @@ namespace Mono.CSharp
 %token COMPARE	
 %token CONST
 %token CONTINUE
+%token CUINT
+%token CULNG
+%token CUSHORT
 %token CSHORT	
 %token CSNG
 %token CSTR
@@ -5299,6 +5303,7 @@ cast_expression
 cast_operator
 	: CBOOL		{ $$ = TypeManager.system_boolean_expr; 	}
 	| CBYTE		{ $$ = TypeManager.system_byte_expr;	 	}
+	| CSBYTE	{ $$ = TypeManager.system_sbyte_expr; 		}
 	| CCHAR		{ $$ = TypeManager.system_char_expr; 		}
  	| CDATE		{ $$ = TypeManager.system_date_expr;	 	}
 	| CDBL		{ $$ = TypeManager.system_double_expr; 		}
@@ -5306,6 +5311,9 @@ cast_operator
 	| CINT		{ $$ = TypeManager.system_int32_expr; 		}
 	| CLNG		{ $$ = TypeManager.system_int64_expr; 		}
 	| COBJ		{ $$ = TypeManager.system_object_expr; 		}
+	| CUINT		{ $$ = TypeManager.system_uint32_expr; 		}
+	| CULNG		{ $$ = TypeManager.system_uint64_expr; 		}
+	| CUSHORT	{ $$ = TypeManager.system_uint16_expr; 		}
 	| CSHORT	{ $$ = TypeManager.system_int16_expr; 		}
 	| CSNG		{ $$ = TypeManager.system_single_expr; 		}
 	| CSTR		{ $$ = TypeManager.system_string_expr; 	}
