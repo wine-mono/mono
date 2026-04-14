@@ -2290,8 +2290,10 @@ public partial class TypeManager {
 	{
 		if (t.IsSubclassOf (TypeManager.enum_type))
 			return true;
-		else
-			return false;
+
+		// Source enums under emission can still be represented by builders
+		// that do not satisfy reflection's IsSubclassOf checks yet.
+		return LookupDeclSpace (t) is Enum;
 	}
 	public static bool IsBuiltinOrEnum (Type t)
 	{

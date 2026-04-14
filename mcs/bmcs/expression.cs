@@ -5300,6 +5300,7 @@ namespace Mono.CSharp {
 			public Expression Expr;
 			Type implicit_byref_type;
 			bool implicit_byref_is_out;
+			bool deferred_flow_analysis;
 			LocalTemporary implicit_byref_temp;
 			ByRefCopyBackValue implicit_byref_copyback_value;
 			ExpressionStatement implicit_byref_copyback;
@@ -5374,6 +5375,34 @@ namespace Mono.CSharp {
 				return Parameter.Modifier.NONE;
 			}
 		}
+
+			public bool IsImplicitOut {
+				get { return implicit_byref_type != null && implicit_byref_is_out; }
+			}
+
+			public bool VerifyValueUseAssigned (EmitContext ec, Location loc)
+			{
+				if (!deferred_flow_analysis || IsImplicitOut)
+					return true;
+
+				IVariable variable = Expr as IVariable;
+				if (variable == null || variable.VariableInfo == null)
+					return true;
+
+				return variable.VariableInfo.IsAssigned (ec, loc);
+			}
+
+			public void SetAssigned (EmitContext ec)
+			{
+				if (!ec.DoFlowAnalysis || ec.CurrentBranching == null)
+					return;
+
+				IVariable variable = Expr as IVariable;
+				if (variable == null || variable.VariableInfo == null)
+					return;
+
+				variable.VariableInfo.SetAssigned (ec);
+			}
 
 	        public static string FullDesc (Argument a)
 			{
@@ -5544,7 +5573,13 @@ namespace Mono.CSharp {
 				Expr = Expr.ResolveLValue (ec, Expr);
 			} else if (ArgType == AType.Out)
 				Expr = Expr.ResolveLValue (ec, EmptyExpression.Null);
-			else
+			else if (Expr is SimpleName) {
+				// VB can bind a bare identifier as an implicit ByRef/Out argument.
+				// Defer definite-assignment until overload resolution tells us
+				// whether this is a value use or a metadata out parameter.
+				Expr = Expr.Resolve (ec, ResolveFlags.VariableOrValue | ResolveFlags.DisableFlowAnalysis);
+				deferred_flow_analysis = true;
+			} else
 				Expr = Expr.Resolve (ec);
 
 			if (Expr == null)
@@ -6537,6 +6572,9 @@ namespace Mono.CSharp {
 				//
 				// Check Type
 				//
+				if (!a.VerifyValueUseAssigned (ec, a_expr.Location))
+					return false;
+
 				if (!TypeManager.IsEqual (a.Type, parameter_type)){
 					Expression conv;
 
@@ -6582,6 +6620,13 @@ namespace Mono.CSharp {
 					}
 					
 					return false;
+				}
+			}
+
+			if (!may_fail && Arguments != null) {
+				foreach (Argument a in Arguments) {
+					if (a.IsImplicitOut)
+						a.SetAssigned (ec);
 				}
 			}
 

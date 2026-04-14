@@ -641,6 +641,14 @@ namespace Mono.CSharp {
 			if (expr_type.Equals (target_type))
 				return true;
 
+			// VB permits an enum value anywhere its underlying integral type
+			// can widen. Normalize here so overload applicability matches the
+			// later conversion emitter.
+			if (TypeManager.IsEnumType (expr_type)) {
+				expr_type = TypeManager.EnumToUnderlying (expr_type);
+				if (expr_type.Equals (target_type))
+					return true;
+			}
 
 			// First numeric conversions 
 
