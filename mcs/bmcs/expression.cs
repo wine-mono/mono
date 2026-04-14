@@ -3752,7 +3752,8 @@ namespace Mono.CSharp {
 			case Operator.BitwiseOr:
 			case Operator.ExclusiveOr:
 				if (t == TypeManager.bool_type ||
-				    TypeManager.IsFixedNumericType (t))
+				    TypeManager.IsFixedNumericType (t) ||
+				    TypeManager.IsEnumType (t))
 					return true;
 
 				break;
