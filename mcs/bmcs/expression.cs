@@ -6721,6 +6721,12 @@ namespace Mono.CSharp {
 		{
 			ParameterData pd = GetParameterData (method);
 			int pd_count = pd.Count;
+
+			if (!chose_params_expanded && arg_count > pd_count) {
+				if (!may_fail)
+					Error_WrongNumArguments (loc, method.Name, arg_count);
+				return false;
+			}
 			
 			for (int j = 0; j < arg_count; j++) {
 				Argument a = (Argument) Arguments [j];
@@ -6953,8 +6959,22 @@ namespace Mono.CSharp {
 			// VB reclassifies property groups through invocation syntax:
 			// Foo.Prop() is a plain property access, while Foo.Chars(i)
 			// binds the property's indexed accessor rather than a method call.
+			// If the property itself has no index parameters, then Foo.Prop(i)
+			// indexes the value returned by the property instead.
 			if (Arguments == null || Arguments.Count == 0)
 				return property.Resolve (ec);
+
+			if (!property.ResolveGetterAccess (ec, true))
+				return null;
+
+			MethodInfo getter = property.Getter;
+			if (getter != null && TypeManager.GetArgumentTypes (getter).Length == 0) {
+				Expression value = property.Resolve (ec);
+				if (value == null)
+					return null;
+
+				return ResolveValueIndexInvocation (ec, value);
+			}
 
 			return (new ParameterizedPropertyAccess (property, Arguments, loc)).Resolve (ec);
 		}
@@ -6970,6 +6990,18 @@ namespace Mono.CSharp {
 
 			if (Arguments == null || Arguments.Count == 0)
 				return property.ResolveLValue (ec, right_side);
+
+			if (!property.ResolveGetterAccess (ec, true))
+				return null;
+
+			MethodInfo getter = property.Getter;
+			if (getter != null && TypeManager.GetArgumentTypes (getter).Length == 0) {
+				Expression value = property.Resolve (ec);
+				if (value == null)
+					return null;
+
+				return ResolveValueIndexInvocationLValue (ec, value, right_side);
+			}
 
 			return (new ParameterizedPropertyAccess (property, Arguments, loc)).ResolveLValue (ec, right_side);
 		}
@@ -6988,16 +7020,26 @@ namespace Mono.CSharp {
 
 		Expression ResolveValueIndexInvocation (EmitContext ec)
 		{
+			return ResolveValueIndexInvocation (ec, expr);
+		}
+
+		Expression ResolveValueIndexInvocation (EmitContext ec, Expression value)
+		{
 			// VB uses the same postfix-parentheses surface syntax for invocation
 			// and index expressions.  Once overload resolution proves the target is
 			// a value rather than a method group or delegate, re-run it through
 			// ElementAccess so arrays and default properties share one binding path.
-			return (new ElementAccess (expr, ExtractIndexExpressions (), loc)).Resolve (ec);
+			return (new ElementAccess (value, ExtractIndexExpressions (), loc)).Resolve (ec);
 		}
 
 		Expression ResolveValueIndexInvocationLValue (EmitContext ec, Expression right_side)
 		{
-			return (new ElementAccess (expr, ExtractIndexExpressions (), loc)).ResolveLValue (ec, right_side);
+			return ResolveValueIndexInvocationLValue (ec, expr, right_side);
+		}
+
+		Expression ResolveValueIndexInvocationLValue (EmitContext ec, Expression value, Expression right_side)
+		{
+			return (new ElementAccess (value, ExtractIndexExpressions (), loc)).ResolveLValue (ec, right_side);
 		}
 
 		void AddMissingOptionalArguments (EmitContext ec)
