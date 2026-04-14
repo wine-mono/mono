@@ -529,9 +529,11 @@ public partial class TypeManager {
 		modules = null;
 		user_types = new ArrayList ();
 		
-		types = new Hashtable ();
-		typecontainers = new Hashtable ();
-		standard_modules = new Hashtable ();
+		// VB name lookup is case-insensitive, so keep the source and imported
+		// type caches keyed the same way the language compares identifiers.
+		types = new Hashtable (StringComparer.OrdinalIgnoreCase);
+		typecontainers = new Hashtable (StringComparer.OrdinalIgnoreCase);
+		standard_modules = new Hashtable (StringComparer.OrdinalIgnoreCase);
 		
 		builder_to_declspace = new PtrHashtable ();
 		builder_to_member_cache = new PtrHashtable ();
@@ -870,7 +872,7 @@ public partial class TypeManager {
 		Type t;
 
 		foreach (Assembly a in assemblies){
-			t = a.GetType (name);
+			t = a.GetType (name, false, true);
 			if (t == null)
 				continue;
 
@@ -897,7 +899,7 @@ public partial class TypeManager {
 		}
 
 		foreach (Module mb in modules) {
-			t = mb.GetType (name);
+			t = mb.GetType (name, false, true);
 			if (t != null) 
 				return t;
 		}
@@ -905,7 +907,7 @@ public partial class TypeManager {
 		return null;
 	}
 
-	static Hashtable negative_hits = new Hashtable ();
+	static Hashtable negative_hits = new Hashtable (StringComparer.OrdinalIgnoreCase);
 	
 	//
 	// This function is used when you want to avoid the lookups, and want to go
@@ -981,7 +983,7 @@ public partial class TypeManager {
 			// We know that System.Object does not have children, and since its the base of 
 			// all the objects, it always gets probbed for inner classes. 
 			//
-			if (top_level_type == "System.Object")
+			if (String.Equals (top_level_type, "System.Object", StringComparison.OrdinalIgnoreCase))
 				return null;
 			
 			string newt = top_level_type + "+" + String.Join ("+", elements, n, count - n);
@@ -1020,7 +1022,7 @@ public partial class TypeManager {
 				}
 			}
 		} else {
-			Hashtable cache = new Hashtable ();
+			Hashtable cache = new Hashtable (StringComparer.OrdinalIgnoreCase);
 			cache.Add ("", null);
 			foreach (Assembly a in assemblies) {
 				foreach (Type t in a.GetExportedTypes ()) {

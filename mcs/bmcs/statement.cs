@@ -1626,6 +1626,8 @@ namespace Mono.CSharp {
 		//
 		ArrayList children;
 		
+		const string CompilerThisLocalName = "<this>";
+
 		//
 		// Labels.  (label, block) pairs.
 		//
@@ -1695,7 +1697,7 @@ namespace Mono.CSharp {
 
 			if (parent != null && Implicit) {
 				if (parent.child_variable_names == null)
-					parent.child_variable_names = new Hashtable();
+					parent.child_variable_names = new Hashtable (StringComparer.OrdinalIgnoreCase);
 				// share with parent
 				child_variable_names = parent.child_variable_names;
 			}
@@ -1788,7 +1790,7 @@ namespace Mono.CSharp {
 			}
 
 			if (labels == null)
-				labels = new Hashtable ();
+				labels = new Hashtable (StringComparer.OrdinalIgnoreCase);
 
 			labels.Add (name, target);
 			return true;
@@ -1854,7 +1856,7 @@ namespace Mono.CSharp {
 		public void AddChildVariableName (string name)
 		{
 			if (child_variable_names == null)
-				child_variable_names = new Hashtable ();
+				child_variable_names = new Hashtable (StringComparer.OrdinalIgnoreCase);
 
 			child_variable_names [name] = null;
 		}
@@ -1883,13 +1885,16 @@ namespace Mono.CSharp {
 				return this_variable;
 
 			if (variables == null)
-				variables = new Hashtable ();
+				variables = new Hashtable (StringComparer.OrdinalIgnoreCase);
 
 			this_variable = new LocalInfo (tc, this, l);
 			this_variable.Used = true;
 			this_variable.IsThis = true;
 
-			variables.Add ("this", this_variable);
+			// This synthetic local is only for struct-constructor flow analysis.
+			// Keep it out of the user-visible identifier space when name lookup
+			// becomes case-insensitive.
+			variables.Add (CompilerThisLocalName, this_variable);
 
 			return this_variable;
 		}
@@ -1897,7 +1902,7 @@ namespace Mono.CSharp {
 		public LocalInfo AddVariable (Expression type, string name, Parameters pars, Location l)
 		{
 			if (variables == null)
-				variables = new Hashtable ();
+				variables = new Hashtable (StringComparer.OrdinalIgnoreCase);
 
 			LocalInfo vi = GetLocalInfo (name);
 			if (vi != null) {
@@ -1960,7 +1965,7 @@ namespace Mono.CSharp {
 				return false;
 			
 			if (constants == null)
-				constants = new Hashtable ();
+				constants = new Hashtable (StringComparer.OrdinalIgnoreCase);
 
 			constants.Add (name, value);
 			return true;

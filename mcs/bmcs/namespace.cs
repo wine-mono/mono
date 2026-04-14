@@ -19,7 +19,7 @@ namespace Mono.CSharp {
 	/// </summary>
 	public class Namespace : FullNamedExpression, IAlias {
 		static ArrayList all_namespaces = new ArrayList ();
-		static Hashtable namespaces_map = new Hashtable ();
+		static Hashtable namespaces_map = new Hashtable (StringComparer.OrdinalIgnoreCase);
 		
 		Namespace parent;
 		string fullname;
@@ -49,8 +49,8 @@ namespace Mono.CSharp {
 				fullname = parent.Name + "." + name;
 
 			entries = new ArrayList ();
-			namespaces = new Hashtable ();
-			defined_names = new Hashtable ();
+			namespaces = new Hashtable (StringComparer.OrdinalIgnoreCase);
+			defined_names = new Hashtable (StringComparer.OrdinalIgnoreCase);
 
 			all_namespaces.Add (this);
 			if (namespaces_map.Contains (fullname))
@@ -379,14 +379,14 @@ namespace Mono.CSharp {
 				return;
 			}
 
-			if (name == FullName)
+			if (String.Equals (name, FullName, StringComparison.OrdinalIgnoreCase))
 				return;
 			
 			if (using_clauses == null)
 				using_clauses = new ArrayList ();
 
 			foreach (UsingEntry old_entry in using_clauses) {
-				if (old_entry.Name.ToString () == name) {
+				if (String.Equals (old_entry.Name.ToString (), name, StringComparison.OrdinalIgnoreCase)) {
 					if (RootContext.WarningLevel >= 3)
 						Report.Warning (105, loc, "The using directive for '{0}' appeared previously in this namespace", name);
 						return;
@@ -406,7 +406,7 @@ namespace Mono.CSharp {
 			}
 
 			if (aliases == null)
-				aliases = new Hashtable ();
+				aliases = new Hashtable (StringComparer.OrdinalIgnoreCase);
 
 			if (aliases.Contains (name)){
 				Report.Error (1537, loc, "The using alias `" + name +

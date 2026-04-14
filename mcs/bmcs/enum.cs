@@ -147,9 +147,9 @@ namespace Mono.CSharp {
 						    IsTopLevel ? Modifiers.INTERNAL : Modifiers.PUBLIC, l);
 
 			ordered_enums = new ArrayList ();
-			member_to_location = new Hashtable ();
-			member_to_value = new Hashtable ();
-			in_transit = new Hashtable ();
+			member_to_location = new Hashtable (StringComparer.OrdinalIgnoreCase);
+			member_to_value = new Hashtable (StringComparer.OrdinalIgnoreCase);
+			in_transit = new Hashtable (StringComparer.OrdinalIgnoreCase);
 			field_builders = new ArrayList ();
 		}
 
@@ -159,7 +159,7 @@ namespace Mono.CSharp {
 		/// </summary>
 		public void AddEnumMember (string name, Expression expr, Location loc, Attributes opt_attrs, string documentation)
 		{
-			if (name == "value__") {
+			if (String.Equals (name, "value__", StringComparison.OrdinalIgnoreCase)) {
 				Report.Error (76, loc, "An item in an enumeration can't have an identifier `value__'");
 				return;
 			}

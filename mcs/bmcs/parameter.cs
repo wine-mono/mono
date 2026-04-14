@@ -492,7 +492,7 @@ namespace Mono.CSharp {
 
 			if (FixedParameters != null){
 				foreach (Parameter par in FixedParameters){
-					if (par.Name == name){
+					if (String.Equals (par.Name, name, StringComparison.OrdinalIgnoreCase)){
 						idx = i;
 						return par;
 					}
@@ -501,7 +501,7 @@ namespace Mono.CSharp {
 			}
 
 			if (ArrayParameter != null){
-				if (name == ArrayParameter.Name){
+				if (String.Equals (name, ArrayParameter.Name, StringComparison.OrdinalIgnoreCase)){
 					idx = i;
 					return ArrayParameter;
 				}

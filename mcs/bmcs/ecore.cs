@@ -660,10 +660,13 @@ namespace Mono.CSharp {
 			MemberTypes.NestedType  |
 			MemberTypes.Property;
 		
+		// VB identifiers are case-insensitive, so ordinary member lookup
+		// must search reflection with IgnoreCase as well as the source caches.
 		public const BindingFlags AllBindingFlags =
 			BindingFlags.Public |
 			BindingFlags.Static |
-			BindingFlags.Instance;
+			BindingFlags.Instance |
+			BindingFlags.IgnoreCase;
 
 		public static Expression MemberLookup (EmitContext ec, Type queried_type,
 						       string name, Location loc)

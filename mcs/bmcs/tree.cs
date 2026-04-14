@@ -42,7 +42,7 @@ namespace Mono.CSharp
 		{
 			root_types = new RootTypes ();
 
-			decls = new Hashtable ();
+			decls = new Hashtable (StringComparer.OrdinalIgnoreCase);
 		}
 
 		DoubleHash decl_ns_name = new DoubleHash ();
@@ -89,7 +89,11 @@ namespace Mono.CSharp
 			object res;
 			
 			decl_ns_name.Lookup (ns, name, out res);
-			return (DeclSpace) res;
+			if (res != null)
+				return (DeclSpace) res;
+
+			string fqn = ns == "" ? name : ns + "." + name;
+			return (DeclSpace) decls [fqn];
 		}
 		
 		//

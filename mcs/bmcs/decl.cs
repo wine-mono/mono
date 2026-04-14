@@ -563,7 +563,7 @@ namespace Mono.CSharp {
 		{
 			NamespaceEntry = ns;
 			Basename = name.Name;
-			defined_names = new Hashtable ();
+			defined_names = new Hashtable (StringComparer.OrdinalIgnoreCase);
 			if (name.TypeArguments != null) {
 				is_generic = true;
 				count_type_params = name.TypeArguments.Count;
@@ -577,7 +577,7 @@ namespace Mono.CSharp {
 		/// </summary>
 		protected bool AddToContainer (MemberCore symbol, string fullname, string basename)
 		{
-			if (basename == Basename && !(this is Interface)) {
+			if (String.Equals (basename, Basename, StringComparison.OrdinalIgnoreCase) && !(this is Interface)) {
 				// Constructors do not introduce a name into the containing
 				// type's declaration space in VB, so the C#-specific CS0542
 				// check does not apply to ordinary members named like their
@@ -1773,13 +1773,13 @@ namespace Mono.CSharp {
 			if (Container.BaseCache != null)
 				member_hash = SetupCache (Container.BaseCache);
 			else
-				member_hash = new Hashtable ();
+				member_hash = new Hashtable (StringComparer.OrdinalIgnoreCase);
 
 			// If this is neither a dynamic type nor an interface, create a special
 			// method cache with all declared and inherited methods.
 			Type type = container.Type;
 			if (!(type is TypeBuilder) && !type.IsInterface && !type.IsGenericParameter) {
-				method_hash = new Hashtable ();
+				method_hash = new Hashtable (StringComparer.OrdinalIgnoreCase);
 				AddMethods (type);
 			}
 
@@ -1797,7 +1797,7 @@ namespace Mono.CSharp {
 			//
 			this.Container = null;
 
-			member_hash = new Hashtable ();
+			member_hash = new Hashtable (StringComparer.OrdinalIgnoreCase);
 			if (ifaces == null)
 				return;
 
@@ -1810,7 +1810,7 @@ namespace Mono.CSharp {
 		/// </summary>
 		Hashtable SetupCache (MemberCache base_class)
 		{
-			Hashtable hash = new Hashtable ();
+			Hashtable hash = new Hashtable (StringComparer.OrdinalIgnoreCase);
 
 			if (base_class == null)
 				return hash;
