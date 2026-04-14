@@ -44,6 +44,7 @@ namespace Mono.CSharp {
 		public Const (TypeContainer parent, Expression constant_type, string name,
 			      Expression expr, int mod_flags, Attributes attrs, Location loc)
 			: base (parent, constant_type, mod_flags, AllowedModifiers,
+				GetVbDefaultMemberAccess (parent, false),
 				new MemberName (name), null, attrs, loc)
 		{
 			Expr = expr;
@@ -317,5 +318,4 @@ namespace Mono.CSharp {
 		}
 	}
 }
-
 

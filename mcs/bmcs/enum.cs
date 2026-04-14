@@ -144,7 +144,7 @@ namespace Mono.CSharp {
 		{
 			this.BaseType = type;
 			ModFlags = Modifiers.Check (AllowedModifiers, mod_flags,
-						    IsTopLevel ? Modifiers.INTERNAL : Modifiers.PRIVATE, l);
+						    IsTopLevel ? Modifiers.INTERNAL : Modifiers.PUBLIC, l);
 
 			ordered_enums = new ArrayList ();
 			member_to_location = new Hashtable ();

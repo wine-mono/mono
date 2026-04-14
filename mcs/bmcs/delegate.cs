@@ -57,7 +57,7 @@ namespace Mono.CSharp {
 			this.ReturnType = type;
 			ModFlags        = Modifiers.Check (AllowedModifiers, mod_flags,
 							   IsTopLevel ? Modifiers.INTERNAL :
-							   Modifiers.PRIVATE, l);
+							   Modifiers.PUBLIC, l);
 			Parameters      = param_list;
 		}
 

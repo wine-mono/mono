@@ -2618,7 +2618,7 @@ namespace Mono.CSharp {
 			if (Parent.Parent == null)
 				accmods = Modifiers.INTERNAL;
 			else
-				accmods = Modifiers.PRIVATE;
+				accmods = Modifiers.PUBLIC;
 
 			this.ModFlags = Modifiers.Check (AllowedModifiers, mod, accmods, loc);
 			if (Kind == Kind.Struct)
@@ -2887,7 +2887,7 @@ namespace Mono.CSharp {
 			if (parent.Parent == null)
 				accmods = Modifiers.INTERNAL;
 			else
-				accmods = Modifiers.PRIVATE;
+				accmods = Modifiers.PUBLIC;
 
 			this.ModFlags = Modifiers.Check (
 				parent.AllowedModifiers, mod & ~Modifiers.PARTIAL, accmods, l);
@@ -3136,7 +3136,7 @@ namespace Mono.CSharp {
 				return null;
 			}
 
-			int accmods = Parent.Parent == null ? Modifiers.INTERNAL : Modifiers.PRIVATE;
+			int accmods = Parent.Parent == null ? Modifiers.INTERNAL : Modifiers.PUBLIC;
 			ModFlags = Modifiers.Check (AllowedModifiersProp, ModFlags, accmods, Location);
 
 			return base.DefineType ();
@@ -3174,7 +3174,7 @@ namespace Mono.CSharp {
 			if (parent.Parent == null)
 				accmods = Modifiers.INTERNAL;
 			else
-				accmods = Modifiers.PRIVATE;
+				accmods = Modifiers.PUBLIC;
 			
 			this.ModFlags = Modifiers.Check (AllowedModifiers, mod, accmods, l);
 
@@ -3222,7 +3222,7 @@ namespace Mono.CSharp {
 			if (parent.Parent == null)
 				accmods = Modifiers.INTERNAL;
 			else
-				accmods = Modifiers.PRIVATE;
+				accmods = Modifiers.PUBLIC;
 
 			this.ModFlags = Modifiers.Check (AllowedModifiers, mod, accmods, l);
 		}
@@ -3275,7 +3275,8 @@ namespace Mono.CSharp {
 				   Expression type, int mod, int allowed_mod, bool is_iface,
 				   MemberName name, Attributes attrs, Parameters parameters,
 				   Location loc)
-			: base (parent, type, mod, allowed_mod, Modifiers.PRIVATE, name,
+			: base (parent, type, mod, allowed_mod,
+				GetVbDefaultMemberAccess (parent, false), name,
 				attrs, loc)
 		{
 			Parameters = parameters;
@@ -4677,10 +4678,13 @@ namespace Mono.CSharp {
 						ca |= MethodAttributes.Family;
 				} else if ((ModFlags & Modifiers.INTERNAL) != 0)
 					ca |= MethodAttributes.Assembly;
-				else if (IsDefault ())
-					ca |= MethodAttributes.Public;
 				else
-					ca |= MethodAttributes.Private;
+					// In VB an omitted access modifier on an explicit
+					// constructor still follows the ordinary member
+					// default of Public. Only synthesized default
+					// constructors get the special MustInherit ->
+					// Protected rule in DefineDefaultConstructor.
+					ca |= MethodAttributes.Public;
 			}
 
 			// Check if arguments were correct.
@@ -5380,6 +5384,18 @@ namespace Mono.CSharp {
 				ShortName = Name;
 		}
 
+		protected static int GetVbDefaultMemberAccess (TypeContainer parent,
+			bool variable_defaults_private)
+		{
+			// VB defaults structure and interface members to Public. Class
+			// and standard-module members also default to Public except for
+			// variable declarations, which stay Private.
+			if (parent.Kind == Kind.Struct || parent.Kind == Kind.Interface)
+				return Modifiers.PUBLIC;
+
+			return variable_defaults_private ? Modifiers.PRIVATE : Modifiers.PUBLIC;
+		}
+
 		protected virtual bool CheckBase ()
 		{
   			if ((ModFlags & Modifiers.PROTECTED) != 0 && Parent.Kind == Kind.Struct) {
@@ -5621,9 +5637,9 @@ namespace Mono.CSharp {
 		// The constructor is only exposed to our children
 		//
 		protected FieldBase (TypeContainer parent, Expression type, int mod,
-				     int allowed_mod, MemberName name, object init,
+				     int allowed_mod, int def_mod, MemberName name, object init,
 				     Attributes attrs, Location loc)
-			: base (parent, type, mod, allowed_mod, Modifiers.PRIVATE,
+			: base (parent, type, mod, allowed_mod, def_mod,
 				name, attrs, loc)
 		{
 			this.init = init;
@@ -5775,8 +5791,9 @@ namespace Mono.CSharp {
 		
 
 		protected FieldMember (TypeContainer parent, Expression type, int mod,
-			int allowed_mod, MemberName name, object init, Attributes attrs, Location loc)
-			: base (parent, type, mod, allowed_mod, name, init, attrs, loc)
+			int allowed_mod, int def_mod, MemberName name, object init,
+			Attributes attrs, Location loc)
+			: base (parent, type, mod, allowed_mod, def_mod, name, init, attrs, loc)
 		{
 		}
 
@@ -5879,7 +5896,8 @@ namespace Mono.CSharp {
 
 		public Field (TypeContainer parent, Expression type, int mod, string name,
 			      Object expr_or_array_init, Attributes attrs, Location loc)
-			: base (parent, type, mod, AllowedModifiers, new MemberName (name),
+			: base (parent, type, mod, AllowedModifiers,
+				GetVbDefaultMemberAccess (parent, true), new MemberName (name),
 				expr_or_array_init, attrs, loc)
 		{
 		}
@@ -7297,6 +7315,7 @@ namespace Mono.CSharp {
 			      Location loc)
 			: base (parent, type, mod_flags,
 				is_iface ? AllowedInterfaceModifiers : AllowedModifiers,
+				GetVbDefaultMemberAccess (parent, false),
 				name, init, attrs, loc)
 		{
 			IsInterface = is_iface;

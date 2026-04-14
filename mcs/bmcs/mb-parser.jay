@@ -1278,7 +1278,8 @@ modifier
 	| OVERRIDABLE			{ $$ = Modifiers.VIRTUAL; }
 	| NOTOVERRIDABLE		{ $$ = Modifiers.SEALED; }
 	| OVERRIDES 			{ $$ = Modifiers.OVERRIDE; }
-	| OVERLOADS			{ $$ = Modifiers.NEW; }
+	/* VB Overloads documents an overload set; it is not C# new/hide. */
+	| OVERLOADS			{ $$ = 0; }
 	| SHADOWS			{ $$ = Modifiers.SHADOWS; }
 	| MUSTINHERIT			{ $$ = Modifiers.ABSTRACT; }
 	/* MUSTOVERRIDE is handled separately in class_member_declaration
