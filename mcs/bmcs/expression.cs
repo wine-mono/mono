@@ -3765,11 +3765,15 @@ namespace Mono.CSharp {
 			case Operator.LessThanOrEqual:
 			case Operator.GreaterThan:
 			case Operator.GreaterThanOrEqual:
+				// VB enums participate in numeric comparison through their
+				// underlying integral type, and the later enum-specific
+				// operator path handles the actual coercion/result typing.
 				if (t == TypeManager.bool_type ||
 				    t == TypeManager.date_type ||
 				    t == TypeManager.char_type ||
 				    t == TypeManager.string_type ||
-				    TypeManager.IsNumericType (t))
+				    TypeManager.IsNumericType (t) ||
+				    TypeManager.IsEnumType (t))
 					return true;
 
 				break;
