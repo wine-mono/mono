@@ -40,11 +40,12 @@ namespace Mono.CSharp {
 							 Location loc)
 		{
 			if (!TypeParameter_to_Null (target_type)) {
-				Report.Error (403, loc, "Cannot convert null to the type " +
-					      "parameter `{0}' becaues it could be a value " +
-					      "type.  Consider using `default ({0})' instead.",
-					      target_type);
-				return null;
+				// In VB, `Nothing` in a known target type context means the
+				// default value of that target type. Unconstrained type
+				// parameters therefore lower to default(T) instead of using
+				// the C#-style CS0403 error.
+				return new DefaultValueExpression (
+					new TypeExpression (target_type, loc), loc);
 			}
 
 			return new NullCast (expr, target_type);
