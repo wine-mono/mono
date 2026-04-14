@@ -5163,47 +5163,88 @@ namespace Mono.CSharp {
 	/// <summary>
 	///   Used for arguments to New(), Invocation()
 	/// </summary>
-	public class Argument {
-		public enum AType : byte {
-			Expression,
-			Ref,
+		public class Argument {
+			public enum AType : byte {
+				Expression,
+				Ref,
 			Out,
 			ArgList,
 			//FIXME: These two are mbas specific and the
 			// related changes need to be propagated
 			NoArg,
 			AddressOf
-		};
+			};
 
-		public readonly AType ArgType;
-		public Expression Expr;
-		
-		public Argument (Expression expr, AType type)
-		{
-			this.Expr = expr;
-			this.ArgType = type;
+			public readonly AType ArgType;
+			public Expression Expr;
+			Type implicit_byref_type;
+			bool implicit_byref_is_out;
+			LocalTemporary implicit_byref_temp;
+			ByRefCopyBackValue implicit_byref_copyback_value;
+			ExpressionStatement implicit_byref_copyback;
+
+			sealed class ByRefCopyBackValue : Expression {
+				LocalTemporary temp;
+
+				public ByRefCopyBackValue (Type type, Location loc)
+				{
+					this.type = type;
+					this.loc = loc;
+					eclass = ExprClass.Value;
+				}
+
+				public void Bind (LocalTemporary temp)
+				{
+					this.temp = temp;
+				}
+
+				public override Expression DoResolve (EmitContext ec)
+				{
+					return this;
+				}
+
+				public override void Emit (EmitContext ec)
+				{
+					temp.Emit (ec);
+				}
+			}
+			
+			public Argument (Expression expr, AType type)
+			{
+				this.Expr = expr;
+				this.ArgType = type;
 		}
 
 		public Argument (Expression expr)
 		{
 			this.Expr = expr;
 			this.ArgType = AType.Expression;
-		}
-
-		public Type Type {
-			get {
-				if (ArgType == AType.Ref || ArgType == AType.Out)
-					return TypeManager.GetReferenceType (Expr.Type);
-				else
-					return Expr.Type;
 			}
+
+			public Type Type {
+				get {
+					if (implicit_byref_type != null)
+						return implicit_byref_type;
+
+					if (ArgType == AType.Ref || ArgType == AType.Out)
+						return TypeManager.GetReferenceType (Expr.Type);
+					else
+						return Expr.Type;
+				}
 		}
 
-		public Parameter.Modifier GetParameterModifier ()
-		{
-			switch (ArgType) {
-			case AType.Out:
-				return Parameter.Modifier.OUT | Parameter.Modifier.ISBYREF;
+			public Parameter.Modifier GetParameterModifier ()
+			{
+				if (implicit_byref_type != null) {
+					if (implicit_byref_is_out)
+						return Parameter.Modifier.OUT | Parameter.Modifier.ISBYREF;
+
+					return Parameter.Modifier.REF | Parameter.Modifier.ISBYREF;
+				}
+
+				switch (ArgType) {
+				case AType.Out:
+					return Parameter.Modifier.OUT | Parameter.Modifier.ISBYREF;
 
 			case AType.Ref:
 				return Parameter.Modifier.REF | Parameter.Modifier.ISBYREF;
@@ -5214,18 +5255,142 @@ namespace Mono.CSharp {
 		}
 
 	        public static string FullDesc (Argument a)
-		{
-			if (a.ArgType == AType.ArgList)
-				return "__arglist";
+			{
+				if (a.ArgType == AType.ArgList)
+					return "__arglist";
 
-			return (a.ArgType == AType.Ref ? "ref " :
-				(a.ArgType == AType.Out ? "out " : "")) +
-				TypeManager.CSharpName (a.Expr.Type);
-		}
+				if (a.implicit_byref_type != null)
+					return (a.implicit_byref_is_out ? "out " : "ref ") +
+						TypeManager.CSharpName (TypeManager.GetElementType (a.implicit_byref_type));
 
-		public bool ResolveMethodGroup (EmitContext ec, Location loc)
-		{
-			ConstructedType ctype = Expr as ConstructedType;
+				return (a.ArgType == AType.Ref ? "ref " :
+					(a.ArgType == AType.Out ? "out " : "")) +
+					TypeManager.CSharpName (a.Expr.Type);
+			}
+
+			bool IsReadonlyField (EmitContext ec, Expression expr, Location loc, bool report_error)
+			{
+				if (ec.IsConstructor)
+					return false;
+
+				FieldExpr fe = expr as FieldExpr;
+				if (fe == null || !fe.FieldInfo.IsInitOnly)
+					return false;
+
+				if (report_error) {
+					if (fe.FieldInfo.IsStatic)
+						Report.Error (199, loc, "A static readonly field cannot be passed ref or out (except in a static constructor)");
+					else
+						Report.Error (192, loc, "A readonly field cannot be passed ref or out (except in a constructor)");
+				}
+
+				return true;
+			}
+
+			bool CheckMarshalByRefField (Expression expr, Location loc, bool report_error)
+			{
+				FieldExpr fe = expr as FieldExpr;
+				if (fe == null || fe.IsStatic)
+					return false;
+
+				Expression instance = fe.InstanceExpression;
+				if (instance.GetType () == typeof (This))
+					return false;
+
+				if (!fe.InstanceExpression.Type.IsSubclassOf (TypeManager.mbr_type))
+					return false;
+
+				if (report_error) {
+					Report.SymbolRelatedToPreviousError (fe.InstanceExpression.Type);
+					Report.Error (197, loc, "Cannot pass '{0}' as ref or out or take its address because it is a member of a marshal-by-reference class",
+						fe.Name);
+				}
+
+				return true;
+			}
+
+			bool CanAliasImplicitByRef (EmitContext ec, Type parameter_element_type, Location loc, bool report_error)
+			{
+				if (!TypeManager.IsEqual (Expr.Type, parameter_element_type))
+					return false;
+
+				if (Expr.eclass != ExprClass.Variable)
+					return false;
+
+				if (!(Expr is IMemoryLocation) && !(Expr is ParameterReference))
+					return false;
+
+				if (IsReadonlyField (ec, Expr, loc, report_error))
+					return false;
+
+				if (CheckMarshalByRefField (Expr, loc, report_error))
+					return false;
+
+				return true;
+			}
+
+			bool CanCopyBackImplicitByRef (Expression original)
+			{
+				FieldExpr fe = original as FieldExpr;
+				if (fe != null)
+					return !fe.FieldInfo.IsInitOnly;
+
+				if (original is PropertyExpr)
+					return ((PropertyExpr) original).Setter != null;
+
+				if (original is ParameterizedPropertyAccess)
+					return ((ParameterizedPropertyAccess) original).HasSetter;
+
+				if (original is IndexerAccess)
+					return ((IndexerAccess) original).HasSetter;
+
+				if (original.eclass == ExprClass.Variable)
+					return true;
+
+				return false;
+			}
+
+			public bool PrepareImplicitByRef (EmitContext ec, Type parameter_type, Parameter.Modifier modifier, bool may_fail, Location loc)
+			{
+				// VB call sites do not spell out ref/out.  The argument is either
+				// passed as a true alias, or through a temp that copies back after
+				// the call if the original expression is writable.
+				Type byref_type = parameter_type.IsByRef ? parameter_type : TypeManager.GetReferenceType (parameter_type);
+				Type parameter_element_type = TypeManager.GetElementType (byref_type);
+				bool is_out = (modifier & Parameter.Modifier.OUT) != 0;
+				Expression original = Expr;
+
+				if (CanAliasImplicitByRef (ec, parameter_element_type, loc, !may_fail)) {
+					implicit_byref_type = byref_type;
+					implicit_byref_is_out = is_out;
+					return true;
+				}
+
+				if (!is_out && !TypeManager.IsEqual (Expr.Type, parameter_element_type)) {
+					Expr = Convert.ImplicitVBConversionRequired (ec, Expr, parameter_element_type, loc);
+					if (Expr == null)
+						return false;
+				}
+
+				implicit_byref_type = byref_type;
+				implicit_byref_is_out = is_out;
+
+				if (!CanCopyBackImplicitByRef (original))
+					return true;
+
+				implicit_byref_copyback_value = new ByRefCopyBackValue (parameter_element_type, loc);
+				implicit_byref_copyback = (new Assign (original, implicit_byref_copyback_value, loc)).Resolve (ec) as ExpressionStatement;
+				if (implicit_byref_copyback == null) {
+					implicit_byref_copyback = null;
+					implicit_byref_copyback_value = null;
+				}
+
+				return true;
+			}
+
+			public bool ResolveMethodGroup (EmitContext ec, Location loc)
+			{
+				ConstructedType ctype = Expr as ConstructedType;
 			if (ctype != null)
 				Expr = ctype.GetSimpleName (ec);
 
@@ -5307,22 +5472,40 @@ namespace Mono.CSharp {
 			return true;
 		}
 
-		public void Emit (EmitContext ec)
-		{
-			//
-			// Ref and Out parameters need to have their addresses taken.
-			//
-			// ParameterReferences might already be references, so we want
-			// to pass just the value
-			//
-			if (ArgType == AType.Ref || ArgType == AType.Out){
-				AddressOp mode = AddressOp.Store;
+			public void Emit (EmitContext ec)
+			{
+				//
+				// Ref and Out parameters need to have their addresses taken.
+				//
+				// ParameterReferences might already be references, so we want
+				// to pass just the value
+				//
+				if (implicit_byref_type != null && !(CanAliasImplicitByRef (ec, TypeManager.GetElementType (implicit_byref_type), Expr.Location, false))) {
+					AddressOp mode = AddressOp.Store;
+					Type temp_type = TypeManager.GetElementType (implicit_byref_type);
 
-				if (ArgType == AType.Ref)
-					mode |= AddressOp.Load;
-				
-				if (Expr is ParameterReference){
-					ParameterReference pr = (ParameterReference) Expr;
+					if (!implicit_byref_is_out)
+						mode |= AddressOp.Load;
+
+					// Non-addressable VB ByRef arguments travel through a temp local.
+					implicit_byref_temp = new LocalTemporary (ec, temp_type);
+					if (!implicit_byref_is_out) {
+						Expr.Emit (ec);
+						implicit_byref_temp.Store (ec);
+					}
+
+					implicit_byref_temp.AddressOf (ec, mode);
+					return;
+				}
+
+				if (ArgType == AType.Ref || ArgType == AType.Out || implicit_byref_type != null){
+					AddressOp mode = AddressOp.Store;
+
+					if (ArgType == AType.Ref || (implicit_byref_type != null && !implicit_byref_is_out))
+						mode |= AddressOp.Load;
+					
+					if (Expr is ParameterReference){
+						ParameterReference pr = (ParameterReference) Expr;
 
 					if (pr.IsRef)
 						pr.EmitLoad (ec);
@@ -5340,10 +5523,30 @@ namespace Mono.CSharp {
 						return;
 					}
 				}
-			} else
-				Expr.Emit (ec);
+				} else
+					Expr.Emit (ec);
+			}
+
+			public bool HasPostCallByRefWork {
+				get {
+					return implicit_byref_temp != null;
+				}
+			}
+
+			public void EmitPostCallByRef (EmitContext ec)
+			{
+				if (implicit_byref_temp == null)
+					return;
+
+				if (implicit_byref_copyback != null) {
+					implicit_byref_copyback_value.Bind (implicit_byref_temp);
+					implicit_byref_copyback.EmitStatement (ec);
+				}
+
+				implicit_byref_temp.Release (ec);
+				implicit_byref_temp = null;
+			}
 		}
-	}
 
 	/// <summary>
 	///   Invocation of methods or delegates.
@@ -5816,10 +6019,10 @@ namespace Mono.CSharp {
 		///   Determines if the candidate method is applicable (section 14.4.2.1)
 		///   to the given set of arguments
 		/// </summary>
-		static bool IsApplicable (EmitContext ec, ArrayList arguments, int arg_count,
+			static bool IsApplicable (EmitContext ec, ArrayList arguments, int arg_count,
 					  MethodBase candidate)
-		{
-			ParameterData pd = GetParameterData (candidate);
+			{
+				ParameterData pd = GetParameterData (candidate);
 
 			if (arg_count != pd.Count)
 				return false;
@@ -5827,35 +6030,44 @@ namespace Mono.CSharp {
 			for (int i = arg_count; i > 0; ) {
 				i--;
 
-				Argument a = (Argument) arguments [i];
+					Argument a = (Argument) arguments [i];
 
-				Parameter.Modifier a_mod = a.GetParameterModifier () &
-					unchecked (~(Parameter.Modifier.OUT | Parameter.Modifier.REF));
-				Parameter.Modifier p_mod = pd.ParameterModifier (i) &
-					unchecked (~(Parameter.Modifier.OUT | Parameter.Modifier.REF));
+					Parameter.Modifier a_mod = a.GetParameterModifier () &
+						unchecked (~(Parameter.Modifier.OUT | Parameter.Modifier.REF));
+					Parameter.Modifier p_mod = pd.ParameterModifier (i) &
+						unchecked (~(Parameter.Modifier.OUT | Parameter.Modifier.REF));
+
+					if (a_mod == Parameter.Modifier.NONE &&
+					    (p_mod & Parameter.Modifier.ISBYREF) != 0 &&
+					    a.ArgType == Argument.AType.Expression) {
+						a_mod = Parameter.Modifier.ISBYREF;
+					}
 
 
-				if (a_mod == p_mod ||
-				    (a_mod == Parameter.Modifier.NONE && p_mod == Parameter.Modifier.PARAMS)) {
-					if (a_mod == Parameter.Modifier.NONE) {
+					if (a_mod == p_mod ||
+					    (a_mod == Parameter.Modifier.NONE && p_mod == Parameter.Modifier.PARAMS)) {
+						if (a_mod == Parameter.Modifier.NONE) {
                                                 if (!Convert.WideningConversionExists (ec,
                                                                                        a.Expr,
                                                                                        pd.ParameterType (i)))
 							return false;
                                         }
 					
-					if ((a_mod & Parameter.Modifier.ISBYREF) != 0) {
-						Type pt = pd.ParameterType (i);
+						if ((a_mod & Parameter.Modifier.ISBYREF) != 0) {
+							Type pt = pd.ParameterType (i);
 
-						if (!pt.IsByRef)
-							pt = TypeManager.GetReferenceType (pt);
-                                                
-						if (pt != a.Type)
-							return false;
-					}
-				} else
-					return false;
-			}
+							if (!pt.IsByRef)
+								pt = TypeManager.GetReferenceType (pt);
+
+							Type parameter_element_type = TypeManager.GetElementType (pt);
+	                                                
+							if (!TypeManager.IsEqual (parameter_element_type, a.Expr.Type) &&
+							    !Convert.WideningConversionExists (ec, a.Expr, parameter_element_type))
+								return false;
+						}
+					} else
+						return false;
+				}
 
 			return true;
 		}
@@ -6151,7 +6363,7 @@ namespace Mono.CSharp {
 						     idx, arg_sig, par_desc));
 		}
 		
-		public static bool VerifyArgumentsCompat (EmitContext ec, ArrayList Arguments,
+			public static bool VerifyArgumentsCompat (EmitContext ec, ArrayList Arguments,
 							  int arg_count, MethodBase method, 
 							  bool chose_params_expanded,
 							  Type delegate_type, bool may_fail,
@@ -6163,12 +6375,21 @@ namespace Mono.CSharp {
 			for (int j = 0; j < arg_count; j++) {
 				Argument a = (Argument) Arguments [j];
 				Expression a_expr = a.Expr;
-				Type parameter_type = pd.ParameterType (j);
-				Parameter.Modifier pm = pd.ParameterModifier (j);
-				
-				if (pm == Parameter.Modifier.PARAMS){
-					if ((pm & ~Parameter.Modifier.PARAMS) != a.GetParameterModifier ()) {
-						if (!may_fail)
+					Type parameter_type = pd.ParameterType (j);
+					Parameter.Modifier pm = pd.ParameterModifier (j);
+					Parameter.Modifier expected_modifier = pm;
+
+					if ((pm & Parameter.Modifier.ISBYREF) != 0 &&
+					    a.ArgType == Argument.AType.Expression) {
+						if (!a.PrepareImplicitByRef (ec, parameter_type, pm, may_fail, a_expr.Location))
+							return false;
+
+						expected_modifier = a.GetParameterModifier ();
+					}
+					
+					if (pm == Parameter.Modifier.PARAMS){
+						if ((pm & ~Parameter.Modifier.PARAMS) != a.GetParameterModifier ()) {
+							if (!may_fail)
 							Error_InvalidArguments (
 								loc, j, method, delegate_type,
 								Argument.FullDesc (a), pd.ParameterDesc (j));
@@ -6177,18 +6398,18 @@ namespace Mono.CSharp {
 
 					if (chose_params_expanded)
 						parameter_type = TypeManager.GetElementType (parameter_type);
-				} else if (pm == Parameter.Modifier.ARGLIST){
-					continue;
-				} else {
-					//
-					// Check modifiers
-					//
-					if (pd.ParameterModifier (j) != a.GetParameterModifier ()){
-						if (!may_fail)
-							Error_InvalidArguments (
-								loc, j, method, delegate_type,
-								Argument.FullDesc (a), pd.ParameterDesc (j));
-						return false;
+					} else if (pm == Parameter.Modifier.ARGLIST){
+						continue;
+					} else {
+						//
+						// Check modifiers
+						//
+						if (expected_modifier != a.GetParameterModifier ()){
+							if (!may_fail)
+								Error_InvalidArguments (
+									loc, j, method, delegate_type,
+									Argument.FullDesc (a), pd.ParameterDesc (j));
+							return false;
 					}
 				}
 
@@ -6807,23 +7028,53 @@ namespace Mono.CSharp {
 			else
 				call_op = OpCodes.Callvirt;
 
-			if ((method.CallingConvention & CallingConventions.VarArgs) != 0) {
-				Type[] varargs_types = GetVarargsTypes (ec, method, Arguments);
-				ig.EmitCall (call_op, (MethodInfo) method, varargs_types);
-				return;
-			}
+				if ((method.CallingConvention & CallingConventions.VarArgs) != 0) {
+					Type[] varargs_types = GetVarargsTypes (ec, method, Arguments);
+					ig.EmitCall (call_op, (MethodInfo) method, varargs_types);
+				} else {
+					//
+					// If you have:
+					// this.DoFoo ();
+					// and DoFoo is not virtual, you can omit the callvirt,
+					// because you don't need the null checking behavior.
+					//
+					if (method is MethodInfo)
+						ig.Emit (call_op, (MethodInfo) method);
+					else
+						ig.Emit (call_op, (ConstructorInfo) method);
+				}
 
-			//
-			// If you have:
-			// this.DoFoo ();
-			// and DoFoo is not virtual, you can omit the callvirt,
-			// because you don't need the null checking behavior.
-			//
-			if (method is MethodInfo)
-				ig.Emit (call_op, (MethodInfo) method);
-			else
-				ig.Emit (call_op, (ConstructorInfo) method);
-		}
+				bool has_post_call_byref = false;
+				if (Arguments != null) {
+					foreach (Argument a in Arguments) {
+						if (a.HasPostCallByRefWork) {
+							has_post_call_byref = true;
+							break;
+						}
+					}
+				}
+
+				if (!has_post_call_byref)
+					return;
+
+				LocalTemporary return_value = null;
+				MethodInfo mi = method as MethodInfo;
+				if (mi != null && TypeManager.TypeToCoreType (mi.ReturnType) != TypeManager.void_type) {
+					// Copy-back runs after the call, so preserve the return value first.
+					return_value = new LocalTemporary (ec, mi.ReturnType);
+					return_value.Store (ec);
+				}
+
+				foreach (Argument a in Arguments) {
+					if (a.HasPostCallByRefWork)
+						a.EmitPostCallByRef (ec);
+				}
+
+				if (return_value != null) {
+					return_value.Emit (ec);
+					return_value.Release (ec);
+				}
+			}
 		
 		public override void Emit (EmitContext ec)
 		{
@@ -9601,7 +9852,7 @@ namespace Mono.CSharp {
 	/// <summary>
 	///   Expressions that represent an indexer call.
 	/// </summary>
-	public class IndexerAccess : Expression, IAssignMethod {
+		public class IndexerAccess : Expression, IAssignMethod {
 		//
 		// Points to our "data" repository
 		//
@@ -9612,10 +9863,16 @@ namespace Mono.CSharp {
 		protected Type indexer_type;
 		protected Type current_type;
 		protected Expression instance_expr;
-		protected ArrayList arguments;
-		
-		public IndexerAccess (ElementAccess ea, Location loc)
-			: this (ea.Expr, false, loc)
+			protected ArrayList arguments;
+
+			public bool HasSetter {
+				get {
+					return set != null;
+				}
+			}
+			
+			public IndexerAccess (ElementAccess ea, Location loc)
+				: this (ea.Expr, false, loc)
 		{
 			this.arguments = ea.Arguments;
 		}
@@ -9831,17 +10088,23 @@ namespace Mono.CSharp {
 		}
 	}
 
-	public class ParameterizedPropertyAccess : Expression, IAssignMethod {
+		public class ParameterizedPropertyAccess : Expression, IAssignMethod {
 		readonly PropertyExpr property;
 		readonly ArrayList arguments;
 		MethodInfo getter;
 		MethodInfo setter;
 		ArrayList set_arguments;
 		bool prepared;
-		LocalTemporary temp;
+			LocalTemporary temp;
 
-		public ParameterizedPropertyAccess (PropertyExpr property, ArrayList arguments, Location loc)
-		{
+			public bool HasSetter {
+				get {
+					return property.Setter != null;
+				}
+			}
+
+			public ParameterizedPropertyAccess (PropertyExpr property, ArrayList arguments, Location loc)
+			{
 			this.property = property;
 			this.arguments = arguments;
 			this.loc = loc;
