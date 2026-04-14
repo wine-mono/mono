@@ -3970,8 +3970,56 @@ line_if_body
 // parse as one line If statement instead of truncating the true
 // branch after the first statement.
 line_statement_list
-	: statement
-	| line_statement_list COLON statement
+	: line_if_statement
+	| line_statement_list COLON line_if_statement
+	;
+
+// The VB spec allows all statements except label declarations inside
+// a line If statement. Reuse the normal statement forms, but keep
+// labeled_statement out so "If b Then Foo() : L: Bar()" is rejected.
+line_if_statement
+	  : declaration_statement
+	    {
+		  if ($1 != null && (Block) $1 != current_block){
+			current_block.AddStatement ((Statement) $1);
+			current_block = (Block) $1;
+		  }
+	    }
+	  | embedded_statement
+	    {
+		  current_block.AddStatement ((Statement) $1);
+	    }
+	  | ADDHANDLER prefixed_unary_expression COMMA expression
+	    {
+		Location loc = lexer.Location;
+
+		Statement stmt = new EventSubscription ((Expression) $2,
+					 (Expression) $4, true, loc);
+
+		current_block.AddStatement (stmt);
+
+	    }
+
+	  | REMOVEHANDLER prefixed_unary_expression COMMA expression
+	    {
+		Location loc = lexer.Location;
+
+		Statement stmt = new EventSubscription ((Expression) $2,
+					 (Expression) $4, false, loc);
+
+		current_block.AddStatement (stmt);
+
+	    }
+	  | RAISEEVENT identifier opt_raise_event_args
+	    {
+	      Location loc = lexer.Location;
+	      MemberName mname = new MemberName ((string) $2);
+	      Expression expr = mname.GetTypeExpression (loc);
+
+	      Invocation inv_expr = new Invocation (expr, (ArrayList) $3, loc);
+	      Statement stmt = new StatementExpression (inv_expr, loc);
+	      current_block.AddStatement (stmt);
+	    }
 	;
 
 else_if_statement_rest
