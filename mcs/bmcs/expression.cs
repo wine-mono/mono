@@ -8708,7 +8708,7 @@ namespace Mono.CSharp {
 				return this;
 			}
 
-			if (ec.IsFieldInitializer) {
+			if (ec.IsFieldInitializer && ec.IsStatic) {
 				Error (27, "Keyword `this' can't be used outside a constructor, " +
 				       "a method or a property.");
 				return null;
@@ -9067,14 +9067,15 @@ namespace Mono.CSharp {
 
 			// If `left' is null, then we're called from SimpleNameResolve and this is
 			// a member in the currently defining class.
-			if (left == null) {
-				left_is_type = ec.IsStatic || ec.IsFieldInitializer;
-				left_is_explicit = false;
+				if (left == null) {
+					left_is_type = ec.IsStatic;
+					left_is_explicit = false;
 
-				// Implicitly default to `this' unless we're static.
-				if (!ec.IsStatic && !ec.IsFieldInitializer && !ec.InEnumContext)
-					left = ec.GetThis (loc);
-			} else {
+					// VB instance field initializers run in the constructor,
+					// so they get the same implicit receiver as other instance code.
+					if (!ec.IsStatic && !ec.InEnumContext)
+						left = ec.GetThis (loc);
+				} else {
 				left_is_type = left is TypeExpr;
 				left_is_explicit = true;
 			}
