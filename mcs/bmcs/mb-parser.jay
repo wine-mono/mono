@@ -4979,11 +4979,11 @@ this_access
 	;
 
 cast_expression
-        : DIRECTCAST OPEN_PARENS expression COMMA type CLOSE_PARENS
+        : DIRECTCAST OPEN_PARENS expression COMMA type_in_expression CLOSE_PARENS
 	  {
 	  	// TODO
 	  }
-	| TRYCAST OPEN_PARENS expression COMMA type CLOSE_PARENS
+	| TRYCAST OPEN_PARENS expression COMMA type_in_expression CLOSE_PARENS
 	  {
 		// VB TryCast returns Nothing for a failed reference cast.
 		// Keep it separate from the C# 'as' node because VB TryCast is
@@ -4991,7 +4991,7 @@ cast_expression
 		// operands instead of silently boxing them.
 		$$ = new VBTryCast ((Expression) $3, (Expression) $5, lexer.Location);
 	  }
-	| CTYPE OPEN_PARENS expression COMMA type CLOSE_PARENS
+	| CTYPE OPEN_PARENS expression COMMA type_in_expression CLOSE_PARENS
 	  {
 		  $$ = new Cast ((Expression) $5, (Expression) $3, lexer.Location);
 	  }
@@ -5017,7 +5017,7 @@ cast_operator
 	;
 
 get_type_expression
-	: GETTYPE OPEN_PARENS type CLOSE_PARENS
+	: GETTYPE OPEN_PARENS type_in_expression CLOSE_PARENS
 	  {
 		$$ = new TypeOf ((Expression) $3, lexer.Location);
   	  }
@@ -5166,7 +5166,7 @@ relational_expression
 		$$ = new Binary (Binary.Operator.Like,
 			         (Expression) $1, (Expression) $3, lexer.Location);
 	  }
-	| TYPEOF shift_expression IS type
+	| TYPEOF shift_expression IS type_in_expression
 	  {
                 $$ = new Is ((Expression) $2, (Expression) $4, lexer.Location);
 	  }
@@ -5345,6 +5345,20 @@ type
 	  }
 	| builtin_types
 	//| array_type
+	;
+
+// Expression contexts like GetType(Byte()), CType(x, Byte()) and
+// TypeOf x Is Byte() accept array type names.  Keep that suffix
+// handling separate from the general 'type' nonterminal so declaration
+// grammar like 'As Integer()' can continue to control rank parsing in
+// its existing dedicated productions.
+type_in_expression
+	: type
+	| type rank_specifiers
+	  {
+		string dims = VariableDeclaration.BuildRanks ((ArrayList) $2, true, lexer.Location);
+		$$ = new ComposedCast ((Expression) $1, dims, lexer.Location);
+	  }
 	;
 
 type_list
