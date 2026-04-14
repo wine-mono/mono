@@ -396,19 +396,24 @@ namespace Mono.CSharp {
 			case ExprClass.MethodGroup:
 				if ((flags & ResolveFlags.MethodGroup) == 0) {
 					// VB reclassifies a method group in value context as
-					// an implicit zero-argument invocation. EventAccess
-					// still stays on the old permissive path for now; the
-					// stricter spec rule lands in its own batch.
+					// an implicit zero-argument invocation.
 					e = new Invocation (e, null, e.Location).Resolve (ec);
 					if (e == null)
 						return null;
 				}
 				break;
 
+			case ExprClass.EventAccess:
+				// VB expression reclassification does not permit event
+				// access to become a value. Event access is only valid
+				// in RaiseEvent/AddHandler/RemoveHandler, which call the
+				// dedicated ResolveForEventAccess path instead.
+				e.Error_UnexpectedKind (flags, loc);
+				return null;
+
 			case ExprClass.Value:
 			case ExprClass.Variable:
 			case ExprClass.PropertyAccess:
-			case ExprClass.EventAccess:
 			case ExprClass.IndexerAccess:
 				if ((flags & ResolveFlags.VariableOrValue) == 0) {
 					Console.WriteLine ("I got: {0} and {1}", e.GetType (), e);
@@ -2624,13 +2629,17 @@ namespace Mono.CSharp {
 				// Invocation needs the raw PropertyExpr here for the same reason
 				// as MemberAccess: VB reclassifies a bare property group through
 				// invocation/index syntax instead of forcing direct accessor calls.
-				if (preserve_property_group && right_side == null && e is PropertyExpr)
-					return e;
+					if (preserve_property_group && right_side == null && e is PropertyExpr)
+						return e;
 
-				return (right_side != null)
-					? e.DoResolveLValue (ec, right_side)
-					: e.DoResolve (ec);
-			}
+					if (right_side != null)
+						return e.DoResolveLValue (ec, right_side);
+
+					if (preserve_event_access)
+						return e.ResolveForEventAccess (ec);
+
+					return e.DoResolve (ec);
+				}
 
 			if (ec.IsStatic || ec.IsFieldInitializer){
 				if (allow_static)
@@ -4085,6 +4094,13 @@ namespace Mono.CSharp {
 		}
 
 		public override Expression DoResolve (EmitContext ec)
+		{
+			Report.Error (119, loc,
+				      "Expression denotes a `event access' where a `value' was expected");
+			return null;
+		}
+
+		public override Expression ResolveForEventAccess (EmitContext ec)
 		{
 			if (instance_expr != null) {
 				instance_expr = instance_expr.DoResolve (ec);

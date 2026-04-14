@@ -6802,22 +6802,58 @@ namespace Mono.CSharp {
 
 		Expression ResolveInvocationTarget (EmitContext ec)
 		{
+			Expression target;
+
 			if (expr is ConstructedType)
 				expr = ((ConstructedType) expr).GetSimpleName (ec);
 
 			MemberAccess member_access = expr as MemberAccess;
-			if (member_access != null)
-				return member_access.ResolveForInvocation (ec);
+			if (member_access != null) {
+				target = member_access.ResolveForInvocation (ec);
+				return RewriteLegacyRaiseEventTarget (ec, target);
+			}
 
 			BaseAccess base_access = expr as BaseAccess;
-			if (base_access != null)
-				return base_access.ResolveForInvocation (ec);
+			if (base_access != null) {
+				target = base_access.ResolveForInvocation (ec);
+				return RewriteLegacyRaiseEventTarget (ec, target);
+			}
 
 			SimpleName simple_name = expr as SimpleName;
-			if (simple_name != null)
-				return simple_name.ResolveForInvocation (ec);
+			if (simple_name != null) {
+				target = simple_name.ResolveForInvocation (ec);
+				return RewriteLegacyRaiseEventTarget (ec, target);
+			}
 
-			return expr.Resolve (ec, ResolveFlags.VariableOrValue | ResolveFlags.MethodGroup);
+			target = expr.Resolve (ec, ResolveFlags.VariableOrValue | ResolveFlags.MethodGroup);
+			return RewriteLegacyRaiseEventTarget (ec, target);
+		}
+
+		Expression RewriteLegacyRaiseEventTarget (EmitContext ec, Expression target)
+		{
+			EventExpr ee = target as EventExpr;
+			if (ee == null)
+				return target;
+
+			if (ee.EventInfo.DeclaringType != ec.ContainerType &&
+			    !TypeManager.IsNestedChildOf (ec.ContainerType, ee.EventInfo.DeclaringType))
+				return target;
+
+			MemberInfo backing_field = GetFieldFromEvent (ee);
+			if (backing_field == null)
+				return target;
+
+			// bmcs still lowers RaiseEvent to an invocation of the event name.
+			// Keep the old field-backed event rewrite only for that invocation
+			// path; ordinary value contexts now reject EventAccess per spec.
+			Expression backing_expr = ExprClassFromMemberInfo (ec, backing_field, loc);
+			if (backing_expr == null) {
+				Report.Error (-200, loc, "Internal error!!");
+				return null;
+			}
+
+			return MemberAccess.ResolveMemberAccess (
+				ec, backing_expr, ee.InstanceExpression, loc, expr, false);
 		}
 
 		Expression ResolvePropertyInvocation (EmitContext ec, PropertyExpr property)
@@ -9131,50 +9167,16 @@ namespace Mono.CSharp {
 				}
 			}
 
-			if (member_lookup is EventExpr) {
-				EventExpr ee = (EventExpr) member_lookup;
+				if (member_lookup is EventExpr) {
+					EventExpr ee = (EventExpr) member_lookup;
+					if (!left_is_explicit)
+						left = null;
 
-				if (preserve_event_access) {
 					ee.InstanceExpression = left;
 					return ee;
 				}
-				
-				//
-				// If the event is local to this class, we transform ourselves into
-				// a FieldExpr
-				//
 
-				if (ee.EventInfo.DeclaringType == ec.ContainerType ||
-				    TypeManager.IsNestedChildOf(ec.ContainerType, ee.EventInfo.DeclaringType)) {
-					MemberInfo mi = GetFieldFromEvent (ee);
-
-					if (mi == null) {
-						//
-						// If this happens, then we have an event with its own
-						// accessors and private field etc so there's no need
-						// to transform ourselves.
-						//
-						ee.InstanceExpression = left;
-						return ee;
-					}
-
-					Expression ml = ExprClassFromMemberInfo (ec, mi, loc);
-					
-					if (ml == null) {
-						Report.Error (-200, loc, "Internal error!!");
-						return null;
-					}
-
-					if (!left_is_explicit)
-						left = null;
-					
-					ee.InstanceExpression = left;
-
-						return ResolveMemberAccess (ec, ml, left, loc, left_original, false);
-					}
-				}
-
-			if (member_lookup is IMemberExpr) {
+				if (member_lookup is IMemberExpr) {
 				IMemberExpr me = (IMemberExpr) member_lookup;
 				MethodGroupExpr mg = me as MethodGroupExpr;
 
@@ -9402,15 +9404,17 @@ namespace Mono.CSharp {
 			if (preserve_property_group && right_side == null && member_lookup is PropertyExpr)
 				return member_lookup;
 
-			// The following DoResolve/DoResolveLValue will do the definite assignment
-			// check.
+				// The following DoResolve/DoResolveLValue will do the definite assignment
+				// check.
 
-			if (right_side != null)
-				member_lookup = member_lookup.DoResolveLValue (ec, right_side);
-			else
-				member_lookup = member_lookup.DoResolve (ec);
+				if (right_side != null)
+					member_lookup = member_lookup.DoResolveLValue (ec, right_side);
+				else if (preserve_event_access)
+					member_lookup = member_lookup.ResolveForEventAccess (ec);
+				else
+					member_lookup = member_lookup.DoResolve (ec);
 
-			return member_lookup;
+				return member_lookup;
 		}
 
 		public override Expression DoResolve (EmitContext ec)
