@@ -425,6 +425,8 @@ namespace Mono.CSharp
 %token INTERFACE
 %token IS
 %token ISNOT
+%token ISTRUE
+%token ISFALSE
 %token LET
 %token LIB	
 %token LIKE	
@@ -759,6 +761,8 @@ identifier
 	| ASSEMBLY	/* Contextual in VB: ordinary declarations such as
 			   'Property Assembly() As ...' still use it as a
 			   regular identifier. */
+	| ISTRUE	/* Operator declaration keywords are contextual too. */
+	| ISFALSE
 	;
 
 type_character
@@ -1445,61 +1449,79 @@ method_declaration
 // 	| must_override_declaration
 	;
 
-// VB operator declarations have real metadata and overload-resolution
-// effects.  The backend Operator node exists, but the VB frontend still
-// lacks the symbol-to-OpType mapping and the expression-resolution
-// plumbing needed to bind uses of those operators correctly.  Reject the
-// declaration loudly instead of parsing and dropping it.
+// VB operator declarations are real type members with dedicated metadata
+// names such as op_Equality, op_Concatenate, and op_IntegerDivision.
+// Keep the declaration-to-Operator mapping in one place by asking the
+// Operator class to translate the VB surface symbol plus parameter count
+// into the backend operator kind.
 operator_declaration
 	: opt_widening_narrowing OPERATOR operator_symbol opt_params opt_type_with_ranks logical_end_of_line
 	  {
-		Report.Error (33000, lexer.Location,
-			"User-defined operator declarations are not supported by " +
-			"this bootstrap compiler; rewrite the operator body as an " +
-			"explicit method (Equals, Compare, ...) on the enclosing type");
+		Parameters pars = (Parameters) $4;
+		Operator.OpType op;
+		bool valid = Operator.TryResolveVBDeclaration ((string) $1,
+			(string) $3, pars, lexer.Location, out op);
 		current_local_parameters = (Parameters) $4;
 		start_block ();
 		oob_stack.Push (lexer.Location);
+		oob_stack.Push (valid);
+		oob_stack.Push (op);
 	  }
 	  opt_statement_list
-	  end_block
 	  END OPERATOR logical_end_of_line
 	  {
-		oob_stack.Pop ();
+		Block body = end_block ();
+		Operator.OpType op = (Operator.OpType) oob_stack.Pop ();
+		bool valid = (bool) oob_stack.Pop ();
+		Location l = (Location) oob_stack.Pop ();
 		current_local_parameters = null;
+
+		if (valid) {
+			int mods = (int) current_modifiers;
+			if ((mods & Modifiers.Accessibility) == 0)
+				mods |= Modifiers.PUBLIC;
+
+			Operator oper = new Operator (current_class, op,
+				($5 != null) ? (Expression) $5 : TypeManager.system_object_expr,
+				mods, (Parameters) $4, (ToplevelBlock) body,
+				(Attributes) current_attributes, l);
+			current_container.AddOperator (oper);
+		}
 		$$ = null;
 	  }
 	;
 
 opt_widening_narrowing
-	: /* empty */
-	| WIDENING
-	| NARROWING
+	: /* empty */		{ $$ = null; }
+	| WIDENING		{ $$ = "widening"; }
+	| NARROWING		{ $$ = "narrowing"; }
 	;
 
 operator_symbol
-	: OP_LT
-	| OP_GT
-	| OP_LE
-	| OP_GE
-	| OP_NE
-	| ASSIGN
-	| PLUS
-	| MINUS
-	| STAR
-	| DIV
-	| OP_IDIV
-	| MOD
-	| OP_EXP
-	| OP_CONCAT
-	| AND
-	| OR
-	| XOR
-	| NOT
-	| OP_SHIFT_LEFT
-	| OP_SHIFT_RIGHT
-	| LIKE
-	| CTYPE
+	: OP_LT			{ $$ = "<"; }
+	| OP_GT			{ $$ = ">"; }
+	| OP_LE			{ $$ = "<="; }
+	| OP_GE			{ $$ = ">="; }
+	| OP_NE			{ $$ = "<>"; }
+	| ASSIGN		{ $$ = "="; }
+	| PLUS			{ $$ = "+"; }
+	| MINUS		{ $$ = "-"; }
+	| STAR			{ $$ = "*"; }
+	| DIV			{ $$ = "/"; }
+	| OP_IDIV		{ $$ = "\\"; }
+	| MOD			{ $$ = "mod"; }
+	| OP_EXP		{ $$ = "^"; }
+	| OP_CONCAT		{ $$ = "&"; }
+	| AND			{ $$ = "and"; }
+	| OR			{ $$ = "or"; }
+	| XOR			{ $$ = "xor"; }
+	| NOT			{ $$ = "not"; }
+	| OP_SHIFT_LEFT	{ $$ = "<<"; }
+	| OP_SHIFT_RIGHT	{ $$ = ">>"; }
+	| LIKE			{ $$ = "like"; }
+	| ISTRUE		{ $$ = "istrue"; }
+	| ISFALSE		{ $$ = "isfalse"; }
+	| CTYPE		{ $$ = "ctype"; }
 	;
 
 // Bodyless abstract declarations keyed by MUSTOVERRIDE in

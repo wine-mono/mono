@@ -687,6 +687,8 @@ namespace Mono.CSharp
 			keywords.Add ("interface", Token.INTERFACE);
 			keywords.Add ("is", Token.IS);
 			keywords.Add ("isnot", Token.ISNOT);
+			keywords.Add ("istrue", Token.ISTRUE);
+			keywords.Add ("isfalse", Token.ISFALSE);
 			keywords.Add ("let", Token.LET ); // An unused VB.NET keyword
 			keywords.Add ("lib", Token.LIB );
 			keywords.Add ("like", Token.LIKE );

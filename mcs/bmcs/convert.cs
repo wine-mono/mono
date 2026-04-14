@@ -1272,13 +1272,12 @@ namespace Mono.CSharp {
 			if (e != null)
 				return e;
 
-			//
-			// VB.NET has no notion of User defined conversions
-			//
-
-// 			e = ImplicitUserConversion (ec, expr, target_type, loc);
-// 			if (e != null)
-// 				return e;
+			// User-defined widening conversions are part of VB operator
+			// declarations, so once op_Implicit metadata exists they must
+			// participate in normal VB conversion binding.
+			e = UserDefinedConversion (ec, expr, target_type, loc, false);
+			if (e != null)
+				return e;
 
 			return null;
 		}
@@ -2478,9 +2477,9 @@ namespace Mono.CSharp {
 			// VB.NET has no notion of User defined conversions
 			//
 
-// 			ne = ExplicitUserConversion (ec, expr, target_type, loc);
-// 			if (ne != null)
-// 				return ne;
+			ne = UserDefinedConversion (ec, expr, target_type, loc, true);
+			if (ne != null)
+				return ne;
 
 			if (expr is NullLiteral){
 				Report.Error (37, loc, "Cannot convert null to value type `" +

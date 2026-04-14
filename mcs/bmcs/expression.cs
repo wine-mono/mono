@@ -1969,11 +1969,14 @@ namespace Mono.CSharp {
 		{
 			oper_names = new string [(int) Operator.TOP];
 
+			oper_names [(int) Operator.Exponentiation] = "op_Exponent";
 			oper_names [(int) Operator.Multiply] = "op_Multiply";
 			oper_names [(int) Operator.Division] = "op_Division";
+			oper_names [(int) Operator.IntegerDivision] = "op_IntegerDivision";
 			oper_names [(int) Operator.Modulus] = "op_Modulus";
 			oper_names [(int) Operator.Addition] = "op_Addition";
 			oper_names [(int) Operator.Subtraction] = "op_Subtraction";
+			oper_names [(int) Operator.Concatenation] = "op_Concatenate";
 			oper_names [(int) Operator.LeftShift] = "op_LeftShift";
 			oper_names [(int) Operator.RightShift] = "op_RightShift";
 			oper_names [(int) Operator.LessThan] = "op_LessThan";
@@ -1982,6 +1985,7 @@ namespace Mono.CSharp {
 			oper_names [(int) Operator.GreaterThanOrEqual] = "op_GreaterThanOrEqual";
 			oper_names [(int) Operator.Equality] = "op_Equality";
 			oper_names [(int) Operator.Inequality] = "op_Inequality";
+			oper_names [(int) Operator.Like] = "op_Like";
 			oper_names [(int) Operator.BitwiseAnd] = "op_BitwiseAnd";
 			oper_names [(int) Operator.BitwiseOr] = "op_BitwiseOr";
 			oper_names [(int) Operator.ExclusiveOr] = "op_ExclusiveOr";
@@ -2082,6 +2086,42 @@ namespace Mono.CSharp {
 		{
 			return "operator " + OperName (oper) + "(" + left.ToString () + ", " +
 				right.ToString () + ")";
+		}
+
+		Expression ResolveUserDefinedOperator (EmitContext ec)
+		{
+			if (TypeManager.IsCLRType (left.Type) && TypeManager.IsCLRType (right.Type))
+				return null;
+
+			string op_name = oper_names [(int) oper];
+			if (op_name == null)
+				return null;
+
+			Expression left_expr = MemberLookup (ec, left.Type, op_name, MemberTypes.Method,
+				AllBindingFlags, loc);
+			MethodGroupExpr union;
+
+			if (right.Type != left.Type) {
+				Expression right_expr = MemberLookup (ec, right.Type, op_name, MemberTypes.Method,
+					AllBindingFlags, loc);
+				union = Invocation.MakeUnionSet (left_expr, right_expr, loc);
+			} else {
+				union = (MethodGroupExpr) left_expr;
+			}
+
+			if (union == null)
+				return null;
+
+			ArrayList args = new ArrayList (2);
+			args.Add (new Argument (left, Argument.AType.Expression));
+			args.Add (new Argument (right, Argument.AType.Expression));
+
+			MethodBase method = Invocation.OverloadResolve (ec, union, args, true, Location.Null);
+			if (method == null)
+				return null;
+
+			MethodInfo mi = (MethodInfo) method;
+			return new BinaryMethod (mi.ReturnType, method, args);
 		}
 		
 		Expression ForceConversion (EmitContext ec, Expression expr, Type target_type)
@@ -3286,6 +3326,10 @@ namespace Mono.CSharp {
 			ret_expr = HandleObjectOperands (ec);
 			if (Report.Errors > errors)
 				return null;
+			if (ret_expr != null)
+				return ret_expr;
+
+			ret_expr = ResolveUserDefinedOperator (ec);
 			if (ret_expr != null)
 				return ret_expr;
 

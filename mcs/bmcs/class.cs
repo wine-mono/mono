@@ -7709,7 +7709,9 @@ namespace Mono.CSharp {
 			Modifiers.PUBLIC |
 			Modifiers.UNSAFE |
 			Modifiers.EXTERN |
-			Modifiers.STATIC;
+			Modifiers.STATIC |
+			Modifiers.NEW |
+			Modifiers.SHADOWS;
 
 		public enum OpType : byte {
 
@@ -7731,7 +7733,11 @@ namespace Mono.CSharp {
 			// Binary operators
 			Multiply,
 			Division,
+			IntegerDivision,
+			Exponentiation,
 			Modulus,
+			Concatenate,
+			Like,
 			BitwiseAnd,
 			BitwiseOr,
 			ExclusiveOr,
@@ -7760,10 +7766,180 @@ namespace Mono.CSharp {
 				 int mod_flags, Parameters parameters,
 				 ToplevelBlock block, Attributes attrs, Location loc)
 			: base (parent, null, ret_type, mod_flags, AllowedModifiers, false,
-				new MemberName ("op_" + type), attrs, parameters, loc)
+				new MemberName (GetMetadataName (type)), attrs, parameters, loc)
 		{
 			OperatorType = type;
 			Block = block;
+		}
+
+		static int GetParameterCount (Parameters parameters)
+		{
+			int count = 0;
+
+			if (parameters == null)
+				return 0;
+
+			if (parameters.FixedParameters != null)
+				count += parameters.FixedParameters.Length;
+
+			if (parameters.ArrayParameter != null)
+				count++;
+
+			return count;
+		}
+
+		public static string GetMetadataName (OpType ot)
+		{
+			switch (ot) {
+			case OpType.IntegerDivision:
+				return "op_IntegerDivision";
+			case OpType.Exponentiation:
+				return "op_Exponent";
+			case OpType.Concatenate:
+				return "op_Concatenate";
+			case OpType.Like:
+				return "op_Like";
+			default:
+				return "op_" + ot;
+			}
+		}
+
+		public static bool TryResolveVBDeclaration (string conversion_kind, string symbol,
+			Parameters parameters, Location loc, out OpType op)
+		{
+			int count = GetParameterCount (parameters);
+
+			op = OpType.Addition;
+
+			switch (symbol) {
+			case "+":
+				if (count == 1) {
+					op = OpType.UnaryPlus;
+					return true;
+				}
+				if (count == 2) {
+					op = OpType.Addition;
+					return true;
+				}
+				Report.Error (33002, loc,
+					"Operator `+' must declare either one parameter (unary) or two parameters (binary)");
+				return false;
+			case "-":
+				if (count == 1) {
+					op = OpType.UnaryNegation;
+					return true;
+				}
+				if (count == 2) {
+					op = OpType.Subtraction;
+					return true;
+				}
+				Report.Error (33002, loc,
+					"Operator `-' must declare either one parameter (unary) or two parameters (binary)");
+				return false;
+			case "not":
+				op = OpType.OnesComplement;
+				break;
+			case "istrue":
+				op = OpType.True;
+				break;
+			case "isfalse":
+				op = OpType.False;
+				break;
+			case "*":
+				op = OpType.Multiply;
+				break;
+			case "/":
+				op = OpType.Division;
+				break;
+			case "\\":
+				op = OpType.IntegerDivision;
+				break;
+			case "^":
+				op = OpType.Exponentiation;
+				break;
+			case "mod":
+				op = OpType.Modulus;
+				break;
+			case "&":
+				op = OpType.Concatenate;
+				break;
+			case "like":
+				op = OpType.Like;
+				break;
+			case "and":
+				op = OpType.BitwiseAnd;
+				break;
+			case "or":
+				op = OpType.BitwiseOr;
+				break;
+			case "xor":
+				op = OpType.ExclusiveOr;
+				break;
+			case "<<":
+				op = OpType.LeftShift;
+				break;
+			case ">>":
+				op = OpType.RightShift;
+				break;
+			case "=":
+				op = OpType.Equality;
+				break;
+			case "<>":
+				op = OpType.Inequality;
+				break;
+			case "<":
+				op = OpType.LessThan;
+				break;
+			case ">":
+				op = OpType.GreaterThan;
+				break;
+			case "<=":
+				op = OpType.LessThanOrEqual;
+				break;
+			case ">=":
+				op = OpType.GreaterThanOrEqual;
+				break;
+			case "ctype":
+				if (count != 1) {
+					Report.Error (33002, loc,
+						"Conversion operator `CType' must declare exactly one parameter");
+					return false;
+				}
+
+				if (conversion_kind == "widening") {
+					op = OpType.Implicit;
+					return true;
+				}
+
+				if (conversion_kind == "narrowing") {
+					op = OpType.Explicit;
+					return true;
+				}
+
+				Report.Error (33003, loc,
+					"Conversion operator `CType' must be declared with either `Widening' or `Narrowing'");
+				return false;
+			default:
+				Report.Error (33005, loc, "Unsupported operator declaration `{0}'", symbol);
+				return false;
+			}
+
+			if (op == OpType.True || op == OpType.False || op == OpType.OnesComplement ||
+			    op == OpType.UnaryPlus || op == OpType.UnaryNegation) {
+				if (count == 1)
+					return true;
+
+				Report.Error (33002, loc,
+					"Operator `{0}' must declare exactly one parameter", symbol);
+				return false;
+			}
+
+			if (count == 2)
+				return true;
+
+			Report.Error (33002, loc,
+				"Operator `{0}' must declare exactly two parameters", symbol);
+			return false;
 		}
 
 		public override void ApplyAttributeBuilder (Attribute a, CustomAttributeBuilder cb) 
@@ -7815,6 +7991,24 @@ namespace Mono.CSharp {
 			if ((ModFlags & RequiredModifiers) != RequiredModifiers){
 				Report.Error (558, Location, "User defined operators '{0}' must be declared static and public", GetSignatureForError (Parent));
 				return false;
+			}
+
+			if (Parameters.ArrayParameter != null) {
+				Report.Error (33004, Location,
+					"Operator parameters cannot be declared ByRef, Optional, or ParamArray");
+				return false;
+			}
+
+			if (Parameters.FixedParameters != null) {
+				foreach (Parameter p in Parameters.FixedParameters) {
+					if ((p.ModFlags & Parameter.Modifier.ISBYREF) != 0 ||
+					    (p.ModFlags & Parameter.Modifier.OPTIONAL) != 0 ||
+					    p.IsOptional) {
+						Report.Error (33004, Location,
+							"Operator parameters cannot be declared ByRef, Optional, or ParamArray");
+						return false;
+					}
+				}
 			}
 
 			if (!DoDefine (ds))
@@ -7957,7 +8151,69 @@ namespace Mono.CSharp {
 				return;
 			
 			OperatorMethod.Emit ();
+			EmitForeignLanguageAlias ();
 			Block = null;
+		}
+
+		bool HasMatchingOperator (OpType op_type, Type return_type, Type[] parameter_types)
+		{
+			ArrayList operators = Parent.Operators;
+			if (operators == null)
+				return false;
+
+			foreach (Operator other in operators) {
+				if (other == this || other.OperatorType != op_type || other.OperatorMethod == null)
+					continue;
+
+				if (other.OperatorMethod.ReturnType != return_type)
+					continue;
+
+				Type[] other_parameters = other.OperatorMethod.ParameterTypes;
+				if (other_parameters.Length != parameter_types.Length)
+					continue;
+
+				bool same = true;
+				for (int i = 0; i < parameter_types.Length; ++i) {
+					if (other_parameters[i] != parameter_types[i]) {
+						same = false;
+						break;
+					}
+				}
+
+				if (same)
+					return true;
+			}
+
+			return false;
+		}
+
+		void EmitForeignLanguageAlias ()
+		{
+			if (OperatorType != OpType.IntegerDivision)
+				return;
+
+			Type return_type = OperatorMethod.ReturnType;
+			Type[] parameter_types = OperatorMethod.ParameterTypes;
+			if (HasMatchingOperator (OpType.Division, return_type, parameter_types))
+				return;
+
+			MethodBuilder alias = Parent.TypeBuilder.DefineMethod (
+				"op_Division",
+				MethodAttributes.Public | MethodAttributes.Static |
+				MethodAttributes.SpecialName | MethodAttributes.HideBySig,
+				return_type, parameter_types);
+
+			if (Parameters.FixedParameters != null) {
+				for (int i = 0; i < Parameters.FixedParameters.Length; ++i)
+					alias.DefineParameter (i + 1, Parameters.FixedParameters[i].Attributes,
+						Parameters.FixedParameters[i].Name);
+			}
+
+			ILGenerator ig = alias.GetILGenerator ();
+			for (short i = 0; i < parameter_types.Length; ++i)
+				ig.Emit (OpCodes.Ldarg, i);
+			ig.Emit (OpCodes.Call, OperatorMethodBuilder);
+			ig.Emit (OpCodes.Ret);
 		}
 
 		// Operator cannot be override
@@ -7972,15 +8228,15 @@ namespace Mono.CSharp {
 			case OpType.LogicalNot:
 				return "!";
 			case OpType.OnesComplement:
-				return "~";
+				return "Not";
 			case OpType.Increment:
 				return "++";
 			case OpType.Decrement:
 				return "--";
 			case OpType.True:
-				return "true";
+				return "IsTrue";
 			case OpType.False:
-				return "false";
+				return "IsFalse";
 			case OpType.Addition:
 				return "+";
 			case OpType.Subtraction:
@@ -7993,22 +8249,30 @@ namespace Mono.CSharp {
 				return "*";
 			case OpType.Division:
 				return "/";
-			case OpType.Modulus:
-				return "%";
-			case OpType.BitwiseAnd:
-				return "&";
-			case OpType.BitwiseOr:
-				return "|";
-			case OpType.ExclusiveOr:
+			case OpType.IntegerDivision:
+				return "\\";
+			case OpType.Exponentiation:
 				return "^";
+			case OpType.Modulus:
+				return "Mod";
+			case OpType.Concatenate:
+				return "&";
+			case OpType.Like:
+				return "Like";
+			case OpType.BitwiseAnd:
+				return "And";
+			case OpType.BitwiseOr:
+				return "Or";
+			case OpType.ExclusiveOr:
+				return "Xor";
 			case OpType.LeftShift:
 				return "<<";
 			case OpType.RightShift:
 				return ">>";
 			case OpType.Equality:
-				return "==";
+				return "=";
 			case OpType.Inequality:
-				return "!=";
+				return "<>";
 			case OpType.GreaterThan:
 				return ">";
 			case OpType.LessThan:
@@ -8018,9 +8282,9 @@ namespace Mono.CSharp {
 			case OpType.LessThanOrEqual:
 				return "<=";
 			case OpType.Implicit:
-				return "implicit";
+				return "Widening CType";
 			case OpType.Explicit:
-				return "explicit";
+				return "Narrowing CType";
 			default: return "";
 			}
 		}
