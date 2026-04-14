@@ -80,12 +80,6 @@ namespace Mono.CSharp {
 				return TypeBuilder;
 
 			ec = new EmitContext (this, this, Location, null, null, ModFlags, false);
-
-			if (IsGeneric) {
-				foreach (TypeParameter type_param in TypeParameters)
-					if (!type_param.Resolve (this))
-						return null;
-			}
 			
 			TypeAttributes attr = Modifiers.TypeAttr (ModFlags, IsTopLevel) |
 				TypeAttributes.Class | TypeAttributes.Sealed;
@@ -131,6 +125,10 @@ namespace Mono.CSharp {
 				for (int i = offset; i < gen_params.Length; i++)
 					CurrentTypeParameters [i - offset].Define (gen_params [i]);
 
+				// Mirror the class path: resolve constraints once after the
+				// builders exist. Constraints.Resolve keeps ordering state,
+				// so the earlier double-resolve here inverted valid `Class,
+				// New` delegate constraints into bogus ordering errors.
 				foreach (TypeParameter type_param in CurrentTypeParameters) {
 					if (!type_param.Resolve (this))
 						return null;

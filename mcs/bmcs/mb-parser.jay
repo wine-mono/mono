@@ -2759,19 +2759,26 @@ delegate_declaration
 		PushDeclaredTypeState ();
 		RejectInvalidPartialModifier (lexer.Location);
 	  }
-	  identifier OPEN_PARENS 
+	  identifier opt_type_params OPEN_PARENS 
 	  opt_formal_parameter_list
 	  CLOSE_PARENS 
 	  logical_end_of_line
 	  {
 		Location l = lexer.Location;
-		MemberName name = MakeName (new MemberName ((string) $4));
+		ParsedTypeParameters type_params = (ParsedTypeParameters) $5;
+		TypeArguments type_args = type_params == null ? null : type_params.TypeArguments;
+		MemberName name = (type_args == null)
+			? MakeName (new MemberName ((string) $4))
+			: MakeName (new MemberName ((string) $4, type_args));
 
 		if (implicit_modifiers && ((current_modifiers & Modifiers.STATIC) != 0))
 			current_modifiers = (current_modifiers & ~Modifiers.STATIC);
 
 		Delegate del = new Delegate (current_namespace, current_container, TypeManager.system_void_expr,
-					     current_modifiers, name, (Parameters) $6, current_attributes, l);
+					     current_modifiers, name, (Parameters) $7, current_attributes, l);
+
+		if (type_params != null)
+			del.SetParameterInfo (type_params.Constraints);
 
 		current_container.AddDelegate (del);
 		RootContext.Tree.RecordDecl (name.GetName (true), del);
@@ -2783,19 +2790,26 @@ delegate_declaration
 		PushDeclaredTypeState ();
 		RejectInvalidPartialModifier (lexer.Location);
 	  }
-	  identifier OPEN_PARENS 
+	  identifier opt_type_params OPEN_PARENS 
 	  opt_formal_parameter_list
 	  CLOSE_PARENS opt_type_with_ranks logical_end_of_line
 	  {
 		Location l = lexer.Location;
-		MemberName name = MakeName (new MemberName ((string) $4));
+		ParsedTypeParameters type_params = (ParsedTypeParameters) $5;
+		TypeArguments type_args = type_params == null ? null : type_params.TypeArguments;
+		MemberName name = (type_args == null)
+			? MakeName (new MemberName ((string) $4))
+			: MakeName (new MemberName ((string) $4, type_args));
 
 		if (implicit_modifiers && ((current_modifiers & Modifiers.STATIC) != 0))
 			current_modifiers = (current_modifiers & ~Modifiers.STATIC);
 
-		Expression rettype = ($8 == null) ? TypeManager.system_object_expr : (Expression) $8;
+		Expression rettype = ($9 == null) ? TypeManager.system_object_expr : (Expression) $9;
 		Delegate del = new Delegate (current_namespace, current_container, rettype,
-					     current_modifiers, name, (Parameters) $6, current_attributes, l);
+					     current_modifiers, name, (Parameters) $7, current_attributes, l);
+
+		if (type_params != null)
+			del.SetParameterInfo (type_params.Constraints);
 
 		current_container.AddDelegate (del);
 		RootContext.Tree.RecordDecl (name.GetName (true), del);
@@ -4945,6 +4959,16 @@ argument
 	: expression
 	  {
 		$$ = new Argument ((Expression) $1, Argument.AType.Expression);
+	  }
+	| identifier ATTR_ASSIGN expression
+	  {
+		// VB named arguments are legal source syntax, but bmcs still
+		// models call arguments as positional-only values.  Keep the
+		// failure explicit here instead of silently dropping the name
+		// and misbinding reordered arguments during overload resolution.
+		Report.Error (30661, lexer.Location,
+			"Named arguments are not supported by this bootstrap compiler; rewrite the call to use positional arguments");
+		$$ = new Argument ((Expression) $3, Argument.AType.Expression);
 	  }
 	| BYREF variable_reference
 	  {
