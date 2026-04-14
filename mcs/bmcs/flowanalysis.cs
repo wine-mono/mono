@@ -1899,10 +1899,23 @@ namespace Mono.CSharp
 			return !ec.DoFlowAnalysis || ec.CurrentBranching.IsAssigned (this);
 		}
 
+		bool HasDefaultInitializedValue (EmitContext ec)
+		{
+			// VB locals start each scope entry at the default value of their
+			// type. Keep the old flow behavior for out-parameter tracking and
+			// for shared unsafe contexts where InitLocals can be disabled.
+			return !IsParameter && !ec.InUnsafe;
+		}
+
 		public bool IsAssigned (EmitContext ec, Location loc)
 		{
 			if (IsAssigned (ec))
 				return true;
+
+			if (HasDefaultInitializedValue (ec)) {
+				ec.CurrentBranching.SetAssigned (this);
+				return true;
+			}
 
 			Report.Error (165, loc,
 				      "Use of unassigned local variable `" + Name + "'");
@@ -1958,6 +1971,11 @@ namespace Mono.CSharp
 		{
 			if (!ec.DoFlowAnalysis || ec.CurrentBranching.IsFieldAssigned (this, name))
 				return true;
+
+			if (HasDefaultInitializedValue (ec)) {
+				ec.CurrentBranching.SetAssigned (this);
+				return true;
+			}
 
 			Report.Error (170, loc,
 				      "Use of possibly unassigned field `" + name + "'");
