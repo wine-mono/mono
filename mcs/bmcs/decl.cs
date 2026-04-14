@@ -578,15 +578,16 @@ namespace Mono.CSharp {
 		protected bool AddToContainer (MemberCore symbol, string fullname, string basename)
 		{
 			if (basename == Basename && !(this is Interface)) {
-				if (symbol is TypeParameter)
+				// Constructors do not introduce a name into the containing
+				// type's declaration space in VB, so the C#-specific CS0542
+				// check does not apply to ordinary members named like their
+				// enclosing type. Type parameters still need CS0694 because
+				// they are declared directly in that declaration space.
+				if (symbol is TypeParameter) {
 					Report.Error (694, "Type parameter `{0}' has same name as " +
 						      "containing type or method", basename);
-				else {
-					Report.SymbolRelatedToPreviousError (this);
-					Report.Error (542, "'{0}': member names cannot be the same as their " +
-						      "enclosing type", symbol.Location, symbol.GetSignatureForError ());
+					return false;
 				}
-				return false;
 			}
 
 			MemberCore mc = (MemberCore)defined_names [fullname];
