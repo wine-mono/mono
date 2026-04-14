@@ -1625,17 +1625,26 @@ namespace Mono.CSharp {
 		{
 			name = ns + "." + name;
 			ArrayList args = new ArrayList ();
-		
+
 			foreach (Expression expr in exprs)
 				args.Add (new Argument (expr, Argument.AType.Expression));
 
 			child = new New (StringToExpression (name, l), args, l).Resolve (ec);
+			if (child != null) {
+				// ImplicitNew is only a conversion wrapper; once the inner New
+				// resolves, expose the same expression classification and type
+				// so later Resolve sanity checks see a normal value expression.
+				type = child.Type;
+				eclass = child.eclass;
+			}
 		}
 
 		public override Expression DoResolve (EmitContext ec)
 		{
-			// This should never be invoked, we are born in fully
-			// initialized state.
+			// Normally ImplicitNew is fully initialized from the constructor.
+			// Propagate failure if the inner constructor lookup failed.
+			if (child == null)
+				return null;
 
 			return this;
 		}
