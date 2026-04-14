@@ -2861,7 +2861,11 @@ public partial class TypeManager {
 		// the System.Array
 		//
 		
-		if (t.IsArray)
+		// Reflected arrays already expose their real generic interfaces
+		// such as IList<T> and IEnumerable<T>. Only synthesized array
+		// types whose element type is still a TypeBuilder need the old
+		// System.Array fallback to avoid Reflection.Emit failures.
+		if (t.IsArray && t.GetElementType () is TypeBuilder)
 			t = TypeManager.array_type;
 		
 		if (t is TypeBuilder){
@@ -2924,7 +2928,11 @@ public partial class TypeManager {
 
 			if (interfaces != null){
 				foreach (Type i in interfaces){
-					if (i == iface)
+					// Generic interface types can flow through bmcs as
+					// reflected constructed types or as equivalent rebuilt
+					// instances. Use the compiler's type-identity helper
+					// instead of raw object identity.
+					if (IsEqual (i, iface))
 						return true;
 				}
 			}
