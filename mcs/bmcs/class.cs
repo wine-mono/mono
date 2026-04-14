@@ -4990,7 +4990,7 @@ namespace Mono.CSharp {
 					break;
 				}
 
-				sb.Append (name.Substring (start, pos-start));
+				sb.Append (name.Substring (start, pos - start));
 
 				pos++;
 				while ((pos < name.Length) && Char.IsNumber (name [pos]))
@@ -5002,35 +5002,108 @@ namespace Mono.CSharp {
 			return sb.ToString ();
 		}
 
+		static string GetImplementedLookupName (string method_name, string interface_member_name)
+		{
+			string accessor_prefix = String.Empty;
+
+			if (method_name.StartsWith ("get_"))
+				accessor_prefix = "get_";
+			else if (method_name.StartsWith ("set_"))
+				accessor_prefix = "set_";
+			else if (method_name.StartsWith ("add_"))
+				accessor_prefix = "add_";
+			else if (method_name.StartsWith ("remove_"))
+				accessor_prefix = "remove_";
+
+			return accessor_prefix + interface_member_name;
+		}
+
+		MethodBuilder DefineVBImplementsProxy (TypeContainer container, MethodInfo iface_method, Type[] parameter_types)
+		{
+			string proxy_name = iface_method.DeclaringType.FullName + "." + iface_method.Name;
+			MethodBuilder proxy = container.TypeBuilder.DefineMethod (
+				proxy_name,
+				MethodAttributes.Private |
+				MethodAttributes.HideBySig |
+				MethodAttributes.NewSlot |
+				MethodAttributes.Virtual |
+				MethodAttributes.Final,
+				CallingConventions.Standard | CallingConventions.HasThis,
+				iface_method.ReturnType,
+				parameter_types);
+
+			ParameterData pd = Invocation.GetParameterData (iface_method);
+			proxy.DefineParameter (0, ParameterAttributes.None, "");
+			for (int i = 0; i < pd.Count; i++) {
+				string parameter_name = pd.ParameterName (i);
+				ParameterAttributes attr = Parameter.GetParameterAttributes (pd.ParameterModifier (i));
+				proxy.DefineParameter (i + 1, attr, parameter_name);
+			}
+
+			ILGenerator ig = proxy.GetILGenerator ();
+			for (int i = 0; i <= parameter_types.Length; i++)
+				ParameterReference.EmitLdArg (ig, i);
+
+			MethodAttributes builder_attrs = builder.Attributes;
+			OpCode call_opcode =
+				((builder_attrs & MethodAttributes.Virtual) != 0 &&
+				 (builder_attrs & MethodAttributes.Final) == 0)
+				? OpCodes.Callvirt
+				: OpCodes.Call;
+			ig.Emit (call_opcode, builder);
+			ig.Emit (OpCodes.Ret);
+
+			return proxy;
+		}
+
 		public bool Define (TypeContainer container)
 		{
 			MethodInfo implementing = null;
+			ArrayList vb_implemented_members = null;
+			bool has_vb_implements =
+				member.ResolvedImplementsClauses != null &&
+				member.ResolvedImplementsClauses.Count != 0;
 
-			string prefix;
-			if (member.IsExplicitImpl)
-				prefix = member.InterfaceType.FullName + ".";
-			else
-				prefix = "";
-
+			string prefix = member.IsExplicitImpl ? member.InterfaceType.FullName + "." : String.Empty;
 			string name = method.MethodName.Basename;
 			string method_name = prefix + name;
-
 			Type[] ParameterTypes = method.ParameterTypes;
 
-			if (container.Pending != null){
-				if (member is Indexer)
+			if (container.Pending != null) {
+				if (has_vb_implements) {
+					vb_implemented_members = new ArrayList (member.ResolvedImplementsClauses.Count);
+
+					foreach (MemberBase.VBImplementsMember vb_member in member.ResolvedImplementsClauses) {
+						string lookup_name = GetImplementedLookupName (name, vb_member.MemberName);
+						MethodInfo impl = container.Pending.IsInterfaceMethod (
+							vb_member.InterfaceType, lookup_name, method.ReturnType, ParameterTypes);
+
+						if (impl == null) {
+							Report.Error (539, method.Location,
+							      "'{0}' does not implement interface member '{1}.{2}'",
+							      member.GetSignatureForError (),
+							      TypeManager.CSharpName (vb_member.InterfaceType),
+							      vb_member.MemberName);
+							return false;
+						}
+
+						vb_implemented_members.Add (impl);
+					}
+
+					implementing = (MethodInfo) vb_implemented_members [0];
+				} else if (member is Indexer) {
 					implementing = container.Pending.IsInterfaceIndexer (
 						member.InterfaceType, method.ReturnType, ParameterTypes);
-				else
+				} else {
 					implementing = container.Pending.IsInterfaceMethod (
 						member.InterfaceType, name, method.ReturnType, ParameterTypes);
+				}
 
-				if (member.InterfaceType != null){
-					if (implementing == null){
-						Report.Error (539, method.Location,
-							      "'{0}' in explicit interface declaration is not a member of interface", member.GetSignatureForError () );
-						return false;
-					}
+				if (member.InterfaceType != null && implementing == null) {
+					Report.Error (539, method.Location,
+						      "'{0}' in explicit interface declaration is not a member of interface",
+						      member.GetSignatureForError ());
+					return false;
 				}
 			}
 
@@ -5038,7 +5111,7 @@ namespace Mono.CSharp {
 			// For implicit implementations, make sure we are public, for
 			// explicit implementations, make sure we are private.
 			//
-			if (implementing != null){
+			if (implementing != null) {
 				//
 				// Setting null inside this block will trigger a more
 				// verbose error reporting for missing interface implementations
@@ -5046,47 +5119,50 @@ namespace Mono.CSharp {
 				// The "candidate" function has been flagged already
 				// but it wont get cleared
 				//
-				if (member.IsExplicitImpl){
-					if ((modifiers & (Modifiers.PUBLIC | Modifiers.ABSTRACT | Modifiers.VIRTUAL)) != 0){
+				if (member.IsExplicitImpl) {
+					if ((modifiers & (Modifiers.PUBLIC | Modifiers.ABSTRACT | Modifiers.VIRTUAL)) != 0) {
 						Modifiers.Error_InvalidModifier (method.Location, "public, virtual or abstract");
 						implementing = null;
 					}
-				} else if ((flags & MethodAttributes.MemberAccessMask) != MethodAttributes.Public){
-					if (TypeManager.IsInterfaceType (implementing.DeclaringType)){
+				} else if (has_vb_implements) {
+					// VB Implements binds the member to the named interface slot
+					// regardless of the member's own accessibility.
+				} else if ((flags & MethodAttributes.MemberAccessMask) != MethodAttributes.Public) {
+					if (TypeManager.IsInterfaceType (implementing.DeclaringType)) {
 						//
 						// If this is an interface method implementation,
 						// check for public accessibility
 						//
 						implementing = null;
-					} else if ((flags & MethodAttributes.MemberAccessMask) == MethodAttributes.Private){
+					} else if ((flags & MethodAttributes.MemberAccessMask) == MethodAttributes.Private) {
 						// We may never be private.
 						implementing = null;
-					} else if ((modifiers & Modifiers.OVERRIDE) == 0){
+					} else if ((modifiers & Modifiers.OVERRIDE) == 0) {
 						//
 						// We may be protected if we're overriding something.
 						//
 						implementing = null;
 					}
-				} 
-					
+				}
+
 				//
 				// Static is not allowed
 				//
-				if ((modifiers & Modifiers.STATIC) != 0){
+				if ((modifiers & Modifiers.STATIC) != 0) {
 					implementing = null;
 					Modifiers.Error_InvalidModifier (method.Location, "static");
 				}
 			}
-			
+
 			//
 			// If implementing is still valid, set flags
 			//
-			if (implementing != null){
+			if (implementing != null) {
 				//
 				// When implementing interface methods, set NewSlot
 				// unless, we are overwriting a method.
 				//
-				if (implementing.DeclaringType.IsInterface){
+				if (implementing.DeclaringType.IsInterface) {
 					if ((modifiers & Modifiers.OVERRIDE) == 0)
 						flags |= MethodAttributes.NewSlot;
 				}
@@ -5102,7 +5178,6 @@ namespace Mono.CSharp {
 			}
 
 			EmitContext ec = method.CreateEmitContext (container, null);
-
 			DefineMethodBuilder (ec, container, method_name, ParameterTypes);
 
 			if (builder == null)
@@ -5116,23 +5191,41 @@ namespace Mono.CSharp {
 			if ((modifiers & Modifiers.UNSAFE) != 0)
 				builder.InitLocals = false;
 
-			if (IsImplementing){
+			if (IsImplementing) {
 				//
 				// clear the pending implemntation flag
 				//
-				if (member is Indexer) {
+				if (has_vb_implements) {
+					foreach (MemberBase.VBImplementsMember vb_member in member.ResolvedImplementsClauses) {
+						string lookup_name = GetImplementedLookupName (name, vb_member.MemberName);
+						container.Pending.ImplementMethod (
+							vb_member.InterfaceType, lookup_name, method.ReturnType,
+							ParameterTypes, false);
+					}
+				} else if (member is Indexer) {
 					container.Pending.ImplementIndexer (
 						member.InterfaceType, builder, method.ReturnType,
 						ParameterTypes, member.IsExplicitImpl);
-				} else
+				} else {
 					container.Pending.ImplementMethod (
 						member.InterfaceType, name, method.ReturnType,
 						ParameterTypes, member.IsExplicitImpl);
+				}
 
-				if (member.IsExplicitImpl)
+				if (member.IsExplicitImpl) {
+					container.TypeBuilder.DefineMethodOverride (builder, implementing);
+				} else if (has_vb_implements) {
+					// Old TypeBuilder only keeps one MethodImpl entry for a body,
+					// so additional Implements targets need forwarding proxies.
 					container.TypeBuilder.DefineMethodOverride (
-						builder, implementing);
+						builder, (MethodInfo) vb_implemented_members [0]);
 
+					for (int i = 1; i < vb_implemented_members.Count; i++) {
+						MethodInfo iface_method = (MethodInfo) vb_implemented_members [i];
+						MethodBuilder proxy = DefineVBImplementsProxy (container, iface_method, ParameterTypes);
+						container.TypeBuilder.DefineMethodOverride (proxy, iface_method);
+					}
+				}
 			}
 
 			TypeManager.RegisterMethod (builder, ParameterInfo, ParameterTypes);
@@ -5325,8 +5418,19 @@ namespace Mono.CSharp {
 		}
 	}
 	
-	abstract public class MemberBase : MemberCore {
-		public Expression Type;
+		abstract public class MemberBase : MemberCore {
+			public class VBImplementsMember {
+				public readonly Type InterfaceType;
+				public readonly string MemberName;
+
+				public VBImplementsMember (Type interface_type, string member_name)
+				{
+					InterfaceType = interface_type;
+					MemberName = member_name;
+				}
+			}
+
+			public Expression Type;
 
 		public MethodAttributes flags;
 
@@ -5358,10 +5462,18 @@ namespace Mono.CSharp {
 		//
 		public bool IsInterface;
 
-		//
-		// If true, the interface type we are explicitly implementing
-		//
-		public Type InterfaceType = null;
+			//
+			// If true, the interface type we are explicitly implementing
+			//
+			public Type InterfaceType = null;
+
+			//
+			// VB's Implements clause is distinct from C# explicit interface
+			// implementation: the member keeps its own name and accessibility
+			// while binding to one or more named interface members.
+			//
+			public ArrayList ImplementsClauses = null;
+			public ArrayList ResolvedImplementsClauses = null;
 
 		//
 		// The constructor is only exposed to our children
@@ -5549,11 +5661,11 @@ namespace Mono.CSharp {
 			if (MemberType.IsPointer && !UnsafeOK (Parent))
 				return false;
 
-			if (IsExplicitImpl) {
-				Expression expr = ExplicitInterfaceName.GetTypeExpression (Location);
-				TypeExpr iface_texpr = expr.ResolveAsTypeTerminal (ec);
-				if (iface_texpr == null)
-					return false;
+				if (IsExplicitImpl) {
+					Expression expr = ExplicitInterfaceName.GetTypeExpression (Location);
+					TypeExpr iface_texpr = expr.ResolveAsTypeTerminal (ec);
+					if (iface_texpr == null)
+						return false;
 
 				InterfaceType = iface_texpr.Type;
 
@@ -5565,11 +5677,43 @@ namespace Mono.CSharp {
 				if (!Parent.VerifyImplements (InterfaceType, ShortName, Name, Location))
 					return false;
 				
-				Modifiers.Check (Modifiers.AllowedExplicitImplFlags, explicit_mod_flags, 0, Location);
-			}
+					Modifiers.Check (Modifiers.AllowedExplicitImplFlags, explicit_mod_flags, 0, Location);
+				}
 
-			return true;
-		}
+				if (ImplementsClauses != null) {
+					ResolvedImplementsClauses = new ArrayList (ImplementsClauses.Count);
+
+					foreach (MemberName iface_member in ImplementsClauses) {
+						if (iface_member == null || iface_member.Left == null) {
+							Report.Error (540, Location,
+								      "`{0}': invalid Implements clause target",
+								      GetSignatureForError ());
+							return false;
+						}
+
+						TypeExpr iface_texpr = iface_member.Left.GetTypeExpression (Location).ResolveAsTypeTerminal (ec);
+						if (iface_texpr == null)
+							return false;
+
+						Type iface_type = iface_texpr.Type;
+						if (!iface_type.IsInterface) {
+							Report.Error (538, Location,
+								      "'{0}' in Implements clause is not an interface",
+								      TypeManager.CSharpName (iface_type));
+							return false;
+						}
+
+						if (!Parent.VerifyImplements (iface_type, GetSignatureForError (),
+										 iface_member.Name, Location))
+							return false;
+
+						ResolvedImplementsClauses.Add (
+							new VBImplementsMember (iface_type, iface_member.Name));
+					}
+				}
+
+				return true;
+			}
 
 		/// <summary>
 		/// The name of the member can be changed during definition (see IndexerName attribute)

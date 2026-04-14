@@ -524,9 +524,10 @@ namespace Mono.CSharp {
 			
 			for (i = 0; i < top; i++){
 				Type type = pending_implementations [i].type;
-				int j = 0;
+				int method_count = pending_implementations [i].methods.Length;
 
-				foreach (MethodInfo mi in pending_implementations [i].methods){
+				for (int j = 0; j < method_count; j++){
+					MethodInfo mi = pending_implementations [i].methods [j];
 					if (mi == null)
 						continue;
 
@@ -563,7 +564,6 @@ namespace Mono.CSharp {
 							container.Name, TypeManager.CSharpSignature (mi));
 					}
 					errors = true;
-					j++;
 				}
 			}
 			return errors;

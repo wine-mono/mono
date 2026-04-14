@@ -1529,9 +1529,9 @@ operator_symbol
 // class_member_declaration so the parser can choose the no-body form
 // cleanly instead of colliding with the normal body-bearing rules.
 abstract_member_declarator
-	: SUB identifier opt_type_params opt_params opt_implement_clause logical_end_of_line
-	  {
-		ParsedTypeParameters type_params = (ParsedTypeParameters) $3;
+		: SUB identifier opt_type_params opt_params opt_member_implement_clause logical_end_of_line
+		  {
+			ParsedTypeParameters type_params = (ParsedTypeParameters) $3;
 		TypeArguments type_args = type_params == null ? null : type_params.TypeArguments;
 		MemberName name = (type_args == null)
 			? new MemberName ((string) $2)
@@ -1545,15 +1545,16 @@ abstract_member_declarator
 			generic.SetParameterInfo (type_params.Constraints);
 		}
 
-		Method method = new Method (current_class, generic, TypeManager.system_void_expr,
-					    mods, false, name,
-					    (Parameters) $4, (Attributes) current_attributes,
-					    lexer.Location);
-		current_container.AddMethod (method);
-		$$ = method;
-	  }
-	| FUNCTION identifier opt_type_params opt_type_character opt_params opt_type_with_ranks opt_implement_clause logical_end_of_line
-	  {
+			Method method = new Method (current_class, generic, TypeManager.system_void_expr,
+						    mods, false, name,
+						    (Parameters) $4, (Attributes) current_attributes,
+						    lexer.Location);
+			method.ImplementsClauses = (ArrayList) $5;
+			current_container.AddMethod (method);
+			$$ = method;
+		  }
+		| FUNCTION identifier opt_type_params opt_type_character opt_params opt_type_with_ranks opt_member_implement_clause logical_end_of_line
+		  {
 		ParsedTypeParameters type_params = (ParsedTypeParameters) $3;
 		TypeArguments type_args = type_params == null ? null : type_params.TypeArguments;
 		MemberName name = (type_args == null)
@@ -1569,14 +1570,15 @@ abstract_member_declarator
 			generic.SetParameterInfo (type_params.Constraints);
 		}
 
-		Method method = new Method (current_class, generic, rettype, mods,
-					    false, name, (Parameters) $5, current_attributes,
-					    lexer.Location);
-		current_container.AddMethod (method);
-		$$ = method;
-	  }
-	| PROPERTY identifier opt_type_character opt_property_parameters opt_type_with_ranks opt_implement_clause logical_end_of_line
-	  {
+			Method method = new Method (current_class, generic, rettype, mods,
+						    false, name, (Parameters) $5, current_attributes,
+						    lexer.Location);
+			method.ImplementsClauses = (ArrayList) $7;
+			current_container.AddMethod (method);
+			$$ = method;
+		  }
+		| PROPERTY identifier opt_type_character opt_property_parameters opt_type_with_ranks opt_member_implement_clause logical_end_of_line
+		  {
 		Expression ptype = ($5 == null) ? (($3 == null) ?
 			TypeManager.system_object_expr : (Expression) $3) : (Expression) $5;
 		MemberName name = new MemberName ((string) $2);
@@ -1611,12 +1613,13 @@ abstract_member_declarator
 			set_params.AppendParameter (implicit_value_parameter);
 		}
 
-		Property prop = new Property (current_class, ptype, mods, false, name,
-			(Attributes) current_attributes, get_params, get_block,
-			set_params, set_block, lexer.Location);
-		current_container.AddProperty (prop);
-		$$ = prop;
-	  }
+			Property prop = new Property (current_class, ptype, mods, false, name,
+				(Attributes) current_attributes, get_params, get_block,
+				set_params, set_block, lexer.Location);
+			prop.ImplementsClauses = (ArrayList) $6;
+			current_container.AddProperty (prop);
+			$$ = prop;
+		  }
 	;
 	
 // must_override_declaration
@@ -1701,17 +1704,18 @@ sub_declaration
 
 		iterator_container = (IIteratorContainer) method;
 	  }
-	  opt_evt_handler opt_implement_clause logical_end_of_line
-	  // FIXME: opt_event_handler and opt_implements_clause are yet to be handled
-	  begin_block
+		  opt_evt_handler opt_member_implement_clause logical_end_of_line
+		  // FIXME: opt_event_handler is not yet handled
+		  begin_block
 	  opt_statement_list
 	  end_block
 	  END SUB logical_end_of_line
 	  {
 		// Position shift: opt_type_args added as $3, so the mid-rule
 		// action is now at $5 and end_block at $11.
-		Method method = (Method) $5;
-		Block b = (Block) $11;
+			Method method = (Method) $5;
+			method.ImplementsClauses = (ArrayList) $7;
+			Block b = (Block) $11;
 		const int extern_abstract = (Modifiers.EXTERN | Modifiers.ABSTRACT);
 
 		if (b == null){
@@ -1766,13 +1770,13 @@ func_declaration
 		$$ = method;
 		iterator_container = method;
 	  }
-// 	  FIXME: opt_implement_clauses needs to be taken care of
-	  opt_implement_clause logical_end_of_line
-	  begin_block
-	  {
-		// Position shift: opt_type_args added as $3, so the first
-		// mid-rule action moved from $6 to $7.
-		Method method = (Method) $7;
+		  opt_member_implement_clause logical_end_of_line
+		  begin_block
+		  {
+			// Position shift: opt_type_args added as $3, so the first
+			// mid-rule action moved from $6 to $7.
+			Method method = (Method) $7;
+			method.ImplementsClauses = (ArrayList) $8;
 
 		ArrayList retval = new ArrayList ();
 		retval.Add (new VariableDeclaration ((string) $2, method.Type, lexer.Location));
@@ -1952,8 +1956,8 @@ struct_member_declarator
 
 
 event_declaration
-	: EVENT identifier AS type opt_implement_clause logical_end_of_line
-	  {
+		: EVENT identifier AS type opt_member_implement_clause logical_end_of_line
+		  {
 	  	VariableDeclaration var = new VariableDeclaration ((string) $2, (Expression) $4, lexer.Location);
 
 		MemberName name = new MemberName ((string) $2);
@@ -2177,35 +2181,33 @@ interface_property_declaration
 			($5 == null) ? (($3 == null) ? 
 				TypeManager.system_object_expr : (Expression) $3 ) : (Expression) $5;
 
-		current_local_parameters = (Parameters) $4;
-		if (current_local_parameters != Parameters.EmptyReadOnlyParameters) { 
-			get_parameters = current_local_parameters.Copy (lexer.Location);
-			set_parameters = current_local_parameters.Copy (lexer.Location);
-			
-			Parameter implicit_value_parameter = new Parameter (
-					get_implicit_value_parameter_type, "Value", Parameter.Modifier.NONE, null);
-			
-			set_parameters.AppendParameter (implicit_value_parameter);
-		}
-		else
-		{
-			get_parameters = Parameters.EmptyReadOnlyParameters;
-			set_parameters = new Parameters (null, null ,lexer.Location); 
-			
-			Parameter implicit_value_parameter = new Parameter (
-					get_implicit_value_parameter_type, "Value", Parameter.Modifier.NONE, null);
-			
-			set_parameters.AppendParameter (implicit_value_parameter);
-		}
-		lexer.PropertyParsing = true;
+			current_local_parameters = (Parameters) $4;
+			if (current_local_parameters != Parameters.EmptyReadOnlyParameters) { 
+				get_parameters = current_local_parameters.Copy (lexer.Location);
+				set_parameters = current_local_parameters.Copy (lexer.Location);
+			}
+			else
+			{
+				get_parameters = Parameters.EmptyReadOnlyParameters;
+				set_parameters = new Parameters (null, null ,lexer.Location); 
+			}
+			lexer.PropertyParsing = true;
 		
 		Location loc = lexer.Location;
 		MemberName name = new MemberName ((string) $2);
 
-		Accessor get_block = new Accessor (null, 0, null, loc);	
-		Accessor set_block = new Accessor (null, 0, null, loc);	
+			Accessor get_block = ((current_modifiers & Modifiers.WRITEONLY) != 0)
+				? null : new Accessor (null, 0, null, loc);
+			Accessor set_block = ((current_modifiers & Modifiers.READONLY) != 0)
+				? null : new Accessor (null, 0, null, loc);
 
-		Property prop = new Property (current_class, get_implicit_value_parameter_type, 
+			if (set_block != null) {
+				Parameter implicit_value_parameter = new Parameter (
+					get_implicit_value_parameter_type, "Value", Parameter.Modifier.NONE, null);
+				set_parameters.AppendParameter (implicit_value_parameter);
+			}
+
+			Property prop = new Property (current_class, get_implicit_value_parameter_type, 
 				     (int) current_modifiers, true,
 				     name, current_attributes, 
 				     get_parameters, get_block, 
@@ -2420,7 +2422,7 @@ property_declaration
 // 	;
 	
 non_abstract_propery_declaration
-	  : PROPERTY identifier opt_type_character opt_property_parameters opt_type_with_ranks opt_implement_clause logical_end_of_line
+	  : PROPERTY identifier opt_type_character opt_property_parameters opt_type_with_ranks opt_member_implement_clause logical_end_of_line
 	  {
 		get_implicit_value_parameter_type  = 
 			($5 == null) ? (($3 == null) ? 
@@ -2455,8 +2457,6 @@ non_abstract_propery_declaration
 		Location loc = lexer.Location;
 		MemberName name = new MemberName ((string) $2);
 
-		// FIXME: Implements Clause needs to be taken care of.
-
 		if (IsCurrentStructType () && (current_modifiers == 0))
 			current_modifiers = Modifiers.PUBLIC;				
 
@@ -2466,6 +2466,7 @@ non_abstract_propery_declaration
 				     name, (Attributes) current_attributes, 
 				     get_parameters, get_block, 
 				     set_parameters, set_block, lexer.Location);
+		prop.ImplementsClauses = (ArrayList) $6;
 		
 		current_container.AddProperty (prop);
 		get_implicit_value_parameter_type = null;
@@ -2502,16 +2503,42 @@ opt_implement_clause
 		$$ = $2;
 	  }
 	;
+
+opt_member_implement_clause
+	: /* empty */
+	  {
+	  	$$ = null;
+	  }
+	| IMPLEMENTS member_implement_clause_list
+	  {
+		$$ = $2;
+	  }
+	;
+
+member_implement_clause_list
+	: type_name DOT identifier
+	  {
+		  ArrayList impl_list = new ArrayList ();
+		  impl_list.Add (new MemberName ((MemberName) $1, (string) $3, null));
+		  $$ = impl_list;
+	  }
+	| member_implement_clause_list COMMA type_name DOT identifier
+	  {
+		  ArrayList impl_list = (ArrayList) $1;
+		  impl_list.Add (new MemberName ((MemberName) $3, (string) $5, null));
+		  $$ = impl_list;
+	  }
+	;
 	
 implement_clause_list
-	: qualified_identifier
+	: type_name
 	  {
 		  MemberName mname = (MemberName) $1;
 		  ArrayList impl_list = new ArrayList ();
 		  impl_list.Add (mname.GetTypeExpression (lexer.Location));
 		  $$ = impl_list;
 	  }	
-	| implement_clause_list COMMA qualified_identifier
+	| implement_clause_list COMMA type_name
 	  {
 		  MemberName mname = (MemberName) $3;
 		  ArrayList impl_list = (ArrayList) $1;
