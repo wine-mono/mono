@@ -1487,6 +1487,12 @@ namespace Mono.CSharp
 		int pending_token = 0;
 		object pending_val = null;
 
+		// VB labels are the one statement form that depends on local-line
+		// position. A local line begins after an emitted EOL or ':', not
+		// merely after any physical newline because '_' line continuations
+		// keep the same logical line alive.
+		bool at_local_line_start = true;
+
 		bool IsPreprocessorSkipping ()
 		{
 			if (pp_if_stack.Count == 0)
@@ -1938,6 +1944,7 @@ namespace Mono.CSharp
 				val = pending_val;
 				pending_token = 0;
 				pending_val = null;
+				UpdateLocalLineState (current_token);
 				return current_token;
 			}
 
@@ -1999,8 +2006,22 @@ namespace Mono.CSharp
 			}
 
 			// Console.WriteLine ("Token = " + val);
+			UpdateLocalLineState (current_token);
 
 			return current_token;
+		}
+
+		void UpdateLocalLineState (int token)
+		{
+			switch (token) {
+			case Token.EOL:
+			case Token.COLON:
+				at_local_line_start = true;
+				break;
+			default:
+				at_local_line_start = false;
+				break;
+			}
 		}
 
 		static bool IsExpressionContinuation (int tok)
@@ -2087,6 +2108,32 @@ namespace Mono.CSharp
 		}
 		
 		private bool tokens_seen = false;
+
+		bool TryConsumeLabelColon ()
+		{
+			int d;
+			for (;;) {
+				d = peekChar ();
+				switch (d) {
+				case ' ':
+				case '\t':
+				case '\v':
+				case 0xa0:
+				case 0xfeff:
+					getChar ();
+					col++;
+					continue;
+				case ':':
+					getChar ();
+					col++;
+					pending_token = Token.COLON;
+					pending_val = null;
+					return true;
+				default:
+					return false;
+				}
+			}
+		}
 		
 		private void nextLine()
 		{
@@ -2145,52 +2192,63 @@ namespace Mono.CSharp
 					return Token.EOL;
 				}
 				
-				// Handle escaped identifiers
-				if (c == '[')
-				{
-					if ((val = GetIdentifier()) == null)
-						break;
-					if ((c = getChar()) != ']')
-						break;
-					tokens_seen = true;
-					return Token.IDENTIFIER;
-				}
+					// Handle escaped identifiers
+					if (c == '[')
+					{
+						if ((val = GetIdentifier()) == null)
+							break;
+						if ((c = getChar()) != ']')
+							break;
+						tokens_seen = true;
+						if (at_local_line_start && TryConsumeLabelColon ())
+							return Token.LABEL_NAME;
+						return Token.IDENTIFIER;
+					}
 
-				// Handle unescaped identifiers
-				if (is_identifier_start_character ((char) c))
-				{
-					string id;
-					if ((id = GetIdentifier(c)) == null)
-						break;
-					val = id;
-					tokens_seen = true;
-					if (is_keyword(id) && (current_token != Token.DOT))
-						return getKeyword(id);
-					return Token.IDENTIFIER;
-				}
+					// Handle unescaped identifiers
+					if (is_identifier_start_character ((char) c))
+					{
+						string id;
+						if ((id = GetIdentifier(c)) == null)
+							break;
+						val = id;
+						tokens_seen = true;
 
-				// Treat string literals
-				if (is_doublequote(c)) {
-					cant_have_a_type_character = true;
-					return ExtractStringOrCharLiteral(c);
-				}
-			
-				// handle numeric literals
-				if (c == '.')
-				{
-					cant_have_a_type_character = true;
-					tokens_seen = true;
-					if (Char.IsDigit ((char) peekChar ()))
-						return is_number (c);
-					return Token.DOT;
-				}
+						if (at_local_line_start && !is_keyword (id) && TryConsumeLabelColon ())
+							return Token.LABEL_NAME;
+
+						if (is_keyword(id) && (current_token != Token.DOT))
+							return getKeyword(id);
+						return Token.IDENTIFIER;
+					}
+
+					// Treat string literals
+					if (is_doublequote(c)) {
+						cant_have_a_type_character = true;
+						return ExtractStringOrCharLiteral(c);
+					}
 				
-				if (Char.IsDigit ((char) c))
-				{
-					cant_have_a_type_character = true;
-					tokens_seen = true;
-					return is_number (c);
-				}
+					// handle numeric literals
+					if (c == '.')
+					{
+						cant_have_a_type_character = true;
+						tokens_seen = true;
+						if (Char.IsDigit ((char) peekChar ()))
+							return is_number (c);
+						return Token.DOT;
+					}
+
+					if (Char.IsDigit ((char) c))
+					{
+						cant_have_a_type_character = true;
+						tokens_seen = true;
+						t = is_number (c);
+						if (t == Token.LITERAL_INTEGER && at_local_line_start && TryConsumeLabelColon ()) {
+							val = System.Convert.ToString (val, CultureInfo.InvariantCulture);
+							return Token.LABEL_NAME;
+						}
+						return t;
+					}
 
 				if ((t = is_punct ((char)c, ref doread)) != Token.ERROR) {
 					cant_have_a_type_character = true;

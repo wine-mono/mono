@@ -570,6 +570,7 @@ namespace Mono.CSharp
 %token LITERAL_DATE              "datetime literal"
 
 %token IDENTIFIER
+%token LABEL_NAME
 
 /* Add precedence rules to solve dangling else s/r conflict */
 %nonassoc LOWPREC
@@ -3022,7 +3023,11 @@ statement
 
 		  current_block.AddStatement ((Statement) $1);
 	    } 
-// 	  | labeled_statement 
+	  | labeled_statement
+	    {
+		  // labeled_statement adds the label node itself, and any
+		  // same-line statement is added by its nested statement action.
+	    }
 	  | ADDHANDLER prefixed_unary_expression COMMA expression
 	    {
 		// VB AddHandler/RemoveHandler takes a delegate-valued expression,
@@ -3077,37 +3082,33 @@ opt_raise_event_args
 	  }
 	;
 
-// label_name
-// 	: identifier
-// 	| LITERAL_INTEGER
-// 	{
-// 		$$ = $1.ToString();
-// 	}
-// 	;
+// VB label declarations are only recognized at the beginning of a local
+// line.  The tokenizer enforces that position-sensitive rule and merges
+// the leading name into LABEL_NAME, leaving the ':' token in the stream
+// so same-line 'label: statement' forms still parse as ordinary statement
+// sequencing.
+label_name
+	: IDENTIFIER
+	  {
+		$$ = $1;
+	  }
+	| LITERAL_INTEGER
+	  {
+		$$ = MakeLabelName ($1);
+	  }
+	;
 
-// labeled_statement
-// 	: label_name COLON
-// 	  {
-// 		LabeledStatement labeled = new LabeledStatement ((string) $1, lexer.Location);
-
-// 		if (!current_block.AddLabel ((string) $1, labeled)){
-// 			Location l = lexer.Location;
-// 			Report.Error (140, l, "The label '" + ((string) $1) + "' is a duplicate");
-// 		}	
-// 		current_block.AddStatement (labeled);
-// 	  }
-// 	| label_name COLON
-// 	  {
-// 		LabeledStatement labeled = new LabeledStatement ((string) $1, lexer.Location);
-
-// 		if (!current_block.AddLabel ((string) $1, labeled)){
-// 			Location l = lexer.Location;
-// 			Report.Error (140, l, "The label '" + ((string) $1) + "' is a duplicate");
-// 		}	
-// 		current_block.AddStatement (labeled);
-// 	  }
-// 	  statement
-// 	;
+labeled_statement
+	: LABEL_NAME COLON
+	  {
+		AddLabelToCurrentBlock ((string) $1, lexer.Location);
+	  }
+	| LABEL_NAME COLON
+	  {
+		AddLabelToCurrentBlock ((string) $1, lexer.Location);
+	  }
+	  statement
+	;
 
 embedded_statement
 	: expression_statement
@@ -5430,6 +5431,20 @@ public static Expression DecomposeQI (string name, Location loc)
 
 		return new MemberAccess (o, right, loc);
 	}
+}
+
+static string MakeLabelName (object label_literal)
+{
+	return System.Convert.ToString (label_literal, System.Globalization.CultureInfo.InvariantCulture);
+}
+
+void AddLabelToCurrentBlock (string label_name, Location loc)
+{
+	LabeledStatement labeled = new LabeledStatement (label_name, loc);
+
+	// Block.AddLabel already reports duplicate/shadowing diagnostics.
+	current_block.AddLabel (label_name, labeled, loc);
+	current_block.AddStatement (labeled);
 }
 
 Block declare_local_variables (Expression dummy_type, ArrayList variable_declarators, Location loc)
