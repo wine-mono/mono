@@ -2264,15 +2264,24 @@ namespace Mono.CSharp {
 		{
 			base.Emit (ec);
 
-			if (expr_type == TypeManager.byte_type ||
+			if (expr_type == TypeManager.sbyte_type ||
+				expr_type == TypeManager.byte_type ||
 				expr_type == TypeManager.short_type ||
+				expr_type == TypeManager.ushort_type ||
 				expr_type == TypeManager.int32_type) {
 				ec.ig.Emit (OpCodes.Ldc_I4_0);
 				ec.ig.Emit (OpCodes.Cgt_Un);
 				return;
 			}
 
-			if (expr_type == TypeManager.int64_type) {
+			if (expr_type == TypeManager.uint32_type) {
+				ec.ig.Emit (OpCodes.Ldc_I4_0);
+				ec.ig.Emit (OpCodes.Cgt_Un);
+				return;
+			}
+
+			if (expr_type == TypeManager.int64_type ||
+			    expr_type == TypeManager.uint64_type) {
 				ec.ig.Emit (OpCodes.Ldc_I8, (long) 0);
 				ec.ig.Emit (OpCodes.Cgt_Un);
 				return;

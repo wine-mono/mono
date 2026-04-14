@@ -1923,6 +1923,11 @@ namespace Mono.CSharp {
 			Type expr_type = expr.Type;
  			Type real_target_type = target_type;
 
+			if (TypeManager.IsEnumType (expr_type)) {
+				expr_type = TypeManager.EnumToUnderlying (expr_type);
+				expr = new EmptyCast (expr, expr_type);
+			}
+
 			if (expr_type == TypeManager.bool_type) {
 
 				//
@@ -1952,10 +1957,14 @@ namespace Mono.CSharp {
 				// double, decimal to boolean
 				//
 
-				if (expr_type == TypeManager.byte_type ||
+				if (expr_type == TypeManager.sbyte_type ||
+					expr_type == TypeManager.byte_type ||
 					expr_type == TypeManager.short_type ||
+					expr_type == TypeManager.ushort_type ||
 					expr_type == TypeManager.int32_type ||
+					expr_type == TypeManager.uint32_type ||
 					expr_type == TypeManager.int64_type || 
+					expr_type == TypeManager.uint64_type || 
 					expr_type == TypeManager.float_type || 
 					expr_type == TypeManager.double_type)
 						return new NumericToBooleanCast (expr, expr_type);
