@@ -384,7 +384,13 @@ namespace Mono.CSharp
 				object left = ParseAndExpression ();
 				while (token == TokenKind.Or || token == TokenKind.OrElse) {
 					NextToken ();
-					left = ToBoolean (left) || ToBoolean (ParseAndExpression ());
+					// Always parse the right-hand side even when the result is
+					// already known. Using C#'s short-circuit operators here
+					// would leave the RHS tokens unconsumed and make valid
+					// directives like "#If DEBUG AndAlso False Then" fail with
+					// a trailing "Expression expected."
+					object right = ParseAndExpression ();
+					left = ToBoolean (left) || ToBoolean (right);
 				}
 
 				return left;
@@ -395,7 +401,8 @@ namespace Mono.CSharp
 				object left = ParseNotExpression ();
 				while (token == TokenKind.And || token == TokenKind.AndAlso) {
 					NextToken ();
-					left = ToBoolean (left) && ToBoolean (ParseNotExpression ());
+					object right = ParseNotExpression ();
+					left = ToBoolean (left) && ToBoolean (right);
 				}
 
 				return left;
