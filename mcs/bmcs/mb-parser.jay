@@ -5318,7 +5318,10 @@ negation_expression
 	: relational_expression
 	| NOT negation_expression 
 	  {
-	  	$$ = new Unary (Unary.Operator.OnesComplement, (Expression) $2, lexer.Location);
+		// VB source `Not` is one operator. Whether it is logical
+		// negation or bitwise complement depends on the resolved
+		// operand type, including lifted Nullable(Of T) cases.
+	  	$$ = new Unary (Unary.Operator.LogicalNot, (Expression) $2, lexer.Location);
 	  }
 	;
 	

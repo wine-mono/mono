@@ -259,9 +259,13 @@ namespace Mono.CSharp {
 				
 			case Operator.LogicalNot:
 				if (expr_type != TypeManager.bool_type) {
-					result = null;
-					Error23 (expr_type);
-					return false;
+					// Source VB `Not` is logical for Boolean and
+					// bitwise for the intrinsic integral types and
+					// enums. Re-resolve non-Boolean operands through
+					// the bitwise path so lifted `T?` and constants
+					// share the same result typing.
+					Oper = Operator.OnesComplement;
+					goto case Operator.OnesComplement;
 				}
 				
 				BoolConstant b = (BoolConstant) e;
@@ -269,42 +273,17 @@ namespace Mono.CSharp {
 				return true;
 				
 			case Operator.OnesComplement:
-				if (!((expr_type == TypeManager.int32_type) ||
-				      (expr_type == TypeManager.uint32_type) ||
-				      (expr_type == TypeManager.int64_type) ||
-				      (expr_type == TypeManager.uint64_type) ||
-				      (expr_type.IsSubclassOf (TypeManager.enum_type)))){
-
+				Type result_type = TypeManager.GetVBNotResultType (expr_type);
+				if (result_type == null || result_type == TypeManager.bool_type) {
 					result = null;
-					if (Convert.WideningConversionExists (ec, e, TypeManager.int32_type)){
-						result = new Cast (new TypeExpression (TypeManager.int32_type, loc), e, loc);
-						result = result.Resolve (ec);
-					} else if (Convert.WideningConversionExists (ec, e, TypeManager.uint32_type)){
-						result = new Cast (new TypeExpression (TypeManager.uint32_type, loc), e, loc);
-						result = result.Resolve (ec);
-					} else if (Convert.WideningConversionExists (ec, e, TypeManager.int64_type)){
-						result = new Cast (new TypeExpression (TypeManager.int64_type, loc), e, loc);
-						result = result.Resolve (ec);
-					} else if (Convert.WideningConversionExists (ec, e, TypeManager.uint64_type)){
-						result = new Cast (new TypeExpression (TypeManager.uint64_type, loc), e, loc);
-						result = result.Resolve (ec);
-					}
-
-					if (result == null || !(result is Constant)){
-						result = null;
-						Error23 (expr_type);
-						return false;
-					}
-
-					expr_type = result.Type;
-					e = (Constant) result;
+					return false;
 				}
 
-				if (e is EnumConstant){
+				if (e is EnumConstant) {
 					EnumConstant enum_constant = (EnumConstant) e;
 					Expression reduced;
 					
-					if (Reduce (ec, enum_constant.Child, out reduced)){
+					if (Reduce (ec, enum_constant.Child, out reduced)) {
 						result = new EnumConstant ((Constant) reduced, enum_constant.Type);
 						return true;
 					} else {
@@ -313,7 +292,26 @@ namespace Mono.CSharp {
 					}
 				}
 
-				if (expr_type == TypeManager.int32_type){
+				if (result_type != expr_type) {
+					Expression converted = Convert.ImplicitVBConversion (ec, e, result_type, loc);
+					if (converted == null || !(converted is Constant)) {
+						result = null;
+						return false;
+					}
+
+					e = (Constant) converted;
+					expr_type = e.Type;
+				}
+
+				if (expr_type == TypeManager.byte_type) {
+					result = new ByteConstant ((byte) (~((ByteConstant) e).Value));
+				} else if (expr_type == TypeManager.sbyte_type) {
+					result = new SByteConstant ((sbyte) (~((SByteConstant) e).Value));
+				} else if (expr_type == TypeManager.short_type) {
+					result = new ShortConstant ((short) (~((ShortConstant) e).Value));
+				} else if (expr_type == TypeManager.ushort_type) {
+					result = new UShortConstant ((ushort) (~((UShortConstant) e).Value));
+				} else if (expr_type == TypeManager.int32_type){
 					result = new IntConstant (~ ((IntConstant) e).Value);
 				} else if (expr_type == TypeManager.uint32_type){
 					result = new UIntConstant (~ ((UIntConstant) e).Value);
@@ -341,6 +339,16 @@ namespace Mono.CSharp {
 
 		Expression ResolveOperator (EmitContext ec)
 		{
+			Type expr_type = Expr.Type;
+
+			if (Oper == Operator.LogicalNot && expr_type != TypeManager.bool_type) {
+				// Parser `Not` keeps the source spelling as LogicalNot.
+				// Non-Boolean operands are then lowered through the
+				// bitwise path here so imported `op_OnesComplement`
+				// and intrinsic VB `Not` share one implementation.
+				Oper = Operator.OnesComplement;
+			}
+
 			//
 			// Step 1: Default operations on CLI native types.
 			//
@@ -356,13 +364,15 @@ namespace Mono.CSharp {
 			//
 			// Step 2: Perform Operator Overload location
 			//
-			Type expr_type = Expr.Type;
 			Expression mg;
 			string op_name;
 			
 			op_name = oper_names [(int) Oper];
 
 			mg = MemberLookup (ec, expr_type, op_name, MemberTypes.Method, AllBindingFlags, loc);
+			if (mg == null && Oper == Operator.OnesComplement)
+				mg = MemberLookup (ec, expr_type, oper_names [(int) Operator.LogicalNot],
+					MemberTypes.Method, AllBindingFlags, loc);
 			
 			if (mg != null) {
 				Expression e = StaticCallExpr.MakeSimpleCall (
@@ -385,48 +395,40 @@ namespace Mono.CSharp {
 			switch (Oper){
 			case Operator.LogicalNot:
 				if (expr_type != TypeManager.bool_type) {
-					Expr = ResolveBoolean (ec, Expr, loc);
-					if (Expr == null){
-						Error23 (expr_type);
-						return null;
-					}
+					Error23 (expr_type);
+					return null;
 				}
 				
 				type = TypeManager.bool_type;
 				return this;
 
 			case Operator.OnesComplement:
-				if (!((expr_type == TypeManager.int32_type) ||
-				      (expr_type == TypeManager.uint32_type) ||
-				      (expr_type == TypeManager.int64_type) ||
-				      (expr_type == TypeManager.uint64_type) ||
-				      (expr_type.IsSubclassOf (TypeManager.enum_type)))){
-					Expression e;
+				if (expr_type == TypeManager.object_type) {
+					if (TypeManager.msvbcs_objecttype_notobj_object == null) {
+						Error23 (expr_type);
+						return null;
+					}
 
-					e = Convert.WideningConversion (ec, Expr, TypeManager.int32_type, loc);
-					if (e != null){
-						type = TypeManager.int32_type;
-						return this;
-					}
-					e = Convert.WideningConversion (ec, Expr, TypeManager.uint32_type, loc);
-					if (e != null){
-						type = TypeManager.uint32_type;
-						return this;
-					}
-					e = Convert.WideningConversion (ec, Expr, TypeManager.int64_type, loc);
-					if (e != null){
-						type = TypeManager.int64_type;
-						return this;
-					}
-					e = Convert.WideningConversion (ec, Expr, TypeManager.uint64_type, loc);
-					if (e != null){
-						type = TypeManager.uint64_type;
-						return this;
-					}
+					return new HelperMethodInvocation (ec, loc, TypeManager.object_type,
+						TypeManager.msvbcs_objecttype_notobj_object, Expr);
+				}
+
+				Type not_type = TypeManager.GetVBNotResultType (expr_type);
+				if (not_type == null || not_type == TypeManager.bool_type) {
 					Error23 (expr_type);
 					return null;
 				}
-				type = expr_type;
+
+				if (not_type != expr_type) {
+					Expr = Convert.ImplicitVBConversion (ec, Expr, not_type, loc);
+					if (Expr == null) {
+						Error23 (expr_type);
+						return null;
+					}
+					expr_type = Expr.Type;
+				}
+
+				type = TypeManager.IsEnumType (expr_type) ? expr_type : not_type;
 				return this;
 
 			case Operator.AddressOf:
@@ -616,6 +618,16 @@ namespace Mono.CSharp {
 			case Operator.OnesComplement:
 				Expr.Emit (ec);
 				ig.Emit (OpCodes.Not);
+				Type emit_type = TypeManager.IsEnumType (type) ?
+					TypeManager.EnumToUnderlying (type) : type;
+				if (emit_type == TypeManager.byte_type)
+					ig.Emit (OpCodes.Conv_U1);
+				else if (emit_type == TypeManager.sbyte_type)
+					ig.Emit (OpCodes.Conv_I1);
+				else if (emit_type == TypeManager.short_type)
+					ig.Emit (OpCodes.Conv_I2);
+				else if (emit_type == TypeManager.ushort_type)
+					ig.Emit (OpCodes.Conv_U2);
 				break;
 				
 			case Operator.AddressOf:

@@ -324,6 +324,7 @@ public partial class TypeManager {
 	static public MethodInfo msvbcs_objecttype_powobj_object_object;
 	static public MethodInfo msvbcs_objecttype_shiftleftobj_object_int32;
 	static public MethodInfo msvbcs_objecttype_shiftrightobj_object_int32;
+	static public MethodInfo msvbcs_objecttype_notobj_object;
 
 	static public MethodInfo math_pow_double_double;
 
@@ -1895,6 +1896,8 @@ public partial class TypeManager {
 			msvbcs_object_type, "ShiftLeftObj", object_int32_arg);
 		msvbcs_objecttype_shiftrightobj_object_int32 = GetMethod (
 			msvbcs_object_type, "ShiftRightObj", object_int32_arg);	
+		msvbcs_objecttype_notobj_object = GetMethod (
+			msvbcs_object_type, "NotObj", object_arg);
 
 	}
 
@@ -2246,6 +2249,30 @@ public partial class TypeManager {
 			return decimal_type;
 		if (type == float_type || type == double_type || type == decimal_type)
 			return type;
+
+		return null;
+	}
+
+	public static Type GetVBNotResultType (Type type)
+	{
+		if (type == bool_type)
+			return bool_type;
+
+		if (IsEnumType (type))
+			return type;
+
+		if (type == sbyte_type || type == byte_type ||
+		    type == short_type || type == ushort_type ||
+		    type == int32_type || type == uint32_type ||
+		    type == int64_type || type == uint64_type)
+			return type;
+
+		if (type == float_type || type == double_type ||
+		    type == decimal_type || type == string_type)
+			return int64_type;
+
+		if (type == object_type)
+			return object_type;
 
 		return null;
 	}
