@@ -1177,7 +1177,8 @@ class_declaration
 		if (implicit_modifiers && ((current_modifiers & Modifiers.STATIC) != 0))
 			current_modifiers = (current_modifiers & ~Modifiers.STATIC);
 
-		TypeArguments type_args = (TypeArguments) $3;
+		ParsedTypeParameters type_params = (ParsedTypeParameters) $3;
+		TypeArguments type_args = type_params == null ? null : type_params.TypeArguments;
 		MemberName name = (type_args == null)
 			? MakeName (new MemberName ((string) $2))
 			: MakeName (new MemberName ((string) $2, type_args));
@@ -1187,6 +1188,12 @@ class_declaration
 		// every class declaration has to keep part-local bases and
 		// members available for a later merge candidate.
 		EnterPartialType (name, mod_flags, Kind.Class);
+
+		// The merged partial container already owns the type-parameter
+		// names; each source part contributes its own constraint list
+		// for consistency checking through SetParameterInfo.
+		if (type_params != null)
+			current_class.SetParameterInfo (type_params.Constraints);
 	  }
 	  opt_inherits opt_implements
 
@@ -1501,7 +1508,8 @@ operator_symbol
 abstract_member_declarator
 	: SUB identifier opt_type_params opt_params opt_implement_clause logical_end_of_line
 	  {
-		TypeArguments type_args = (TypeArguments) $3;
+		ParsedTypeParameters type_params = (ParsedTypeParameters) $3;
+		TypeArguments type_args = type_params == null ? null : type_params.TypeArguments;
 		MemberName name = (type_args == null)
 			? new MemberName ((string) $2)
 			: new MemberName ((string) $2, type_args);
@@ -1511,7 +1519,7 @@ abstract_member_declarator
 		GenericMethod generic = null;
 		if (type_args != null) {
 			generic = new GenericMethod (current_namespace, current_container, name, lexer.Location);
-			generic.SetParameterInfo (null);
+			generic.SetParameterInfo (type_params.Constraints);
 		}
 
 		Method method = new Method (current_class, generic, TypeManager.system_void_expr,
@@ -1523,7 +1531,8 @@ abstract_member_declarator
 	  }
 	| FUNCTION identifier opt_type_params opt_type_character opt_params opt_type_with_ranks opt_implement_clause logical_end_of_line
 	  {
-		TypeArguments type_args = (TypeArguments) $3;
+		ParsedTypeParameters type_params = (ParsedTypeParameters) $3;
+		TypeArguments type_args = type_params == null ? null : type_params.TypeArguments;
 		MemberName name = (type_args == null)
 			? new MemberName ((string) $2)
 			: new MemberName ((string) $2, type_args);
@@ -1534,7 +1543,7 @@ abstract_member_declarator
 		GenericMethod generic = null;
 		if (type_args != null) {
 			generic = new GenericMethod (current_namespace, current_container, name, lexer.Location);
-			generic.SetParameterInfo (null);
+			generic.SetParameterInfo (type_params.Constraints);
 		}
 
 		Method method = new Method (current_class, generic, rettype, mods,
@@ -1643,7 +1652,8 @@ abstract_member_declarator
 sub_declaration
 	: SUB identifier opt_type_params opt_params
 	  {
-		TypeArguments type_args = (TypeArguments) $3;
+		ParsedTypeParameters type_params = (ParsedTypeParameters) $3;
+		TypeArguments type_args = type_params == null ? null : type_params.TypeArguments;
 		MemberName name = (type_args == null)
 			? new MemberName ((string) $2)
 			: new MemberName ((string) $2, type_args);
@@ -1655,7 +1665,7 @@ sub_declaration
 		GenericMethod generic = null;
 		if (type_args != null) {
 			generic = new GenericMethod (current_namespace, current_container, name, lexer.Location);
-			generic.SetParameterInfo (null);
+			generic.SetParameterInfo (type_params.Constraints);
 		}
 		Method method = new Method (current_class, generic, TypeManager.system_void_expr,
 					    (int) current_modifiers, false, name,
@@ -1708,7 +1718,8 @@ func_declaration
 	: FUNCTION identifier opt_type_params opt_type_character
 	  opt_params opt_type_with_ranks
 	  {
-		TypeArguments type_args = (TypeArguments) $3;
+		ParsedTypeParameters type_params = (ParsedTypeParameters) $3;
+		TypeArguments type_args = type_params == null ? null : type_params.TypeArguments;
 		MemberName name = (type_args == null)
 			? new MemberName ((string) $2)
 			: new MemberName ((string) $2, type_args);
@@ -1717,7 +1728,7 @@ func_declaration
 		GenericMethod generic = null;
 		if (type_args != null) {
 			generic = new GenericMethod (current_namespace, current_container, name, lexer.Location);
-			generic.SetParameterInfo (null);
+			generic.SetParameterInfo (type_params.Constraints);
 		}
 
 		Method method = new Method (current_class, generic, rettype, current_modifiers,
@@ -5309,17 +5320,78 @@ opt_type_params
 	;
 
 type_parameter_list
+	: type_parameter_declaration
+	  {
+		ParsedTypeParameters type_params = new ParsedTypeParameters (lexer.Location);
+		TypeParameterDeclaration decl = (TypeParameterDeclaration) $1;
+		type_params.Add (decl.Name, decl.Constraints, lexer.Location);
+		$$ = type_params;
+	  }
+	| type_parameter_list COMMA type_parameter_declaration
+	  {
+		ParsedTypeParameters type_params = (ParsedTypeParameters) $1;
+		TypeParameterDeclaration decl = (TypeParameterDeclaration) $3;
+		type_params.Add (decl.Name, decl.Constraints, lexer.Location);
+		$$ = type_params;
+	  }
+	;
+
+type_parameter_declaration
 	: identifier
 	  {
-		TypeArguments args = new TypeArguments (lexer.Location);
-		args.Add (new SimpleName ((string) $1, lexer.Location));
-		$$ = args;
+		$$ = new TypeParameterDeclaration ((string) $1, null);
 	  }
-	| type_parameter_list COMMA identifier
+	| identifier AS type_parameter_constraints
 	  {
-		TypeArguments args = (TypeArguments) $1;
-		args.Add (new SimpleName ((string) $3, lexer.Location));
-		$$ = args;
+		$$ = new TypeParameterDeclaration ((string) $1, (ArrayList) $3);
+	  }
+	;
+
+// Generic type-parameter constraints in VB can be a single constraint
+// after 'As' or a brace-wrapped list such as '{Class, IFoo, New}'.
+// Parse them into the existing Constraints/SpecialConstraint model so
+// the generic backend enforces the same rules it already uses elsewhere.
+type_parameter_constraints
+	: type_parameter_constraint
+	  {
+		ArrayList list = new ArrayList ();
+		list.Add ($1);
+		$$ = list;
+	  }
+	| OPEN_BRACE type_parameter_constraint_list CLOSE_BRACE
+	  {
+		$$ = $2;
+	  }
+	;
+
+type_parameter_constraint_list
+	: type_parameter_constraint
+	  {
+		ArrayList list = new ArrayList ();
+		list.Add ($1);
+		$$ = list;
+	  }
+	| type_parameter_constraint_list COMMA type_parameter_constraint
+	  {
+		ArrayList list = (ArrayList) $1;
+		list.Add ($3);
+		$$ = list;
+	  }
+	;
+
+type_parameter_constraint
+	: type
+	| CLASS
+	  {
+		$$ = SpecialConstraint.ReferenceType;
+	  }
+	| STRUCTURE
+	  {
+		$$ = SpecialConstraint.ValueType;
+	  }
+	| NEW
+	  {
+		$$ = SpecialConstraint.Constructor;
 	  }
 	;
 
@@ -5444,6 +5516,50 @@ public static Expression DecomposeQI (string name, Location loc)
 		o = DecomposeQI (left, loc);
 
 		return new MemberAccess (o, right, loc);
+	}
+}
+
+sealed class TypeParameterDeclaration
+{
+	public readonly string Name;
+	public readonly ArrayList Constraints;
+
+	public TypeParameterDeclaration (string name, ArrayList constraints)
+	{
+		Name = name;
+		Constraints = constraints;
+	}
+}
+
+sealed class ParsedTypeParameters
+{
+	readonly TypeArguments type_arguments;
+	ArrayList constraints;
+
+	public ParsedTypeParameters (Location loc)
+	{
+		type_arguments = new TypeArguments (loc);
+	}
+
+	public TypeArguments TypeArguments {
+		get { return type_arguments; }
+	}
+
+	public ArrayList Constraints {
+		get { return constraints; }
+	}
+
+	public void Add (string name, ArrayList parameter_constraints, Location loc)
+	{
+		type_arguments.Add (new SimpleName (name, loc));
+
+		if (parameter_constraints == null)
+			return;
+
+		if (constraints == null)
+			constraints = new ArrayList ();
+
+		constraints.Add (new Constraints (name, parameter_constraints, loc));
 	}
 }
 

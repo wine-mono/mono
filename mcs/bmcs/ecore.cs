@@ -3139,6 +3139,7 @@ namespace Mono.CSharp {
 
 			int first_count = 0;
 			MethodInfo first = null;
+			MethodInfo first_constraint_mismatch = null;
 
 			ArrayList list = new ArrayList ();
 			foreach (MethodBase mb in Methods) {
@@ -3164,6 +3165,12 @@ namespace Mono.CSharp {
 				if (gen_params.Length != atypes.Length)
 					continue;
 
+				if (!ConstructedType.CheckMethodConstraints (ec, mi, atypes, loc, false)) {
+					if (first_constraint_mismatch == null)
+						first_constraint_mismatch = mi;
+					continue;
+				}
+
 				list.Add (mi.MakeGenericMethod (atypes));
 			}
 
@@ -3172,6 +3179,12 @@ namespace Mono.CSharp {
 				new_mg.InstanceExpression = InstanceExpression;
 				new_mg.HasTypeArguments = true;
 				return new_mg;
+			}
+
+			if (first_constraint_mismatch != null) {
+				ConstructedType.CheckMethodConstraints (
+					ec, first_constraint_mismatch, atypes, loc, true);
+				return null;
 			}
 
 			if (first != null)

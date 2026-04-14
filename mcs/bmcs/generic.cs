@@ -1137,8 +1137,9 @@ namespace Mono.CSharp {
 			}
 		}
 
-		protected bool CheckConstraint (EmitContext ec, Type ptype, Expression expr,
-						Type ctype)
+		protected static bool CheckConstraint (EmitContext ec, Type[] atypes,
+						Type ptype, Expression expr, Type ctype,
+						Location loc)
 		{
 			if (TypeManager.HasGenericArguments (ctype)) {
 				Type[] types = TypeManager.GetTypeArguments (ctype);
@@ -1150,7 +1151,7 @@ namespace Mono.CSharp {
 
 					if (t.IsGenericParameter) {
 						int pos = t.GenericParameterPosition;
-						t = args.Arguments [pos];
+						t = atypes [pos];
 					}
 					new_args.Add (new TypeExpression (t, loc));
 				}
@@ -1164,112 +1165,145 @@ namespace Mono.CSharp {
 			return Convert.WideningStandardConversionExists (ec, expr, ctype);
 		}
 
-		protected bool CheckConstraints (EmitContext ec, int index)
+		static bool CheckConstraints (EmitContext ec, Type[] gen_params,
+				      Type[] atypes, Location loc,
+				      string declaration_name, bool report_errors)
 		{
-			Type atype = atypes [index];
-			Type ptype = gen_params [index];
+			for (int index = 0; index < gen_params.Length; index++) {
+				Type atype = atypes [index];
+				Type ptype = gen_params [index];
 
-			if (atype == ptype)
-				return true;
+				if (atype == ptype)
+					continue;
 
-			Expression aexpr = new EmptyExpression (atype);
+				Expression aexpr = new EmptyExpression (atype);
 
-			GenericConstraints gc = TypeManager.GetTypeParameterConstraints (ptype);
-			if (gc == null)
-				return true;
+				GenericConstraints gc = TypeManager.GetTypeParameterConstraints (ptype);
+				if (gc == null)
+					continue;
 
-			bool is_class, is_struct;
-			if (atype.IsGenericParameter) {
-				GenericConstraints agc = TypeManager.GetTypeParameterConstraints (atype);
-				if (agc != null) {
-					is_class = agc.HasReferenceTypeConstraint;
-					is_struct = agc.HasValueTypeConstraint;
+				bool is_class, is_struct;
+				if (atype.IsGenericParameter) {
+					GenericConstraints agc = TypeManager.GetTypeParameterConstraints (atype);
+					if (agc != null) {
+						is_class = agc.HasReferenceTypeConstraint;
+						is_struct = agc.HasValueTypeConstraint;
+					} else {
+						is_class = is_struct = false;
+					}
 				} else {
-					is_class = is_struct = false;
+					is_class = atype.IsClass;
+					is_struct = atype.IsValueType;
 				}
-			} else {
-				is_class = atype.IsClass;
-				is_struct = atype.IsValueType;
-			}
 
-			//
-			// First, check the `class' and `struct' constraints.
-			//
-			if (gc.HasReferenceTypeConstraint && !is_class) {
-				Report.Error (452, loc, "The type `{0}' must be " +
-					      "a reference type in order to use it " +
-					      "as type parameter `{1}' in the " +
-					      "generic type or method `{2}'.",
-					      atype, ptype, DeclarationName);
-				return false;
-			} else if (gc.HasValueTypeConstraint && !is_struct) {
-				Report.Error (453, loc, "The type `{0}' must be " +
-					      "a value type in order to use it " +
-					      "as type parameter `{1}' in the " +
-					      "generic type or method `{2}'.",
-					      atype, ptype, DeclarationName);
-				return false;
-			}
-
-			//
-			// The class constraint comes next.
-			//
-			if (gc.HasClassConstraint) {
-				if (!CheckConstraint (ec, ptype, aexpr, gc.ClassConstraint)) {
-					Report.Error (309, loc, "The type `{0}' must be " +
-						      "convertible to `{1}' in order to " +
-						      "use it as parameter `{2}' in the " +
-						      "generic type or method `{3}'",
-						      atype, gc.ClassConstraint, ptype, DeclarationName);
+				//
+				// First, check the `class' and `struct' constraints.
+				//
+				if (gc.HasReferenceTypeConstraint && !is_class) {
+					if (report_errors) {
+						Report.Error (452, loc, "The type `{0}' must be " +
+							      "a reference type in order to use it " +
+							      "as type parameter `{1}' in the " +
+							      "generic type or method `{2}'.",
+							      atype, ptype, declaration_name);
+					}
+					return false;
+				} else if (gc.HasValueTypeConstraint && !is_struct) {
+					if (report_errors) {
+						Report.Error (453, loc, "The type `{0}' must be " +
+							      "a value type in order to use it " +
+							      "as type parameter `{1}' in the " +
+							      "generic type or method `{2}'.",
+							      atype, ptype, declaration_name);
+					}
 					return false;
 				}
-			}
 
-			//
-			// Now, check the interface constraints.
-			//
-			foreach (Type it in gc.InterfaceConstraints) {
-				Type itype;
-				if (it.IsGenericParameter)
-					itype = atypes [it.GenericParameterPosition];
-				else
-					itype = it;
+				//
+				// The class constraint comes next.
+				//
+				if (gc.HasClassConstraint) {
+					if (!CheckConstraint (ec, atypes, ptype, aexpr, gc.ClassConstraint, loc)) {
+						if (report_errors) {
+							Report.Error (309, loc, "The type `{0}' must be " +
+								      "convertible to `{1}' in order to " +
+								      "use it as parameter `{2}' in the " +
+								      "generic type or method `{3}'",
+								      atype, gc.ClassConstraint, ptype, declaration_name);
+						}
+						return false;
+					}
+				}
 
-				if (!CheckConstraint (ec, ptype, aexpr, itype)) {
-					Report.Error (309, loc, "The type `{0}' must be " +
-						      "convertible to `{1}' in order to " +
-						      "use it as parameter `{2}' in the " +
-						      "generic type or method `{3}'",
-						      atype, itype, ptype, DeclarationName);
+				//
+				// Now, check the interface constraints.
+				//
+				foreach (Type it in gc.InterfaceConstraints) {
+					Type itype;
+					if (it.IsGenericParameter)
+						itype = atypes [it.GenericParameterPosition];
+					else
+						itype = it;
+
+					if (!CheckConstraint (ec, atypes, ptype, aexpr, itype, loc)) {
+						if (report_errors) {
+							Report.Error (309, loc, "The type `{0}' must be " +
+								      "convertible to `{1}' in order to " +
+								      "use it as parameter `{2}' in the " +
+								      "generic type or method `{3}'",
+								      atype, itype, ptype, declaration_name);
+						}
+						return false;
+					}
+				}
+
+				//
+				// Finally, check the constructor constraint.
+				//
+
+				if (!gc.HasConstructorConstraint)
+					continue;
+
+				if (TypeManager.IsBuiltinType (atype) || atype.IsValueType)
+					continue;
+
+				MethodGroupExpr mg = Expression.MemberLookup (
+					ec, atype, ".ctor", MemberTypes.Constructor,
+					BindingFlags.Public | BindingFlags.Instance |
+					BindingFlags.DeclaredOnly, loc)
+					as MethodGroupExpr;
+
+				if (atype.IsAbstract || (mg == null) || !mg.IsInstance) {
+					if (report_errors) {
+						Report.Error (310, loc, "The type `{0}' must have a public " +
+							      "parameterless constructor in order to use it " +
+							      "as parameter `{1}' in the generic type or " +
+							      "method `{2}'", atype, ptype, declaration_name);
+					}
 					return false;
 				}
-			}
-
-			//
-			// Finally, check the constructor constraint.
-			//
-
-			if (!gc.HasConstructorConstraint)
-				return true;
-
-			if (TypeManager.IsBuiltinType (atype) || atype.IsValueType)
-				return true;
-
-			MethodGroupExpr mg = Expression.MemberLookup (
-				ec, atype, ".ctor", MemberTypes.Constructor,
-				BindingFlags.Public | BindingFlags.Instance |
-				BindingFlags.DeclaredOnly, loc)
-				as MethodGroupExpr;
-
-			if (atype.IsAbstract || (mg == null) || !mg.IsInstance) {
-				Report.Error (310, loc, "The type `{0}' must have a public " +
-					      "parameterless constructor in order to use it " +
-					      "as parameter `{1}' in the generic type or " +
-					      "method `{2}'", atype, ptype, DeclarationName);
-				return false;
 			}
 
 			return true;
+		}
+
+		string GetDeclarationName ()
+		{
+			return DeclarationName;
+		}
+
+		public static bool CheckMethodConstraints (EmitContext ec, MethodInfo method,
+				       Type[] atypes, Location loc,
+				       bool report_errors)
+		{
+			Type[] gen_params = method.GetGenericArguments ();
+			string declaration_name = method.Name;
+
+			if (method.DeclaringType != null)
+				declaration_name = TypeManager.GetFullName (method.DeclaringType) + "." + method.Name;
+
+			return CheckConstraints (ec, gen_params, atypes, loc,
+						 declaration_name, report_errors);
 		}
 
 		protected override TypeExpr DoResolveAsTypeStep (EmitContext ec)
@@ -1282,12 +1316,8 @@ namespace Mono.CSharp {
 
 		public bool CheckConstraints (EmitContext ec)
 		{
-			for (int i = 0; i < gen_params.Length; i++) {
-				if (!CheckConstraints (ec, i))
-					return false;
-			}
-
-			return true;
+			return CheckConstraints (ec, gen_params, atypes, loc,
+						 GetDeclarationName (), true);
 		}
 
 		public override TypeExpr ResolveAsTypeTerminal (EmitContext ec)
@@ -1487,8 +1517,10 @@ namespace Mono.CSharp {
 			GenericTypeParameterBuilder[] gen_params;
 			string[] names = MemberName.TypeArguments.GetDeclarations ();
 			gen_params = mb.DefineGenericParameters (names);
-			for (int i = 0; i < TypeParameters.Length; i++)
+			for (int i = 0; i < TypeParameters.Length; i++) {
 				TypeParameters [i].Define (gen_params [i]);
+				TypeParameters [i].DefineConstraints ();
+			}
 
 			ec = new EmitContext (
 				this, this, Location, null, return_type, ModFlags, false);
@@ -2186,6 +2218,10 @@ namespace Mono.CSharp {
 				if (infered_types [i] == null)
 					return false;
 
+			if (!ConstructedType.CheckMethodConstraints (
+				    ec, (MethodInfo) method, infered_types, Location.Null, false))
+				return false;
+
 			method = ((MethodInfo)method).MakeGenericMethod (infered_types);
 			return true;
 		}
@@ -2256,6 +2292,10 @@ namespace Mono.CSharp {
 			if (!InferTypeArguments (param_types, arg_types, infered_types))
 				return false;
 
+			if (!ConstructedType.CheckMethodConstraints (
+				    ec, (MethodInfo) method, infered_types, Location.Null, false))
+				return false;
+
 			method = ((MethodInfo)method).MakeGenericMethod (infered_types);
 			return true;
 		}
@@ -2282,6 +2322,10 @@ namespace Mono.CSharp {
 			}
 
 			if (!InferTypeArguments (param_types, arg_types, infered_types))
+				return false;
+
+			if (!ConstructedType.CheckMethodConstraints (
+				    ec, (MethodInfo) method, infered_types, Location.Null, false))
 				return false;
 
 			method = ((MethodInfo)method).MakeGenericMethod (infered_types);
