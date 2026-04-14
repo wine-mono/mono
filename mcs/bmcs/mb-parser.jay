@@ -5492,13 +5492,13 @@ type_parameter_constraint
 	;
 
 type_argument_list
-	: type
+	: type_with_array_modifiers
 	  {
 		TypeArguments args = new TypeArguments (lexer.Location);
 		args.Add ((Expression) $1);
 		$$ = args;
 	  }
-	| type_argument_list COMMA type
+	| type_argument_list COMMA type_with_array_modifiers
 	  {
 		TypeArguments args = (TypeArguments) $1;
 		args.Add ((Expression) $3);
@@ -5515,18 +5515,21 @@ type
 	//| array_type
 	;
 
-// Expression contexts like GetType(Byte()), CType(x, Byte()) and
-// TypeOf x Is Byte() accept array type names.  Keep that suffix
-// handling separate from the general 'type' nonterminal so declaration
-// grammar like 'As Integer()' can continue to control rank parsing in
-// its existing dedicated productions.
-type_in_expression
+// Type arguments and expression-side type contexts both use TypeName in
+// the VB grammar, which includes ArrayTypeName. Keep the array suffixes
+// separate from the general 'type' nonterminal so declarations can
+// continue to use their dedicated rank-parsing productions.
+type_with_array_modifiers
 	: type
 	| type rank_specifiers
 	  {
 		string dims = VariableDeclaration.BuildRanks ((ArrayList) $2, true, lexer.Location);
 		$$ = new ComposedCast ((Expression) $1, dims, lexer.Location);
 	  }
+	;
+
+type_in_expression
+	: type_with_array_modifiers
 	;
 
 type_list
