@@ -692,11 +692,21 @@ namespace Mono.CSharp {
 			if (ua != null)
 				return ua;
 
-			Class attr_class = TypeManager.LookupClass (Type);
+			DeclSpace attr_decl = TypeManager.LookupDeclSpace (Type);
+			Class attr_class = attr_decl as Class;
 
 			if (attr_class == null) {
+				if (attr_decl != null) {
+					ua = new AttributeUsageAttribute (AttributeTargets.All);
+					usage_attr_cache.Add (Type, ua);
+					return ua;
+				}
+
 				object[] usage_attr = Type.GetCustomAttributes (TypeManager.attribute_usage_type, true);
-				ua = (AttributeUsageAttribute)usage_attr [0];
+				if (usage_attr.Length == 0)
+					ua = new AttributeUsageAttribute (AttributeTargets.All);
+				else
+					ua = (AttributeUsageAttribute)usage_attr [0];
 				usage_attr_cache.Add (Type, ua);
 				return ua;
 			}

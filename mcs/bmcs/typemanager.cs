@@ -712,7 +712,10 @@ public partial class TypeManager {
 	
 	public static Class LookupClass (Type t)
 	{
-		return (Class) builder_to_declspace [t];
+		// Some in-progress TypeBuilder entries are not classes. Callers that
+		// specifically want class metadata should be able to fall back instead
+		// of crashing on an invalid cast.
+		return builder_to_declspace [t] as Class;
 	}
 	
 	/// <summary>
