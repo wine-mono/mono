@@ -1311,6 +1311,19 @@ namespace Mono.CSharp {
 				return new Nullable.LiftedConversion (
 					expr, target_type, false, false, loc).Resolve (ec);
 
+			// VB defines a widening conversion from T to T?.  Emit the
+			// Nullable<T>(T) constructor directly; LiftedConversion only
+			// applies when the source expression is itself nullable.
+			if (TypeManager.IsNullableType (target_type) &&
+			    !TypeManager.IsNullableType (expr_type)) {
+				Type underlying = TypeManager.GetTypeArguments (target_type) [0];
+				if (TypeManager.IsEqual (expr_type, underlying)) {
+					ArrayList args = new ArrayList ();
+					args.Add (new Argument (expr, Argument.AType.Expression));
+					return new New (new TypeExpression (target_type, loc), args, loc).Resolve (ec);
+				}
+			}
+
 			if (expr.eclass == ExprClass.MethodGroup){
 				if (!TypeManager.IsDelegateType (target_type)){
 					return null;

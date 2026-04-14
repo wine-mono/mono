@@ -5514,7 +5514,18 @@ type
 	  {
 		$$ = ((MemberName) $1).GetTypeExpression (lexer.Location);
 	  }
+	| type_name INTERR
+	  {
+		// VB nullable shorthand: T? is exactly
+		// System.Nullable(Of T) at the type-name level.
+		Expression te = ((MemberName) $1).GetTypeExpression (lexer.Location);
+		$$ = new NullableType (te, lexer.Location);
+	  }
 	| builtin_types
+	| builtin_types INTERR
+	  {
+		$$ = new NullableType ((Expression) $1, lexer.Location);
+	  }
 	//| array_type
 	;
 
