@@ -895,6 +895,67 @@ namespace Mono.CSharp {
 				return null;
 		}
 	}
+
+	// VB's AddressOf is a delegate-creation operand, not C#'s unsafe
+	// pointer address-of operator. Keep the method group intact until the
+	// surrounding assignment or conversion supplies the target delegate type.
+	public class VBAddressOfExpression : Expression {
+		Expression expr;
+		Expression resolved_expr;
+
+		public VBAddressOfExpression (Expression expr, Location loc)
+		{
+			this.expr = expr;
+			this.loc = loc;
+			this.eclass = ExprClass.Value;
+			this.type = TypeManager.delegate_type;
+		}
+
+		public override Expression DoResolve (EmitContext ec)
+		{
+			if (resolved_expr != null)
+				return this;
+
+			// AddressOf is target-typed, but Resolve still requires a placeholder
+			// type after semantic analysis completes.
+			type = TypeManager.delegate_type;
+
+			ConstructedType ctype = expr as ConstructedType;
+			if (ctype != null)
+				expr = ctype.GetSimpleName (ec);
+
+			resolved_expr = expr.Resolve (ec, ResolveFlags.VariableOrValue | ResolveFlags.MethodGroup);
+			if (resolved_expr == null)
+				return null;
+
+			return this;
+		}
+
+		public Expression ResolveAsDelegate (EmitContext ec, Type delegate_type)
+		{
+			if (resolved_expr == null && DoResolve (ec) == null)
+				return null;
+
+			if (!TypeManager.IsDelegateType (delegate_type)) {
+				Convert.Error_CannotConvertType (loc, TypeManager.delegate_type, delegate_type);
+				return null;
+			}
+
+			MethodGroupExpr mg = resolved_expr as MethodGroupExpr;
+			if (mg == null) {
+				Report.Error (149, loc, "Method name expected");
+				return null;
+			}
+
+			return ImplicitDelegateCreation.Create (ec, mg, delegate_type, loc);
+		}
+
+		public override void Emit (EmitContext ec)
+		{
+			throw new InternalErrorException (
+				"VBAddressOfExpression must be converted to a delegate before emit");
+		}
+	}
 	
 	//
 	// A delegate-creation-expression, invoked from the `New' class 

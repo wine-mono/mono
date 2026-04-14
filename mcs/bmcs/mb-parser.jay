@@ -5144,6 +5144,11 @@ exponentiation_expression
 	
 prefixed_unary_expression
 	: exponentiation_expression
+	| ADDRESSOF expression
+	  {
+		Expression aoexpr = DisambiguateReturnNameInvocation ((Expression) $2);
+		$$ = new VBAddressOfExpression (aoexpr, lexer.Location);
+	  }
 	| PLUS prefixed_unary_expression
 	  {
 	  	//FIXME: Is this rule correctly defined ?
@@ -5388,11 +5393,6 @@ assignment_expression
 
 		/* TODO: $$ = new CompoundAssign (
 			Binary.Operator.ExclusiveOr, (Expression) $1, (Expression) $4, l); */
-	  }
-	| prefixed_unary_expression ASSIGN ADDRESSOF expression
-	  {
-		Expression aorhs = DisambiguateReturnNameInvocation ((Expression) $4);
-		$$ = new Assign ((Expression) $1, aorhs, lexer.Location);
 	  }
 	;
 

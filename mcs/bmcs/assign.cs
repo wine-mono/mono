@@ -351,6 +351,13 @@ namespace Mono.CSharp {
 				return null;
 
 			Type target_type = target.Type;
+			VBAddressOfExpression vb_address_of = real_source as VBAddressOfExpression;
+			if (vb_address_of != null) {
+				real_source = source = vb_address_of.ResolveAsDelegate (ec, target_type);
+				if (real_source == null)
+					return null;
+			}
+
 			Type source_type = real_source.Type;
 
 			// If we're an embedded assignment, our parent will reuse our source as its
@@ -626,7 +633,5 @@ namespace Mono.CSharp {
 		}
 	}
 }
-
-
 
 

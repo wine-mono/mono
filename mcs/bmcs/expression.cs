@@ -5573,6 +5573,8 @@ namespace Mono.CSharp {
 				Expr = Expr.ResolveLValue (ec, Expr);
 			} else if (ArgType == AType.Out)
 				Expr = Expr.ResolveLValue (ec, EmptyExpression.Null);
+			else if (ArgType == AType.AddressOf)
+				Expr = Expr.Resolve (ec, ResolveFlags.VariableOrValue | ResolveFlags.MethodGroup);
 			else if (Expr is SimpleName) {
 				// VB can bind a bare identifier as an implicit ByRef/Out argument.
 				// Defer definite-assignment until overload resolution tells us
@@ -5708,7 +5710,7 @@ namespace Mono.CSharp {
 	///   Invocation of methods or delegates.
 	/// </summary>
 	public class Invocation : ExpressionStatement  {
-		public readonly ArrayList Arguments;
+		public ArrayList Arguments;
 
 		public Expression expr;
 		MethodBase method = null;
@@ -5763,6 +5765,97 @@ namespace Mono.CSharp {
 
 				return (ParameterData) rp;
 			}
+		}
+
+		static bool IsOptionalParameter (MethodBase mb, ParameterData pd, int pos)
+		{
+			if ((pd.ParameterModifier (pos) & Parameter.Modifier.OPTIONAL) != 0)
+				return true;
+
+			if (!(pd is ReflectionParameters))
+				return false;
+
+			try {
+				ParameterInfo[] parameters = mb.GetParameters ();
+				return pos < parameters.Length && parameters [pos].IsOptional;
+			} catch (NotSupportedException) {
+				return false;
+			}
+		}
+
+		static int GetRequiredParameterCount (MethodBase mb, ParameterData pd)
+		{
+			int count = pd.Count;
+			if (count == 0)
+				return 0;
+
+			if (pd.ParameterModifier (count - 1) == Parameter.Modifier.PARAMS)
+				count--;
+
+			while (count > 0 && IsOptionalParameter (mb, pd, count - 1))
+				count--;
+
+			return count;
+		}
+
+		static bool CanMatchOptionalArgumentCount (MethodBase mb, ParameterData pd, int arg_count)
+		{
+			return arg_count <= pd.Count && arg_count >= GetRequiredParameterCount (mb, pd);
+		}
+
+		static Expression GetOptionalArgumentValue (EmitContext ec, MethodBase mb,
+							    ParameterData pd, int pos,
+							    Location loc)
+		{
+			InternalParameters ip = pd as InternalParameters;
+			if (ip != null && ip.Parameters.FixedParameters != null &&
+			    pos < ip.Parameters.FixedParameters.Length) {
+				Parameter p = ip.Parameters.FixedParameters [pos];
+				if (p.ParameterInitializer != null)
+					return p.ParameterInitializer.Resolve (ec);
+			}
+
+			Type parameter_type = pd.ParameterType (pos);
+			if (parameter_type != null && parameter_type.IsByRef)
+				parameter_type = TypeManager.GetElementType (parameter_type);
+
+			if (pd is ReflectionParameters) {
+				ParameterInfo[] parameters;
+				try {
+					parameters = mb.GetParameters ();
+				} catch (NotSupportedException) {
+					parameters = null;
+				}
+
+				if (parameters != null &&
+				    pos < parameters.Length &&
+				    parameters [pos].IsOptional) {
+					object default_value;
+					try {
+						default_value = parameters [pos].DefaultValue;
+					} catch {
+						default_value = Missing.Value;
+					}
+
+					if (default_value != Missing.Value &&
+					    default_value != DBNull.Value) {
+						if (default_value == null) {
+							if (parameter_type != null && parameter_type.IsValueType)
+								return new DefaultValueExpression (
+									new TypeExpression (parameter_type, loc), loc).Resolve (ec);
+							return NullLiteral.Null;
+						}
+
+						return Expression.Constantify (default_value, parameter_type);
+					}
+				}
+			}
+
+			if (parameter_type != null && parameter_type.IsValueType)
+				return new DefaultValueExpression (
+					new TypeExpression (parameter_type, loc), loc).Resolve (ec);
+
+			return NullLiteral.Null;
 		}
 
 		/// <summary>
@@ -5911,7 +6004,7 @@ namespace Mono.CSharp {
 
 			if ((candidate_pd.ParameterModifier (cand_count - 1) != Parameter.Modifier.PARAMS) &&
 			    (candidate_pd.ParameterModifier (cand_count - 1) != Parameter.Modifier.ARGLIST))
-				if (cand_count != argument_count)
+				if (!CanMatchOptionalArgumentCount (candidate, candidate_pd, argument_count))
 					return false;
 
 			bool better_at_least_one = false;
@@ -5961,6 +6054,16 @@ namespace Mono.CSharp {
 			// only one of them is generic, the non-generic one wins.
 			//
 			if (is_equal) {
+				int best_count = best_pd.Count;
+				int candidate_missing = cand_count - argument_count;
+				int best_missing = best_count - argument_count;
+
+				if (candidate_missing != best_missing &&
+				    candidate_missing >= 0 &&
+				    best_missing >= 0 &&
+				    !candidate_params && !best_params)
+					return candidate_missing < best_missing;
+
 				if (TypeManager.IsGenericMethod (best) && !TypeManager.IsGenericMethod (candidate))
 					return true;
 				else if (!TypeManager.IsGenericMethod (best) && TypeManager.IsGenericMethod (candidate))
@@ -6097,26 +6200,29 @@ namespace Mono.CSharp {
 				if (pd.ParameterModifier (count) != Parameter.Modifier.PARAMS)
 				return false;
 			}
-			
-			if (count > arg_count)
+
+			int required_fixed_count = count;
+			while (required_fixed_count > 0 &&
+			       IsOptionalParameter (candidate, pd, required_fixed_count - 1))
+				required_fixed_count--;
+
+			if (required_fixed_count > arg_count)
 				return false;
-			
-			if (pd_count == 1 && arg_count == 0)
-				return true;
 
 			//
 			// If we have come this far, the case which
 			// remains is when the number of parameters is
 			// less than or equal to the argument count.
 			//
-			for (int i = 0; i < count; ++i) {
+			int fixed_argument_count = arg_count < count ? arg_count : count;
+			for (int i = 0; i < fixed_argument_count; ++i) {
 
 				Argument a = (Argument) arguments [i];
 
 				Parameter.Modifier a_mod = a.GetParameterModifier () &
 					(unchecked (~(Parameter.Modifier.OUT | Parameter.Modifier.REF)));
 				Parameter.Modifier p_mod = pd.ParameterModifier (i) &
-					(unchecked (~(Parameter.Modifier.OUT | Parameter.Modifier.REF)));
+					(unchecked (~(Parameter.Modifier.OUT | Parameter.Modifier.REF | Parameter.Modifier.OPTIONAL)));
 
 				if (a_mod == p_mod) {
 
@@ -6180,7 +6286,7 @@ namespace Mono.CSharp {
 			{
 				ParameterData pd = GetParameterData (candidate);
 
-			if (arg_count != pd.Count)
+			if (!CanMatchOptionalArgumentCount (candidate, pd, arg_count))
 				return false;
 
 			for (int i = arg_count; i > 0; ) {
@@ -6191,7 +6297,7 @@ namespace Mono.CSharp {
 					Parameter.Modifier a_mod = a.GetParameterModifier () &
 						unchecked (~(Parameter.Modifier.OUT | Parameter.Modifier.REF));
 					Parameter.Modifier p_mod = pd.ParameterModifier (i) &
-						unchecked (~(Parameter.Modifier.OUT | Parameter.Modifier.REF));
+						unchecked (~(Parameter.Modifier.OUT | Parameter.Modifier.REF | Parameter.Modifier.OPTIONAL));
 
 					if (a_mod == Parameter.Modifier.NONE &&
 					    (p_mod & Parameter.Modifier.ISBYREF) != 0 &&
@@ -6335,11 +6441,12 @@ namespace Mono.CSharp {
 				// Okay so we have failed to find anything so we
 				// return by providing info about the closest match
 				//
+				bool reported_argument_mismatch = false;
 				for (int i = 0; i < methods.Length; ++i) {
 					MethodBase c = (MethodBase) methods [i];
 					ParameterData pd = GetParameterData (c);
 
-					if (pd.Count != arg_count)
+					if (!CanMatchOptionalArgumentCount (c, pd, arg_count))
 						continue;
 
 					if (!TypeManager.InferTypeArguments (ec, Arguments, ref c))
@@ -6347,6 +6454,7 @@ namespace Mono.CSharp {
 
 					VerifyArgumentsCompat (ec, Arguments, arg_count,
 							       c, false, null, may_fail, loc);
+					reported_argument_mismatch = true;
                                         break;
 				}
 
@@ -6354,12 +6462,15 @@ namespace Mono.CSharp {
 					string report_name = me.Name;
 					if (report_name == ".ctor")
 						report_name = me.DeclaringType.ToString ();
+
+					if (reported_argument_mismatch)
+						return null;
                                         
 					for (int i = 0; i < methods.Length; ++i) {
 						MethodBase c = methods [i];
 						ParameterData pd = GetParameterData (c);
 
-						if (pd.Count != arg_count)
+						if (!CanMatchOptionalArgumentCount (c, pd, arg_count))
 							continue;
 
 						if (TypeManager.InferTypeArguments (ec, Arguments, ref c))
@@ -6533,7 +6644,8 @@ namespace Mono.CSharp {
 				Expression a_expr = a.Expr;
 					Type parameter_type = pd.ParameterType (j);
 					Parameter.Modifier pm = pd.ParameterModifier (j);
-					Parameter.Modifier expected_modifier = pm;
+					Parameter.Modifier expected_modifier =
+						pm & unchecked (~Parameter.Modifier.OPTIONAL);
 
 					if ((pm & Parameter.Modifier.ISBYREF) != 0 &&
 					    a.ArgType == Argument.AType.Expression) {
@@ -6605,7 +6717,7 @@ namespace Mono.CSharp {
 				Parameter.Modifier a_mod = a.GetParameterModifier () &
 					unchecked (~(Parameter.Modifier.OUT | Parameter.Modifier.REF));
 				Parameter.Modifier p_mod = pd.ParameterModifier (j) &
-					unchecked (~(Parameter.Modifier.OUT | Parameter.Modifier.REF));
+					unchecked (~(Parameter.Modifier.OUT | Parameter.Modifier.REF | Parameter.Modifier.OPTIONAL));
 				
 				if (a_mod != p_mod &&
 				    pd.ParameterModifier (pd_count - 1) != Parameter.Modifier.PARAMS) {
@@ -6767,6 +6879,23 @@ namespace Mono.CSharp {
 			return (new ElementAccess (expr, ExtractIndexExpressions (), loc)).ResolveLValue (ec, right_side);
 		}
 
+		void AddMissingOptionalArguments (EmitContext ec)
+		{
+			ParameterData pd = GetParameterData (method);
+			int supplied = Arguments != null ? Arguments.Count : 0;
+
+			if (supplied >= pd.Count || !CanMatchOptionalArgumentCount (method, pd, supplied))
+				return;
+
+			if (Arguments == null)
+				Arguments = new ArrayList ();
+
+			for (int i = supplied; i < pd.Count; ++i) {
+				Expression default_value = GetOptionalArgumentValue (ec, method, pd, i, loc);
+				Arguments.Add (new Argument (default_value, Argument.AType.Expression));
+			}
+		}
+
 		public override Expression DoResolve (EmitContext ec)
 		{
 			expr = ResolveInvocationTarget (ec);
@@ -6810,6 +6939,8 @@ namespace Mono.CSharp {
 
 			if (method == null)
 				return null;
+
+			AddMissingOptionalArguments (ec);
 
 			MethodInfo mi = method as MethodInfo;
 			if (mi != null) {

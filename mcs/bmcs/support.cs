@@ -151,12 +151,14 @@ namespace Mono.CSharp {
 			Type t = pi [pos].ParameterType;
 			if (t.IsByRef){
 				if ((pi [pos].Attributes & ParameterAttributes.Out) != 0)
-					return Parameter.Modifier.ISBYREF | Parameter.Modifier.OUT;
+					return (pi [pos].IsOptional ? Parameter.Modifier.OPTIONAL : 0) |
+						Parameter.Modifier.ISBYREF | Parameter.Modifier.OUT;
 				else
-					return Parameter.Modifier.ISBYREF | Parameter.Modifier.REF;
+					return (pi [pos].IsOptional ? Parameter.Modifier.OPTIONAL : 0) |
+						Parameter.Modifier.ISBYREF | Parameter.Modifier.REF;
 			}
 			
-			return Parameter.Modifier.NONE;
+			return pi [pos].IsOptional ? Parameter.Modifier.OPTIONAL : Parameter.Modifier.NONE;
 		}
 
 		public int Count {

@@ -394,11 +394,14 @@ namespace Mono.CSharp {
 				break;
 
 			case ExprClass.MethodGroup:
-				if (RootContext.Version == LanguageVersion.ISO_1){
-					if ((flags & ResolveFlags.MethodGroup) == 0) {
-						((MethodGroupExpr) e).ReportUsageError ();
+				if ((flags & ResolveFlags.MethodGroup) == 0) {
+					// VB reclassifies a method group in value context as
+					// an implicit zero-argument invocation. EventAccess
+					// still stays on the old permissive path for now; the
+					// stricter spec rule lands in its own batch.
+					e = new Invocation (e, null, e.Location).Resolve (ec);
+					if (e == null)
 						return null;
-					}
 				}
 				break;
 
