@@ -3887,7 +3887,10 @@ while_statement
 	;
 
 for_statement
-	: FOR identifier opt_type_spec ASSIGN expression TO expression opt_step end_of_stmt
+	// Block-form For needs a real logical line break here. If we leave
+	// COLON inside the same rule, `For ... :` is always claimed by the
+	// block-form path before the same-line body has a chance to parse.
+	: FOR identifier opt_type_spec ASSIGN expression TO expression opt_step logical_end_of_line
 	  {
 		bool declared_loop_local = false;
 		if ($3 != null) {
@@ -3904,6 +3907,43 @@ for_statement
 	  }
 	  opt_statement_list
 	  NEXT opt_identifier
+	  {
+		Block inner_statement = end_block ();
+		bool declared_loop_local = (bool) oob_stack.Pop ();
+		string loop_name = (string) oob_stack.Pop ();
+		Location l = (Location) oob_stack.Pop ();
+		string next_name = (string) $13;
+
+		if (next_name != null && String.Compare (loop_name, next_name, true) != 0)
+			Report.Error (30070, lexer.Location,
+				"'Next {0}' does not match loop control variable '{1}'",
+				next_name, loop_name);
+
+		VBFor f = new VBFor (loop_name, (Expression) $5, (Expression) $7,
+			(Expression) $8, inner_statement, l);
+		if ($3 != null) {
+			if (declared_loop_local)
+				current_block.AddStatement (f);
+			$$ = end_block ();
+		} else
+			$$ = f;
+	  }
+	| FOR identifier opt_type_spec ASSIGN expression TO expression opt_step
+	  {
+		bool declared_loop_local = false;
+		if ($3 != null) {
+			start_block ();
+			LocalInfo li = current_block.AddVariable (
+				(Expression) $3, (string) $2, current_local_parameters, lexer.Location);
+			declared_loop_local = li != null;
+		}
+
+		oob_stack.Push (lexer.Location);
+		oob_stack.Push ($2);
+		oob_stack.Push (declared_loop_local);
+		start_block ();
+	  }
+	  COLON for_line_body NEXT opt_identifier
 	  {
 		Block inner_statement = end_block ();
 		bool declared_loop_local = (bool) oob_stack.Pop ();
@@ -4010,6 +4050,103 @@ if_statement
 
 line_if_body
 	: begin_block line_statement_list end_block
+	  { $$ = $3; }
+	;
+
+// Same-line For bodies use ordinary colon-separated statements too, but
+// unlike a standalone line If they must stop before `: Next'.  Encode the
+// separator as a right-recursive tail so a trailing colon can terminate the
+// body only when the following token is not another statement.
+for_line_body
+	: begin_block for_line_statement_list end_block
+	  { $$ = $3; }
+	;
+
+for_line_statement_list
+	: for_line_statement for_line_statement_tail
+	;
+
+for_line_statement_tail
+	: /* empty */
+	| COLON
+	| COLON for_line_statement for_line_statement_tail
+	;
+
+for_line_statement
+	  : declaration_statement
+	    {
+		  if ($1 != null && (Block) $1 != current_block){
+			current_block.AddStatement ((Statement) $1);
+			current_block = (Block) $1;
+		  }
+	    }
+	  | for_line_if_statement
+	    {
+		  current_block.AddStatement ((Statement) $1);
+	    }
+	  | for_line_embedded_statement
+	    {
+		  current_block.AddStatement ((Statement) $1);
+	    }
+	  | ADDHANDLER prefixed_unary_expression COMMA expression
+	    {
+		Location loc = lexer.Location;
+
+		Statement stmt = new EventSubscription ((Expression) $2,
+					 (Expression) $4, true, loc);
+
+		current_block.AddStatement (stmt);
+
+	    }
+
+	  | REMOVEHANDLER prefixed_unary_expression COMMA expression
+	    {
+		Location loc = lexer.Location;
+
+		Statement stmt = new EventSubscription ((Expression) $2,
+					 (Expression) $4, false, loc);
+
+		current_block.AddStatement (stmt);
+
+	    }
+	  | RAISEEVENT identifier opt_raise_event_args
+	    {
+	      Location loc = lexer.Location;
+	      MemberName mname = new MemberName ((string) $2);
+	      Expression expr = mname.GetTypeExpression (loc);
+
+	      Invocation inv_expr = new Invocation (expr, (ArrayList) $3, loc);
+	      Statement stmt = new StatementExpression (inv_expr, loc);
+	      current_block.AddStatement (stmt);
+	    }
+	;
+
+for_line_embedded_statement
+	: expression_statement
+	| iteration_statement
+	| redim_statement
+	| stop_statement
+	| using_statement
+	| with_statement
+	| try_statement
+	| synclock_statement
+	| jump_statement
+	| select_statement
+	;
+
+for_line_if_statement
+	: IF boolean_expression THEN for_line_if_body
+	  {
+		$$ = new If ((Expression) $2, (Statement) $4, lexer.Location);
+	  }
+	| IF boolean_expression THEN for_line_if_body ELSE for_line_if_body
+	  {
+		$$ = new If ((Expression) $2, (Statement) $4, (Statement) $6, lexer.Location);
+	  }
+	;
+
+for_line_if_body
+	: begin_block for_line_statement_list end_block
 	  { $$ = $3; }
 	;
 
