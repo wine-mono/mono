@@ -3367,7 +3367,10 @@ namespace Mono.CSharp {
 					return false;
 				}
 
-				if (RootContext.WarningLevel > 2) {
+				if (RootContext.WarningLevel > 2 && Parent.Methods != null) {
+					// This tracking only feeds the later Equals/GetHashCode
+					// warning; some bootstrap vbnc containers reach override
+					// checking before a MethodArrayList is attached.
 					if (Name == "Equals" && parameter_types.Length == 1 && parameter_types [0] == TypeManager.object_type)
 						Parent.Methods.HasEquals = true;
 					else if (Name == "GetHashCode" && parameter_types.Length == 0)
