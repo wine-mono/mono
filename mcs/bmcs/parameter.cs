@@ -277,37 +277,22 @@ namespace Mono.CSharp {
 		
 		public ParameterAttributes Attributes {
 			get {
-				int flags = ((int) ModFlags) & ~((int) Parameter.Modifier.ISBYREF);
-				switch ((Modifier) flags) {
-				case Modifier.NONE:
-					return ParameterAttributes.None;
-				case Modifier.REF:
-					return ParameterAttributes.None;
-				case Modifier.OUT:
-					return ParameterAttributes.Out;
-				case Modifier.PARAMS:
-					return 0;
-				}
-				
-				return ParameterAttributes.None;
+				return GetParameterAttributes (ModFlags);
 			}
 		}
 
 		public static ParameterAttributes GetParameterAttributes (Modifier mod)
 		{
-			int flags = ((int) mod) & ~((int) Parameter.Modifier.ISBYREF);
-			switch ((Modifier) flags) {
-			case Modifier.NONE:
-				return ParameterAttributes.None;
-			case Modifier.REF:
-				return ParameterAttributes.None;
-			case Modifier.OUT:
-				return ParameterAttributes.Out;
-			case Modifier.PARAMS:
-				return 0;
-			}
-				
-			return ParameterAttributes.None;
+			Modifier flags = mod & ~Parameter.Modifier.ISBYREF;
+			ParameterAttributes attrs = ParameterAttributes.None;
+
+			if ((flags & Modifier.OUT) != 0)
+				attrs |= ParameterAttributes.Out;
+
+			if ((flags & Modifier.OPTIONAL) != 0)
+				attrs |= ParameterAttributes.Optional | ParameterAttributes.HasDefault;
+
+			return attrs;
 		}
 		
 		public override AttributeTargets AttributeTargets {
@@ -359,10 +344,103 @@ namespace Mono.CSharp {
 				builder = cb.DefineParameter (index, par_attr, Name);
 			else 
 				builder = mb.DefineParameter (index, par_attr, Name);
+
+			// Optional parameters must survive into emitted metadata. Without
+			// the Optional/HasDefault flags plus the default constant, the
+			// current compilation sees the parameter initializer, but any later
+			// import sees a required parameter list instead.
+			EmitOptionalMetadataFallback ();
+			EmitOptionalDefaultValue (ec, loc);
 					
 			if (OptAttributes != null) {
 				OptAttributes.Emit (ec, this);
 			}
+		}
+
+		void EmitOptionalMetadataFallback ()
+		{
+			if (!IsOptional || builder == null)
+				return;
+
+			if (TypeManager.cons_optional_attribute != null) {
+				CustomAttributeBuilder optional_cab = new CustomAttributeBuilder (
+					TypeManager.cons_optional_attribute, new object [0]);
+				builder.SetCustomAttribute (optional_cab);
+			}
+		}
+
+		void EmitOptionalDefaultValue (EmitContext ec, Location loc)
+		{
+			if (!IsOptional || ParameterInitializer == null || builder == null)
+				return;
+
+			Expression initializer = ParameterInitializer.Resolve (ec);
+			if (initializer == null)
+				return;
+
+			Type target_type = parameter_type;
+			if (target_type == null)
+				target_type = TypeName.Type;
+
+			if (initializer is NullLiteral) {
+				if (target_type != null && target_type.IsValueType) {
+					if (TypeManager.IsEnumType (target_type)) {
+						object enum_default = System.Enum.ToObject (target_type, 0);
+						builder.SetConstant (enum_default);
+					} else if (target_type == TypeManager.decimal_type)
+						EmitDecimalDefault (decimal.Zero);
+					else {
+						object default_value = Activator.CreateInstance (target_type);
+						builder.SetConstant (default_value);
+					}
+				} else {
+					builder.SetConstant (null);
+				}
+				return;
+			}
+
+			Constant constant = initializer as Constant;
+			if (constant == null) {
+				Report.Error (150, loc, "A constant value is expected");
+				return;
+			}
+
+			if (target_type != null && target_type != constant.Type) {
+				constant = Const.ChangeType (loc, constant, target_type);
+				if (constant == null)
+					return;
+			}
+
+			EnumConstant enum_constant = constant as EnumConstant;
+			if (enum_constant != null) {
+				object enum_value = enum_constant.GetValueAsEnumType ();
+				builder.SetConstant (enum_value);
+				return;
+			}
+
+			DecimalConstant decimal_constant = constant as DecimalConstant;
+			if (decimal_constant != null) {
+				EmitDecimalDefault (decimal_constant.Value);
+				return;
+			}
+
+			object constant_value = constant.GetValue ();
+			builder.SetConstant (constant_value);
+		}
+
+		void EmitDecimalDefault (decimal value)
+		{
+			int[] bits = Decimal.GetBits (value);
+			object[] args = new object[] {
+				(byte) (bits [3] >> 16),
+				(byte) (bits [3] >> 31),
+				(uint) bits [2],
+				(uint) bits [1],
+				(uint) bits [0]
+			};
+			CustomAttributeBuilder cab = new CustomAttributeBuilder (
+				TypeManager.decimal_constant_attribute_ctor, args);
+			builder.SetCustomAttribute (cab);
 		}
 
 		public override string[] ValidAttributeTargets {

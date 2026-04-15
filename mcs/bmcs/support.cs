@@ -73,6 +73,15 @@ namespace Mono.CSharp {
 			last_arg_is_params = true;
 		}
 
+		static bool HasOptionalAttribute (ParameterInfo parameter)
+		{
+			if (TypeManager.optional_attribute_type == null)
+				return false;
+
+			object[] attrs = parameter.GetCustomAttributes (TypeManager.optional_attribute_type, false);
+			return attrs != null && attrs.Length > 0;
+		}
+
 		public Type ParameterType (int pos)
 		{
 			if (last_arg_is_params && pos >= pi.Length - 1)
@@ -151,14 +160,14 @@ namespace Mono.CSharp {
 			Type t = pi [pos].ParameterType;
 			if (t.IsByRef){
 				if ((pi [pos].Attributes & ParameterAttributes.Out) != 0)
-					return (pi [pos].IsOptional ? Parameter.Modifier.OPTIONAL : 0) |
+					return ((pi [pos].IsOptional || HasOptionalAttribute (pi [pos])) ? Parameter.Modifier.OPTIONAL : 0) |
 						Parameter.Modifier.ISBYREF | Parameter.Modifier.OUT;
 				else
-					return (pi [pos].IsOptional ? Parameter.Modifier.OPTIONAL : 0) |
+					return ((pi [pos].IsOptional || HasOptionalAttribute (pi [pos])) ? Parameter.Modifier.OPTIONAL : 0) |
 						Parameter.Modifier.ISBYREF | Parameter.Modifier.REF;
 			}
 			
-			return pi [pos].IsOptional ? Parameter.Modifier.OPTIONAL : Parameter.Modifier.NONE;
+			return (pi [pos].IsOptional || HasOptionalAttribute (pi [pos])) ? Parameter.Modifier.OPTIONAL : Parameter.Modifier.NONE;
 		}
 
 		public int Count {

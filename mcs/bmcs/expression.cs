@@ -5895,7 +5895,18 @@ namespace Mono.CSharp {
 
 			try {
 				ParameterInfo[] parameters = mb.GetParameters ();
-				return pos < parameters.Length && parameters [pos].IsOptional;
+				if (pos >= parameters.Length)
+					return false;
+
+				ParameterInfo parameter = parameters [pos];
+				if (parameter.IsOptional)
+					return true;
+
+				if (TypeManager.optional_attribute_type == null)
+					return false;
+
+				object[] attrs = parameter.GetCustomAttributes (TypeManager.optional_attribute_type, false);
+				return attrs != null && attrs.Length > 0;
 			} catch (NotSupportedException) {
 				return false;
 			}
@@ -5947,12 +5958,30 @@ namespace Mono.CSharp {
 
 				if (parameters != null &&
 				    pos < parameters.Length &&
-				    parameters [pos].IsOptional) {
+				    IsOptionalParameter (mb, pd, pos)) {
 					object default_value;
 					try {
 						default_value = parameters [pos].DefaultValue;
 					} catch {
 						default_value = Missing.Value;
+					}
+
+					// Old Mono reflection reports imported decimal defaults as
+					// DefaultValue == null with DecimalConstantAttribute present.
+					// Treat that as "attribute-backed default still needed" rather
+					// than as an actual Nothing/default(T) constant.
+					if (default_value == null &&
+					    parameter_type == TypeManager.decimal_type)
+						default_value = Missing.Value;
+
+					if ((default_value == Missing.Value || default_value == DBNull.Value) &&
+					    TypeManager.decimal_constant_attribute_type != null) {
+						object[] attrs = parameters [pos].GetCustomAttributes (TypeManager.decimal_constant_attribute_type, false);
+						if (attrs != null && attrs.Length > 0) {
+							PropertyInfo value_property = attrs [0].GetType ().GetProperty ("Value");
+							if (value_property != null)
+								default_value = value_property.GetValue (attrs [0], null);
+						}
 					}
 
 					if (default_value != Missing.Value &&
@@ -9325,10 +9354,28 @@ namespace Mono.CSharp {
 				      "type name instead");
 		}
 
+		static Type IdenticalNameRuleType (EmitContext ec, Expression resolved)
+		{
+			PropertyGroupExpr property_group = resolved as PropertyGroupExpr;
+			if (property_group != null) {
+				// VB's identical type/member-name rule applies to properties too.
+				// Property groups carry Object until they are narrowed to a real
+				// zero-index property, so inspect that property type instead.
+				PropertyExpr property = property_group.ResolveUniqueZeroIndexProperty (ec);
+				if (property == null)
+					property = property_group.ResolveSingleProperty (ec);
+				if (property != null)
+					return property.Type;
+			}
+
+			return resolved != null ? resolved.Type : null;
+		}
+
 		public static bool IdenticalNameAndTypeName (EmitContext ec, Expression left_original, Expression left, Location loc)
 		{
 			SimpleName sn = left_original as SimpleName;
-			if (sn == null || left == null || left.Type.Name != sn.Name)
+			Type resolved_type = IdenticalNameRuleType (ec, left);
+			if (sn == null || resolved_type == null || resolved_type.Name != sn.Name)
 				return false;
 
 			return ec.DeclSpace.LookupType (sn.Name, true, loc) != null;
@@ -9551,6 +9598,10 @@ namespace Mono.CSharp {
 			if (expr == null)
 				return null;
 
+			TypeExpr identical_name_type = null;
+			if (!(expr is TypeExpr) && IdenticalNameAndTypeName (ec, original, expr, loc))
+				identical_name_type = ((SimpleName) original).ResolveAsTypeStep (ec) as TypeExpr;
+
 			if (expr is Namespace) {
 				Namespace ns = (Namespace) expr;
 				string lookup_id = MemberName.MakeName (Identifier, args);
@@ -9636,6 +9687,17 @@ namespace Mono.CSharp {
 				string lookup_id = MemberName.MakeName (Identifier, args);
 				member_lookup = MemberLookup (
 					ec, expr_type, expr_type, lookup_id, loc);
+			}
+			if (member_lookup == null && identical_name_type != null) {
+				expr = identical_name_type;
+				expr_type = expr.Type;
+				member_lookup = MemberLookup (
+					ec, expr_type, expr_type, Identifier, loc);
+				if ((member_lookup == null) && (args != null)) {
+					string lookup_id = MemberName.MakeName (Identifier, args);
+					member_lookup = MemberLookup (
+						ec, expr_type, expr_type, lookup_id, loc);
+				}
 			}
 			if (member_lookup == null) {
 				MemberLookupFailed (

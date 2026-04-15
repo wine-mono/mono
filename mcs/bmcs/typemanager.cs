@@ -79,6 +79,7 @@ public partial class TypeManager {
 	static public Type unverifiable_code_type;
 	static public Type methodimpl_attr_type;
 	static public Type marshal_as_attr_type;
+	static public Type optional_attribute_type;
 	static public Type param_array_type;
 	static public Type guid_attr_type;
 	static public Type void_ptr_type;
@@ -248,6 +249,7 @@ public partial class TypeManager {
 	//
 	static public ConstructorInfo object_ctor;
 	static public ConstructorInfo cons_param_array_attribute;
+	static public ConstructorInfo cons_optional_attribute;
 	static public ConstructorInfo void_decimal_ctor_five_args;
 	static public ConstructorInfo void_decimal_ctor_int_arg;
 	static public ConstructorInfo unverifiable_code_ctor;
@@ -1379,6 +1381,7 @@ public partial class TypeManager {
 		attribute_type       = CoreLookupType ("System.Attribute");
 		attribute_usage_type = CoreLookupType ("System.AttributeUsageAttribute");
 		dllimport_type       = CoreLookupType ("System.Runtime.InteropServices.DllImportAttribute");
+		optional_attribute_type = CoreLookupType ("System.Runtime.InteropServices.OptionalAttribute");
 		methodimpl_attr_type = CoreLookupType ("System.Runtime.CompilerServices.MethodImplAttribute");
 		marshal_as_attr_type = CoreLookupType ("System.Runtime.InteropServices.MarshalAsAttribute");
 		param_array_type     = CoreLookupType ("System.ParamArrayAttribute");
@@ -1739,6 +1742,9 @@ public partial class TypeManager {
 		//
 		cons_param_array_attribute = GetConstructor (
 			param_array_type, void_arg);
+
+		cons_optional_attribute = GetConstructor (
+			optional_attribute_type, void_arg);
 
 		unverifiable_code_ctor = GetConstructor (
 			unverifiable_code_type, void_arg);
