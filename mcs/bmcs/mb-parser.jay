@@ -256,8 +256,6 @@ namespace Mono.CSharp
 		bool expecting_global_attribs = false;
 		bool expecting_local_attribs = false;
 
-		bool local_attrib_section_added = false;
-
 		///FIXME
 		ArrayList current_rank_specifiers;
 
@@ -858,13 +856,12 @@ opt_attributes
 	  { 
 		  current_attributes = null;
 	  }
- 	| attribute_sections 	
+	| attribute_sections 	
 	  { 
 	  	$$ = $1; 
-		local_attrib_section_added = false;
 		current_attributes = (Attributes) $1;
 	  }
- 	;
+	;
 
 attribute_sections
 	:  attribute_section	
@@ -877,7 +874,6 @@ attribute_sections
 		}
 		
 		if (expecting_local_attribs) {
-			local_attrib_section_added = true;
 			allow_global_attribs = false;
 
 			$$ = new Attributes ((ArrayList) $1);
@@ -902,19 +898,13 @@ attribute_sections
 			ArrayList attrs = (ArrayList) $3;
 
 			if (expecting_local_attribs) {
-				if (local_attrib_section_added) {
-					expecting_local_attribs = false;
-					expecting_global_attribs = false;
-					Report.Error (30205, (Location) $2, "Multiple attribute sections may not be used; Coalesce multiple attribute sections in to a single attribute section");
-					break;
-				}
-
+				// VB permits multiple adjacent local attribute sections on the
+				// same declaration; merge them into one Attributes bag here.
 				if ($1 == null)
 					$$ = new Attributes (attrs);
 				else 
 					((Attributes) $1).AddAttributes (attrs);
 
-				local_attrib_section_added = true;
 				allow_global_attribs = false;
 			}
 
