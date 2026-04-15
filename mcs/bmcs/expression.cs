@@ -6164,6 +6164,13 @@ namespace Mono.CSharp {
 			ParameterData best_pd = GetParameterData (best);
 		
 			int cand_count = candidate_pd.Count;
+			int best_count = best_pd.Count;
+			bool cand_declares_params =
+				cand_count > 0 &&
+				candidate_pd.ParameterModifier (cand_count - 1) == Parameter.Modifier.PARAMS;
+			bool best_declares_params =
+				best_count > 0 &&
+				best_pd.ParameterModifier (best_count - 1) == Parameter.Modifier.PARAMS;
 
 			//
 			// If there is no best method, than this one
@@ -6183,13 +6190,24 @@ namespace Mono.CSharp {
 			//
 			// We cant tell if IFoo.DoIt is better than IBar.DoIt
 			//
-			// However, we have to consider that
-			// Trim (); is better than Trim (params char[] chars);
-                        //
-			if (cand_count == 0 && argument_count == 0)
-				return !candidate_params && best_params;
+			// VB overload-resolution tie-break 71 prefers a candidate that does
+			// not declare ParamArray over one that does, even when the ParamArray
+			// method is applicable with the current argument count. Without this,
+			// zero-argument calls like Trim() are left ambiguous against
+			// Trim(ParamArray Char()).
+			if (cand_declares_params != best_declares_params)
+				return !cand_declares_params && best_declares_params;
 
-			if ((candidate_pd.ParameterModifier (cand_count - 1) != Parameter.Modifier.PARAMS) &&
+			if (cand_declares_params && best_declares_params) {
+				int candidate_params_arguments = Math.Max (0, argument_count - (cand_count - 1));
+				int best_params_arguments = Math.Max (0, argument_count - (best_count - 1));
+
+				if (candidate_params_arguments != best_params_arguments)
+					return candidate_params_arguments < best_params_arguments;
+			}
+
+			if (cand_count > 0 &&
+			    (candidate_pd.ParameterModifier (cand_count - 1) != Parameter.Modifier.PARAMS) &&
 			    (candidate_pd.ParameterModifier (cand_count - 1) != Parameter.Modifier.ARGLIST))
 				if (!CanMatchOptionalArgumentCount (candidate, candidate_pd, argument_count))
 					return false;
@@ -6249,7 +6267,6 @@ namespace Mono.CSharp {
 			// only one of them is generic, the non-generic one wins.
 			//
 			if (is_equal) {
-				int best_count = best_pd.Count;
 				int candidate_missing = cand_count - argument_count;
 				int best_missing = best_count - argument_count;
 
