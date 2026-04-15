@@ -594,7 +594,9 @@ namespace Mono.CSharp {
 				if (target_type.IsGenericParameter)
 					return TypeParameter_to_Null (target_type);
 
-				if (TypeManager.IsNullableType (target_type))
+				// In VB, `Nothing` in a known target-type context can bind to any
+				// value type parameter as that type's default value.
+				if (target_type.IsValueType)
 					return true;
 			}
 
