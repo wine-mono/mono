@@ -473,6 +473,13 @@ namespace Mono.CSharp {
 					return null;
 				}
 				
+				if (member is PropertyGroupExpr) {
+					PropertyGroupExpr pg = (PropertyGroupExpr) member;
+					member = pg.ResolveUniqueZeroIndexProperty (ec);
+					if (member == null)
+						member = pg.ResolveSingleProperty (ec);
+				}
+
 				if (!(member is PropertyExpr || member is FieldExpr)) {
 					Error_InvalidNamedArgument (member_name);
 					return null;
@@ -488,7 +495,12 @@ namespace Mono.CSharp {
 					PropertyExpr pe = (PropertyExpr) member;
 					PropertyInfo pi = pe.PropertyInfo;
 
-					if (!pi.CanWrite || !pi.CanRead) {
+					// Attribute named arguments are limited to public read-write
+					// instance properties on the attribute type.  PropertyInfo
+					// exposes that through the public accessor methods, not through
+					// CanRead/CanWrite, which can be false on looked-up property
+					// instances even when the declaring property is valid here.
+					if (pi.GetGetMethod () == null || pi.GetSetMethod () == null) {
 						Report.SymbolRelatedToPreviousError (pi);
 						Error_InvalidNamedArgument (member_name);
 						return null;
