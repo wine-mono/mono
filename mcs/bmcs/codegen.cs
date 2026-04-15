@@ -700,6 +700,14 @@ namespace Mono.CSharp {
 						null, FlowBranching.BranchingType.Block, block, loc);
 
 					if (!block.Resolve (this)) {
+						// Candidate probing can fail silently during binding, but a
+						// top-level method body must not. If resolution bubbles all
+						// the way out here without reporting a diagnostic, surface it
+						// immediately instead of letting Reflection.Emit trip over a
+						// bodyless method later.
+						if (Report.Errors == errors)
+							Report.Error (-100, loc,
+								"Internal error: top-level block resolution failed without reporting a diagnostic");
 						current_flow_branching = null;
 						DoFlowAnalysis = old_do_flow_analysis;
 						return false;
