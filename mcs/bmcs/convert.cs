@@ -138,6 +138,23 @@ namespace Mono.CSharp {
 			return null;
 		}
 
+		static bool TryGetNullableWideningUnderlyingType (Type expr_type, Type target_type, out Type underlying_type)
+		{
+			underlying_type = null;
+
+			// VB preserves the underlying conversion classification when the
+			// target is Nullable(Of S): if T widens to S, then T also widens to
+			// S?. Keep the shape test in one helper so applicability and
+			// emission do not drift apart again.
+			if (!TypeManager.IsNullableType (target_type) ||
+			    TypeManager.IsNullableType (expr_type) ||
+			    expr_type == TypeManager.null_type)
+				return false;
+
+			underlying_type = TypeManager.GetTypeArguments (target_type) [0];
+			return true;
+		}
+
 		static EmptyExpression MyEmptyExpr;
 		static public Expression WideningReferenceConversion (EmitContext ec, Expression expr, Type target_type)
 		{
@@ -644,14 +661,8 @@ namespace Mono.CSharp {
 			if (expr_type.Equals (target_type))
 				return true;
 
-			// VB nullable value-type conversions preserve the classification
-			// of the underlying conversion: if T widens to S, then T also
-			// widens to S?. Overload applicability has to see the same rule
-			// as the later conversion emitter.
-			if (TypeManager.IsNullableType (target_type) &&
-			    !TypeManager.IsNullableType (expr_type) &&
-			    expr_type != TypeManager.null_type) {
-				Type underlying = TypeManager.GetTypeArguments (target_type) [0];
+			Type underlying;
+			if (TryGetNullableWideningUnderlyingType (expr_type, target_type, out underlying)) {
 				if (WideningStandardConversionExists (ec, expr, underlying))
 					return true;
 			}
@@ -1334,14 +1345,8 @@ namespace Mono.CSharp {
 				return new Nullable.LiftedConversion (
 					expr, target_type, false, false, loc).Resolve (ec);
 
-			// VB nullable value-type conversions preserve the underlying
-			// classification: if T widens to S, then T widens to S?. Lower the
-			// source to the nullable's underlying type first, then wrap it in
-			// the Nullable(Of S) constructor.
-			if (TypeManager.IsNullableType (target_type) &&
-			    !TypeManager.IsNullableType (expr_type) &&
-			    expr_type != TypeManager.null_type) {
-				Type underlying = TypeManager.GetTypeArguments (target_type) [0];
+			Type underlying;
+			if (TryGetNullableWideningUnderlyingType (expr_type, target_type, out underlying)) {
 				Expression widened = WideningConversionStandard (ec, expr, underlying, loc);
 				if (widened != null) {
 					ArrayList args = new ArrayList ();
