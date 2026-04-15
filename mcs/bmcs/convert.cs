@@ -1931,17 +1931,29 @@ namespace Mono.CSharp {
 			if (expr_type == TypeManager.bool_type) {
 
 				//
-				// From boolean to byte, short, int,
-				// long, float, double, decimal
+				// VB defines Boolean->numeric as False = 0 and
+				// True = all bits set. Signed targets therefore see
+				// -1, while unsigned targets see their max value.
 				//
 
+				if (real_target_type == TypeManager.sbyte_type)
+					return new BooleanToNumericCast (expr, target_type, OpCodes.Conv_I1);
 				if (real_target_type == TypeManager.byte_type)
 					return new BooleanToNumericCast (expr, target_type, OpCodes.Conv_U1);
 				if (real_target_type == TypeManager.short_type)
 					return new BooleanToNumericCast (expr, target_type, OpCodes.Conv_I2);
+				if (real_target_type == TypeManager.ushort_type)
+					return new BooleanToNumericCast (expr, target_type, OpCodes.Conv_U2);
 				if (real_target_type == TypeManager.int32_type)
 					return new BooleanToNumericCast (expr, target_type, OpCodes.Conv_I4);
+				if (real_target_type == TypeManager.uint32_type)
+					return new BooleanToNumericCast (expr, target_type, OpCodes.Conv_U4);
 				if (real_target_type == TypeManager.int64_type)
+					return new BooleanToNumericCast (expr, target_type, OpCodes.Conv_I8);
+				if (real_target_type == TypeManager.uint64_type)
+					// Conv_U8 zero-extends the intermediate Int32 -1 to
+					// 0x00000000FFFFFFFF; VB's all-bits-set rule needs the
+					// 64-bit pattern 0xFFFFFFFFFFFFFFFF instead.
 					return new BooleanToNumericCast (expr, target_type, OpCodes.Conv_I8);
 				if (real_target_type == TypeManager.float_type)
 					return new BooleanToNumericCast (expr, target_type, OpCodes.Conv_R4);
