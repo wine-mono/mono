@@ -5,11 +5,13 @@ SUBDIRS := build jay mcs class nunit24 ilasm tools tests errors docs
 basic_SUBDIRS := build jay mcs class
 net_1_1_bootstrap_SUBDIRS := build jay mcs class ilasm tools
 net_2_0_bootstrap_SUBDIRS := build jay mcs class ilasm tools
-net_2_0_SUBDIRS := build jay mcs class nunit24 ilasm tools tests errors docs
+net_2_0_SUBDIRS := build jay mcs class bmcs nunit24 ilasm tools tests errors docs
 net_2_1_bootstrap_SUBDIRS := build mcs class
 net_2_1_raw_SUBDIRS := build mcs class tools
 net_2_1_SUBDIRS := tools tests errors
 net_3_5_SUBDIRS := build class
+
+DIST_ONLY_SUBDIRS := bmcs
 
 # List of test subdirs that should pass 100%
 centum_tests := \
