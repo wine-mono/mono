@@ -3909,6 +3909,11 @@ namespace Mono.CSharp {
 					
 				break;
 
+			case Operator.Division:
+			case Operator.Modulus:
+			case Operator.IntegerDivision:
+				break;
+
 			case Operator.Like:
 			case Operator.Concatenation:
 				return Convert.ExplicitVBConversion(ec, expr, TypeManager.string_type, expr.Location);
@@ -3923,6 +3928,20 @@ namespace Mono.CSharp {
 				return Convert.ExplicitVBConversion(ec, expr, TypeManager.double_type, expr.Location);
 				break;
 
+			}
+
+			if (target_type == null && TypeManager.IsEnumType (operand_type)) {
+				switch (oper) {
+				case Operator.Multiply:
+				case Operator.Division:
+				case Operator.Modulus:
+				case Operator.IntegerDivision:
+					// VB keeps enum-specific + / - behavior in TryResolveEnumArithmetic.
+					// The remaining arithmetic operators first widen enums to their
+					// underlying integral type and then use the ordinary numeric binder.
+					target_type = TypeManager.EnumToUnderlying (operand_type);
+					break;
+				}
 			}
 
 			if (target_type != null)
