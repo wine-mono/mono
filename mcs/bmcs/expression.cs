@@ -7073,6 +7073,38 @@ namespace Mono.CSharp {
 			return (new ParameterizedPropertyAccess (property, Arguments, loc)).Resolve (ec);
 		}
 
+		Expression ResolvePropertyInvocation (EmitContext ec, PropertyGroupExpr property_group)
+		{
+			if (Arguments != null) {
+				foreach (Argument a in Arguments) {
+					if (!a.Resolve (ec, loc))
+						return null;
+				}
+			}
+
+			if (Arguments == null || Arguments.Count == 0)
+				return property_group.Resolve (ec);
+
+			PropertyExpr property = property_group.ResolveGetterProperty (ec, Arguments, true, false);
+			if (property != null)
+				return (new ParameterizedPropertyAccess (property, Arguments, loc)).Resolve (ec);
+
+			PropertyExpr value_property = property_group.ResolveGetterProperty (ec, null, true, true);
+			if (value_property == null)
+				value_property = property_group.ResolveUniqueZeroIndexProperty (ec);
+
+			if (value_property != null) {
+				Expression value = value_property.Resolve (ec);
+				if (value == null)
+					return null;
+
+				return ResolveValueIndexInvocation (ec, value);
+			}
+
+			property_group.ResolveGetterProperty (ec, Arguments, false, false);
+			return null;
+		}
+
 		Expression ResolvePropertyInvocationLValue (EmitContext ec, PropertyExpr property, Expression right_side)
 		{
 			if (Arguments != null){
@@ -7098,6 +7130,42 @@ namespace Mono.CSharp {
 			}
 
 			return (new ParameterizedPropertyAccess (property, Arguments, loc)).ResolveLValue (ec, right_side);
+		}
+
+		Expression ResolvePropertyInvocationLValue (EmitContext ec, PropertyGroupExpr property_group,
+			Expression right_side)
+		{
+			if (Arguments != null) {
+				foreach (Argument a in Arguments) {
+					if (!a.Resolve (ec, loc))
+						return null;
+				}
+			}
+
+			if (Arguments == null || Arguments.Count == 0)
+				return property_group.ResolveLValue (ec, right_side);
+
+			ArrayList set_arguments = (ArrayList) Arguments.Clone ();
+			set_arguments.Add (new Argument (right_side, Argument.AType.Expression));
+
+			PropertyExpr property = property_group.ResolveSetterProperty (ec, set_arguments, true, false);
+			if (property != null)
+				return (new ParameterizedPropertyAccess (property, Arguments, loc)).ResolveLValue (ec, right_side);
+
+			PropertyExpr value_property = property_group.ResolveGetterProperty (ec, null, true, true);
+			if (value_property == null)
+				value_property = property_group.ResolveUniqueZeroIndexProperty (ec);
+
+			if (value_property != null) {
+				Expression value = value_property.Resolve (ec);
+				if (value == null)
+					return null;
+
+				return ResolveValueIndexInvocationLValue (ec, value, right_side);
+			}
+
+			property_group.ResolveSetterProperty (ec, set_arguments, false, false);
+			return null;
 		}
 
 		ArrayList ExtractIndexExpressions ()
@@ -7150,6 +7218,10 @@ namespace Mono.CSharp {
 			PropertyExpr property = expr as PropertyExpr;
 			if (property != null)
 				return ResolvePropertyInvocation (ec, property);
+
+			PropertyGroupExpr property_group = expr as PropertyGroupExpr;
+			if (property_group != null)
+				return ResolvePropertyInvocation (ec, property_group);
 
 			if (!(expr is MethodGroupExpr)) {
 				Type expr_type = expr.Type;
@@ -7262,6 +7334,10 @@ namespace Mono.CSharp {
 			PropertyExpr property = expr as PropertyExpr;
 			if (property != null)
 				return ResolvePropertyInvocationLValue (ec, property, right_side);
+
+			PropertyGroupExpr property_group = expr as PropertyGroupExpr;
+			if (property_group != null)
+				return ResolvePropertyInvocationLValue (ec, property_group, right_side);
 
 			if (!(expr is MethodGroupExpr) && expr.Type != null && !TypeManager.IsDelegateType (expr.Type))
 				return ResolveValueIndexInvocationLValue (ec, right_side);
@@ -9589,7 +9665,7 @@ namespace Mono.CSharp {
 					Report.Error (307, loc, "The event `{0}' cannot " +
 						      "be used with type arguments", full_name);
 					return null;
-				} else if (member_lookup is PropertyExpr) {
+				} else if (member_lookup is PropertyExpr || member_lookup is PropertyGroupExpr) {
 					Report.Error (307, loc, "The property `{0}' cannot " +
 						      "be used with type arguments", full_name);
 					return null;
@@ -9609,9 +9685,11 @@ namespace Mono.CSharp {
 				return mg.ResolveGeneric (ec, args);
 			}
 
-			// Invocation needs the raw PropertyExpr so it can distinguish
-			// empty-paren property access from indexed property access.
-			if (preserve_property_group && right_side == null && member_lookup is PropertyExpr)
+			// Invocation needs the raw property group so it can distinguish
+			// empty-paren property access, overloaded properties, and indexing
+			// of the value returned by a zero-arg property.
+			if (preserve_property_group && right_side == null &&
+			    (member_lookup is PropertyExpr || member_lookup is PropertyGroupExpr))
 				return member_lookup;
 
 				// The following DoResolve/DoResolveLValue will do the definite assignment
@@ -10855,7 +10933,7 @@ namespace Mono.CSharp {
 					Report.Error (307, loc, "The event `{0}' cannot " +
 						      "be used with type arguments", full_name);
 					return null;
-				} else if (member_lookup is PropertyExpr) {
+				} else if (member_lookup is PropertyExpr || member_lookup is PropertyGroupExpr) {
 					Report.Error (307, loc, "The property `{0}' cannot " +
 						      "be used with type arguments", full_name);
 					return null;
@@ -10875,11 +10953,11 @@ namespace Mono.CSharp {
 			if (e == null)
 				return null;
 
-			if (e is PropertyExpr){
-				PropertyExpr pe = (PropertyExpr) e;
+			if (e is PropertyExpr)
+				((PropertyExpr) e).IsBase = true;
 
-				pe.IsBase = true;
-			}
+			if (e is PropertyGroupExpr)
+				((PropertyGroupExpr) e).IsBase = true;
 
 			if (e is MethodGroupExpr)
 				((MethodGroupExpr) e).IsBase = true;

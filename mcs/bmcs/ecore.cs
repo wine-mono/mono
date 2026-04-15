@@ -654,6 +654,9 @@ namespace Mono.CSharp {
 			if (mi [0] is MethodBase)
 				return new MethodGroupExpr (mi, loc);
 
+			if (mi [0] is PropertyInfo)
+				return new PropertyGroupExpr (mi, loc);
+
 			if (count > 1)
 				return null;
 
@@ -2644,10 +2647,11 @@ namespace Mono.CSharp {
 					return null;
 				}
 
-				// Invocation needs the raw PropertyExpr here for the same reason
-				// as MemberAccess: VB reclassifies a bare property group through
-				// invocation/index syntax instead of forcing direct accessor calls.
-					if (preserve_property_group && right_side == null && e is PropertyExpr)
+				// Invocation needs the raw property group here so it can decide
+				// between overloaded property access and indexing the value
+				// returned by a zero-arg property.
+					if (preserve_property_group && right_side == null &&
+					    (e is PropertyExpr || e is PropertyGroupExpr))
 						return e;
 
 					if (right_side != null)
@@ -3614,7 +3618,276 @@ namespace Mono.CSharp {
 			Report.Error (-215, "Report this: Taking the address of a remapped parameter not supported");
 		}
 	}
-	
+
+	//
+	// VB allows overloaded properties. Preserve the reflected property set until
+	// the use-site tells us whether this is bare access, parameterized property
+	// access, or indexing of the value returned by a zero-arg property.
+	//
+	public class PropertyGroupExpr : Expression, IMemberExpr {
+		public readonly PropertyInfo[] Properties;
+		Expression instance_expression;
+		bool is_base;
+
+		public PropertyGroupExpr (MemberInfo[] mi, Location l)
+		{
+			Properties = new PropertyInfo[mi.Length];
+			mi.CopyTo (Properties, 0);
+			eclass = ExprClass.PropertyAccess;
+			type = TypeManager.object_type;
+			loc = l;
+		}
+
+		public string Name {
+			get {
+				return Properties[Properties.Length - 1].Name;
+			}
+		}
+
+		public bool IsInstance {
+			get {
+				foreach (PropertyInfo pi in Properties) {
+					MethodInfo accessor = pi.GetGetMethod (true);
+					if (accessor == null)
+						accessor = pi.GetSetMethod (true);
+
+					if (accessor != null && !accessor.IsStatic)
+						return true;
+				}
+
+				return false;
+			}
+		}
+
+		public bool IsStatic {
+			get {
+				foreach (PropertyInfo pi in Properties) {
+					MethodInfo accessor = pi.GetGetMethod (true);
+					if (accessor == null)
+						accessor = pi.GetSetMethod (true);
+
+					if (accessor != null && accessor.IsStatic)
+						return true;
+				}
+
+				return false;
+			}
+		}
+
+		public Type DeclaringType {
+			get {
+				return Properties[Properties.Length - 1].DeclaringType;
+			}
+		}
+
+		public Expression InstanceExpression {
+			get {
+				return instance_expression;
+			}
+
+			set {
+				instance_expression = value;
+			}
+		}
+
+		public bool IsBase {
+			get {
+				return is_base;
+			}
+			set {
+				is_base = value;
+			}
+		}
+
+		static int GetPropertyIndexArgumentCount (PropertyInfo pi)
+		{
+			MethodInfo getter = pi.GetGetMethod (true);
+			if (getter != null)
+				return TypeManager.GetArgumentTypes (getter).Length;
+
+			MethodInfo setter = pi.GetSetMethod (true);
+			if (setter != null)
+				return TypeManager.GetArgumentTypes (setter).Length - 1;
+
+			return -1;
+		}
+
+		static Type[] GetPropertyIndexArgumentTypes (PropertyInfo pi)
+		{
+			MethodInfo getter = pi.GetGetMethod (true);
+			if (getter != null)
+				return TypeManager.GetArgumentTypes (getter);
+
+			MethodInfo setter = pi.GetSetMethod (true);
+			if (setter == null)
+				return Type.EmptyTypes;
+
+			Type[] set_arguments = TypeManager.GetArgumentTypes (setter);
+			Type[] index_arguments = new Type[set_arguments.Length - 1];
+			Array.Copy (set_arguments, index_arguments, index_arguments.Length);
+			return index_arguments;
+		}
+
+		static bool SamePropertySignature (PropertyInfo a, PropertyInfo b)
+		{
+			if (!TypeManager.IsEqual (a.PropertyType, b.PropertyType))
+				return false;
+
+			Type[] a_args = GetPropertyIndexArgumentTypes (a);
+			Type[] b_args = GetPropertyIndexArgumentTypes (b);
+			if (a_args.Length != b_args.Length)
+				return false;
+
+			for (int i = 0; i < a_args.Length; ++i) {
+				if (!TypeManager.IsEqual (a_args[i], b_args[i]))
+					return false;
+			}
+
+			return true;
+		}
+
+		MethodGroupExpr CreateAccessorGroup (bool want_setter, bool zero_index_only)
+		{
+			ArrayList accessors = new ArrayList ();
+
+			foreach (PropertyInfo pi in Properties) {
+				if (zero_index_only && GetPropertyIndexArgumentCount (pi) != 0)
+					continue;
+
+				MethodInfo accessor = want_setter
+					? pi.GetSetMethod (true)
+					: pi.GetGetMethod (true);
+				if (accessor != null)
+					accessors.Add (accessor);
+			}
+
+			if (accessors.Count == 0)
+				return null;
+
+			MethodGroupExpr mg = new MethodGroupExpr (accessors, loc);
+			mg.InstanceExpression = instance_expression;
+			mg.IsBase = is_base;
+			return mg;
+		}
+
+		PropertyExpr CreateBoundProperty (PropertyInfo pi)
+		{
+			PropertyExpr property = new PropertyExpr (
+				pi, pi.GetGetMethod (true), pi.GetSetMethod (true), loc);
+			property.InstanceExpression = instance_expression;
+			property.IsBase = is_base;
+			return property;
+		}
+
+		PropertyInfo FindPropertyByAccessor (MethodInfo accessor)
+		{
+			foreach (PropertyInfo pi in Properties) {
+				if (pi.GetGetMethod (true) == accessor || pi.GetSetMethod (true) == accessor)
+					return pi;
+			}
+
+			return null;
+		}
+
+		PropertyExpr ResolvePropertyFromAccessorGroup (EmitContext ec, MethodGroupExpr mg,
+			ArrayList arguments, bool may_fail)
+		{
+			if (mg == null)
+				return null;
+
+			MethodBase accessor = Invocation.OverloadResolve (ec, mg, arguments, may_fail, loc);
+			if (accessor == null)
+				return null;
+
+			PropertyInfo pi = FindPropertyByAccessor ((MethodInfo) accessor);
+			if (pi == null)
+				throw new InternalErrorException ();
+
+			return CreateBoundProperty (pi);
+		}
+
+		public PropertyExpr ResolveGetterProperty (EmitContext ec, ArrayList arguments,
+			bool may_fail, bool zero_index_only)
+		{
+			return ResolvePropertyFromAccessorGroup (
+				ec, CreateAccessorGroup (false, zero_index_only), arguments, may_fail);
+		}
+
+		public PropertyExpr ResolveSetterProperty (EmitContext ec, ArrayList arguments,
+			bool may_fail, bool zero_index_only)
+		{
+			return ResolvePropertyFromAccessorGroup (
+				ec, CreateAccessorGroup (true, zero_index_only), arguments, may_fail);
+		}
+
+		public PropertyExpr ResolveUniqueZeroIndexProperty (EmitContext ec)
+		{
+			PropertyInfo found = null;
+
+			foreach (PropertyInfo pi in Properties) {
+				if (GetPropertyIndexArgumentCount (pi) != 0)
+					continue;
+
+				if (found != null && found != pi)
+					return null;
+
+				found = pi;
+			}
+
+			return found != null ? CreateBoundProperty (found) : null;
+		}
+
+		public PropertyExpr ResolveSingleProperty (EmitContext ec)
+		{
+			PropertyInfo found = Properties[Properties.Length - 1];
+
+			for (int i = 0; i < Properties.Length - 1; ++i) {
+				if (!SamePropertySignature (found, Properties[i]))
+					return null;
+			}
+
+			return CreateBoundProperty (found);
+		}
+
+		public override Expression DoResolve (EmitContext ec)
+		{
+			PropertyExpr property = ResolveGetterProperty (ec, null, true, true);
+			if (property == null)
+				property = ResolveUniqueZeroIndexProperty (ec);
+			if (property == null)
+				property = ResolveSingleProperty (ec);
+
+			if (property != null)
+				return property.Resolve (ec);
+
+			ResolveGetterProperty (ec, null, false, false);
+			return null;
+		}
+
+		public override Expression DoResolveLValue (EmitContext ec, Expression right_side)
+		{
+			ArrayList set_arguments = new ArrayList (1);
+			set_arguments.Add (new Argument (right_side, Argument.AType.Expression));
+
+			PropertyExpr property = ResolveSetterProperty (ec, set_arguments, true, true);
+			if (property == null)
+				property = ResolveUniqueZeroIndexProperty (ec);
+			if (property == null)
+				property = ResolveSingleProperty (ec);
+
+			if (property != null)
+				return property.ResolveLValue (ec, right_side);
+
+			ResolveSetterProperty (ec, set_arguments, false, false);
+			return null;
+		}
+
+		public override void Emit (EmitContext ec)
+		{
+			throw new InternalErrorException ("Unresolved property group reached Emit()");
+		}
+	}
+
 	/// <summary>
 	///   Expression that evaluates to a Property.  The Assign class
 	///   might set the `Value' expression if we are in an assignment.
@@ -3638,16 +3911,41 @@ namespace Mono.CSharp {
 
 		internal static PtrHashtable AccessorTable = new PtrHashtable (); 
 
-		public PropertyExpr (EmitContext ec, PropertyInfo pi, Location l)
+		void Initialize (Type property_type, Location l)
 		{
-			PropertyInfo = pi;
 			eclass = ExprClass.PropertyAccess;
 			is_static = false;
 			loc = l;
 
-			type = TypeManager.TypeToCoreType (pi.PropertyType);
+			type = TypeManager.TypeToCoreType (property_type);
+		}
 
+		void RegisterAccessor (MethodInfo accessor)
+		{
+			if (accessor == null)
+				return;
+
+			AccessorTable [accessor] = PropertyInfo;
+			is_static = accessor.IsStatic;
+		}
+
+		public PropertyExpr (EmitContext ec, PropertyInfo pi, Location l)
+		{
+			PropertyInfo = pi;
+			Initialize (pi.PropertyType, l);
 			ResolveAccessors (ec);
+		}
+
+		internal PropertyExpr (PropertyInfo pi, MethodInfo known_getter, MethodInfo known_setter, Location l)
+		{
+			PropertyInfo = pi;
+			Initialize (pi.PropertyType, l);
+			// Overloaded properties cannot re-find accessors by name: that would
+			// collapse back to the full overload set and lose the chosen slot again.
+			getter = known_getter;
+			setter = known_setter;
+			RegisterAccessor (getter);
+			RegisterAccessor (setter);
 		}
 
 		public string Name {
@@ -3753,15 +4051,8 @@ namespace Mono.CSharp {
 		{
 			FindAccessors (ec.ContainerType);
 
-			if (getter != null) {
-				AccessorTable [getter] = PropertyInfo;
-				is_static = getter.IsStatic;
-			}
-
-			if (setter != null) {
-				AccessorTable [setter] = PropertyInfo;
-				is_static = setter.IsStatic;
-			}
+			RegisterAccessor (getter);
+			RegisterAccessor (setter);
 		}
 
 		bool InstanceResolve (EmitContext ec, bool must_do_cs1540_check)
