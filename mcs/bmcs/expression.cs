@@ -9594,7 +9594,27 @@ namespace Mono.CSharp {
 			//
 
 			Expression original = expr;
-			expr = expr.Resolve (ec, flags | ResolveFlags.Intermediate | ResolveFlags.DisableFlowAnalysis);
+			ConstructedType constructed_left = expr as ConstructedType;
+			if (constructed_left != null) {
+				// VB permits a method group in value context to reclassify as an
+				// implicit zero-argument invocation, so `F(Of T).P` can mean
+				// `F(Of T)().P`. The parser still builds bare `identifier(Of T)`
+				// bases as ConstructedType nodes in expression position, so probe
+				// the expression interpretation first for member-access bases and
+				// fall back to ordinary type resolution when it stays type-shaped.
+				Expression method_like_left = constructed_left.GetSimpleName (ec);
+				Expression resolved_method_like_left = method_like_left.Resolve (
+					ec, flags | ResolveFlags.Intermediate | ResolveFlags.DisableFlowAnalysis);
+				if (resolved_method_like_left != null &&
+				    !(resolved_method_like_left is TypeExpr) &&
+				    !(resolved_method_like_left is Namespace))
+					expr = resolved_method_like_left;
+				else
+					expr = original.Resolve (
+						ec, flags | ResolveFlags.Intermediate | ResolveFlags.DisableFlowAnalysis);
+			} else {
+				expr = expr.Resolve (ec, flags | ResolveFlags.Intermediate | ResolveFlags.DisableFlowAnalysis);
+			}
 			if (expr == null)
 				return null;
 
