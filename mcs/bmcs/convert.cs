@@ -644,6 +644,18 @@ namespace Mono.CSharp {
 			if (expr_type.Equals (target_type))
 				return true;
 
+			// VB nullable value-type conversions preserve the classification
+			// of the underlying conversion: if T widens to S, then T also
+			// widens to S?. Overload applicability has to see the same rule
+			// as the later conversion emitter.
+			if (TypeManager.IsNullableType (target_type) &&
+			    !TypeManager.IsNullableType (expr_type) &&
+			    expr_type != TypeManager.null_type) {
+				Type underlying = TypeManager.GetTypeArguments (target_type) [0];
+				if (WideningStandardConversionExists (ec, expr, underlying))
+					return true;
+			}
+
 			// VB permits an enum value anywhere its underlying integral type
 			// can widen. Normalize here so overload applicability matches the
 			// later conversion emitter.
@@ -1322,15 +1334,18 @@ namespace Mono.CSharp {
 				return new Nullable.LiftedConversion (
 					expr, target_type, false, false, loc).Resolve (ec);
 
-			// VB defines a widening conversion from T to T?.  Emit the
-			// Nullable<T>(T) constructor directly; LiftedConversion only
-			// applies when the source expression is itself nullable.
+			// VB nullable value-type conversions preserve the underlying
+			// classification: if T widens to S, then T widens to S?. Lower the
+			// source to the nullable's underlying type first, then wrap it in
+			// the Nullable(Of S) constructor.
 			if (TypeManager.IsNullableType (target_type) &&
-			    !TypeManager.IsNullableType (expr_type)) {
+			    !TypeManager.IsNullableType (expr_type) &&
+			    expr_type != TypeManager.null_type) {
 				Type underlying = TypeManager.GetTypeArguments (target_type) [0];
-				if (TypeManager.IsEqual (expr_type, underlying)) {
+				Expression widened = WideningConversionStandard (ec, expr, underlying, loc);
+				if (widened != null) {
 					ArrayList args = new ArrayList ();
-					args.Add (new Argument (expr, Argument.AType.Expression));
+					args.Add (new Argument (widened, Argument.AType.Expression));
 					return new New (new TypeExpression (target_type, loc), args, loc).Resolve (ec);
 				}
 			}
