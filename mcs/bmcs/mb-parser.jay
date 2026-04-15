@@ -6251,8 +6251,12 @@ public class VariableDeclaration {
 			foreach (Argument a in n.Arguments)
 				dims.Add (a.Expr);
 		}
-
-		if (varinit != null && varinit.Count == 0)
+		// VB distinguishes 'New T() {}' from an omitted initializer: the empty
+		// braces create a zero-length array when the rank has no explicit bounds.
+		// When bounds are explicit, '{}' is just the no-element form of a sized
+		// array creation and should keep the old null path instead of being
+		// validated like a populated initializer list.
+		if (varinit != null && varinit.Count == 0 && IndexesSpecifiedInRank (dims))
 			varinit = null;
 
 		if (IndexesSpecifiedInRank (dims)) {
