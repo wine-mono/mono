@@ -5337,11 +5337,63 @@ cast_operator
 	| CSTR		{ $$ = TypeManager.system_string_expr; 	}
 	;
 
+// VB gives GetType its own grammar for open generic names such as
+// Dictionary(Of ,). Parse that form here so it goes through bmcs's
+// unbound-generic type path instead of being misread as empty type args.
 get_type_expression
-	: GETTYPE OPEN_PARENS type_in_expression CLOSE_PARENS
+	: GETTYPE OPEN_PARENS get_type_operand CLOSE_PARENS
 	  {
 		$$ = new TypeOf ((Expression) $3, lexer.Location);
   	  }
+	;
+
+get_type_operand
+	: get_type_name
+	  {
+		$$ = ((MemberName) $1).GetTypeExpression (lexer.Location);
+	  }
+	| get_type_name INTERR
+	  {
+		Expression te = ((MemberName) $1).GetTypeExpression (lexer.Location);
+		$$ = new NullableType (te, lexer.Location);
+	  }
+	| builtin_types
+	| builtin_types INTERR
+	  {
+		$$ = new NullableType ((Expression) $1, lexer.Location);
+	  }
+	| get_type_operand rank_specifiers
+	  {
+		string dims = VariableDeclaration.BuildRanks ((ArrayList) $2, true, lexer.Location);
+		$$ = new ComposedCast ((Expression) $1, dims, lexer.Location);
+	  }
+	;
+
+get_type_name
+	: identifier opt_get_type_args
+	  {
+		$$ = new MemberName ((string) $1, (TypeArguments) $2);
+	  }
+	| get_type_name DOT identifier opt_get_type_args
+	  {
+		$$ = new MemberName ((MemberName) $1, (string) $3, (TypeArguments) $4);
+	  }
+	;
+
+opt_get_type_args
+	: /* empty */
+	  { $$ = null; }
+	| OPEN_PARENS_OF type_argument_list CLOSE_PARENS
+	  { $$ = $2; }
+	| OPEN_PARENS_OF open_type_argument_commas CLOSE_PARENS
+	  { $$ = new TypeArguments (((int) $2) + 1, lexer.Location); }
+	;
+
+open_type_argument_commas
+	: COMMA
+	  { $$ = 1; }
+	| open_type_argument_commas COMMA
+	  { $$ = ((int) $1) + 1; }
 	;
 	
 exponentiation_expression
@@ -5801,8 +5853,7 @@ numeric_type
 	;
 
 integral_type
-	:
-	| BYTE		{ $$ = TypeManager.system_byte_expr; }
+	: BYTE		{ $$ = TypeManager.system_byte_expr; }
 	| SBYTE		{ $$ = TypeManager.system_sbyte_expr; }
 	| SHORT		{ $$ = TypeManager.system_int16_expr; }
 	| USHORT	{ $$ = TypeManager.system_uint16_expr; }
