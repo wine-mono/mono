@@ -7314,14 +7314,8 @@ namespace Mono.CSharp {
 				}
 
 				Expression iexpr = mg.InstanceExpression;
-				if (mi.IsStatic && (iexpr != null) && !(iexpr is This)) {
-					if (mg.IdenticalTypeName)
-						mg.InstanceExpression = null;
-					else {
-						MemberAccess.error176 (loc, mi.Name);
-						return null;
-					}
-				}
+				if (mi.IsStatic && (iexpr != null))
+					mg.InstanceExpression = null;
 			} else if (method is ConstructorInfo) {
 				// VB constructor chaining (Me.New/MyBase.New/MyClass.New)
 				// binds as a constructor method group. The invocation still
@@ -9454,12 +9448,8 @@ namespace Mono.CSharp {
 
 						Expression exp = Constantify (real_value, t);
 
-						if (left_is_explicit && !left_is_type && !IdenticalNameAndTypeName (ec, left_original, left, loc)) {
-							Report.SymbolRelatedToPreviousError (c);
-							error176 (loc, c.GetSignatureForError ());
-							return null;
-						}
-					
+						// VB member access ignores an instance qualifier for shared
+						// fields/constants, so constant folding must not reject it.
 						return exp;
 					}
 				}
@@ -9480,12 +9470,6 @@ namespace Mono.CSharp {
 						o = fi.GetValue (fi);
 					
 					if (decl_type.IsSubclassOf (TypeManager.enum_type)) {
-						if (left_is_explicit && !left_is_type &&
-						    !IdenticalNameAndTypeName (ec, left_original, member_lookup, loc)) {
-							error176 (loc, fe.FieldInfo.Name);
-							return null;
-						}					
-						
 						Expression enum_member = MemberLookup (
 							ec, decl_type, "value__", MemberTypes.Field,
 							AllBindingFlags, loc); 
@@ -9503,11 +9487,6 @@ namespace Mono.CSharp {
 					
 					Expression exp = Constantify (o, t);
 
-					if (left_is_explicit && !left_is_type) {
-						error176 (loc, fe.FieldInfo.Name);
-						return null;
-					}
-					
 					return exp;
 				}
 
@@ -9519,7 +9498,7 @@ namespace Mono.CSharp {
 
 				if (member_lookup is EventExpr) {
 					EventExpr ee = (EventExpr) member_lookup;
-					if (!left_is_explicit)
+					if (!left_is_explicit || ee.IsStatic)
 						left = null;
 
 					ee.InstanceExpression = left;
@@ -9548,10 +9527,11 @@ namespace Mono.CSharp {
 						if (IdenticalNameAndTypeName (ec, left_original, left, loc))
 							return member_lookup;
 
-						if (left_is_explicit) {
-							error176 (loc, me.Name);
-							return null;
-						}
+						// VB spec: for early-bound shared member access, any
+						// expression on the left of the period is superfluous and
+						// is not evaluated. Discard it here so later property/event
+						// resolution and emission cannot observe side effects.
+						left = null;
 					}
 
 					//
@@ -9575,7 +9555,8 @@ namespace Mono.CSharp {
 						}
 					}
 
-					if ((mg != null) && IdenticalNameAndTypeName (ec, left_original, left, loc))
+					if ((mg != null) && left != null &&
+					    IdenticalNameAndTypeName (ec, left_original, left, loc))
 						mg.IdenticalTypeName = true;
 
 					me.InstanceExpression = left;
