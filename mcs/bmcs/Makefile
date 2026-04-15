@@ -4,7 +4,7 @@
 # .NET 2.0 profile.
 #
 thisdir := bmcs
-SUBDIRS := 
+SUBDIRS := tests
 include ../build/rules.make
 
 #uncomment to enable some debug stuff
