@@ -2064,13 +2064,6 @@ namespace Mono.CSharp {
 			if (list.Count == 1 && !(list [0] is MethodBase))
 				return true;
 
-			//
-			// Multiple properties: we query those just to find out the indexer
-			// name
-			//
-			if ((list.Count > 0) && (list [0] is PropertyInfo))
-				return true;
-
 			return false;
 		}
 
