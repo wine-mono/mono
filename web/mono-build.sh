@@ -23,8 +23,8 @@ LD_LIBRARY_PATH=$here/install/lib:$LD_LIBRARY_PATH
 viable_downloaders="wget fetch"
 for i in $viable_downloaders
 do
-    if which $i > /dev/null; then
-	downloader=`which $i`
+    if command -v "$i" > /dev/null 2>&1; then
+	downloader=$(command -v "$i")
 	break
     fi
 done
@@ -41,7 +41,7 @@ fi
 viable_makers="gmake make"
 for i in $viable_makers
 do
-    if which $i > /dev/null; then
+    if command -v "$i" > /dev/null 2>&1; then
 	MAKE=$i
 	break
     fi
@@ -251,4 +251,3 @@ echo "All done."
 echo "Add $here/install/bin to \$PATH"
 echo "Add $here/install/lib to \$LD_LIBRARY_PATH"
 echo "Don't forget to copy the class libraries to $here/install/lib"
-
