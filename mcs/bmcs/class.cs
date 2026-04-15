@@ -4805,11 +4805,8 @@ namespace Mono.CSharp {
 			if (OptAttributes != null) 
 				OptAttributes.Emit (ec, this);
 
-			// If this is a non-static `struct' constructor and doesn't have any
-			// initializer, it must initialize all of the struct's fields.
-			if ((Parent.Kind == Kind.Struct) &&
-			    ((ModFlags & Modifiers.STATIC) == 0) && (Initializer == null))
-				Block.AddThisVariable (Parent, Location);
+			// VB struct constructors run on an already default-initialized value,
+			// so they are not required to assign every field explicitly.
 
 			ec.EmitTopBlock (block, ParameterInfo, Location);
 

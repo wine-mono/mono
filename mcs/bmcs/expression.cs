@@ -9015,9 +9015,6 @@ namespace Mono.CSharp {
 				return false;
 			}
 
-			if ((block != null) && (block.ThisVariable != null))
-				variable_info = block.ThisVariable.VariableInfo;
-
 			return true;
 		}
 
@@ -9025,13 +9022,6 @@ namespace Mono.CSharp {
 		{
 			if (!ResolveBase (ec))
 				return null;
-
-			if ((variable_info != null) && !variable_info.IsAssigned (ec)) {
-				Error (188, "The this object cannot be used before all " +
-				       "of its fields are assigned to");
-				variable_info.SetAssigned (ec);
-				return this;
-			}
 
 			if (ec.IsFieldInitializer && ec.IsStatic) {
 				Error (27, "Keyword `this' can't be used outside a constructor, " +

@@ -1626,8 +1626,6 @@ namespace Mono.CSharp {
 		//
 		ArrayList children;
 		
-		const string CompilerThisLocalName = "<this>";
-
 		//
 		// Labels.  (label, block) pairs.
 		//
@@ -1829,23 +1827,6 @@ namespace Mono.CSharp {
 			return null;
 		}
 
-		LocalInfo this_variable = null;
-
-		// <summary>
-		//   Returns the "this" instance variable of this block.
-		//   See AddThisVariable() for more information.
-		// </summary>
-		public LocalInfo ThisVariable {
-			get {
-				for (Block b = this; b != null; b = b.Parent) {
-					if (b.this_variable != null)
-						return b.this_variable;
-				}
-				
-				return null;
-			}
-		}
-
 		Hashtable child_variable_names;
 
 		// <summary>
@@ -1870,33 +1851,6 @@ namespace Mono.CSharp {
 				return false;
 
 			return child_variable_names.Contains (name);
-		}
-
-		// <summary>
-		//   This is used by non-static `struct' constructors which do not have an
-		//   initializer - in this case, the constructor must initialize all of the
-		//   struct's fields.  To do this, we add a "this" variable and use the flow
-		//   analysis code to ensure that it's been fully initialized before control
-		//   leaves the constructor.
-		// </summary>
-		public LocalInfo AddThisVariable (TypeContainer tc, Location l)
-		{
-			if (this_variable != null)
-				return this_variable;
-
-			if (variables == null)
-				variables = new Hashtable (StringComparer.OrdinalIgnoreCase);
-
-			this_variable = new LocalInfo (tc, this, l);
-			this_variable.Used = true;
-			this_variable.IsThis = true;
-
-			// This synthetic local is only for struct-constructor flow analysis.
-			// Keep it out of the user-visible identifier space when name lookup
-			// becomes case-insensitive.
-			variables.Add (CompilerThisLocalName, this_variable);
-
-			return this_variable;
 		}
 
 		public LocalInfo AddVariable (Expression type, string name, Parameters pars, Location l)
@@ -2399,13 +2353,6 @@ namespace Mono.CSharp {
 			FlowBranching.UsageVector vector = ec.DoEndFlowBranching ();
 
 			ec.CurrentBlock = prev_block;
-
-			// If we're a non-static `struct' constructor which doesn't have an
-			// initializer, then we must initialize all of the struct's fields.
-			if ((this_variable != null) &&
-			    (vector.Reachability.Throws != FlowBranching.FlowReturns.Always) &&
-			    !this_variable.IsThisAssigned (ec, loc))
-				ok = false;
 
 			if ((labels != null) && (RootContext.WarningLevel >= 2)) {
 				foreach (LabeledStatement label in labels.Values)
