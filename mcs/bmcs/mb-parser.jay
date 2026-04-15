@@ -1168,7 +1168,64 @@ type_spec_declaration
 	;
 
 class_declaration
-	: CLASS identifier opt_type_params logical_end_of_line
+	: class_header logical_end_of_line
+	  opt_inherits opt_implements
+
+	  {
+		ArrayList bases = (ArrayList) $3;
+		ArrayList ifaces = (ArrayList) $4;
+
+		if (ifaces != null){
+			if (bases != null)	
+				bases.AddRange(ifaces);
+			else
+				bases = ifaces;
+		}
+
+		if (bases != null) {
+			if (current_class.Name == "System.Object") {
+				Report.Error (537, current_class.Location,
+					      "The class System.Object cannot have a base " +
+					      "class or implement an interface.");
+			}
+			current_class.Bases = (ArrayList) bases;
+		}
+	  }
+	  opt_class_member_declarations
+	  END CLASS logical_end_of_line
+	  {
+		$$ = PopDeclaredTypeState ();
+	  }
+	| class_header COLON INHERITS type_list logical_end_of_line opt_implements
+	  {
+		ArrayList bases = (ArrayList) $4;
+		ArrayList ifaces = (ArrayList) $6;
+
+		if (ifaces != null){
+			if (bases != null)
+				bases.AddRange(ifaces);
+			else
+				bases = ifaces;
+		}
+
+		if (bases != null) {
+			if (current_class.Name == "System.Object") {
+				Report.Error (537, current_class.Location,
+					      "The class System.Object cannot have a base " +
+					      "class or implement an interface.");
+			}
+			current_class.Bases = (ArrayList) bases;
+		}
+	  }
+	  opt_class_member_declarations
+	  END CLASS logical_end_of_line
+	  {
+		$$ = PopDeclaredTypeState ();
+	  }
+	;
+
+class_header
+	: CLASS identifier opt_type_params
 	  {
 		PushDeclaredTypeState ();
 
@@ -1192,35 +1249,6 @@ class_declaration
 		// for consistency checking through SetParameterInfo.
 		if (type_params != null)
 			current_class.SetParameterInfo (type_params.Constraints);
-	  }
-	  opt_inherits opt_implements
-
-	  {
-		// Position shift: opt_type_params added as $3, so opt_inherits
-		// is now $6 and opt_implements is now $7.
-		ArrayList bases = (ArrayList) $6;
-		ArrayList ifaces = (ArrayList) $7;
-
-		if (ifaces != null){
-			if (bases != null)	
-				bases.AddRange(ifaces);
-			else
-				bases = ifaces;
-		}
-
-		if (bases != null) {
-			if (current_class.Name == "System.Object") {
-				Report.Error (537, current_class.Location,
-					      "The class System.Object cannot have a base " +
-					      "class or implement an interface.");
-			}
-			current_class.Bases = (ArrayList) bases;
-		}
-	  }
-	  opt_class_member_declarations
-	  END CLASS logical_end_of_line
-	  {
-		$$ = PopDeclaredTypeState ();
 	  }
 	;
 
