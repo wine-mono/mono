@@ -66,10 +66,20 @@ namespace Mono.CSharp {
 			// working compiler.
 		}
 
-		public void MarkSequencePoint (ILGenerator ig, int row, int column)
+		public int DefineNamespace (string name, SourceFile file, string[] using_clauses, int parent)
+		{
+			return base.DefineNamespace (name, file, using_clauses, parent);
+		}
+
+		public SourceMethodBuilder OpenMethod (SourceFile file, int ns_id, IMethodDef method)
+		{
+			return base.OpenMethod (file, ns_id, method);
+		}
+
+		public void MarkSequencePoint (ILGenerator ig, Location loc)
 		{
 			int offset = get_il_offset_func (ig);
-			MarkSequencePoint (offset, row, column);
+			base.MarkSequencePoint (offset, loc.SourceFile.SourceFileEntry, loc.Row, 0, false);
 		}
 
 		public void WriteSymbolFile ()

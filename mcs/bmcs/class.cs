@@ -3816,27 +3816,23 @@ namespace Mono.CSharp {
 		}
 	}
 
-	public class SourceMethod : ISourceMethod
+	public class SourceMethod : IMethodDef
 	{
 		TypeContainer container;
 		MethodBase builder;
 
 		protected SourceMethod (TypeContainer container, MethodBase builder,
-					ISourceFile file, Location start, Location end)
+					SourceFile file)
 		{
 			this.container = container;
 			this.builder = builder;
 			
 			CodeGen.SymbolWriter.OpenMethod (
-				file, this, start.Row, 0, end.Row, 0);
+				file, container.NamespaceEntry.SymbolFileID, this);
 		}
 
 		public string Name {
 			get { return builder.Name; }
-		}
-
-		public int NamespaceID {
-			get { return container.NamespaceEntry.SymbolFileID; }
 		}
 
 		public int Token {
@@ -3868,16 +3864,11 @@ namespace Mono.CSharp {
 			if (Location.IsNull (start_loc))
 				return null;
 
-			Location end_loc = block.EndLocation;
-			if (Location.IsNull (end_loc))
-				return null;
-
-			ISourceFile file = start_loc.SourceFile;
+			SourceFile file = start_loc.SourceFile;
 			if (file == null)
 				return null;
 
-			return new SourceMethod (
-				parent, builder, file, start_loc, end_loc);
+			return new SourceMethod (parent, builder, file);
 		}
 	}
 

@@ -807,7 +807,7 @@ namespace Mono.CSharp {
 			if (check_file && (CurrentFile != loc.File))
 				return;
 
-			CodeGen.SymbolWriter.MarkSequencePoint (ig, loc.Row, 0);
+			CodeGen.SymbolWriter.MarkSequencePoint (ig, loc);
 		}
 
 		public void DefineLocalVariable (string name, LocalBuilder builder)

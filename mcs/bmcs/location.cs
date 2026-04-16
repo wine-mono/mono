@@ -20,11 +20,12 @@ namespace Mono.CSharp {
 	///   This is intentionally a class and not a struct since we need
 	///   to pass this by reference.
 	/// </remarks>
-	public sealed class SourceFile : ISourceFile {
+	public sealed class SourceFile : ISourceFile, ICompileUnit {
 		public readonly string Name;
 		public readonly string Path;
 		public readonly int Index;
 		public SourceFileEntry SourceFileEntry;
+		public CompileUnitEntry CompileUnitEntry;
 		public bool HasLineDirective;
 
 		public SourceFile (string name, string path, int index)
@@ -36,6 +37,10 @@ namespace Mono.CSharp {
 
 		SourceFileEntry ISourceFile.Entry {
 			get { return SourceFileEntry; }
+		}
+
+		CompileUnitEntry ICompileUnit.Entry {
+			get { return CompileUnitEntry; }
 		}
 
 		public override string ToString ()
@@ -167,6 +172,7 @@ namespace Mono.CSharp {
 		{
 			foreach (SourceFile file in source_list) {
 				file.SourceFileEntry = symwriter.DefineDocument (file.Path);
+				file.CompileUnitEntry = symwriter.DefineCompilationUnit (file.SourceFileEntry);
 			}
 		}
 		
