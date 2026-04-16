@@ -4012,18 +4012,34 @@ namespace Mono.CSharp {
 
 		}
 
-		Type GetComparisonPromotionType (Type t, Type other)
+		Type GetPromotionType (Type t, Type other)
 		{
-			if (!IsRelationalExpression)
+			if (IsRelationalExpression) {
+				if (!TypeManager.IsEnumType (t))
+					return t;
+
+				// Mixed enum/numeric comparisons follow the enum's underlying
+				// integral type. Keep enum/enum comparisons on the enum path so
+				// different enum types still fail instead of silently collapsing
+				// to their shared underlying primitive type.
+				if (TypeManager.IsEnumType (other))
+					return t;
+
+				return TypeManager.EnumToUnderlying (t);
+			}
+
+			if (oper != Operator.BitwiseAnd &&
+			    oper != Operator.BitwiseOr &&
+			    oper != Operator.ExclusiveOr)
 				return t;
 
 			if (!TypeManager.IsEnumType (t))
 				return t;
 
-			// Mixed enum/numeric comparisons follow the enum's underlying
-			// integral type. Keep enum/enum comparisons on the enum path so
-			// different enum types still fail instead of silently collapsing
-			// to their shared underlying primitive type.
+			// VB permits flags-style masks such as `value And 16` by widening
+			// the enum operand to its underlying integral type. Keep enum/enum
+			// bitwise expressions on the enum path so `Bits.A And Bits.B`
+			// still yields the enum type.
 			if (TypeManager.IsEnumType (other))
 				return t;
 
@@ -4036,8 +4052,8 @@ namespace Mono.CSharp {
 			Type r = target_right_expr.Type;
 
 			Type target_type = GetWiderOfTypes (
-				GetComparisonPromotionType (l, r),
-				GetComparisonPromotionType (r, l));
+				GetPromotionType (l, r),
+				GetPromotionType (r, l));
 
 			//Console.WriteLine ("		DoingOperandPromotions");
 			//Console.WriteLine ("         left => " + l + " right => " + r);
