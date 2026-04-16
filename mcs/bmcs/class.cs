@@ -4932,6 +4932,9 @@ namespace Mono.CSharp {
 	// Encapsulates most of the Method's state
 	//
 	public class MethodData {
+#if GMCS_SOURCE
+		static FieldInfo methodbuilder_attrs_field;
+#endif
 
 		readonly IMethodData method;
 
@@ -5359,14 +5362,34 @@ namespace Mono.CSharp {
 				}
 			}
 
-			if (builder == null)
+			if (builder == null) {
 				builder = container.TypeBuilder.DefineMethod (
 					method_name, flags, method.CallingConventions,
 					method.ReturnType, ParameterTypes);
-			else
-				builder.SetGenericMethodSignature (
-					flags, method.CallingConventions,
-					method.ReturnType, ParameterTypes);
+				return;
+			}
+
+#if GMCS_SOURCE
+			//
+			// Generic methods are pre-defined before we know the final signature.
+			// On newer runtimes the old SetGenericMethodSignature API is gone, so
+			// update the existing MethodBuilder in place the same way mcs does.
+			//
+			builder.SetParameters (ParameterTypes);
+			builder.SetReturnType (method.ReturnType);
+
+			if (builder.Attributes != flags) {
+				try {
+					if (methodbuilder_attrs_field == null)
+						methodbuilder_attrs_field = typeof (MethodBuilder).GetField ("attrs", BindingFlags.NonPublic | BindingFlags.Instance);
+					methodbuilder_attrs_field.SetValue (builder, flags);
+				} catch {
+					Report.RuntimeMissingSupport (method.Location, "Generic method MethodAttributes");
+				}
+			}
+#else
+			throw new InternalErrorException ();
+#endif
 		}
 
 		//

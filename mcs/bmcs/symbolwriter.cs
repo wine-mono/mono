@@ -68,7 +68,7 @@ namespace Mono.CSharp {
 
 		public int DefineNamespace (string name, SourceFile file, string[] using_clauses, int parent)
 		{
-			return base.DefineNamespace (name, file, using_clauses, parent);
+			return base.DefineNamespace (name, file.CompileUnitEntry, using_clauses, parent);
 		}
 
 		public SourceMethodBuilder OpenMethod (SourceFile file, int ns_id, IMethodDef method)
