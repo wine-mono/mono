@@ -786,6 +786,13 @@ namespace Mono.CSharp {
 			if (handler_expr == null)
 				return false;
 
+			VBAddressOfExpression vb_address_of = handler_expr as VBAddressOfExpression;
+			if (vb_address_of != null) {
+				handler_expr = vb_address_of.ResolveAsDelegate (ec, resolved_event.Type);
+				if (handler_expr == null)
+					return false;
+			}
+
 			handler_expr = Convert.ImplicitVBConversionRequired (ec, handler_expr,
 				resolved_event.Type, loc);
 			return handler_expr != null;
