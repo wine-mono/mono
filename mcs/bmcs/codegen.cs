@@ -76,6 +76,13 @@ namespace Mono.CSharp {
 
 		static public string FileName;
 
+#if MS_COMPATIBLE
+		const AssemblyBuilderAccess COMPILER_ACCESS = 0;
+#else
+		/* Keep this in sync with System.Reflection.Emit.AssemblyBuilder */
+		const AssemblyBuilderAccess COMPILER_ACCESS = (AssemblyBuilderAccess) 0x800;
+#endif
+
 		//
 		// Initializes the symbol writer
 		//
@@ -121,7 +128,7 @@ namespace Mono.CSharp {
 
 			try {
 				Assembly.Builder = current_domain.DefineDynamicAssembly (an,
-					AssemblyBuilderAccess.Save, Dirname (name));
+					AssemblyBuilderAccess.RunAndSave | COMPILER_ACCESS, Dirname (name));
 			}
 			catch (ArgumentException) {
 				// specified key may not be exportable outside it's container
