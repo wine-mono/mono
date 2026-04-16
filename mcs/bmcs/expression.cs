@@ -6038,15 +6038,31 @@ namespace Mono.CSharp {
 			// slot inert through overload selection, then replace it with the
 			// parameter's default value once the target member is known.
 			ParameterData pd = GetParameterData (mb);
+			int materialize_count = pd.Count;
+
+			// A trailing ParamArray is supplied by call emission, not by default-value
+			// materialization. Treating it like an omitted optional argument injects a
+			// NullLiteral placeholder, which later escapes into `newarr NullType`.
+			if (materialize_count > 0 &&
+			    pd.ParameterModifier (materialize_count - 1) == Parameter.Modifier.PARAMS)
+				materialize_count--;
 
 			if (arguments == null) {
-				if (pd.Count == 0)
+				if (materialize_count == 0)
 					return null;
 
 				arguments = new ArrayList ();
 			}
 
-			int supplied = arguments.Count < pd.Count ? arguments.Count : pd.Count;
+			while (arguments.Count > materialize_count) {
+				Argument a = (Argument) arguments [arguments.Count - 1];
+				if (!a.IsOmitted)
+					break;
+
+				arguments.RemoveAt (arguments.Count - 1);
+			}
+
+			int supplied = arguments.Count < materialize_count ? arguments.Count : materialize_count;
 			for (int i = 0; i < supplied; ++i) {
 				Argument a = (Argument) arguments [i];
 				if (!a.IsOmitted)
@@ -6056,7 +6072,7 @@ namespace Mono.CSharp {
 				arguments [i] = new Argument (default_value, Argument.AType.Expression);
 			}
 
-			for (int i = arguments.Count; i < pd.Count; ++i) {
+			for (int i = arguments.Count; i < materialize_count; ++i) {
 				Expression default_value = GetOptionalArgumentValue (ec, mb, pd, i, loc);
 				arguments.Add (new Argument (default_value, Argument.AType.Expression));
 			}
@@ -8085,6 +8101,8 @@ namespace Mono.CSharp {
 					return null;
                                 }
 			}
+
+			Invocation.MaterializeOptionalArguments (ec, method, Arguments, loc);
 
 			return this;
 		}

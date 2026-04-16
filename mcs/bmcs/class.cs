@@ -4782,13 +4782,16 @@ namespace Mono.CSharp {
 			//
 			if (Parent.Kind == Kind.Class){
 				if ((ModFlags & Modifiers.STATIC) == 0){
+					TypeContainer field_init_parent = Parent;
+					if (field_init_parent is ClassPart)
+						field_init_parent = ((ClassPart) field_init_parent).PartialContainer;
 
 					//
 					// If we use a "this (...)" constructor initializer, then
 					// do not emit field initializers, they are initialized in the other constructor
 					//
 					if (!(Initializer != null && Initializer is ConstructorThisInitializer))
-						Parent.EmitFieldInitializers (ec);
+						field_init_parent.EmitFieldInitializers (ec);
 				}
 			}
 			if (Initializer != null) {
