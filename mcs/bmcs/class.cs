@@ -4932,9 +4932,7 @@ namespace Mono.CSharp {
 	// Encapsulates most of the Method's state
 	//
 	public class MethodData {
-#if GMCS_SOURCE
 		static FieldInfo methodbuilder_attrs_field;
-#endif
 
 		readonly IMethodData method;
 
@@ -5369,7 +5367,6 @@ namespace Mono.CSharp {
 				return;
 			}
 
-#if GMCS_SOURCE
 			//
 			// Generic methods are pre-defined before we know the final signature.
 			// On newer runtimes the old SetGenericMethodSignature API is gone, so
@@ -5387,9 +5384,6 @@ namespace Mono.CSharp {
 					Report.RuntimeMissingSupport (method.Location, "Generic method MethodAttributes");
 				}
 			}
-#else
-			throw new InternalErrorException ();
-#endif
 		}
 
 		//
