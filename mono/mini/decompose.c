@@ -75,8 +75,6 @@ decompose_long_opcode (MonoCompile *cfg, MonoInst *ins, MonoInst **repl_ins)
 	case OP_LADD_OVF: {
 		int opcode;
 
-		if (COMPILE_LLVM (cfg))
-			break;
 		if (cfg->backend->ilp32 && SIZEOF_REGISTER == 8)
 			opcode = OP_LADDCC;
 		else
@@ -89,8 +87,6 @@ decompose_long_opcode (MonoCompile *cfg, MonoInst *ins, MonoInst **repl_ins)
 	case OP_LADD_OVF_UN: {
 		int opcode;
 
-		if (COMPILE_LLVM (cfg))
-			break;
 		if (cfg->backend->ilp32 && SIZEOF_REGISTER == 8)
 			opcode = OP_LADDCC;
 		else
@@ -104,8 +100,6 @@ decompose_long_opcode (MonoCompile *cfg, MonoInst *ins, MonoInst **repl_ins)
 	case OP_LSUB_OVF: {
 		int opcode;
 
-		if (COMPILE_LLVM (cfg))
-			break;
 		if (cfg->backend->ilp32 && SIZEOF_REGISTER == 8)
 			opcode = OP_LSUBCC;
 		else
@@ -118,8 +112,6 @@ decompose_long_opcode (MonoCompile *cfg, MonoInst *ins, MonoInst **repl_ins)
 	case OP_LSUB_OVF_UN: {
 		int opcode;
 
-		if (COMPILE_LLVM (cfg))
-			break;
 		if (cfg->backend->ilp32 && SIZEOF_REGISTER == 8)
 			opcode = OP_LSUBCC;
 		else
@@ -219,7 +211,7 @@ decompose_long_opcode (MonoCompile *cfg, MonoInst *ins, MonoInst **repl_ins)
 #if SIZEOF_REGISTER == 8
 		MONO_EMIT_NEW_LCOMPARE_IMM (cfg, ins->sreg1, ((int)-2147483648));
 #else
-		g_assert (COMPILE_LLVM (cfg));
+		g_assert_not_reached ();
 		MONO_EMIT_NEW_LCOMPARE_IMM (cfg, ins->sreg1, -2147483648LL);
 #endif
 		MONO_EMIT_NEW_COND_EXC (cfg, LT, "OverflowException");
@@ -319,26 +311,18 @@ mono_decompose_opcode (MonoCompile *cfg, MonoInst *ins)
 	/* this doesn't make sense on ppc and other architectures */
 #if !defined(MONO_ARCH_NO_IOV_CHECK)
 	case OP_IADD_OVF:
-		if (COMPILE_LLVM (cfg))
-			break;
 		ins->opcode = OP_IADDCC;
 		MONO_EMIT_NEW_COND_EXC (cfg, IOV, "OverflowException");
 		break;
 	case OP_IADD_OVF_UN:
-		if (COMPILE_LLVM (cfg))
-			break;
 		ins->opcode = OP_IADDCC;
 		MONO_EMIT_NEW_COND_EXC (cfg, IC, "OverflowException");
 		break;
 	case OP_ISUB_OVF:
-		if (COMPILE_LLVM (cfg))
-			break;
 		ins->opcode = OP_ISUBCC;
 		MONO_EMIT_NEW_COND_EXC (cfg, IOV, "OverflowException");
 		break;
 	case OP_ISUB_OVF_UN:
-		if (COMPILE_LLVM (cfg))
-			break;
 		ins->opcode = OP_ISUBCC;
 		MONO_EMIT_NEW_COND_EXC (cfg, IC, "OverflowException");
 		break;
@@ -522,8 +506,7 @@ mono_decompose_opcode (MonoCompile *cfg, MonoInst *ins)
 		break;
 	case OP_ICONV_TO_R_UN:
 #ifdef MONO_ARCH_EMULATE_CONV_R8_UN
-		if (!COMPILE_LLVM (cfg))
-			emulate = TRUE;
+		emulate = TRUE;
 #endif
 		break;
 	default:
@@ -534,9 +517,6 @@ mono_decompose_opcode (MonoCompile *cfg, MonoInst *ins)
 	if (emulate) {
 #if SIZEOF_REGISTER == 8
 		if (decompose_long_opcode (cfg, ins, &repl))
-			emulate = FALSE;
-#else
-		if (COMPILE_LLVM (cfg) && decompose_long_opcode (cfg, ins, &repl))
 			emulate = FALSE;
 #endif
 
@@ -1209,8 +1189,6 @@ mono_decompose_vtype_opts (MonoCompile *cfg)
 				switch (ins->opcode) {
 				case OP_VMOVE: {
 					g_assert (ins->klass);
-					if (COMPILE_LLVM (cfg) && !mini_is_gsharedvt_klass (ins->klass))
-						break;
 					src_var = get_vreg_to_inst (cfg, ins->sreg1);
 					dest_var = get_vreg_to_inst (cfg, ins->dreg);
 
@@ -1231,9 +1209,6 @@ mono_decompose_vtype_opts (MonoCompile *cfg)
 					break;
 				}
 				case OP_VZERO:
-					if (COMPILE_LLVM (cfg) && !mini_is_gsharedvt_klass (ins->klass))
-						break;
-
 					g_assert (ins->klass);
 
 					EMIT_NEW_VARLOADA_VREG (cfg, dest, ins->dreg, m_class_get_byval_arg (ins->klass));
@@ -1253,18 +1228,12 @@ mono_decompose_vtype_opts (MonoCompile *cfg)
 					}
 					break;
 				case OP_DUMMY_VZERO:
-					if (COMPILE_LLVM (cfg))
-						break;
-
 					NULLIFY_INS (ins);
 					break;
 				case OP_STOREV_MEMBASE: {
 					src_var = get_vreg_to_inst (cfg, ins->sreg1);
 
 					mono_class_init_sizes (ins->klass);
-
-					if (COMPILE_LLVM (cfg) && !mini_is_gsharedvt_klass (ins->klass) && !(cfg->gen_write_barriers && m_class_has_references (ins->klass)))
-						break;
 
 					if (!src_var) {
 						g_assert (ins->klass);
@@ -1280,8 +1249,6 @@ mono_decompose_vtype_opts (MonoCompile *cfg)
 				}
 				case OP_LOADV_MEMBASE: {
 					g_assert (ins->klass);
-					if (COMPILE_LLVM (cfg) && !mini_is_gsharedvt_klass (ins->klass))
-						break;
 
 					dest_var = get_vreg_to_inst (cfg, ins->dreg);
 					// FIXME-VT:
@@ -1296,9 +1263,6 @@ mono_decompose_vtype_opts (MonoCompile *cfg)
 					break;
 				}
 				case OP_OUTARG_VT: {
-					if (COMPILE_LLVM (cfg))
-						break;
-
 					g_assert (ins->klass);
 
 					src_var = get_vreg_to_inst (cfg, ins->sreg1);
@@ -1329,9 +1293,6 @@ mono_decompose_vtype_opts (MonoCompile *cfg)
 				case OP_VCALL_MEMBASE: {
 					MonoCallInst *call = (MonoCallInst*)ins;
 					int size;
-
-					if (COMPILE_LLVM (cfg))
-						break;
 
 					if (call->vret_in_reg) {
 						MonoCallInst *call2;
@@ -1538,13 +1499,7 @@ mono_decompose_array_access_opts (MonoCompile *cfg)
 					break;
 				case OP_BOUNDS_CHECK:
 					MONO_EMIT_NULL_CHECK (cfg, ins->sreg1, FALSE);
-					if (COMPILE_LLVM (cfg)) {
-						int index2_reg = alloc_preg (cfg);
-						MONO_EMIT_NEW_UNALU (cfg, OP_SEXT_I4, index2_reg, ins->sreg2);
-						MONO_EMIT_DEFAULT_BOUNDS_CHECK (cfg, ins->sreg1, ins->inst_imm, index2_reg, ins->flags & MONO_INST_FAULT, ins->inst_p0);
-					} else {
-						MONO_ARCH_EMIT_BOUNDS_CHECK (cfg, ins->sreg1, ins->inst_imm, ins->sreg2, ins->inst_p0);
-					}
+					MONO_ARCH_EMIT_BOUNDS_CHECK (cfg, ins->sreg1, ins->inst_imm, ins->sreg2, ins->inst_p0);
 					break;
 				case OP_NEWARR:
 					if (cfg->opt & MONO_OPT_SHARED) {
@@ -2000,8 +1955,7 @@ mono_local_emulate_ops (MonoCompile *cfg)
 	 * at IR level, instead of inlining the icall wrapper. FIXME
 	 */
 	if (inlined_wrapper) {
-		if (!COMPILE_LLVM (cfg))
-			mono_decompose_long_opts (cfg);
+		mono_decompose_long_opts (cfg);
 		if (cfg->opt & (MONO_OPT_CONSPROP | MONO_OPT_COPYPROP))
 			mono_local_cprop (cfg);
 	}

@@ -458,7 +458,7 @@ mini_emit_memory_load (MonoCompile *cfg, MonoType *type, MonoInst *src, int offs
 	/* LLVM can handle unaligned loads and stores, so there's no reason to
 	 * manually decompose an unaligned load here into a memcpy if we're
 	 * using LLVM. */
-	if ((ins_flag & MONO_INST_UNALIGNED) && !COMPILE_LLVM (cfg)) {
+	if ((ins_flag & MONO_INST_UNALIGNED)) {
 		MonoInst *addr, *tmp_var;
 		int align;
 		int size = mono_type_size (type, &align);
@@ -500,7 +500,7 @@ mini_emit_memory_store (MonoCompile *cfg, MonoType *type, MonoInst *dest, MonoIn
 
 	MONO_EMIT_NULL_CHECK (cfg, dest->dreg, FALSE);
 
-	if ((ins_flag & MONO_INST_UNALIGNED) && !COMPILE_LLVM (cfg)) {
+	if ((ins_flag & MONO_INST_UNALIGNED)) {
 		MonoInst *addr, *mov, *tmp_var;
 
 		tmp_var = mono_compile_create_var (cfg, type, OP_LOCAL);

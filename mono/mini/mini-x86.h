@@ -218,12 +218,6 @@ typedef struct {
 
 #define MONO_ARCH_GSHARED_SUPPORTED 1
 
-#define MONO_ARCH_LLVM_SUPPORTED 1
-#if defined(HOST_WIN32) && defined(TARGET_WIN32)
-// Only supported for Windows cross compiler builds, host == Win32, target != Win32.
-#undef MONO_ARCH_LLVM_SUPPORTED
-#endif
-
 #define MONO_ARCH_SOFT_DEBUG_SUPPORTED 1
 
 #define MONO_ARCH_HAVE_EXCEPTIONS_INIT 1

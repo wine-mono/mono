@@ -1313,10 +1313,7 @@ mono_type_to_extract_op (MonoCompile *cfg, MonoType *type)
 	case MONO_TYPE_U4:
 		return OP_EXTRACT_I4;
 	case MONO_TYPE_R4:
-		if (COMPILE_LLVM (cfg))
-			return OP_EXTRACT_R4;
-		else
-			return OP_EXTRACT_I4;
+		return OP_EXTRACT_I4;
 	default:
 		g_assert_not_reached ();
 	}
@@ -1403,14 +1400,7 @@ simd_intrinsic_emit_setter (const SimdIntrinsic *intrinsic, MonoCompile *cfg, Mo
 
 	size = mono_type_size (sig->params [0], &align); 
 
-	if (COMPILE_LLVM (cfg)) {
-		MONO_INST_NEW (cfg, ins, mono_type_to_insert_op (sig->params [0]));
-		ins->klass = cmethod->klass;
-		ins->dreg = ins->sreg1 = dreg = load_simd_vreg (cfg, cmethod, args [0], &indirect);
-		ins->sreg2 = args [1]->dreg;
-		ins->inst_c0 = intrinsic->opcode;
-		MONO_ADD_INS (cfg->cbb, ins);
-	} else if (size == 2 || size == 4 || size == 8) {
+	if (size == 2 || size == 4 || size == 8) {
 		MONO_INST_NEW (cfg, ins, mono_type_to_slow_insert_op (sig->params [0]));
 		ins->klass = cmethod->klass;
 		/*This is a partial load so we encode the dependency on the previous value by setting dreg and sreg1 to the same value.*/
@@ -2225,20 +2215,6 @@ emit_vector_intrinsics (MonoCompile *cfg, MonoMethod *cmethod, MonoMethodSignatu
 		if (!(fsig->param_count == 1 && fsig->ret == type && fsig->params [0] == type))
 			break;
 		return simd_intrinsic_emit_unary (intrins, cfg, cmethod, args);
-	case SN_Dot:
-		if (!(fsig->param_count == 2 && fsig->ret->type == MONO_TYPE_R4 && fsig->params [0] == type && fsig->params [1] == type))
-			break;
-		if (COMPILE_LLVM (cfg)) {
-			MonoInst *ins;
-
-			if (!(mini_get_cpu_features (cfg) & MONO_CPU_X86_SSE41))
-				break;
-
-			ins = simd_intrinsic_emit_binary (intrins, cfg, cmethod, args);
-			/* The end result is in the lowest element */
-			return simd_intrinsic_emit_getter_op (cfg, 0, cmethod->klass, mono_method_signature_internal (cmethod)->ret, ins);
-		}
-		break;
 	case SN_Abs: {
 		// abs(x) = max(x, sub(0,x))
 		MonoInst *sub;

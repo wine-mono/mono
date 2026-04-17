@@ -96,16 +96,8 @@ typedef struct SeqPointInfo SeqPointInfo;
 #endif
 #endif
 
-#if ENABLE_LLVM
-#define COMPILE_LLVM(cfg) ((cfg)->compile_llvm)
-#define LLVM_ENABLED TRUE
-#else
-#define COMPILE_LLVM(cfg) (0)
-#define LLVM_ENABLED FALSE
-#endif
-
 #ifdef MONO_ARCH_SOFT_FLOAT_FALLBACK
-#define COMPILE_SOFT_FLOAT(cfg) (!COMPILE_LLVM ((cfg)) && mono_arch_is_soft_float ())
+#define COMPILE_SOFT_FLOAT(cfg) (mono_arch_is_soft_float ())
 #else
 #define COMPILE_SOFT_FLOAT(cfg) (0)
 #endif
@@ -318,7 +310,7 @@ enum {
 #ifdef TARGET_ARM64
 // SIMD is only supported on arm64 when using the LLVM backend. When not using
 // the LLVM backend, treat SIMD datatypes as regular value types.
-#define MONO_CLASS_IS_SIMD(cfg, klass) ( ((cfg)->opt & MONO_OPT_SIMD) && ( COMPILE_LLVM (cfg) ) && m_class_is_simd_type (klass) )
+#define MONO_CLASS_IS_SIMD(cfg, klass) 0
 #else
 #define MONO_CLASS_IS_SIMD(cfg, klass) (((cfg)->opt & MONO_OPT_SIMD) && m_class_is_simd_type (klass))
 #endif
@@ -552,11 +544,6 @@ struct MonoBasicBlock {
 	guint has_call_handler : 1;
 	/* Whenever this bblock starts a try block */
 	guint try_start : 1;
-
-#ifdef ENABLE_LLVM
-	/* The offset of the CIL instruction in this bblock which ends a try block */
-	intptr_t try_end;
-#endif
 
 	/*
 	 * If this is set, extend the try range started by this bblock by an arch specific
@@ -798,10 +785,6 @@ struct MonoCallInst {
 	GSList *out_freg_args;
 	GSList *outarg_vts;
 	CallInfo *call_info;
-#ifdef ENABLE_LLVM
-	LLVMCallInfo *cinfo;
-	int rgctx_arg_reg, imt_arg_reg;
-#endif
 #ifdef TARGET_ARM
 	/* See the comment in mini-arm.c!mono_arch_emit_call for RegTypeFP. */
 	GSList *float_args;

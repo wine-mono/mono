@@ -13,7 +13,6 @@ AC_DEFUN([AC_MONO_OUTPUT], [
 
 	AC_OUTPUT([
 		Makefile
-		llvm/Makefile
 		mono/Makefile
 		mono/btls/Makefile
 		mono/culture/Makefile

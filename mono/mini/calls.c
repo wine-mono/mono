@@ -249,14 +249,7 @@ mini_emit_call_args (MonoCompile *cfg, MonoMethodSignature *sig,
 
 	call->need_unbox_trampoline = unbox_trampoline;
 
-#ifdef ENABLE_LLVM
-	if (COMPILE_LLVM (cfg))
-		mono_llvm_emit_call (cfg, call);
-	else
-		mono_arch_emit_call (cfg, call);
-#else
 	mono_arch_emit_call (cfg, call);
-#endif
 
 	cfg->param_area = MAX (cfg->param_area, call->stack_usage);
 	cfg->flags |= MONO_CFG_HAS_CALLS;
@@ -286,9 +279,6 @@ set_rgctx_arg (MonoCompile *cfg, MonoCallInst *call, int rgctx_reg, MonoInst *rg
 	mono_call_inst_add_outarg_reg (cfg, call, rgctx_reg, MONO_ARCH_RGCTX_REG, FALSE);
 	cfg->uses_rgctx_reg = TRUE;
 	call->rgctx_reg = TRUE;
-#ifdef ENABLE_LLVM
-	call->rgctx_arg_reg = rgctx_reg;
-#endif
 }	
 
 /* Either METHOD or IMT_ARG needs to be set */
@@ -298,22 +288,6 @@ emit_imt_argument (MonoCompile *cfg, MonoCallInst *call, MonoMethod *method, Mon
 	int method_reg;
 
 	g_assert (method || imt_arg);
-
-	if (COMPILE_LLVM (cfg)) {
-		if (imt_arg) {
-			method_reg = alloc_preg (cfg);
-			MONO_EMIT_NEW_UNALU (cfg, OP_MOVE, method_reg, imt_arg->dreg);
-		} else {
-			MonoInst *ins = mini_emit_runtime_constant (cfg, MONO_PATCH_INFO_METHODCONST, method);
-			method_reg = ins->dreg;
-		}
-
-#ifdef ENABLE_LLVM
-		call->imt_arg_reg = method_reg;
-#endif
-		mono_call_inst_add_outarg_reg (cfg, call, method_reg, MONO_ARCH_IMT_REG, FALSE);
-		return;
-	}
 
 	if (imt_arg) {
 		method_reg = alloc_preg (cfg);

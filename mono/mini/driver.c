@@ -1745,14 +1745,6 @@ mono_get_version_info (void)
 	g_string_append_printf (output, "\tInterpreter:   no\n");
 #endif
 
-#ifdef MONO_ARCH_LLVM_SUPPORTED
-#ifdef ENABLE_LLVM
-	g_string_append_printf (output, "\tLLVM:          yes(%d)\n", LLVM_API_VERSION);
-#else
-	g_string_append_printf (output, "\tLLVM:          supported, not enabled.\n");
-#endif
-#endif
-
 	mono_threads_suspend_policy_init ();
 	g_string_append_printf (output, "\tSuspend:       %s\n", mono_threads_suspend_policy_name (mono_threads_suspend_policy ()));
 
@@ -1862,13 +1854,7 @@ mono_jit_parse_options (int argc, char * argv[])
 		} else if (strncmp (argv[i], "--gc-debug=", 11) == 0) {
 			mono_gc_debug_set (argv[i] + 11);
 		} else if (strcmp (argv [i], "--llvm") == 0) {
-#ifndef MONO_ARCH_LLVM_SUPPORTED
-			fprintf (stderr, "Mono Warning: --llvm not supported on this platform.\n");
-#elif !defined(ENABLE_LLVM)
-			fprintf (stderr, "Mono Warning: --llvm not enabled in this runtime.\n");
-#else
-			mono_use_llvm = TRUE;
-#endif
+			fprintf (stderr, "Mono Warning: --llvm is not supported.\n");
 		} else if (strcmp (argv [i], "--profile") == 0) {
 			mini_add_profiler_argument (NULL);
 		} else if (strncmp (argv [i], "--profile=", 10) == 0) {
@@ -2455,13 +2441,7 @@ mono_main (int argc, char* argv[])
 			test_jit_info_table = TRUE;
 #endif
 		} else if (strcmp (argv [i], "--llvm") == 0) {
-#ifndef MONO_ARCH_LLVM_SUPPORTED
-			fprintf (stderr, "Mono Warning: --llvm not supported on this platform.\n");
-#elif !defined(ENABLE_LLVM)
-			fprintf (stderr, "Mono Warning: --llvm not enabled in this runtime.\n");
-#else
-			mono_use_llvm = TRUE;
-#endif
+			fprintf (stderr, "Mono Warning: --llvm not supported\n");
 		} else if (strcmp (argv [i], "--nollvm") == 0){
 			mono_use_llvm = FALSE;
 		} else if (strcmp (argv [i], "--ffast-math") == 0){

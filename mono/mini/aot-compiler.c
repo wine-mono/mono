@@ -4284,19 +4284,6 @@ add_jit_icall_wrapper (MonoAotCompile *acfg, MonoJitICallInfo *callinfo)
 	add_method (acfg, mono_marshal_get_icall_wrapper (callinfo, TRUE));
 }
 
-#if ENABLE_LLVM
-
-static void
-add_lazy_init_wrappers (MonoAotCompile *acfg)
-{
-	add_method (acfg, mono_marshal_get_aot_init_wrapper (AOT_INIT_METHOD));
-	add_method (acfg, mono_marshal_get_aot_init_wrapper (AOT_INIT_METHOD_GSHARED_MRGCTX));
-	add_method (acfg, mono_marshal_get_aot_init_wrapper (AOT_INIT_METHOD_GSHARED_VTABLE));
-	add_method (acfg, mono_marshal_get_aot_init_wrapper (AOT_INIT_METHOD_GSHARED_THIS));
-}
-
-#endif
-
 static MonoMethod*
 get_runtime_invoke_sig (MonoMethodSignature *sig)
 {
@@ -9999,172 +9986,6 @@ execute_system (const char * command)
 	return status;
 }
 
-#ifdef ENABLE_LLVM
-
-/*
- * emit_llvm_file:
- *
- *   Emit the LLVM code into an LLVM bytecode file, and compile it using the LLVM
- * tools.
- */
-static gboolean
-emit_llvm_file (MonoAotCompile *acfg)
-{
-	char *command, *opts, *tempbc, *optbc, *output_fname;
-
-	if (acfg->aot_opts.llvm_only && acfg->aot_opts.asm_only) {
-		if (acfg->aot_opts.no_opt)
-			tempbc = g_strdup (acfg->aot_opts.llvm_outfile);
-		else
-			tempbc = g_strdup_printf ("%s.bc", acfg->tmpbasename);
-		optbc = g_strdup (acfg->aot_opts.llvm_outfile);
-	} else {
-		tempbc = g_strdup_printf ("%s.bc", acfg->tmpbasename);
-		optbc = g_strdup_printf ("%s.opt.bc", acfg->tmpbasename);
-	}
-
-	mono_llvm_emit_aot_module (tempbc, g_path_get_basename (acfg->image->name));
-
-	if (acfg->aot_opts.no_opt)
-		return TRUE;
-	/*
-	 * FIXME: Experiment with adding optimizations, the -std-compile-opts set takes
-	 * a lot of time, and doesn't seem to save much space.
-	 * The following optimizations cannot be enabled:
-	 * - 'tailcallelim'
-	 * - 'jump-threading' changes our blockaddress references to int constants.
-	 * - 'basiccg' fails because it contains:
-	 * if (CS && !isa<IntrinsicInst>(II)) {
-	 * and isa<IntrinsicInst> is false for invokes to intrinsics (iltests.exe).
-	 * - 'prune-eh' and 'functionattrs' depend on 'basiccg'.
-	 * The opt list below was produced by taking the output of:
-	 * llvm-as < /dev/null | opt -O2 -disable-output -debug-pass=Arguments
-	 * then removing tailcallelim + the global opts.
-	 * strip-dead-prototypes deletes unused intrinsics definitions.
-	 */
-	/* The dse pass is disabled because of #13734 and #17616 */
-	/*
-	 * The dse bug is in DeadStoreElimination.cpp:isOverwrite ():
-	 * // If we have no DataLayout information around, then the size of the store
-	 *  // is inferrable from the pointee type.  If they are the same type, then
-	 * // we know that the store is safe.
-	 * if (AA.getDataLayout() == 0 &&
-	 * Later.Ptr->getType() == Earlier.Ptr->getType()) {
-	 * return OverwriteComplete;
-	 * Here, if 'Earlier' refers to a memset, and Later has no size info, it mistakenly thinks the memset is redundant.
-	 */
-	if (acfg->aot_opts.llvm_only) {
-		// FIXME: This doesn't work yet
-		opts = g_strdup ("");
-	} else {
-		opts = g_strdup ("-disable-tail-calls -place-safepoints -spp-all-backedges");
-	}
-
-	if (acfg->aot_opts.llvm_opts) {
-		opts = g_strdup_printf ("%s %s", acfg->aot_opts.llvm_opts, opts);
-	} else if (!acfg->aot_opts.llvm_only) {
-		opts = g_strdup_printf ("-O2 %s", opts);
-	}
-
-	if (acfg->aot_opts.use_current_cpu) {
-		opts = g_strdup_printf ("%s -mcpu=native", opts);
-	}
-
-	if (acfg->aot_opts.llvm_cpu_attr) {
-		opts = g_strdup_printf ("%s -mattr=%s", opts, acfg->aot_opts.llvm_cpu_attr);
-	}
-
-	if (mono_use_fast_math) {
-		// same parameters are passed to llc and LLVM JIT
-		opts = g_strdup_printf ("%s -fp-contract=fast -enable-no-infs-fp-math -enable-no-nans-fp-math -enable-no-signed-zeros-fp-math -enable-no-trapping-fp-math -enable-unsafe-fp-math", opts);
-	}
-
-	command = g_strdup_printf ("\"%sopt\" -f %s -o \"%s\" \"%s\"", acfg->aot_opts.llvm_path, opts, optbc, tempbc);
-	aot_printf (acfg, "Executing opt: %s\n", command);
-	if (execute_system (command) != 0)
-		return FALSE;
-	g_free (opts);
-
-	if (acfg->aot_opts.llvm_only && acfg->aot_opts.asm_only)
-		/* Nothing else to do */
-		return TRUE;
-
-	if (acfg->aot_opts.llvm_only) {
-		/* Use the stock clang from xcode */
-		// FIXME: arch
-		command = g_strdup_printf ("%s -fexceptions -fpic -O2 -fno-optimize-sibling-calls -Wno-override-module -c -o \"%s\" \"%s.opt.bc\"", acfg->aot_opts.clangxx, acfg->llvm_ofile, acfg->tmpbasename);
-
-		aot_printf (acfg, "Executing clang: %s\n", command);
-		if (execute_system (command) != 0)
-			return FALSE;
-		return TRUE;
-	}
-
-	if (!acfg->llc_args)
-		acfg->llc_args = g_string_new ("");
-
-	/* Verbose asm slows down llc greatly */
-	g_string_append (acfg->llc_args, " -asm-verbose=false");
-
-	if (acfg->aot_opts.mtriple)
-		g_string_append_printf (acfg->llc_args, " -mtriple=%s", acfg->aot_opts.mtriple);
-
-#if defined(TARGET_X86_64_WIN32_MSVC)
-	if (!acfg->aot_opts.mtriple)
-		g_string_append_printf (acfg->llc_args, " -mtriple=%s", "x86_64-pc-windows-msvc");
-#endif
-
-	g_string_append (acfg->llc_args, " -disable-gnu-eh-frame -enable-mono-eh-frame");
-
-	g_string_append_printf (acfg->llc_args, " -mono-eh-frame-symbol=%s%s", acfg->user_symbol_prefix, acfg->llvm_eh_frame_symbol);
-
-	g_string_append_printf (acfg->llc_args, " -disable-tail-calls");
-
-#if defined(TARGET_AMD64) || defined(TARGET_X86)
-	/* This generates stack adjustments in the middle of functions breaking unwind info */
-	g_string_append_printf (acfg->llc_args, " -no-x86-call-frame-opt");
-#endif
-
-#if ( defined(TARGET_MACH) && defined(TARGET_ARM) ) || defined(TARGET_ORBIS) || defined(TARGET_X86_64_WIN32_MSVC)
-	g_string_append_printf (acfg->llc_args, " -relocation-model=pic");
-#else
-	if (llvm_acfg->aot_opts.static_link)
-		g_string_append_printf (acfg->llc_args, " -relocation-model=static");
-	else
-		g_string_append_printf (acfg->llc_args, " -relocation-model=pic");
-#endif
-
-	if (acfg->llvm_owriter) {
-		/* Emit an object file directly */
-		output_fname = g_strdup_printf ("%s", acfg->llvm_ofile);
-		g_string_append_printf (acfg->llc_args, " -filetype=obj");
-	} else {
-		output_fname = g_strdup_printf ("%s", acfg->llvm_sfile);
-	}
-
-	if (acfg->aot_opts.llvm_llc) {
-		g_string_append_printf (acfg->llc_args, " %s", acfg->aot_opts.llvm_llc);
-	}
-
-	if (acfg->aot_opts.use_current_cpu) {
-		g_string_append (acfg->llc_args, " -mcpu=native");
-	}
-
-	if (acfg->aot_opts.llvm_cpu_attr) {
-		g_string_append_printf (acfg->llc_args, " -mattr=%s", acfg->aot_opts.llvm_cpu_attr);
-	}
-
-	command = g_strdup_printf ("\"%sllc\" %s -o \"%s\" \"%s.opt.bc\"", acfg->aot_opts.llvm_path, acfg->llc_args->str, output_fname, acfg->tmpbasename);
-	g_free (output_fname);
-
-	aot_printf (acfg, "Executing llc: %s\n", command);
-
-	if (execute_system (command) != 0)
-		return FALSE;
-	return TRUE;
-}
-#endif
-
 /* Set the skip flag for methods which do not need to be emitted because of dedup */
 static void
 dedup_skip_methods (MonoAotCompile *acfg)
@@ -11969,7 +11790,7 @@ emit_codeview_info (MonoAotCompile *acfg)
 	for (i = 0; i < acfg->nmethods; ++i) {
 		MonoCompile *cfg = acfg->cfgs[i];
 
-		if (!cfg || COMPILE_LLVM (cfg))
+		if (!cfg)
 			continue;
 
 		int ret = g_snprintf (symbol_buffer, G_N_ELEMENTS (symbol_buffer), "%sme_%x", acfg->temp_prefix, i);
@@ -12322,11 +12143,6 @@ compile_methods (MonoAotCompile *acfg)
 		/* This can add new methods to acfg->methods */
 		compile_method (acfg, (MonoMethod *)g_ptr_array_index (acfg->methods, i));
 	}
-
-#ifdef ENABLE_LLVM
-	if (acfg->llvm)
-		mono_llvm_fixup_aot_module ();
-#endif
 }
 
 static int
@@ -13829,16 +13645,14 @@ mono_compile_assembly (MonoAssembly *ass, guint32 opts, const char *aot_options,
 		acfg->jit_opts |= MONO_OPT_GSHAREDVT;
 #endif
 
-#if !defined(ENABLE_LLVM)
 	if (acfg->aot_opts.llvm_only) {
-		aot_printerrf (acfg, "--aot=llvmonly requires a runtime compiled with llvm support.\n");
+		aot_printerrf (acfg, "LLVM support is no longer available.\n");
 		return 1;
 	}
 	if (mono_use_llvm || acfg->aot_opts.llvm) {
-		aot_printerrf (acfg, "--aot=llvm requires a runtime compiled with llvm support.\n");
+		aot_printerrf (acfg, "LLVM support is no longer available.\n");
 		return 1;
 	}
-#endif
 
 	if (acfg->jit_opts & MONO_OPT_GSHAREDVT)
 		mono_set_generic_sharing_vt_supported (TRUE);
@@ -14026,29 +13840,6 @@ mono_compile_assembly (MonoAssembly *ass, guint32 opts, const char *aot_options,
 
 	current_acfg = acfg;
 
-#ifdef ENABLE_LLVM
-	if (acfg->llvm) {
-		llvm_acfg = acfg;
-		LLVMModuleFlags flags = (LLVMModuleFlags)0;
-#ifdef EMIT_DWARF_INFO
-		flags = LLVM_MODULE_FLAG_DWARF;
-#endif
-#ifdef EMIT_WIN32_CODEVIEW_INFO
-		flags = LLVM_MODULE_FLAG_CODEVIEW;
-#endif
-		if (acfg->aot_opts.static_link)
-			flags = (LLVMModuleFlags)(flags | LLVM_MODULE_FLAG_STATIC);
-		if (acfg->aot_opts.llvm_only)
-			flags = (LLVMModuleFlags)(flags | LLVM_MODULE_FLAG_LLVM_ONLY);
-		if (acfg->aot_opts.interp)
-			flags = (LLVMModuleFlags)(flags | LLVM_MODULE_FLAG_INTERP);
-		mono_llvm_create_aot_module (acfg->image->assembly, acfg->global_prefix, acfg->nshared_got_entries, flags);
-
-		add_lazy_init_wrappers (acfg);
-		add_method (acfg, mono_marshal_get_llvm_func_wrapper (LLVM_FUNC_WRAPPER_GC_POLL));
-	}
-#endif
-
 	if (mono_aot_mode_is_interp (&acfg->aot_opts) && mono_is_corlib_image (acfg->image->assembly->image)) {
 		MonoMethod *wrapper = mini_get_interp_lmf_wrapper ("mono_interp_to_native_trampoline", (gpointer) mono_interp_to_native_trampoline);
 		add_method (acfg, wrapper);
@@ -14192,42 +13983,6 @@ emit_aot_image (MonoAotCompile *acfg)
 
 	TV_GETTIME (atv);
 
-#ifdef ENABLE_LLVM
-	if (acfg->llvm) {
-		if (acfg->aot_opts.asm_only) {
-			if (acfg->aot_opts.outfile) {
-				acfg->tmpfname = g_strdup_printf ("%s", acfg->aot_opts.outfile);
-				acfg->tmpbasename = g_strdup (acfg->tmpfname);
-			} else {
-				acfg->tmpbasename = g_strdup_printf ("%s", acfg->image->name);
-				acfg->tmpfname = g_strdup_printf ("%s.s", acfg->tmpbasename);
-			}
-			g_assert (acfg->aot_opts.llvm_outfile);
-			acfg->llvm_sfile = g_strdup (acfg->aot_opts.llvm_outfile);
-			if (acfg->llvm_owriter)
-				acfg->llvm_ofile = g_strdup (acfg->aot_opts.llvm_outfile);
-			else
-				acfg->llvm_sfile = g_strdup (acfg->aot_opts.llvm_outfile);
-		} else {
-			gchar *temp_path;
-			if (strcmp (acfg->aot_opts.temp_path, "") != 0) {
-				temp_path = g_strdup (acfg->aot_opts.temp_path);
-			} else {
-				temp_path = g_mkdtemp (g_strdup ("mono_aot_XXXXXX"));
-				g_assertf (temp_path, "mkdtemp failed, error = (%d) %s", errno, g_strerror (errno));
-				acfg->temp_dir_to_delete = g_strdup (temp_path);
-			}
-				
-			acfg->tmpbasename = g_build_filename (temp_path, "temp", (const char*)NULL);
-			acfg->tmpfname = g_strdup_printf ("%s.s", acfg->tmpbasename);
-			acfg->llvm_sfile = g_strdup_printf ("%s-llvm.s", acfg->tmpbasename);
-			acfg->llvm_ofile = g_strdup_printf ("%s-llvm." AS_OBJECT_FILE_SUFFIX, acfg->tmpbasename);
-
-			g_free (temp_path);
-		}
-	}
-#endif
-
 	if (acfg->aot_opts.asm_only && !acfg->aot_opts.llvm_only) {
 		if (acfg->aot_opts.outfile)
 			acfg->tmpfname = g_strdup_printf ("%s", acfg->aot_opts.outfile);
@@ -14264,8 +14019,6 @@ emit_aot_image (MonoAotCompile *acfg)
 					cfg->asm_symbol = g_strdup_printf ("%s%s", acfg->llvm_label_prefix, cfg->asm_symbol);
 					g_free (old_symbol);
 				}
-			} else if (COMPILE_LLVM (cfg)) {
-				cfg->asm_symbol = g_strdup_printf ("%s%s", acfg->llvm_label_prefix, cfg->llvm_method_name);
 			} else if (acfg->global_symbols || acfg->llvm) {
 				cfg->asm_symbol = get_debug_sym (cfg->orig_method, "", acfg->method_label_hash);
 			} else {
@@ -14364,16 +14117,6 @@ emit_aot_image (MonoAotCompile *acfg)
 
 	if (acfg->aot_opts.data_outfile)
 		fclose (acfg->data_outfile);
-
-#ifdef ENABLE_LLVM
-	if (acfg->llvm) {
-		gboolean res;
-
-		res = emit_llvm_file (acfg);
-		if (!res)
-			return 1;
-	}
-#endif
 
 	emit_library_info (acfg);
 

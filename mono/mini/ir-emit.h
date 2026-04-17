@@ -510,7 +510,7 @@ handle_gsharedvt_ldaddr (MonoCompile *cfg)
  */
 
 #define EMIT_NEW_VARLOAD_SFLOAT(cfg,dest,var,vartype) do { \
-		if (!COMPILE_LLVM ((cfg)) && !(vartype)->byref && (vartype)->type == MONO_TYPE_R4) { \
+		if (!(vartype)->byref && (vartype)->type == MONO_TYPE_R4) { \
 			MonoInst *iargs [1]; \
 			EMIT_NEW_VARLOADA (cfg, iargs [0], (var), (vartype)); \
 			(dest) = mono_emit_jit_icall (cfg, mono_fload_r4, iargs); \
@@ -723,11 +723,7 @@ handle_gsharedvt_ldaddr (MonoCompile *cfg)
         MonoInst *inst; \
         MONO_INST_NEW ((cfg), (inst), (OP_LCOMPARE_IMM)); \
         inst->sreg1 = sr1;									\
-        if (SIZEOF_REGISTER == 4 && COMPILE_LLVM (cfg))  { 	\
-			inst->inst_l = (imm); \
-		} else { \
-			inst->inst_imm = (imm);		 \
-		}								 \
+		inst->inst_imm = (imm);		 \
 	    MONO_ADD_INS ((cfg)->cbb, inst); \
 	} while (0)
 
@@ -873,9 +869,6 @@ static int ccount = 0;
 
 /* This marks a place in code where an implicit exception could be thrown */
 #define MONO_EMIT_NEW_IMPLICIT_EXCEPTION(cfg) do { \
-		if (COMPILE_LLVM ((cfg))) {									\
-			MONO_EMIT_NEW_UNALU (cfg, OP_IMPLICIT_EXCEPTION, -1, -1);	\
-		} \
 	} while (0)
 
 /* Loads/Stores which can fault are handled correctly by the LLVM mono branch */
@@ -970,10 +963,7 @@ mini_emit_bounds_check_offset (MonoCompile *cfg, int array_reg, int array_length
 		ex_name = ex_name ? ex_name : "IndexOutOfRangeException";
 		if (!(cfg->opt & MONO_OPT_ABCREM)) {
 			MONO_EMIT_NULL_CHECK (cfg, array_reg, FALSE);
-			if (COMPILE_LLVM (cfg))
-				MONO_EMIT_DEFAULT_BOUNDS_CHECK ((cfg), (array_reg), (array_length_offset), (index_reg), TRUE, ex_name);
-			else
-				MONO_ARCH_EMIT_BOUNDS_CHECK ((cfg), (array_reg), (array_length_offset), (index_reg), ex_name);
+			MONO_ARCH_EMIT_BOUNDS_CHECK ((cfg), (array_reg), (array_length_offset), (index_reg), ex_name);
 		} else {
 			MonoInst *ins;
 			MONO_INST_NEW ((cfg), ins, OP_BOUNDS_CHECK);

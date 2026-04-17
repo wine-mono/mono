@@ -2258,7 +2258,7 @@ static MonoInst*
 mono_emit_widen_call_res (MonoCompile *cfg, MonoInst *ins, MonoMethodSignature *fsig)
 {
 	if (!MONO_TYPE_IS_VOID (fsig->ret)) {
-		if ((fsig->pinvoke || LLVM_ENABLED) && !fsig->ret->byref) {
+		if (fsig->pinvoke && !fsig->ret->byref) {
 			int widen_op = -1;
 
 			/* 
@@ -2396,7 +2396,7 @@ mini_emit_write_barrier (MonoCompile *cfg, MonoInst *ptr, MonoInst *value)
 
 	mono_gc_get_nursery (&nursery_shift_bits, &nursery_size);
 
-	if (cfg->backend->have_card_table_wb && !cfg->compile_aot && card_table && nursery_shift_bits > 0 && !COMPILE_LLVM (cfg)) {
+	if (cfg->backend->have_card_table_wb && !cfg->compile_aot && card_table && nursery_shift_bits > 0) {
 		MonoInst *wbarrier;
 
 		MONO_INST_NEW (cfg, wbarrier, OP_CARD_TABLE_WBARRIER);
@@ -2937,7 +2937,7 @@ emit_class_init (MonoCompile *cfg, MonoClass *klass)
 		EMIT_NEW_VTABLECONST (cfg, vtable_arg, vtable);
 	}
 
-	if (!COMPILE_LLVM (cfg) && cfg->backend->have_op_generic_class_init) {
+	if (cfg->backend->have_op_generic_class_init) {
 		MonoInst *ins;
 
 		/*
@@ -3929,14 +3929,7 @@ mono_method_check_inlining (MonoCompile *cfg, MonoMethod *method)
 		inline_limit_inited = TRUE;
 	}
 
-	if (COMPILE_LLVM (cfg)) {
-		if (cfg->compile_aot)
-			limit = llvm_aot_inline_limit;
-		else
-			limit = llvm_jit_inline_limit;
-	} else {
-		limit = inline_limit;
-	}
+	limit = inline_limit;
 
 	if (header.code_size >= limit && !(method->iflags & METHOD_IMPL_ATTRIBUTE_AGGRESSIVE_INLINING))
 		return FALSE;
@@ -4070,17 +4063,8 @@ mini_emit_sext_index_reg (MonoCompile *cfg, MonoInst *index)
 
 #if SIZEOF_REGISTER == 8
 	/* The array reg is 64 bits but the index reg is only 32 */
-	if (COMPILE_LLVM (cfg)) {
-		/*
-		 * abcrem can't handle the OP_SEXT_I4, so add this after abcrem,
-		 * during OP_BOUNDS_CHECK decomposition, and in the implementation
-		 * of OP_X86_LEA for llvm.
-		 */
-		index2_reg = index_reg;
-	} else {
-		index2_reg = alloc_preg (cfg);
-		MONO_EMIT_NEW_UNALU (cfg, OP_SEXT_I4, index2_reg, index_reg);
-	}
+	index2_reg = alloc_preg (cfg);
+	MONO_EMIT_NEW_UNALU (cfg, OP_SEXT_I4, index2_reg, index_reg);
 #else
 	if (index->type == STACK_I8) {
 		index2_reg = alloc_preg (cfg);
@@ -4198,16 +4182,12 @@ mini_emit_ldelema_2_ins (MonoCompile *cfg, MonoClass *klass, MonoInst *arr, Mono
 
 #if SIZEOF_REGISTER == 8
 	/* The array reg is 64 bits but the index reg is only 32 */
-	if (COMPILE_LLVM (cfg)) {
-		/* Not needed */
-	} else {
-		int tmpreg = alloc_preg (cfg);
-		MONO_EMIT_NEW_UNALU (cfg, OP_SEXT_I4, tmpreg, index1);
-		index1 = tmpreg;
-		tmpreg = alloc_preg (cfg);
-		MONO_EMIT_NEW_UNALU (cfg, OP_SEXT_I4, tmpreg, index2);
-		index2 = tmpreg;
-	}
+	int tmpreg = alloc_preg (cfg);
+	MONO_EMIT_NEW_UNALU (cfg, OP_SEXT_I4, tmpreg, index1);
+	index1 = tmpreg;
+	tmpreg = alloc_preg (cfg);
+	MONO_EMIT_NEW_UNALU (cfg, OP_SEXT_I4, tmpreg, index2);
+	index2 = tmpreg;
 #else
 	// FIXME: Do we need to do something here for i8 indexes, like in ldelema_1_ins ?
 #endif
@@ -4330,9 +4310,6 @@ mini_emit_array_store (MonoCompile *cfg, MonoClass *klass, MonoInst **sp, gboole
 			int array_reg = sp [0]->dreg;
 			int index_reg = sp [1]->dreg;
 			int offset = (mono_class_array_element_size (klass) * sp [1]->inst_c0) + MONO_STRUCT_OFFSET (MonoArray, vector);
-
-			if (SIZEOF_REGISTER == 8 && COMPILE_LLVM (cfg) && sp [1]->inst_c0 < 0)
-				MONO_EMIT_NEW_UNALU (cfg, OP_ZEXT_I4, index_reg, index_reg);
 
 			if (safety_checks)
 				MONO_EMIT_BOUNDS_CHECK (cfg, array_reg, MonoArray, max_length, index_reg);
@@ -6334,12 +6311,6 @@ mono_method_to_ir (MonoCompile *cfg, MonoMethod *method, MonoBasicBlock *start_b
 
 			if (clause->flags == MONO_EXCEPTION_CLAUSE_FINALLY)
 				mono_create_exvar_for_offset (cfg, clause->handler_offset);
-			/*
-			 * Linking the try block with the EH block hinders inlining as we won't be able to 
-			 * merge the bblocks from inlining and produce an artificial hole for no good reason.
-			 */
-			if (COMPILE_LLVM (cfg))
-				link_bblock (cfg, try_bb, tblock);
 
 			if (*(ip + clause->handler_offset) == CEE_POP)
 				tblock->flags |= BB_EXCEPTION_DEAD_OBJ;
@@ -6446,7 +6417,7 @@ mono_method_to_ir (MonoCompile *cfg, MonoMethod *method, MonoBasicBlock *start_b
 		mono_save_args (cfg, sig, inline_args);
 	}
 
-	if (cfg->method == method && cfg->self_init && cfg->compile_aot && !COMPILE_LLVM (cfg)) {
+	if (cfg->method == method && cfg->self_init && cfg->compile_aot) {
 		MonoMethod *wrapper;
 		MonoInst *args [2];
 		int idx;
@@ -8439,9 +8410,6 @@ calli_end:
 				use_op_switch = TRUE;
 #endif
 
-			if (COMPILE_LLVM (cfg))
-				use_op_switch = TRUE;
-
 			cfg->cbb->has_jump_table = 1;
 
 			if (use_op_switch) {
@@ -9046,7 +9014,7 @@ calli_end:
 				handle_ctor_call (cfg, cmethod, fsig, context_used, sp, ip, &ctor_inline_costs);
 
 				// don't contribute to inline_const if ctor has [MethodImpl(MethodImplOptions.AggressiveInlining)]
-				if (!COMPILE_LLVM(cfg) || !(cmethod->iflags & METHOD_IMPL_ATTRIBUTE_AGGRESSIVE_INLINING))
+				if (!(cmethod->iflags & METHOD_IMPL_ATTRIBUTE_AGGRESSIVE_INLINING))
 					inline_costs += ctor_inline_costs;
 
 				CHECK_CFG_EXCEPTION;
@@ -9263,7 +9231,6 @@ calli_end:
 					       (ip = il_read_brfalse  (next_ip, end, &target))  ||
 					       (ip = il_read_brfalse_s (next_ip, end, &target)))) {
 
-				int dreg;
 				MonoBasicBlock *true_bb, *false_bb;
 
 				il_op = (MonoOpcodeEnum)next_ip [0];
@@ -9292,18 +9259,10 @@ calli_end:
 					CHECK_UNVERIFIABLE (cfg);
 				}
 
-				if (COMPILE_LLVM (cfg)) {
-					dreg = alloc_ireg (cfg);
-					MONO_EMIT_NEW_ICONST (cfg, dreg, 0);
-					MONO_EMIT_NEW_BIALU_IMM (cfg, OP_COMPARE_IMM, -1, dreg, is_true ? 0 : 1);
-
-					MONO_EMIT_NEW_BRANCH_BLOCK2 (cfg, OP_IBEQ, true_bb, false_bb);
-				} else {
-					/* The JIT can't eliminate the iconst+compare */
-					MONO_INST_NEW (cfg, ins, OP_BR);
-					ins->inst_target_bb = is_true ? true_bb : false_bb;
-					MONO_ADD_INS (cfg->cbb, ins);
-				}
+				/* The JIT can't eliminate the iconst+compare */
+				MONO_INST_NEW (cfg, ins, OP_BR);
+				ins->inst_target_bb = is_true ? true_bb : false_bb;
+				MONO_ADD_INS (cfg->cbb, ins);
 
 				start_new_bblock = 1;
 				break;
@@ -10153,9 +10112,6 @@ field_access_end:
 				int index_reg = sp [1]->dreg;
 				int offset = (mono_class_array_element_size (klass) * sp [1]->inst_c0) + MONO_STRUCT_OFFSET (MonoArray, vector);
 
-				if (SIZEOF_REGISTER == 8 && COMPILE_LLVM (cfg))
-					MONO_EMIT_NEW_UNALU (cfg, OP_ZEXT_I4, index_reg, index_reg);
-
 				MONO_EMIT_BOUNDS_CHECK (cfg, array_reg, MonoArray, max_length, index_reg);
 				EMIT_NEW_LOAD_MEMBASE_TYPE (cfg, ins, m_class_get_byval_arg (klass), array_reg, offset);
 			} else {
@@ -10448,9 +10404,6 @@ field_access_end:
 			
 			link_bblock (cfg, cfg->cbb, end_bblock);
 			start_new_bblock = 1;
-			/* This can complicate code generation for llvm since the return value might not be defined */
-			if (COMPILE_LLVM (cfg))
-				INLINE_FAILURE ("throw");
 			break;
 		case MONO_CEE_ENDFINALLY:
 			if (!ip_in_finally_clause (cfg, ip - header->code))
@@ -10521,10 +10474,6 @@ field_access_end:
 				}
 			}
 
-#ifdef ENABLE_LLVM
-			cfg->cbb->try_end = (intptr_t)(ip - header->code);
-#endif
-
 			if ((handlers = mono_find_leave_clauses (cfg, ip, target))) {
 				GList *tmp;
 				/*
@@ -10570,18 +10519,6 @@ field_access_end:
 
 					MONO_START_BB (cfg, dont_throw);
 					cfg->cbb->clause_holes = tmp;
-
-					if (COMPILE_LLVM (cfg)) {
-						MonoBasicBlock *target_bb;
-
-						/* 
-						 * Link the finally bblock with the target, since it will
-						 * conceptually branch there.
-						 */
-						GET_BBLOCK (cfg, tblock, cfg->cil_start + clause->handler_offset + clause->handler_len - 1);
-						GET_BBLOCK (cfg, target_bb, target);
-						link_bblock (cfg, tblock, target_bb);
-					}
 				}
 			} 
 
@@ -11499,9 +11436,6 @@ mono_ldptr:
 
 			link_bblock (cfg, cfg->cbb, end_bblock);
 			start_new_bblock = 1;
-			/* This can complicate code generation for llvm since the return value might not be defined */
-			if (COMPILE_LLVM (cfg))
-				INLINE_FAILURE ("mono_rethrow");
 			break;
 		}
 		case MONO_CEE_SIZEOF: {
@@ -12214,7 +12148,7 @@ mono_handle_global_vregs (MonoCompile *cfg)
 
 #if SIZEOF_REGISTER == 4
 				/* In the LLVM case, the long opcodes are not decomposed */
-				if (regtype == 'l' && !COMPILE_LLVM (cfg)) {
+				if (regtype == 'l') {
 					/*
 					 * Since some instructions reference the original long vreg,
 					 * and some reference the two component vregs, it is quite hard

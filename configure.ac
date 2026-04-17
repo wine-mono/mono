@@ -1253,7 +1253,7 @@ AC_ARG_WITH(unreal,              [  --with-unreal=yes,no                If you w
 AC_ARG_WITH(wasm,                [  --with-wasm=yes,no                  If you want to build the WebAssembly (defaults to no)], [], [with_wasm=default])
 
 
-AC_ARG_WITH(runtime-preset, [  --with-runtime-preset=net_4_x,all,aot,aot_llvm,hybridaot,hybridaot_llvm,fullaot,fullaot_llvm,winaot,winaotinterp,winaot_llvm,winaotinterp_llvm,bitcode,bitcodeinterp,unreal,fullaotinterp,fullaotinterp_llvm  Which default profile to build (defaults to net_4_x)],  [], [with_runtime_preset=net_4_x])
+AC_ARG_WITH(runtime-preset, [  --with-runtime-preset=net_4_x,all,aot,hybridaot,fullaot,winaot,winaotinterp,bitcode,bitcodeinterp,unreal,fullaotinterp  Which default profile to build (defaults to net_4_x)],  [], [with_runtime_preset=net_4_x])
 AC_ARG_WITH(spectre-mitigation,             [  --with-spectre-mitigation=yes,no   If you want to build the runtime with compiler flags that enable Spectre mitigation (defaults to no)], [], [with_spectre_mitigation=default])
 AC_ARG_WITH(spectre-indirect-branch-choice,   [  --with-spectre-indirect-branch-choice=keep,thunk,inline,extern   Convert indirect branches to the specified kind of thunk (defaults to inline)], [], [with_spectre_indirect_branch_choice=inline])
 AC_ARG_WITH(spectre-function-return-choice, [  --with-spectre-function-return-choice=keep,thunk,inline,extern   Convert function return instructions to the specified kind of thunk (defaults to inline)], [], [with_spectre_function_return_choice=inline])
@@ -1311,7 +1311,6 @@ dnl
 dnl Profile defaults
 dnl
 TEST_PROFILE=default
-enable_llvm_default=no
 
 with_profile4_x_default=no
 with_monodroid_default=no
@@ -1337,8 +1336,6 @@ INVARIANT_AOT_OPTIONS=nimt-trampolines=2000,ntrampolines=10000,nrgctx-fetch-tram
 
 AOT_BUILD_ATTRS=$INVARIANT_AOT_OPTIONS
 
-MONO_LLVM_PATH_OPTION=llvm-path="`pwd`/llvm/usr/bin"
-
 if test x$cross_compiling = xyes -o x$enable_mcs_build = xno; then
    DISABLE_MCS_DOCS_default=yes
 fi
@@ -1362,41 +1359,6 @@ elif test x$with_runtime_preset = xall; then
    with_testing_aot_hybrid_default=yes
    with_testing_aot_full_default=yes
    TEST_PROFILE=net_4_x
-elif test x$with_runtime_preset = xbitcode; then
-   DISABLE_MCS_DOCS_default=yes
-   with_testing_aot_full_default=yes
-   with_bitcode_default=yes
-   enable_cooperative_suspend_default=yes
-   # FIXME: use TEST_PROFILE=testing_aot_full
-   TEST_PROFILE=testing_aot_bitcode
-   PLATFORM_TEST_HARNESS_EXCLUDES=BitcodeNotSupported
-   enable_llvm_default=yes
-
-   mono_feature_disable_com='yes'
-   mono_feature_disable_remoting='yes'
-   mono_feature_disable_reflection_emit_save='yes'
-   mono_feature_disable_reflection_emit='yes'
-   mono_feature_disable_appdomains='yes'
-
-   # We need at least clang++-6.0 to read the LLVM IR produced by the runtime
-   AOT_BUILD_FLAGS="--runtime=mobile --aot=llvmonly,clangxx=clang++-6.0,$INVARIANT_AOT_OPTIONS"
-   AOT_RUN_FLAGS="--runtime=mobile --llvmonly"
-   AOT_MODE="llvmonly"
-elif test x$with_runtime_preset = xbitcodeinterp; then
-   with_testing_aot_full_interp_default=yes
-   with_bitcode_default=yes
-   enable_cooperative_suspend_default=yes
-   # FIXME: use TEST_PROFILE=testing_aot_full_interp
-   TEST_PROFILE=testing_aot_bitcode_interp
-   PLATFORM_TEST_HARNESS_EXCLUDES=BitcodeNotSupported
-   enable_llvm_default=yes
-
-   # mscorlib.dll aot compilation crashes
-   mono_feature_disable_com='yes'
-
-   # We need at least clang++-6.0 to read the LLVM IR produced by the runtime
-   AOT_BUILD_FLAGS="--aot=llvmonly,interp,clangxx=clang++-6.0,$INVARIANT_AOT_OPTIONS"
-   AOT_RUN_FLAGS="--llvmonly-interp"
 elif test x$with_runtime_preset = xfullaot; then
    DISABLE_MCS_DOCS_default=yes
    with_testing_aot_full_default=yes
@@ -1411,33 +1373,12 @@ elif test x$with_runtime_preset = xfullaot; then
    AOT_BUILD_FLAGS="--runtime=mobile -O=gsharedvt --aot=full,$INVARIANT_AOT_OPTIONS"
    AOT_RUN_FLAGS="--runtime=mobile --full-aot"
    AOT_MODE="full"
-elif test x$with_runtime_preset = xfullaot_llvm; then
-   DISABLE_MCS_DOCS_default=yes
-   with_testing_aot_full_default=yes
-   TEST_PROFILE=testing_aot_full
-
-   mono_feature_disable_com='yes'
-   mono_feature_disable_remoting='yes'
-   mono_feature_disable_reflection_emit_save='yes'
-   mono_feature_disable_reflection_emit='yes'
-   mono_feature_disable_appdomains='yes'
-
-   AOT_BUILD_FLAGS="--runtime=mobile -O=gsharedvt --llvm --aot=full,$INVARIANT_AOT_OPTIONS"
-   AOT_RUN_FLAGS="--runtime=mobile --full-aot"
-   AOT_MODE="full"
 elif test x$with_runtime_preset = xhybridaot; then
    DISABLE_MCS_DOCS_default=yes
    with_testing_aot_hybrid_default=yes
    TEST_PROFILE=testing_aot_hybrid 
 
    AOT_BUILD_FLAGS="--runtime=mobile --aot=hybrid,$INVARIANT_AOT_OPTIONS"
-   AOT_RUN_FLAGS="--runtime=mobile --hybrid-aot"
-elif test x$with_runtime_preset = xhybridaot_llvm; then
-   DISABLE_MCS_DOCS_default=yes
-   with_testing_aot_hybrid_default=yes
-   TEST_PROFILE=testing_aot_hybrid
-
-   AOT_BUILD_FLAGS="--runtime=mobile --llvm --aot=hybrid,$INVARIANT_AOT_OPTIONS"
    AOT_RUN_FLAGS="--runtime=mobile --hybrid-aot"
 elif test x$with_runtime_preset = xfullaotinterp; then
    with_testing_aot_full_interp_default=yes
@@ -1448,26 +1389,10 @@ elif test x$with_runtime_preset = xfullaotinterp; then
 
    AOT_BUILD_FLAGS="--aot=full,interp,$INVARIANT_AOT_OPTIONS"
    AOT_RUN_FLAGS="--full-aot-interp"
-elif test x$with_runtime_preset = xfullaotinterp_llvm; then
-   with_testing_aot_full_interp_default=yes
-   TEST_PROFILE=testing_aot_full_interp
-
-   # mscorlib.dll aot compilation crashes
-   mono_feature_disable_com='yes'
-
-   AOT_BUILD_FLAGS="-O=gsharedvt --llvm --aot=full,interp,$INVARIANT_AOT_OPTIONS"
-   AOT_RUN_FLAGS="--full-aot-interp"
 elif test x$with_runtime_preset = xaot; then
    with_profile4_x_default=yes
 
    AOT_BUILD_FLAGS="--aot=$INVARIANT_AOT_OPTIONS"
-   AOT_RUN_FLAGS=""
-
-   DISABLE_MCS_DOCS_default=yes
-elif test x$with_runtime_preset = xaot_llvm; then
-   with_profile4_x_default=yes
-
-   AOT_BUILD_FLAGS="--llvm --aot=$INVARIANT_AOT_OPTIONS"
    AOT_RUN_FLAGS=""
 
    DISABLE_MCS_DOCS_default=yes
@@ -1496,33 +1421,6 @@ elif test x$with_runtime_preset = xwinaotinterp; then
 
    AOT_BUILD_FLAGS="--aot=full,interp,$INVARIANT_AOT_OPTIONS"
    AOT_RUN_FLAGS="--full-aot-interp"
-elif test x$with_runtime_preset = xwinaotinterp_llvm; then
-   DISABLE_MCS_DOCS_default=yes
-   with_testing_winaot_interp_default=yes
-   TEST_PROFILE=testing_winaot_interp
-
-   mono_feature_disable_com='yes'
-   mono_feature_disable_remoting='yes'
-   mono_feature_disable_appdomains='yes'
-
-   INVARIANT_AOT_OPTIONS="llvmllc=-mattr=sse4.1,$INVARIANT_AOT_OPTIONS"
-   AOT_BUILD_FLAGS="-O=gsharedvt --llvm --aot=full,interp,$INVARIANT_AOT_OPTIONS"
-   AOT_RUN_FLAGS="--full-aot-interp"
-elif test x$with_runtime_preset = xwinaot_llvm; then
-   DISABLE_MCS_DOCS_default=yes
-   with_winaot_default=yes
-   TEST_PROFILE=winaot
-
-   mono_feature_disable_com='yes'
-   mono_feature_disable_remoting='yes'
-   mono_feature_disable_reflection_emit_save='yes'
-   mono_feature_disable_reflection_emit='yes'
-   mono_feature_disable_appdomains='yes'
-
-   INVARIANT_AOT_OPTIONS="llvmllc=-mattr=sse4.1,$INVARIANT_AOT_OPTIONS"
-   AOT_BUILD_FLAGS="--runtime=mobile -O=gsharedvt --llvm --aot=full,$INVARIANT_AOT_OPTIONS"
-   AOT_RUN_FLAGS="--runtime=mobile --full-aot"
-   AOT_MODE="full"
 elif test x$with_runtime_preset = xorbis; then
    DISABLE_MCS_DOCS_default=yes
    with_orbis_default=yes
@@ -4239,123 +4137,6 @@ dnl **************************
 AC_ARG_WITH(cross-offsets, [  --with-cross-offsets=<offsets file path>    Explicit AOT cross offsets file],
     AC_DEFINE_UNQUOTED(MONO_OFFSETS_FILE, "$withval", [AOT cross offsets file]))
 
-dnl **************
-dnl ***  LLVM  ***
-dnl **************
-
-AC_ARG_ENABLE(llvm,[  --enable-llvm	Enable the LLVM back-end], enable_llvm=$enableval, enable_llvm=default)
-AC_ARG_ENABLE(loadedllvm,[  --enable-loadedllvm	Load the LLVM back-end dynamically], enable_llvm=$enableval && enable_loadedllvm=$enableval, enable_loadedllvm=no)
-AC_ARG_ENABLE(llvm-version-check,[  --enable-llvm-version-check Check that the LLVM matches the version expected by mono], enable_llvm_version_check=$enableval, enable_llvm_version_check=no)
-AC_ARG_ENABLE(llvm-runtime,[  --enable-llvm-runtime	Enable runtime support for llvmonly code], enable_llvm_runtime=$enableval, enable_llvm_runtime=no)
-AC_ARG_ENABLE(llvm-asserts,[  --enable-llvm-asserts Enable llvm asserts (option to LLVM in CMake)], enable_llvm_asserts=$enableval, enable_llvm_asserts=no)
-
-AC_ARG_WITH(llvm, [  --with-llvm=<llvm prefix>    Enable the LLVM back-end], enable_llvm=yes,)
-
-if test "x$enable_llvm" = "xdefault"; then
-   enable_llvm=$enable_llvm_default
-fi
-
-if test "x$enable_loadedllvm" = "xyes"; then
-   AC_MSG_WARN("Loadable LLVM is no longer supported. Enabling default LLVM support instead.")
-   enable_llvm=yes
-fi
-
-enable_llvm_msvc_only="no"
-if test "x$enable_llvm" = "xyes"; then
-	if test "x$host_win32" = "xyes"; then
-		if test "x$cross_compiling" = "xno"; then
-			case "$target" in
-			x86_64*)
-				AC_MSG_WARN("LLVM for host=Windows and target=Windows is only supported on x64 MSVC builds. Disabling LLVM for GCC build.")
-				enable_llvm_msvc_only="yes"
-				;;
-			i686*)
-				AC_MSG_ERROR("LLVM for host=Windows and target=Windows is only supported for x64 builds.")
-				;;
-			esac
-		fi
-	fi
-fi
-
-internal_llvm="no"
-if test "x$enable_llvm" = "xyes"; then
-	if test "x$with_llvm" != "x"; then
-		EXTERNAL_LLVM_CONFIG=$with_llvm/bin/llvm-config
-		if test x$host_win32 = xyes; then
-			EXTERNAL_LLVM_CONFIG=$EXTERNAL_LLVM_CONFIG.exe
-		fi
-		if test ! -x $EXTERNAL_LLVM_CONFIG; then
-			AC_MSG_ERROR([LLVM executable $EXTERNAL_LLVM_CONFIG not found.])
-		fi
-	else
-		internal_llvm=yes
-	fi
-
-	LLVM_CODEGEN_LIBS="x86codegen"
-	case "$target" in
-	arm*)
-		LLVM_CODEGEN_LIBS="armcodegen"
-		;;
-	aarch64*)
-		LLVM_CODEGEN_LIBS="aarch64codegen"
-		;;
-	powerpc*)
-		LLVM_CODEGEN_LIBS="powerpccodegen"
-		;;
-	esac
-	if test "x$host" != "x$target"; then
-		# No need for jit libs
-		LLVM_CODEGEN_LIBS=
-	fi
-
-	AC_SUBST(LLVM_CODEGEN_LIBS)
-	AC_SUBST(EXTERNAL_LLVM_CONFIG)
-
-	if test "x$host_win32" = "xyes" && test "x$cross_compiling" = "xno" &&  test "x$internal_llvm" = "xno"; then
-		EXTERNAL_LLVM_CONFIG_WIN32=$(cygpath -m $EXTERNAL_LLVM_CONFIG)
-		AC_SUBST(EXTERNAL_LLVM_CONFIG_WIN32)
-	fi
-	if test "x$enable_llvm_msvc_only" != "xyes"; then
-		AC_DEFINE(ENABLE_LLVM, 1, [Enable the LLVM back end])
-	else
-		AC_DEFINE(ENABLE_LLVM_MSVC_ONLY, 1, [Enable the LLVM back end])
-	fi
-fi # ENABLE_LLVM
-
-# AC_DEFINE necessary for correct restore behavior on Linux
-AM_CONDITIONAL(INTERNAL_LLVM, [test "x$internal_llvm" != "xno" && test "x$enable_llvm_msvc_only" != "xyes"])
-if test "x$internal_llvm" != "xno"; then
-	if test "x$enable_llvm_msvc_only" != "xyes"; then
-		AC_DEFINE(INTERNAL_LLVM, 1, [LLVM used is being build during mono build])
-	else
-		AC_DEFINE(INTERNAL_LLVM_MSVC_ONLY, 1, [LLVM used is being build during mono build])
-	fi
-fi
-
-AM_CONDITIONAL(INTERNAL_LLVM_ASSERTS, [test "x$enable_llvm_asserts" != "xno" && test "x$enable_llvm_msvc_only" != "xyes"])
-if test "x$enable_llvm_asserts" != "xno"; then
-	if test "x$enable_llvm_msvc_only" != "xyes"; then
-		AC_DEFINE(INTERNAL_LLVM_ASSERTS, 1, [Build LLVM with assertions])
-	else
-		AC_DEFINE(INTERNAL_LLVM_ASSERTS_MSVC_ONLY, 1, [Build LLVM with assertions])
-	fi
-fi
-
-AM_CONDITIONAL(ENABLE_LLVM, [test x$enable_llvm = xyes && test x$enable_llvm_msvc_only != xyes])
-
-if test "x$enable_llvm" = "xyes"; then
-	enable_llvm_runtime=yes
-fi
-
-AM_CONDITIONAL(ENABLE_LLVM_RUNTIME, [test x$enable_llvm_runtime = xyes && test x$enable_llvm_msvc_only != xyes])
-if test "x$enable_llvm_runtime" = "xyes"; then
-	if test "x$enable_llvm_msvc_only" != "xyes"; then
-		AC_DEFINE(ENABLE_LLVM_RUNTIME, 1, [Runtime support code for llvm enabled])
-	else
-		AC_DEFINE(ENABLE_LLVM_RUNTIME_MSVC_ONLY, 1, [Runtime support code for llvm enabled])
-	fi
-fi
-
 TARGET="unknown"
 ACCESS_UNALIGNED="yes"
 
@@ -6387,7 +6168,7 @@ if test x$with_ikvm_native = xyes; then
 	mono_subdirs_ikvm_native=ikvm-native
 fi
 
-MONO_SUBDIRS="po $mono_subdirs_libgc llvm mono $mono_subdirs_ikvm_native $mono_subdirs_support data runtime scripts man samples $mono_subdirs_tools $mono_subdirs_docs msvc acceptance-tests"
+MONO_SUBDIRS="po $mono_subdirs_libgc mono $mono_subdirs_ikvm_native $mono_subdirs_support data runtime scripts man samples $mono_subdirs_tools $mono_subdirs_docs msvc acceptance-tests"
 MONO_NOINST_SUBDIRS="$mono_subdirs_libgc"
 
 AC_SUBST(MONO_SUBDIRS)
@@ -6395,7 +6176,6 @@ AC_SUBST(MONO_NOINST_SUBDIRS)
 
 AC_CONFIG_COMMANDS([quiet-libtool], [sed -e 's/echo "copying selected/# "copying selected/g' < libtool > libtool.tmp && mv libtool.tmp libtool && chmod a+x libtool; sed -e 's/$ECHO "copying selected/# "copying selected/g' < libtool > libtool.tmp && mv libtool.tmp libtool && chmod a+x libtool])
 AC_CONFIG_COMMANDS([nolock-libtool], [sed -e 's/lock_old_archive_extraction=yes/lock_old_archive_extraction=no/g' < libtool > libtool.tmp && mv libtool.tmp libtool && chmod a+x libtool])
-AC_CONFIG_COMMANDS([clean-llvm], [rm -f llvm/llvm_config.mk])
 
 #
 # Mono.Native Support
@@ -6767,13 +6547,8 @@ AC_SUBST(MONO_NATIVE_PLATFORM_TYPE_UNIFIED)
 #  mono/mini/Makefile.am.in we have CCLD=$MONO_CXXLD and CXXLD=$MONO_CXXLD which bypasses
 #  automake's autodetection and lets us use the linker that we want.
 #
-if test "x$enable_llvm_runtime" = "xyes"; then
-	AC_SUBST(MONO_CXXLD, [$CXX])
-	AC_SUBST(MONO_LIBTOOL_TAG, '--tag=CXX')
-else
-	AC_SUBST(MONO_CXXLD, [$CC])
-	AC_SUBST(MONO_LIBTOOL_TAG, '')
-fi
+AC_SUBST(MONO_CXXLD, [$CC])
+AC_SUBST(MONO_LIBTOOL_TAG, '')
 
 ### Set -Werror options
 #
@@ -6963,11 +6738,7 @@ fi
       echo "AOT_RUN_FLAGS=$AOT_RUN_FLAGS" >> $srcdir/$mcsdir/build/config.make
       echo "AOT_BUILD_ATTRS=$AOT_BUILD_ATTRS" >> $srcdir/$mcsdir/build/config.make
 
-      if test "x$internal_llvm" != "xno" && test "x$enable_llvm_msvc_only" = "xno"; then
-        echo "AOT_BUILD_FLAGS=$AOT_BUILD_FLAGS,$MONO_LLVM_PATH_OPTION" >> $srcdir/$mcsdir/build/config.make
-      else
-        echo "AOT_BUILD_FLAGS=$AOT_BUILD_FLAGS" >> $srcdir/$mcsdir/build/config.make
-      fi
+      echo "AOT_BUILD_FLAGS=$AOT_BUILD_FLAGS" >> $srcdir/$mcsdir/build/config.make
     fi
 
     if test "x$AOT_MODE" != "x" ; then
@@ -7078,7 +6849,6 @@ echo "
 	Engine:        $jit_status
 	BigArrays:     $enable_big_arrays
 	DTrace:        $enable_dtrace
-	LLVM Back End: $enable_llvm (built in-tree: $internal_llvm, assertions: $enable_llvm_asserts, msvc only: $enable_llvm_msvc_only)
 	Spectre:       $spectre_mitigation_status
 	Mono.Native:   $mono_native_text
 

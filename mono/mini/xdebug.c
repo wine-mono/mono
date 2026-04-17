@@ -109,14 +109,6 @@ G_BEGIN_DECLS
 /* GDB puts a breakpoint in this function.  */
 void MONO_NEVER_INLINE __jit_debug_register_code(void);
 
-#if defined(ENABLE_LLVM) && !defined(MONO_CROSS_COMPILE)
-
-/* LLVM already defines these */
-
-extern jit_descriptor __jit_debug_descriptor;
-
-#else
-
 /* gcc seems to inline/eliminate calls to noinline functions, thus the asm () */
 void MONO_NEVER_INLINE __jit_debug_register_code(void) {
 #if defined(__GNUC__)
@@ -127,8 +119,6 @@ void MONO_NEVER_INLINE __jit_debug_register_code(void) {
 /* Make sure to specify the version statically, because the
    debugger may check the version before we can set it.  */
 jit_descriptor __jit_debug_descriptor = { 1, 0, 0, 0 };
-
-#endif
 
 G_END_DECLS
 

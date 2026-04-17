@@ -237,7 +237,3 @@
 #include "cygconfig.h"
 
 #endif
-
-#if defined(ENABLE_LLVM) && defined(HOST_WIN32) && defined(TARGET_WIN32) && (!defined(TARGET_AMD64) || !defined(_MSC_VER))
-#error LLVM for host=Windows and target=Windows is only supported on x64 MSVC build.
-#endif

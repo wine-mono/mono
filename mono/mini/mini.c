@@ -2043,14 +2043,7 @@ mono_compile_create_vars (MonoCompile *cfg)
 	if (cfg->verbose_level > 2)
 		g_print ("locals done\n");
 
-#ifdef ENABLE_LLVM
-	if (COMPILE_LLVM (cfg))
-		mono_llvm_create_vars (cfg);
-	else
-		mono_arch_create_vars (cfg);
-#else
 	mono_arch_create_vars (cfg);
-#endif
 
 	if (cfg->method->save_lmf && cfg->create_lmf_var) {
 		MonoInst *lmf_var = mono_compile_create_var (cfg, mono_get_int_type (), OP_LOCAL);
@@ -2471,10 +2464,7 @@ create_jit_info (MonoCompile *cfg, MonoMethod *method_to_compile)
 			printf ("Number of try block holes %d\n", num_holes);
 	}
 
-	if (COMPILE_LLVM (cfg))
-		num_clauses = cfg->llvm_ex_info_len;
-	else
-		num_clauses = header->num_clauses;
+	num_clauses = header->num_clauses;
 
 	if (cfg->method->dynamic)
 		jinfo = (MonoJitInfo *)g_malloc0 (mono_jit_info_size (flags, num_clauses, num_holes));
@@ -2484,9 +2474,6 @@ create_jit_info (MonoCompile *cfg, MonoMethod *method_to_compile)
 
 	mono_jit_info_init (jinfo, cfg->method_to_register, cfg->native_code, cfg->code_len, flags, num_clauses, num_holes);
 	jinfo->domain_neutral = (cfg->opt & MONO_OPT_SHARED) != 0;
-
-	if (COMPILE_LLVM (cfg))
-		jinfo->from_llvm = TRUE;
 
 	if (cfg->gshared) {
 		MonoInst *inst;
@@ -2514,8 +2501,7 @@ create_jit_info (MonoCompile *cfg, MonoMethod *method_to_compile)
 				mini_method_get_context (method_to_compile)->method_inst ||
 				m_class_is_valuetype (method_to_compile->klass)) {
 			inst = cfg->rgctx_var;
-			if (!COMPILE_LLVM (cfg))
-				g_assert (inst->opcode == OP_REGOFFSET);
+			g_assert (inst->opcode == OP_REGOFFSET);
 			loclist = cfg->rgctx_loclist;
 		} else {
 			inst = cfg->args [0];
@@ -2539,12 +2525,7 @@ create_jit_info (MonoCompile *cfg, MonoMethod *method_to_compile)
 			}
 		}
 
-		if (COMPILE_LLVM (cfg)) {
-			g_assert (cfg->llvm_this_reg != -1);
-			gi->this_in_reg = 0;
-			gi->this_reg = cfg->llvm_this_reg;
-			gi->this_offset = cfg->llvm_this_offset;
-		} else if (inst->opcode == OP_REGVAR) {
+		if (inst->opcode == OP_REGVAR) {
 			gi->this_in_reg = 1;
 			gi->this_reg = inst->dreg;
 		} else {
@@ -2610,10 +2591,7 @@ create_jit_info (MonoCompile *cfg, MonoMethod *method_to_compile)
 		info->thunks_size = cfg->thunk_area;
 	}
 
-	if (COMPILE_LLVM (cfg)) {
-		if (num_clauses)
-			memcpy (&jinfo->clauses [0], &cfg->llvm_ex_info [0], num_clauses * sizeof (MonoJitExceptionInfo));
-	} else if (header->num_clauses) {
+	if (header->num_clauses) {
 		int i;
 
 		for (i = 0; i < header->num_clauses; i++) {
@@ -2870,15 +2848,6 @@ insert_safepoints (MonoCompile *cfg)
 
 	g_assert (mini_safepoints_enabled ());
 
-	if (COMPILE_LLVM (cfg)) {
-		if (!cfg->llvm_only) {
-			/* We rely on LLVM's safepoints insertion capabilities. */
-			if (cfg->verbose_level > 1)
-				printf ("SKIPPING SAFEPOINTS for code compiled with LLVM\n");
-			return;
-		}
-	}
-
 	if (cfg->method->wrapper_type == MONO_WRAPPER_MANAGED_TO_NATIVE) {
 		WrapperInfo *info = mono_marshal_get_wrapper_info (cfg->method);
 		/* These wrappers are called from the wrapper for the polling function, leading to potential stack overflow */
@@ -3096,9 +3065,6 @@ mini_method_compile (MonoMethod *method, guint32 opts, MonoDomain *domain, JitFl
 	gboolean full_aot = (flags & JIT_FLAG_FULL_AOT) ? 1 : 0;
 	gboolean disable_direct_icalls = (flags & JIT_FLAG_NO_DIRECT_ICALLS) ? 1 : 0;
 	gboolean gsharedvt_method = FALSE;
-#ifdef ENABLE_LLVM
-	gboolean llvm = (flags & JIT_FLAG_LLVM) ? 1 : 0;
-#endif
 	static gboolean verbose_method_inited;
 	static char **verbose_method_names;
 
@@ -3145,10 +3111,6 @@ mini_method_compile (MonoMethod *method, guint32 opts, MonoDomain *domain, JitFl
 		else if (mono_method_is_generic_impl (method))
 			mono_atomic_inc_i32 (&mono_stats.generics_unsharable_methods);
 	}
-
-#ifdef ENABLE_LLVM
-	try_llvm = mono_use_llvm || llvm;
-#endif
 
 #ifndef MONO_ARCH_FLOAT32_SUPPORTED
 	opts &= ~MONO_OPT_FLOAT32;
@@ -3295,38 +3257,6 @@ mini_method_compile (MonoMethod *method, guint32 opts, MonoDomain *domain, JitFl
 		return cfg;
 	}
 
-#ifdef ENABLE_LLVM
-	{
-		static gboolean inited;
-
-		if (!inited)
-			inited = TRUE;
-
-		/* 
-		 * Check for methods which cannot be compiled by LLVM early, to avoid
-		 * the extra compilation pass.
-		 */
-		if (COMPILE_LLVM (cfg)) {
-			mono_llvm_check_method_supported (cfg);
-			if (cfg->disable_llvm) {
-				if (cfg->verbose_level >= (cfg->llvm_only ? 0 : 1)) {
-					//nm = mono_method_full_name (cfg->method, TRUE);
-					printf ("LLVM failed for '%s.%s': %s\n", m_class_get_name (method->klass), method->name, cfg->exception_message);
-					//g_free (nm);
-				}
-				if (cfg->llvm_only) {
-					g_free (cfg->exception_message);
-					cfg->disable_aot = TRUE;
-					return cfg;
-				}
-				mono_destroy_compile (cfg);
-				try_llvm = FALSE;
-				goto restart_compile;
-			}
-		}
-	}
-#endif
-
 	cfg->prof_flags = mono_profiler_get_call_instrumentation_flags (cfg->method);
 	cfg->prof_coverage = mono_profiler_coverage_instrumentation_enabled (cfg->method);
 
@@ -3388,10 +3318,6 @@ mini_method_compile (MonoMethod *method, guint32 opts, MonoDomain *domain, JitFl
 		}
 	}
 
-	if (COMPILE_LLVM (cfg)) {
-		cfg->opt |= MONO_OPT_ABCREM;
-	}
-
 	if (!verbose_method_inited) {
 		char *env = g_getenv ("MONO_VERBOSE_METHOD");
 		if (env != NULL)
@@ -3428,11 +3354,9 @@ mini_method_compile (MonoMethod *method, guint32 opts, MonoDomain *domain, JitFl
 		char *method_name;
 
 		method_name = mono_method_get_full_name (method);
-		g_print ("converting %s%s%smethod %s\n", COMPILE_LLVM (cfg) ? "llvm " : "", cfg->gsharedvt ? "gsharedvt " : "", (cfg->gshared && !cfg->gsharedvt) ? "gshared " : "", method_name);
+		g_print ("converting %s%smethod %s\n", cfg->gsharedvt ? "gsharedvt " : "", (cfg->gshared && !cfg->gsharedvt) ? "gshared " : "", method_name);
 		/*
-		if (COMPILE_LLVM (cfg))
-			g_print ("converting llvm method %s\n", method_name = mono_method_full_name (method, TRUE));
-		else if (cfg->gsharedvt)
+		if (cfg->gsharedvt)
 			g_print ("converting gsharedvt method %s\n", method_name = mono_method_full_name (method_to_compile, TRUE));
 		else if (cfg->gshared)
 			g_print ("converting shared method %s\n", method_name = mono_method_full_name (method_to_compile, TRUE));
@@ -3507,30 +3431,6 @@ mini_method_compile (MonoMethod *method, guint32 opts, MonoDomain *domain, JitFl
 
 	cfg->stat_basic_blocks += cfg->num_bblocks;
 
-	if (COMPILE_LLVM (cfg)) {
-		MonoInst *ins;
-
-		/* The IR has to be in SSA form for LLVM */
-		cfg->opt |= MONO_OPT_SSA;
-
-		// FIXME:
-		if (cfg->ret) {
-			// Allow SSA on the result value
-			cfg->ret->flags &= ~MONO_INST_VOLATILE;
-
-			// Add an explicit return instruction referencing the return value
-			MONO_INST_NEW (cfg, ins, OP_SETRET);
-			ins->sreg1 = cfg->ret->dreg;
-
-			MONO_ADD_INS (cfg->bb_exit, ins);
-		}
-
-		cfg->opt &= ~MONO_OPT_LINEARS;
-
-		/* FIXME: */
-		cfg->opt &= ~MONO_OPT_BRANCH;
-	}
-
 	/* todo: remove code when we have verified that the liveness for try/catch blocks
 	 * works perfectly 
 	 */
@@ -3553,10 +3453,8 @@ mini_method_compile (MonoMethod *method, guint32 opts, MonoDomain *domain, JitFl
 
 	/*g_print ("numblocks = %d\n", cfg->num_bblocks);*/
 
-	if (!COMPILE_LLVM (cfg)) {
-		MONO_TIME_TRACK (mono_jit_stats.jit_decompose_long_opts, mono_decompose_long_opts (cfg));
-		mono_cfg_dump_ir (cfg, "decompose_long_opts");
-	}
+	MONO_TIME_TRACK (mono_jit_stats.jit_decompose_long_opts, mono_decompose_long_opts (cfg));
+	mono_cfg_dump_ir (cfg, "decompose_long_opts");
 
 	/* Should be done before branch opts */
 	if (cfg->opt & (MONO_OPT_CONSPROP | MONO_OPT_COPYPROP)) {
@@ -3599,10 +3497,8 @@ mini_method_compile (MonoMethod *method, guint32 opts, MonoDomain *domain, JitFl
 		mono_cfg_dump_ir (cfg, "local_alias_analysis");
 	}
 	/* Disable this for LLVM to make the IR easier to handle */
-	if (!COMPILE_LLVM (cfg)) {
-		MONO_TIME_TRACK (mono_jit_stats.jit_if_conversion, mono_if_conversion (cfg));
-		mono_cfg_dump_ir (cfg, "if_conversion");
-	}
+	MONO_TIME_TRACK (mono_jit_stats.jit_if_conversion, mono_if_conversion (cfg));
+	mono_cfg_dump_ir (cfg, "if_conversion");
 
 	mono_threads_safepoint ();
 
@@ -3679,7 +3575,7 @@ mini_method_compile (MonoMethod *method, guint32 opts, MonoDomain *domain, JitFl
 	}
 
 	if ((cfg->opt & MONO_OPT_CONSPROP) || (cfg->opt & MONO_OPT_COPYPROP)) {
-		if (cfg->comp_done & MONO_COMP_SSA && !COMPILE_LLVM (cfg)) {
+		if (cfg->comp_done & MONO_COMP_SSA) {
 #ifndef DISABLE_SSA
 			MONO_TIME_TRACK (mono_jit_stats.jit_ssa_cprop, mono_ssa_cprop (cfg));
 			mono_cfg_dump_ir (cfg, "ssa_cprop");
@@ -3688,7 +3584,7 @@ mini_method_compile (MonoMethod *method, guint32 opts, MonoDomain *domain, JitFl
 	}
 
 #ifndef DISABLE_SSA
-	if (cfg->comp_done & MONO_COMP_SSA && !COMPILE_LLVM (cfg)) {
+	if (cfg->comp_done & MONO_COMP_SSA) {
 		//mono_ssa_strength_reduction (cfg);
 
 		if (cfg->opt & MONO_OPT_DEADCE) {
@@ -3719,7 +3615,7 @@ mini_method_compile (MonoMethod *method, guint32 opts, MonoDomain *domain, JitFl
 	}
 #endif
 
-	if (cfg->comp_done & MONO_COMP_SSA && COMPILE_LLVM (cfg)) {
+	if (cfg->comp_done & MONO_COMP_SSA) {
 		mono_ssa_loop_invariant_code_motion (cfg);
 		mono_cfg_dump_ir (cfg, "loop_invariant_code_motion");
 		/* This removes MONO_INST_FAULT flags too so perform it unconditionally */
@@ -3811,81 +3707,34 @@ mini_method_compile (MonoMethod *method, guint32 opts, MonoDomain *domain, JitFl
     //print_dfn (cfg);
 	
 	/* variables are allocated after decompose, since decompose could create temps */
-	if (!COMPILE_LLVM (cfg)) {
-		MONO_TIME_TRACK (mono_jit_stats.jit_arch_allocate_vars, mono_arch_allocate_vars (cfg));
-		mono_cfg_dump_ir (cfg, "arch_allocate_vars");
-		if (cfg->exception_type)
-			return cfg;
-	}
+	MONO_TIME_TRACK (mono_jit_stats.jit_arch_allocate_vars, mono_arch_allocate_vars (cfg));
+	mono_cfg_dump_ir (cfg, "arch_allocate_vars");
+	if (cfg->exception_type)
+		return cfg;
 
 	if (cfg->gsharedvt)
 		mono_allocate_gsharedvt_vars (cfg);
 
-	if (!COMPILE_LLVM (cfg)) {
-		gboolean need_local_opts;
-		MONO_TIME_TRACK (mono_jit_stats.jit_spill_global_vars, mono_spill_global_vars (cfg, &need_local_opts));
-		mono_cfg_dump_ir (cfg, "spill_global_vars");
+	gboolean need_local_opts;
+	MONO_TIME_TRACK (mono_jit_stats.jit_spill_global_vars, mono_spill_global_vars (cfg, &need_local_opts));
+	mono_cfg_dump_ir (cfg, "spill_global_vars");
 
-		if (need_local_opts || cfg->compile_aot) {
-			/* To optimize code created by spill_global_vars */
-			MONO_TIME_TRACK (mono_jit_stats.jit_local_cprop3, mono_local_cprop (cfg));
-			if (cfg->opt & MONO_OPT_DEADCE)
-				MONO_TIME_TRACK (mono_jit_stats.jit_local_deadce3, mono_local_deadce (cfg));
-			mono_cfg_dump_ir (cfg, "needs_local_opts");
-		}
+	if (need_local_opts || cfg->compile_aot) {
+		/* To optimize code created by spill_global_vars */
+		MONO_TIME_TRACK (mono_jit_stats.jit_local_cprop3, mono_local_cprop (cfg));
+		if (cfg->opt & MONO_OPT_DEADCE)
+			MONO_TIME_TRACK (mono_jit_stats.jit_local_deadce3, mono_local_deadce (cfg));
+		mono_cfg_dump_ir (cfg, "needs_local_opts");
 	}
 
 	mono_insert_branches_between_bblocks (cfg);
 
-	if (COMPILE_LLVM (cfg)) {
-#ifdef ENABLE_LLVM
-		char *nm;
+	MONO_TIME_TRACK (mono_jit_stats.jit_codegen, mono_codegen (cfg));
+	mono_cfg_dump_ir (cfg, "codegen");
+	if (cfg->exception_type)
+		return cfg;
 
-		/* The IR has to be in SSA form for LLVM */
-		if (!(cfg->comp_done & MONO_COMP_SSA)) {
-			cfg->exception_message = g_strdup ("SSA disabled.");
-			cfg->disable_llvm = TRUE;
-		}
-
-		if (cfg->flags & MONO_CFG_NEEDS_DECOMPOSE)
-			mono_decompose_array_access_opts (cfg);
-
-		if (!cfg->disable_llvm)
-			mono_llvm_emit_method (cfg);
-		if (cfg->disable_llvm) {
-			if (cfg->verbose_level >= (cfg->llvm_only ? 0 : 1)) {
-				//nm = mono_method_full_name (cfg->method, TRUE);
-				printf ("LLVM failed for '%s.%s': %s\n", m_class_get_name (method->klass), method->name, cfg->exception_message);
-				//g_free (nm);
-			}
-			if (cfg->llvm_only) {
-				cfg->disable_aot = TRUE;
-				return cfg;
-			}
-			mono_destroy_compile (cfg);
-			try_llvm = FALSE;
-			goto restart_compile;
-		}
-
-		if (cfg->verbose_level > 0 && !cfg->compile_aot) {
-			nm = mono_method_get_full_name (cfg->method);
-			g_print ("LLVM Method %s emitted at %p to %p (code length %d) [%s]\n", 
-					 nm, 
-					 cfg->native_code, cfg->native_code + cfg->code_len, cfg->code_len, cfg->domain->friendly_name);
-			g_free (nm);
-		}
-#endif
-	} else {
-		MONO_TIME_TRACK (mono_jit_stats.jit_codegen, mono_codegen (cfg));
-		mono_cfg_dump_ir (cfg, "codegen");
-		if (cfg->exception_type)
-			return cfg;
-	}
-
-	if (COMPILE_LLVM (cfg))
-		mono_atomic_inc_i32 (&mono_jit_stats.methods_with_llvm);
-	else
-		mono_atomic_inc_i32 (&mono_jit_stats.methods_without_llvm);
+	mono_atomic_inc_i32 (&mono_jit_stats.methods_without_llvm);
 
 	MONO_TIME_TRACK (mono_jit_stats.jit_create_jit_info, cfg->jit_info = create_jit_info (cfg, method_to_compile));
 
@@ -4306,7 +4155,6 @@ mini_jit_cleanup (void)
 #endif
 }
 
-#ifndef ENABLE_LLVM
 void
 mono_llvm_emit_aot_file_info (MonoAotFileInfo *info, gboolean has_jitted_code)
 {
@@ -4325,10 +4173,6 @@ mono_llvm_emit_aot_data_aligned (const char *symbol, guint8 *data, int data_len,
 	g_assert_not_reached ();
 }
 
-#endif
-
-#if !defined(ENABLE_LLVM_RUNTIME) && !defined(ENABLE_LLVM)
-
 void
 mono_llvm_cpp_throw_exception (void)
 {
@@ -4340,8 +4184,6 @@ mono_llvm_cpp_catch_exception (MonoLLVMInvokeCallback cb, gpointer arg, gboolean
 {
 	g_assert_not_reached ();
 }
-
-#endif
 
 #ifdef DISABLE_JIT
 
@@ -4414,9 +4256,7 @@ mini_get_cpu_features (MonoCompile* cfg)
 #if !defined(MONO_CROSS_COMPILE)
 	if (!cfg->compile_aot || cfg->use_current_cpu) {
 		// detect current CPU features if we are in JIT mode or AOT with use_current_cpu flag.
-#if defined(ENABLE_LLVM)
-		features = mono_llvm_get_cpu_features (); // llvm has a nice built-in API to detect features
-#elif defined(TARGET_AMD64) || defined(TARGET_X86)
+#if defined(TARGET_AMD64) || defined(TARGET_X86)
 		features = mono_arch_get_cpu_features ();
 #endif
 	}

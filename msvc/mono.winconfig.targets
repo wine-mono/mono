@@ -120,8 +120,6 @@
                   string [] GetEnabledConfigFeatures (string path, string enableDefines)
                   {
                       string [] supportedFeatures = { "ENABLE_ICALL_SYMBOL_MAP",
-                                                      "ENABLE_LLVM",
-                                                      "ENABLE_LLVM_RUNTIME",
                                                       "ENABLE_HYBRID_SUSPEND",
                                                       "ENABLE_COOP_SUSPEND" };
 

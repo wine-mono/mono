@@ -15,14 +15,6 @@
     <MONO_USE_STATIC_C_RUNTIME>false</MONO_USE_STATIC_C_RUNTIME>
     <!-- When true, mono binaries will link using static libmono. When false, mono binaries will link using dynamic libmono.  -->
     <MONO_USE_STATIC_LIBMONO>false</MONO_USE_STATIC_LIBMONO>
-    <!-- When true, mono binaries will link and include llvm. When false, mono binaries will not link and include llvm.  -->
-    <MONO_ENABLE_LLVM>false</MONO_ENABLE_LLVM>
-    <!-- When true, enable LLVM asserts for internal LLVM build. When false, disable LLVM asserts for internal LLVM build.  -->
-    <MONO_ENABLE_LLVM_ASSERTS>false</MONO_ENABLE_LLVM_ASSERTS>
-    <!-- When set, use an alternative LLVM source location for internal LLVM build.  -->
-    <MONO_INTERNAL_LLVM_SOURCE_DIR></MONO_INTERNAL_LLVM_SOURCE_DIR>
-    <!-- When set, use an external pre-build LLVM library instead of internal one.  -->
-    <MONO_EXTERNAL_LLVM_CONFIG></MONO_EXTERNAL_LLVM_CONFIG>
     <!-- When true, ported mono projects will build using C++ instead of C compiler. When false, all project will be build using the default compiler.  -->
     <MONO_COMPILE_AS_CPP>false</MONO_COMPILE_AS_CPP>
     <!-- When true, mono binaries will link and include BTLS. When false, mono binaries will not link and include BTLS.  -->
