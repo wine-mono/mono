@@ -2529,8 +2529,26 @@ namespace Mono.CSharp {
 				bool left_is_null = left is NullLiteral;
 				bool right_is_null = right is NullLiteral;
 
-				if (left_is_null || right_is_null)
+				if (left_is_null || right_is_null) {
+					Type non_null_type = left_is_null ? r : l;
+
+					if (left_is_null && right_is_null)
+						return;
+
+					if (non_null_type.IsGenericParameter) {
+						if (IsKnownValueTypeParameter (non_null_type)) {
+							Error_OperatorCannotBeApplied ();
+							return;
+						}
+
+						if (left_is_null)
+							right = new BoxedCast (right);
+						else
+							left = new BoxedCast (left);
+					}
+
 					return;
+				}
 
 				if (l.IsValueType || r.IsValueType) {
 					Error_OperatorCannotBeApplied ();
@@ -2556,6 +2574,15 @@ namespace Mono.CSharp {
 					right = new EmptyCast (right, TypeManager.object_type);
 
 				return;
+		}
+
+		static bool IsKnownValueTypeParameter (Type t)
+		{
+			if (!t.IsGenericParameter)
+				return false;
+
+			GenericConstraints gc = TypeManager.GetTypeParameterConstraints (t);
+			return (gc != null) && gc.IsValueType;
 		}
 
 		
