@@ -4427,6 +4427,9 @@ namespace Mono.CSharp {
 				       "Can not find a constructor for this argument list");
 				return false;
 			}
+
+			argument_list = Invocation.MaterializeOptionalArguments (
+				ec, base_constructor, argument_list, loc);
 			
 			if (base_constructor == caller_builder){
 				Report.Error (516, String.Format ("Constructor `{0}' can not call itself", TypeManager.CSharpSignature (caller_builder)));
@@ -4768,8 +4771,19 @@ namespace Mono.CSharp {
 			SourceMethod source = SourceMethod.Create (
 				Parent, ConstructorBuilder, block);
 
+			if (Initializer != null) {
+				if (GetObsoleteAttribute (Parent) == null && Parent.GetObsoleteAttribute (Parent.Parent) == null)
+					Initializer.CheckObsoleteAttribute (Parent, Location);
+				else
+					ec.TestObsoleteMethodUsage = false;
+				Initializer.Emit (ec);
+			}
+
 			//
 			// Classes can have base initializers and instance field initializers.
+			// Instance field initializers run after the selected base constructor
+			// has been invoked. If we chain with "this (...)", the delegated-to
+			// constructor is responsible for running them exactly once.
 			//
 			if (Parent.Kind == Kind.Class){
 				if ((ModFlags & Modifiers.STATIC) == 0){
@@ -4777,20 +4791,9 @@ namespace Mono.CSharp {
 					if (field_init_parent is ClassPart)
 						field_init_parent = ((ClassPart) field_init_parent).PartialContainer;
 
-					//
-					// If we use a "this (...)" constructor initializer, then
-					// do not emit field initializers, they are initialized in the other constructor
-					//
 					if (!(Initializer != null && Initializer is ConstructorThisInitializer))
 						field_init_parent.EmitFieldInitializers (ec);
 				}
-			}
-			if (Initializer != null) {
-				if (GetObsoleteAttribute (Parent) == null && Parent.GetObsoleteAttribute (Parent.Parent) == null)
-					Initializer.CheckObsoleteAttribute (Parent, Location);
-				else
-					ec.TestObsoleteMethodUsage = false;
-				Initializer.Emit (ec);
 			}
 			
 			if ((ModFlags & Modifiers.STATIC) != 0)
