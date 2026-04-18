@@ -5521,6 +5521,7 @@ mono_breakpoint_clean_code (guint8 *method_start, guint8 *code, int offset, guin
 gpointer
 mono_arch_get_vcall_slot (guint8 *code, gpointer *regs, int *displacement)
 {
+	guint8 *orig_code = code;
 	guint8 buf [10];
 	guint32 reg;
 	gint32 disp;
@@ -5597,7 +5598,7 @@ mono_arch_get_vcall_slot (guint8 *code, gpointer *regs, int *displacement)
 	} else if ((code [0] == 0x41) && (code [1] == 0xff) && (code [2] == 0x15)) {
 		/* call OFFSET(%rip) */
 		disp = *(guint32*)(code + 3);
-		return (gpointer*)(code + disp + 7);
+		return (gpointer*)(orig_code + disp);
 	} else if ((code [0] == 0xff) && (amd64_modrm_reg (code [1]) == 0x2) && (amd64_modrm_mod (code [1]) == 0x2) && (amd64_modrm_reg (code [2]) == X86_ESP) && (amd64_modrm_mod (code [2]) == 0) && (amd64_modrm_rm (code [2]) == X86_ESP)) {
 		/* call *[r12+disp32] */
 		if (IS_REX (code [-1]))

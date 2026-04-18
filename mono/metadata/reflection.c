@@ -9511,6 +9511,54 @@ methodbuilder_to_mono_method (MonoClass *klass, MonoReflectionMethodBuilder* mb)
 	return mb->mhandle;
 }
 
+static MonoMethod*
+dynamic_override_method_to_mono_method (MonoObject *obj)
+{
+	/*
+	 * Dynamic MethodImpl readback runs before every override target has a
+	 * reflected MonoMethod cached in mhandle.  For MethodBuilder inputs we
+	 * must force the existing Reflection.Emit materialization path instead
+	 * of only peeking at the raw mhandle.  If that target is an interface
+	 * method, the interface runtime vtable also has to be built here so the
+	 * declaration method receives a stable slot before class vtable setup
+	 * consumes the override pair.
+	 */
+	if (!strcmp (obj->vtable->klass->name, "MethodBuilder")) {
+		MonoReflectionMethodBuilder *mb = (MonoReflectionMethodBuilder*) obj;
+		MonoMethod *result = mb->mhandle;
+
+		if (!result) {
+			MonoReflectionTypeBuilder *tb = (MonoReflectionTypeBuilder*) mb->type;
+			MonoType *type = mono_reflection_type_get_handle ((MonoReflectionType*) tb);
+
+			if (!type) {
+				mono_domain_try_type_resolve (mono_domain_get (), NULL, (MonoObject*) tb);
+				type = mono_reflection_type_get_handle ((MonoReflectionType*) tb);
+			}
+
+			if (!type)
+				return NULL;
+
+			result = methodbuilder_to_mono_method (mono_class_from_mono_type (type), mb);
+		}
+
+		if (result && MONO_CLASS_IS_INTERFACE (result->klass) && result->slot == -1) {
+			ensure_runtime_vtable (result->klass);
+			result = mb->mhandle;
+		}
+
+		return result;
+	}
+
+	if (!strcmp (obj->vtable->klass->name, "MonoMethod") ||
+	    !strcmp (obj->vtable->klass->name, "MonoCMethod") ||
+	    !strcmp (obj->vtable->klass->name, "MonoGenericMethod") ||
+	    !strcmp (obj->vtable->klass->name, "MonoGenericCMethod"))
+		return ((MonoReflectionMethod*) obj)->method;
+
+	return NULL;
+}
+
 static MonoClassField*
 fieldbuilder_to_mono_class_field (MonoClass *klass, MonoReflectionFieldBuilder* fb)
 {
@@ -9945,8 +9993,12 @@ ensure_runtime_vtable (MonoClass *klass)
 	}
 
 	if (klass->flags & TYPE_ATTRIBUTE_INTERFACE) {
-		for (i = 0; i < klass->method.count; ++i)
-			klass->methods [i]->slot = i;
+		int slot_num = 0;
+		for (i = 0; i < klass->method.count; ++i) {
+			MonoMethod *im = klass->methods [i];
+			if (!(im->flags & METHOD_ATTRIBUTE_STATIC))
+				im->slot = slot_num++;
+		}
 		
 		mono_class_setup_interface_offsets (klass);
 		mono_class_setup_interface_id (klass);
@@ -10000,14 +10052,27 @@ mono_reflection_get_dynamic_overrides (MonoClass *klass, MonoMethod ***overrides
 			MonoReflectionMethodBuilder *mb = 
 				mono_array_get (tb->methods, MonoReflectionMethodBuilder*, i);
 			if (mb->override_method) {
-				(*overrides) [onum * 2] = 
-					mb->override_method->method;
-				(*overrides) [onum * 2 + 1] =
-					mb->mhandle;
+				MonoMethod *override_method =
+					dynamic_override_method_to_mono_method ((MonoObject*) mb->override_method);
+				MonoMethod *method_impl = mb->mhandle;
 
-				/* FIXME: What if 'override_method' is a MethodBuilder ? */
-				g_assert (mb->override_method->method);
-				g_assert (mb->mhandle);
+				if (!override_method) {
+					MonoClass *handle_class = NULL;
+					override_method = (MonoMethod*) resolve_object (
+						klass->image, (MonoObject*) mb->override_method,
+						&handle_class, NULL);
+				}
+
+				if (!method_impl)
+					method_impl = methodbuilder_to_mono_method (klass, mb);
+
+				(*overrides) [onum * 2] = 
+					override_method;
+				(*overrides) [onum * 2 + 1] =
+					method_impl;
+
+				g_assert (override_method);
+				g_assert (method_impl);
 
 				onum ++;
 			}
