@@ -2534,6 +2534,11 @@ namespace Mono.CSharp {
 		{
 			Expression e = null;
 
+			// In VB, `Global.` roots a qualified name at the global namespace.
+			// It is only meaningful as the leading segment of a member-access chain.
+			if (intermediate && String.Compare (Name, "Global", true) == 0)
+				return Namespace.Root;
+
 			//
 			// Stage 1: Performed by the parser (binding to locals or parameters).
 			//
