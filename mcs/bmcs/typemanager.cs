@@ -2094,7 +2094,7 @@ public partial class TypeManager {
 	// 
 	public static bool IsCLRType (Type t)
 	{
-		if (t == object_type || t == int32_type || t == _uint32_type ||
+		if (t == object_type || t == string_type || t == int32_type || t == _uint32_type ||
 		    t == int64_type || t == _uint64_type || t == float_type || t == double_type ||
 		    t == char_type || t == short_type || t == bool_type ||
 		    t == _sbyte_type || t == byte_type || t == _ushort_type)

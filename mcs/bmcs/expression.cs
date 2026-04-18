@@ -2178,6 +2178,14 @@ namespace Mono.CSharp {
 
 		Expression ResolveUserDefinedOperator (EmitContext ec)
 		{
+			// VB string comparisons give Nothing the same semantics as "", so a
+			// relational expression that mixes String and null must flow through
+			// the normal VB comparison binder, not CLR operator lookup.
+			if (IsRelationalExpression &&
+			    (left.Type == TypeManager.string_type || right.Type == TypeManager.string_type) &&
+			    (left.Type == TypeManager.null_type || right.Type == TypeManager.null_type))
+				return null;
+
 			if (TypeManager.IsCLRType (left.Type) && TypeManager.IsCLRType (right.Type))
 				return null;
 
