@@ -3151,11 +3151,20 @@ namespace Mono.CSharp {
 				return;
 				}
 				
-			left.Emit (ec);
-			right.Emit (ec);
+			Type t;
+			bool isUnsigned;
 
-			Type t = left.Type;
-			bool isUnsigned = is_unsigned (t) || t == TypeManager.double_type || t == TypeManager.float_type;
+			if (intermediate != null) {
+				intermediate.Emit (ec);
+				ig.Emit (OpCodes.Ldc_I4_0);
+				t = TypeManager.int32_type;
+				isUnsigned = false;
+			} else {
+				left.Emit (ec);
+				right.Emit (ec);
+				t = left.Type;
+				isUnsigned = is_unsigned (t) || t == TypeManager.double_type || t == TypeManager.float_type;
+			}
 
 			switch (oper){
 			case Operator.Equality:
