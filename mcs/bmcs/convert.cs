@@ -2138,14 +2138,20 @@ namespace Mono.CSharp {
 				helper_method = TypeManager.msvbcs_booleantype_fromobject_object;
 			if (real_target_type == TypeManager.byte_type)
 				helper_method = TypeManager.msvbcs_bytetype_fromobject_object;
+			if (real_target_type == TypeManager.ushort_type)
+				helper_method = TypeManager.convert_to_uint16_object;
 			if (real_target_type == TypeManager.short_type)
 				helper_method = TypeManager.msvbcs_shorttype_fromobject_object;
 			if (real_target_type == TypeManager.char_type)
 				helper_method = TypeManager.msvbcs_chartype_fromobject_object;
 			if (real_target_type == TypeManager.int32_type)
 				helper_method = TypeManager.msvbcs_integertype_fromobject_object;
+			if (real_target_type == TypeManager.uint32_type)
+				helper_method = TypeManager.convert_to_uint32_object;
 			if (real_target_type == TypeManager.int64_type)
 				helper_method = TypeManager.msvbcs_longtype_fromobject_object;
+			if (real_target_type == TypeManager.uint64_type)
+				helper_method = TypeManager.convert_to_uint64_object;
 			if (real_target_type == TypeManager.float_type)
 				helper_method = TypeManager.msvbcs_singletype_fromobject_object;
 			if (real_target_type == TypeManager.double_type)

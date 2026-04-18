@@ -264,6 +264,9 @@ public partial class TypeManager {
 	static public MethodInfo convert_to_int16_decimal;
 	static public MethodInfo convert_to_int32_decimal;
 	static public MethodInfo convert_to_int64_decimal;
+	static public MethodInfo convert_to_uint16_object;
+	static public MethodInfo convert_to_uint32_object;
+	static public MethodInfo convert_to_uint64_object;
 	static public MethodInfo convert_to_single_decimal;
 	static public MethodInfo convert_to_double_decimal;
 	static public MethodInfo convert_to_boolean_decimal;
@@ -1865,6 +1868,12 @@ public partial class TypeManager {
 			msvbcs_date_type, "FromObject", object_arg);
 		msvbcs_stringtype_fromobject_object = GetMethod (
 			msvbcs_string_type, "FromObject", object_arg);
+		convert_to_uint16_object = GetMethod (
+			convert_type, "ToUInt16", object_arg);
+		convert_to_uint32_object = GetMethod (
+			convert_type, "ToUInt32", object_arg);
+		convert_to_uint64_object = GetMethod (
+			convert_type, "ToUInt64", object_arg);
 
 		Type [] object_object_arg = { object_type, object_type };
 		msvbcs_objecttype_mulobj_object_object = GetMethod (
