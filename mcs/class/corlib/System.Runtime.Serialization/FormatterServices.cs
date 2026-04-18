@@ -91,9 +91,17 @@ namespace System.Runtime.Serialization
 
 			//FIXME: context?
 			ArrayList fields = new ArrayList ();
+			if (!type.IsSerializable) {
+				string msg = String.Format ("Type {0} in assembly {1} is not " +
+							    "marked as serializable.",
+							    type, type.Assembly.FullName);
+
+				throw new SerializationException (msg);
+			}
+
 			Type t = type;
-			while (t != null) {
-				if (!t.IsSerializable) {
+			while (t != null && t != typeof (object)) {
+				if (t != type && !t.IsSerializable) {
 					string msg = String.Format ("Type {0} in assembly {1} is not " +
 								    "marked as serializable.",
 								    t, t.Assembly.FullName);
