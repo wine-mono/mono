@@ -123,7 +123,9 @@ namespace Mono.CSharp {
 					return TypeParameterConversion (expr, is_reference, target_type);
 
 				foreach (Type t in gc.InterfaceConstraints) {
-					if (TypeManager.IsSubclassOf (t, target_type))
+					if (TypeManager.IsEqual (t, target_type) ||
+					    TypeManager.IsSubclassOf (t, target_type) ||
+					    TypeManager.ImplementsInterface (t, target_type))
 						return TypeParameterConversion (expr, is_reference, target_type);
 				}
 			}
