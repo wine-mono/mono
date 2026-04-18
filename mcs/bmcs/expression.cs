@@ -591,15 +591,15 @@ namespace Mono.CSharp {
 					break;
 				}
 
-				if (ec.CheckState) {
+				if (ec.CheckState && type != TypeManager.double_type && type != TypeManager.float_type) {
 					ig.Emit (OpCodes.Ldc_I4_0);
 					if (type == TypeManager.int64_type)
 						ig.Emit (OpCodes.Conv_U8);
 					Expr.Emit (ec);
 					ig.Emit (OpCodes.Sub_Ovf);
 				} else {
-				Expr.Emit (ec);
-				ig.Emit (OpCodes.Neg);
+					Expr.Emit (ec);
+					ig.Emit (OpCodes.Neg);
 				}
 
 				if (type == TypeManager.sbyte_type)
