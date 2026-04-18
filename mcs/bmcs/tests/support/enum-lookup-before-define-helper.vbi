@@ -1,0 +1,50 @@
+Imports System.Collections.Generic
+
+Public Enum KS
+    None
+    [Boolean]
+    [Byte]
+    [UShort]
+    [Using]
+    [Xor]
+    LT
+    NumberOfItems
+End Enum
+
+Module Enums
+    Friend strSpecial(KS.NumberOfItems) As String
+    Public ReadOnly BinaryOperators As KS() = {KS.Boolean, KS.Byte, KS.UShort, KS.Using, KS.Xor, KS.LT}
+
+    Class KW
+        Public KeywordL As String
+        Public KS As KS
+    End Class
+
+    Public m_Keywords(1) As Dictionary(Of Char, List(Of KW))
+
+    Sub New()
+        For i As Integer = 0 To 1
+            m_Keywords(i) = New Dictionary(Of Char, List(Of KW))
+        Next
+
+        AddKeyword("Boolean", KS.Boolean)
+        AddKeyword("Byte", KS.Byte)
+        AddKeyword("UShort", KS.UShort)
+        AddKeyword("Using", KS.Using)
+    End Sub
+
+    Private Sub AddKeyword(ByVal keyword As String, ByVal ks As KS)
+        Dim list As List(Of KW) = Nothing
+        Dim kw As New KW()
+        kw.KeywordL = keyword.ToLowerInvariant()
+        kw.KS = ks
+
+        If Not m_Keywords(keyword.Length Mod 2).TryGetValue(keyword(0), list) Then
+            list = New List(Of KW)
+            m_Keywords(keyword.Length Mod 2)(keyword(0)) = list
+        End If
+
+        list.Add(kw)
+        strSpecial(ks) = keyword
+    End Sub
+End Module

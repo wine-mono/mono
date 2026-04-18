@@ -122,7 +122,8 @@ net_2_0_dirs := \
 	System.Web.Mvc			\
 	Mono.Management			\
 	Mono.Options 			\
-	Mono.Simd
+	Mono.Simd			\
+	Microsoft.VisualBasic
 
 net_2_1_dirs := \
 	corlib			\

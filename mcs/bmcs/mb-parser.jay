@@ -1,0 +1,6754 @@
+%{
+//
+// Mono.MonoBASIC.Parser.cs (from .jay): The Parser for the MonoBASIC compiler
+//
+// Authors: A Rafael D Teixeira (rafaelteixeirabr@hotmail.com)
+//	    Anirban Bhattacharjee (banirban@novell.com)
+//          Jambunathan K (kjambunathan@novell.com)
+//
+// Licensed under the terms of the GNU GPL
+//
+// Copyright (C) 2001, 2002, 2003, 2004 A Rafael D Teixeira
+// Copyright (C) 2003, 2004 Novell
+//
+//
+
+namespace Mono.CSharp
+{
+	using System.Text;
+	using System;
+	using System.Reflection;
+	using System.Collections;
+	using Mono.CSharp;
+
+	/// <summary>
+	///    The MonoBASIC Parser
+	/// </summary>
+// 	[DefaultParser]
+// 	public class Parser : GenericParser
+// 	{
+	
+
+// 		/// <summary>
+// 		///   Current block is used to add statements as we find
+// 		///   them.  
+// 		/// </summary>
+// 		Block      current_block;
+		
+// 		/// <summary>
+// 		///   Tmp block is used to store block endings in if/select's
+// 		/// </summary>
+// 		Block      tmp_block;		
+
+// 		/// <summary>
+// 		///   Tmp block is used to store tmp copies of expressions
+// 		/// </summary>
+// 		Expression      tmp_expr;	
+		
+// 		/// <summary>
+// 		///   Tmp catch is used to store catch clauses in try..catch..finally
+// 		/// </summary>
+// 		ArrayList      tmp_catch_clauses;			
+		
+// 		/// <summary>
+// 		///   Current interface is used by the various declaration
+// 		///   productions in the interface declaration to "add"
+// 		///   the interfaces as we find them.
+// 		/// </summary>
+// 		Interface  current_interface;
+
+// 		/// <summary>
+// 		///   This is used by the unary_expression code to resolve
+// 		///   a name against a parameter.  
+// 		/// </summary>
+// 		Parameters current_local_parameters;
+		
+// 		/// <summary>
+// 		///   This are used when parsing parameters in property
+// 		///   declarations.
+// 		/// </summary>		
+// 		Parameters set_parameters;
+// 		Parameters get_parameters;
+		
+// 		/// <summary>
+// 		///   This is used by the sub_header parser to store modifiers
+// 		///   to be passed to sub/constructor  
+// 		/// </summary>
+// 		int current_modifiers;		
+			
+// 		/// <summary>
+// 		///   This is used by the sub_header parser to store attributes
+// 		///   to be passed to sub/constructor  
+// 		/// </summary>
+// 		Attributes current_attributes;				
+
+// 		/// <summary>
+// 		///   Using during property parsing to describe the implicit
+// 		///   value parameter that is passed to the "set" accessor
+// 		///   method
+// 		/// </summary>
+// 		string get_implicit_value_parameter_name;
+		
+// 		// <summary>
+// 		//   Using during property parsing to describe the implicit
+// 		//   value parameter that is passed to the "set" and "get"accesor
+// 		//   methods (properties and indexers).
+// 		// </summary>
+// 		Expression get_implicit_value_parameter_type;
+		
+// 		/// <summary>
+// 		///   Using during property parsing to describe the implicit
+// 		///   value parameter that is passed to the "set" accessor
+// 		///   method
+// 		/// </summary>
+// 		string set_implicit_value_parameter_name;
+		
+// 		// <summary>
+// 		//   Using during property parsing to describe the implicit
+// 		//   value parameter that is passed to the "set" and "get"accesor
+// 		//   methods (properties and indexers).
+// 		// </summary>
+// 		Expression set_implicit_value_parameter_type;		
+		
+// 		Location member_location;
+		
+// 		// An out-of-band stack.
+// 		//
+// 		Stack oob_stack;
+		
+// 		ArrayList current_rank_specifiers;
+
+// 		DoOptions do_type;
+// 		//
+// 		// Switch stack.
+// 		//
+// 		Stack switch_stack;
+		
+// 		// Expression stack for nested ifs
+// 		Stack expr_stack; 
+		
+// 		Stack tmp_blocks;
+// 	    	Stack statement_stack;
+
+// 		// A stack for With expressions.
+// 		//
+// 		Stack with_stack;
+	
+		
+// 		static public bool InitialOptionExplicit = false;
+// 		static public bool InitialOptionStrict = false;
+// 		static public bool InitialOptionCompareBinary = true;
+// 		static public ArrayList ImportsList = null;
+
+// 		bool OptionExplicit;
+// 		bool OptionStrict;
+// 		bool OptionCompareBinary;
+
+// 		static public bool UseExtendedSyntax; // for ".mbs" files
+
+// 		bool implicit_modifiers;
+		
+// 		public override string[] extensions()
+// 		{
+// 			string [] list = { ".vb", ".mbs" };
+// 			return list;
+// 		}
+
+
+	/// <summary>
+	///    The C# Parser
+	/// </summary>
+	public class CSharpParser {
+		NamespaceEntry  current_namespace;
+		TypeContainer   current_container;
+		TypeContainer	current_class;
+	
+		IIteratorContainer iterator_container;
+
+		/// <summary>
+		///   Current block is used to add statements as we find
+		///   them.  
+		/// </summary>
+		Block      current_block, top_current_block;
+
+		/// <summary>
+		///   This is used by the unary_expression code to resolve
+		///   a name against a parameter.  
+		/// </summary>
+		Parameters current_local_parameters;
+
+		/// <summary>
+		///   Using during property parsing to describe the implicit
+		///   value parameter that is passed to the "set" and "get"accesor
+		///   methods (properties and indexers).
+		/// </summary>
+		Expression implicit_value_parameter_type;
+		Parameters indexer_parameters;
+
+		/// <summary>
+		///   Used to determine if we are parsing the get/set pair
+		///   of an indexer or a property
+		/// </summmary>
+		bool  parsing_indexer;
+
+		///
+		/// An out-of-band stack.
+		///
+		Stack oob_stack;
+
+		///
+		/// Switch stack.
+		///
+		Stack switch_stack;
+
+		// Active 'With ... End With' targets.  Leading-dot member accesses
+		// inside a With block resolve against the topmost entry.
+		Stack with_stack;
+
+		// Class and structure declarations can enter through a merged
+		// PartialContainer while members still belong to the current source
+		// part.  Keep the outer parser state explicitly instead of trying
+		// to infer it from Parent links.
+		Stack type_stack;
+
+		// Name of the implicit return local for the currently parsed
+		// Function or Get accessor body.  Used to apply the VB rule that
+		// invocation and AddressOf contexts skip that local and keep
+		// looking for a method/property member with the same name.
+		enum ExitTargetKind {
+			None,
+			Sub,
+			Function,
+			Property
+		}
+
+		string current_return_name;
+		bool current_method_is_shared;
+		ExitTargetKind current_exit_target;
+
+		static public int yacc_verbose_flag;
+
+		// Name of the file we are parsing
+		public string name;
+
+		///
+		/// The current file.
+		///
+		SourceFile file;
+		
+		///   This is used by the sub_header parser to store modifiers
+		///   to be passed to sub/constructor  
+		int current_modifiers;		
+			
+		///   This is used by the sub_header parser to store attributes
+		///   to be passed to sub/constructor  
+		Attributes current_attributes;				
+
+		///   Owner-level attributes temporarily saved while parsing a
+		///   parameter list so parameter attributes do not overwrite the
+		///   enclosing method/property attributes through opt_attributes.
+		Attributes parameter_owner_attributes;
+
+		///   This is used by the attributes parser to syntactically
+		///   validate the attribute rules  
+		bool allow_global_attribs = true;
+
+		bool expecting_global_attribs = false;
+		bool expecting_local_attribs = false;
+
+		///FIXME
+		ArrayList current_rank_specifiers;
+
+		/// <summary>
+		///   Using during property parsing to describe the implicit
+		///   value parameter that is passed to the "set" accessor
+		///   method
+		/// </summary>
+		string get_implicit_value_parameter_name;
+		
+		// <summary>
+		//   Using during property parsing to describe the implicit
+		//   value parameter that is passed to the "set" and "get"accesor
+		//   methods (properties and indexers).
+		// </summary>
+		Expression get_implicit_value_parameter_type;
+		
+		/// <summary>
+		///   Using during property parsing to describe the implicit
+		///   value parameter that is passed to the "set" accessor
+		///   method
+		/// </summary>
+		string set_implicit_value_parameter_name;
+		
+		// <summary>
+		//   Using during property parsing to describe the implicit
+		//   value parameter that is passed to the "set" and "get"accesor
+		//   methods (properties and indexers).
+		// </summary>
+		Expression set_implicit_value_parameter_type;		
+
+		/// <summary>
+		///   This are used when parsing parameters in property
+		///   declarations.
+		/// </summary>		
+		Parameters set_parameters;
+		Parameters get_parameters;
+
+// 		static public ArrayList ImportsList = null;
+
+		bool implicit_modifiers;
+
+		sealed class DeclaredTypeState {
+			public readonly TypeContainer Container;
+			public readonly TypeContainer Type;
+
+			public DeclaredTypeState (TypeContainer container, TypeContainer type)
+			{
+				Container = container;
+				Type = type;
+			}
+		}
+
+
+		/// <summary>
+		///   This is used as a helper class for handling of
+		///   pre-processor statements.
+		/// </summary>		
+
+		// FIXME: This class MBASException is actually a kludge 
+		// It can be done away with a more elegant replacement.
+
+		public class MBASException : ApplicationException
+		{
+			public int code;
+			public Location loc;
+
+			public MBASException(int code, Location loc, string text) : base(text)
+			{
+				this.code = code;
+				this.loc = loc;
+			}
+		}
+
+
+
+		// Conditional-compilation directives are handled in mb-tokenizer.cs so
+		// disabled text never reaches the parser.
+
+
+
+%}
+
+%token EOF
+%token NONE   /* This token is never returned by our lexer */
+%token ERROR  // This is used not by the parser, but by the tokenizer.
+	      // do not remove.
+
+/*
+ *These are the MonoBASIC keywords
+ */
+%token ADDHANDLER
+%token ADDRESSOF
+%token ALIAS
+%token AND
+%token ANDALSO
+%token ANSI
+%token AS
+%token ASSEMBLY
+%token AUTO
+%token BINARY
+%token BOOLEAN	
+%token BYREF
+%token BYTE
+%token BYVAL	
+%token CALL
+%token CASE	
+%token CATCH	
+%token CBOOL
+%token CBYTE
+%token CSBYTE
+%token CCHAR	
+%token CDATE
+%token CDEC
+%token CDBL
+%token CHAR	
+%token CINT
+%token CLASS
+%token CLNG
+%token COBJ
+%token COMPARE	
+%token CONST
+%token CONTINUE
+%token CUINT
+%token CULNG
+%token CUSHORT
+%token CSHORT	
+%token CSNG
+%token CSTR
+%token CTYPE
+%token DATE
+%token DECIMAL	
+%token DECLARE
+%token DEFAULT	
+%token DELEGATE	
+%token DIM
+%token DIRECTCAST
+%token TRYCAST
+%token DO	
+%token DOUBLE	
+%token EACH	
+%token ELSE
+%token ELSEIF
+%token END
+%token ENDIF
+%token ENUM	
+%token EOL
+%token ERASE
+%token ERROR
+%token EVENT
+%token EXIT	
+%token EXPLICIT	
+%token FALSE	
+%token FINALLY	
+%token FOR	
+%token FRIEND
+%token FUNCTION
+%token GET
+%token GETTYPE
+%token GOSUB
+%token GOTO	
+%token HANDLES
+%token IF	
+%token IMPLEMENTS
+%token IMPORTS	
+%token IN	
+%token INHERITS
+%token INTEGER	
+%token INTERFACE
+%token IS
+%token ISNOT
+%token ISTRUE
+%token ISFALSE
+%token LET
+%token LIB	
+%token LIKE	
+%token LONG	
+%token LOOP
+%token ME
+%token MOD
+%token MODULE
+%token MUSTINHERIT	
+%token MUSTOVERRIDE
+%token MYBASE
+%token MYCLASS
+%token NAMESPACE
+%token NEW
+%token NEXT	
+%token NOT
+%token NOTHING
+%token NOTINHERITABLE
+%token NOTOVERRIDABLE
+%token OBJECT
+%token OF
+%token OFF
+%token ON
+%token OPTION
+%token OPERATOR
+%token WIDENING
+%token NARROWING
+%token OPTIONAL	
+%token PARTIAL
+%token OR
+%token ORELSE
+%token OVERLOADS
+%token OVERRIDABLE	
+%token OVERRIDES	
+%token PARAM_ARRAY
+%token PRESERVE
+%token PRIVATE	
+%token PROPERTY
+%token PROTECTED
+%token PUBLIC
+%token RAISEEVENT
+%token READONLY	
+%token REDIM
+%token REM
+%token REMOVEHANDLER
+%token RESUME	
+%token RETURN
+%token SELECT
+%token SET
+%token SHADOWS
+%token SHARED
+%token SHORT
+%token SBYTE
+%token USHORT
+%token UINTEGER
+%token ULONG
+%token SINGLE
+%token SIZEOF	
+%token STATIC	
+%token STEP
+%token STOP
+%token STRICT	
+%token STRING
+%token STRUCTURE
+%token SUB
+%token SYNCLOCK
+%token TEXT
+%token THEN
+%token THROW
+%token TO
+%token TRUE	
+%token TRY	
+%token TYPEOF	
+%token UNICODE
+%token UNTIL
+%token USING
+%token VARIANT	
+%token WEND
+%token WHEN	
+%token WHILE	
+%token WITH
+%token WITHEVENTS
+%token WRITEONLY
+%token XOR
+%token YIELD // MonoBASIC extension
+
+%token HASH
+
+/* MonoBASIC single character operators/punctuation. */
+
+%token OPEN_BRACKET  "["
+%token CLOSE_BRACKET "]"
+%token OPEN_PARENS   "("
+%token OPEN_PARENS_OF "(Of"  /* synthetic: the tokenizer merges "(" followed by the Of keyword into this single token so the LALR(1) grammar can distinguish generic type-argument lists from parameter lists / array indexing without ambiguous lookahead. */
+%token OPEN_BRACE    "{"
+%token CLOSE_BRACE   "}"
+%token CLOSE_PARENS  ")"
+%token DOT           "."
+%token DOT_WITH      /* synthetic: leading '.' inside a With block */
+%token COMMA         ","
+%token COLON         ":"
+
+%token PLUS           "+"
+%token MINUS          "-"
+%token ASSIGN         "="
+%token OP_LT          "<"
+%token OP_GT          ">"
+%token STAR           "*"
+%token DIV            "/"
+%token OP_EXP         "^"
+%token INTERR         "?"
+%token OP_IDIV        "\\" //FIXME: This should be "\"
+%token OP_CONCAT      "&"
+%token EXCLAMATION    "!"
+
+%token PERCENT        "%"
+%token LONGTYPECHAR   "&"
+%token AT_SIGN		  "@"
+%token SINGLETYPECHAR "!"
+%token NUMBER_SIGN    "#"
+%token DOLAR_SIGN     "$"
+
+%token ATTR_ASSIGN	  ":="
+
+/* MonoBASIC multi-character operators. */
+%token OP_LE                  "<="
+%token OP_GE                  ">="
+%token OP_NE                  "<>"
+%token OP_XOR                 "xor"
+//%token OP_MODULUS             //"mod"
+
+/* VB.NET 2003 new bit-shift operators */
+%token OP_SHIFT_LEFT		  "<<"
+%token OP_SHIFT_RIGHT         ">>"
+
+/* Numbers */
+%token LITERAL_INTEGER           "int literal"
+%token LITERAL_SINGLE            "float literal"
+%token LITERAL_DOUBLE            "double literal"
+%token LITERAL_DECIMAL           "decimal literal"
+%token LITERAL_CHARACTER         "character literal"
+%token LITERAL_STRING            "string literal"
+%token LITERAL_DATE              "datetime literal"
+
+%token IDENTIFIER
+%token LABEL_NAME
+
+/* Add precedence rules to solve dangling else s/r conflict */
+%nonassoc LOWPREC
+%nonassoc IF
+%nonassoc ELSE
+%right ASSIGN
+%left OP_OR
+%left OP_AND
+%left BITWISE_OR
+%left BITWISE_AND
+%left OP_SHIFT_LEFT OP_SHIFT_RIGHT
+%left PLUS MINUS
+%left STAR DIV PERCENT
+%right BITWISE_NOT CARRET UMINUS
+%nonassoc OP_INC OP_DEC
+%left OPEN_PARENS
+%left OPEN_BRACKET OPEN_BRACE
+%left DOT
+%right NOT
+%nonassoc HIGHPREC
+
+%start compilation_unit
+%%
+
+end_of_stmt
+	: logical_end_of_line
+	| COLON
+	;	
+
+logical_end_of_line
+	: EOL
+	;
+
+compilation_unit
+	: logical_end_of_line
+	  opt_option_directives
+	  opt_imports_directives 
+	  declarations 
+	  EOF
+	  {
+		$$=$4;
+	  }
+	|logical_end_of_line
+	  opt_option_directives
+	  opt_imports_directives 
+	  opt_attributes
+	  EOF
+	  {
+		/* ????? */ ;
+	  }
+	;
+	  
+opt_option_directives
+	: /* empty */
+	| option_directives
+	;
+	
+option_directives
+	: option_directive
+	| option_directives option_directive
+	;
+	
+option_directive
+	: option_explicit_directive
+	| option_strict_directive
+	| option_compare_directive
+	;
+	
+on_off
+	: /* empty */
+	  {
+		  $$ = (object)true;
+	  }
+	| ON
+	  {
+		  $$ = (object)true;
+	  }
+	| OFF
+	  {
+		  $$ = (object)false;
+	  }
+	;
+	  
+text_or_binary
+	: BINARY
+	  {
+		  $$ = (object)true;
+	  }
+	| TEXT
+	  {
+		  $$ = (object)false;
+	  }
+	;
+	  
+option_explicit_directive
+	: OPTION EXPLICIT on_off logical_end_of_line
+	  {
+// 		if (!UseExtendedSyntax)
+// 			OptionExplicit = (bool)$3;
+// 		else
+// 			Report.Warning (
+// 				9999, lexer.Location, 
+// 				"In MonoBASIC extended syntax explicit declaration is always required. So OPTION EXPLICIT is deprecated");
+	  }
+	;
+	  
+			
+option_strict_directive
+	: OPTION STRICT on_off logical_end_of_line
+	  {
+// 		if (!UseExtendedSyntax)
+// 			OptionStrict = (bool)$3;
+// 		else
+// 			Report.Warning (
+// 				9999, lexer.Location, 
+// 				"In MonoBASIC extended syntax strict assignability is always required. So OPTION STRICT is deprecated");
+	  }
+	;
+	  
+option_compare_directive
+	: OPTION COMPARE text_or_binary logical_end_of_line
+	  {
+// 		OptionCompareBinary = (bool)$3;
+	  }
+	;
+
+opt_declarations
+	: /* empty */
+	| declarations
+	;		
+
+declarations
+	: declaration
+	| declarations declaration
+	;
+	
+declaration
+	: declaration_qualifiers
+	  {
+// 	  	FIXME: Need to check declaration qualifiers for multi-file compilation
+// 	  	FIXME: Qualifiers cannot be applied to namespaces
+	  	allow_global_attribs = false;
+	  }
+	  namespace_declaration
+	  {
+		current_namespace.DeclarationFound = true;
+	  }
+	| declaration_qualifiers
+	  {
+		  // FIXME: Need to check declaration qualifiers for multi-file compilation
+		  allow_global_attribs = false;
+	  }
+	  type_spec_declaration
+	  {
+		string name = "";
+		int mod_flags;
+
+		if ($3 is Class){
+			Class c = (Class) $3;
+			mod_flags = c.ModFlags;
+			name = c.Name;
+		} else if ($3 is Struct){
+			Struct s = (Struct) $3;
+			mod_flags = s.ModFlags;
+			name = s.Name;
+		} else
+			break;
+
+		if ((mod_flags & (Modifiers.PRIVATE|Modifiers.PROTECTED)) != 0){
+			Report.Error (
+				1527, lexer.Location, 
+				"Namespace elements cant be explicitly " +
+			        "declared private or protected in `" + name + "'");
+		}
+		current_namespace.DeclarationFound = true;
+	  }
+	;
+
+identifier
+	: IDENTIFIER
+	| BINARY
+	| TEXT
+	| COMPARE
+	| EXPLICIT
+	| OFF
+	| ASSEMBLY	/* Contextual in VB: ordinary declarations such as
+			   'Property Assembly() As ...' still use it as a
+			   regular identifier. */
+	| ISTRUE	/* Operator declaration keywords are contextual too. */
+	| ISFALSE
+	;
+
+type_character
+	: PERCENT 			{ $$ = TypeManager.system_int32_expr; }
+	| LONGTYPECHAR 			{ $$ = TypeManager.system_int64_expr; }
+	| AT_SIGN		 	{ $$ = TypeManager.system_decimal_expr; }
+	| SINGLETYPECHAR 		{ $$ = TypeManager.system_single_expr; }
+	| NUMBER_SIGN 			{ $$ = TypeManager.system_double_expr; }
+	| DOLAR_SIGN 			{ $$ = TypeManager.system_string_expr; }
+	;	
+	
+opt_type_character
+	: /* empty */			{ $$ = null; }
+	| type_character		{ $$ = $1; }
+	;
+	
+
+qualified_identifier
+	: identifier
+	{
+		$$ = new MemberName ((string) $1);
+	}
+	| qualified_identifier DOT identifier // FIXME: It should be qualified_identifier DOT identifier-or-keyword
+	{
+		$$ = new MemberName ((MemberName) $1, (string) $3, null);
+	  }
+	;
+
+type_name
+	: identifier opt_type_args
+	{
+		$$ = new MemberName ((string) $1, (TypeArguments) $2);
+	}
+	| type_name DOT identifier opt_type_args
+	{
+		$$ = new MemberName ((MemberName) $1, (string) $3, (TypeArguments) $4);
+	}
+	;
+	
+opt_imports_directives
+	: /* empty */
+	| imports_directives
+	;
+
+imports_directives
+	: imports_directive 
+	| imports_directives imports_directive 
+	;
+
+imports_directive
+	: IMPORTS imports_terms logical_end_of_line
+	;
+
+imports_terms
+	: imports_term
+	| imports_terms COMMA imports_term
+	;
+	
+imports_term
+	: namespace_or_type_name 
+	{
+		MemberName ns_name = (MemberName) $1;
+		current_namespace.Using (ns_name.GetTypeExpression (lexer.Location), lexer.Location);
+	}
+	| identifier ASSIGN namespace_or_type_name 
+	{
+		MemberName name = (MemberName) $3;
+		current_namespace.UsingAlias ((string) $1, name.GetTypeExpression (lexer.Location), lexer.Location);
+	}
+	;
+	
+
+opt_params
+	: /* empty */	{ $$ = Parameters.EmptyReadOnlyParameters; }
+	| OPEN_PARENS CLOSE_PARENS	{ $$ = Parameters.EmptyReadOnlyParameters; }
+	| OPEN_PARENS
+	  {
+		parameter_owner_attributes = current_attributes;
+	  }
+	  opt_formal_parameter_list CLOSE_PARENS
+	  {
+		current_attributes = parameter_owner_attributes;
+		$$ = $3;
+	  }
+	;
+
+opt_attributes
+ 	: /* empty */
+	  { 
+		  current_attributes = null;
+	  }
+	| attribute_sections 	
+	  { 
+	  	$$ = $1; 
+		current_attributes = (Attributes) $1;
+	  }
+	;
+
+attribute_sections
+	:  attribute_section	
+	  { 
+	  	$$ = $1;
+		if ($1 == null) {
+			expecting_local_attribs = false;
+			expecting_global_attribs = false;
+			break;
+		}
+		
+		if (expecting_local_attribs) {
+			allow_global_attribs = false;
+
+			$$ = new Attributes ((ArrayList) $1);
+		}	
+
+		if (expecting_global_attribs) {
+			$$ = null;
+			CodeGen.AddGlobalAttributes ((ArrayList) $1);
+		}
+
+		expecting_local_attribs = false;
+		expecting_global_attribs = false;
+	  }
+	| attribute_sections  
+	   {
+	   	$$ = lexer.Location;
+	   }
+	   attribute_section	
+	  {
+	  	$$ = $1;
+	  	if ($3 != null) {
+			ArrayList attrs = (ArrayList) $3;
+
+			if (expecting_local_attribs) {
+				// VB permits multiple adjacent local attribute sections on the
+				// same declaration; merge them into one Attributes bag here.
+				if ($1 == null)
+					$$ = new Attributes (attrs);
+				else 
+					((Attributes) $1).AddAttributes (attrs);
+
+				allow_global_attribs = false;
+			}
+
+			if (expecting_global_attribs) {
+				$$ = null;
+				CodeGen.AddGlobalAttributes ((ArrayList) $3);
+			}
+  		}	
+
+		expecting_local_attribs = false;
+		expecting_global_attribs = false;
+	  }
+	;
+
+attribute_section
+	: OP_LT attribute_list OP_GT opt_end_of_stmt
+ 	  {
+ 	  	$$ = null;
+		if ($2 != null) {
+			if (expecting_global_attribs && !(bool) $4) {
+				Report.Error (30205, lexer.Location, "End of statement expected");
+				break;
+			}
+			
+			if (expecting_local_attribs)  {
+				if ((bool) $4) {
+					Report.Error (32035, lexer.Location, "Use a line continuation after the attribute specifier to apply it to the following statement.");
+					break;
+				}
+			}
+
+			$$ = $2;
+		}
+ 	  }
+ 	; 
+
+opt_end_of_stmt
+	: /* empty */ { $$ = false; }
+	| end_of_stmt	{ $$ = true; }
+	;
+
+attribute_list
+ 	: attribute 
+ 	  {
+ 	  	ArrayList attrs = null;
+ 	  	if ($1 != null) {
+	 		attrs = new ArrayList ();
+ 			attrs.Add ($1);
+  		}
+ 		$$ = attrs;
+ 	  }	
+ 	| attribute_list COMMA attribute
+ 	  {
+ 	  	ArrayList attrs = null;
+		
+ 	  	if ($3 != null) {
+	 		attrs = ($1 == null) ? new ArrayList () : (ArrayList) $1;
+ 			attrs.Add ($3);
+  		}
+
+ 		$$ = attrs;
+ 	  }	
+ 	;
+
+attribute 
+ 	:  namespace_or_type_name
+ 	   {
+ 		$$ = lexer.Location;
+ 	   }
+ 	   opt_attribute_arguments
+ 	   {
+ 	   	$$ = null;
+		
+ 	   	if (expecting_global_attribs)
+			Report.Error (32015, (Location) $2, "Expecting Assembly or Module attribute specifiers");
+		else {
+			expecting_local_attribs = true;
+			MemberName mname = (MemberName) $1;
+
+			MemberName left = mname.Left;
+			string identifier = mname.Name;
+
+			Expression left_expr = left == null ? null : left.GetTypeExpression ((Location)$2);
+
+			$$ = new Attribute (null, left_expr, identifier, (ArrayList) $3, (Location)$2);
+		}
+ 	   }
+	  | attribute_target_specifier 
+	    {
+	    	$$ = lexer.Location;
+	    }
+	    COLON 
+	    namespace_or_type_name
+	   {
+		  $$ = lexer.Location;
+	   }
+	   opt_attribute_arguments
+	   {
+	   	$$ = null;
+
+	   	string attribute_target = (string) $1;
+	   	if (attribute_target != "assembly" && attribute_target != "module") {
+			Report.Error (29999, lexer.Location, "`" + (string)$1 + "' is an invalid attribute modifier");
+			break;
+   		}
+   		if (!allow_global_attribs) {
+			Report.Error (30637, (Location) $2, "Global attribute statements must precede any declarations in a file");
+			break;
+		}
+
+		if (expecting_local_attribs) {
+			Report.Error (30183, (Location) $2, "Global attributes cannot be combined with local attributes");
+			break;
+		}			
+
+		expecting_global_attribs = true;
+
+		MemberName mname = (MemberName) $4;
+		MemberName left = mname.Left;
+		string identifier = mname.Name;
+
+		Expression left_expr = left == null ? null : left.GetTypeExpression ((Location) $5);
+
+		$$ = new GlobalAttribute (current_container, attribute_target, left_expr, identifier, (ArrayList) $6, (Location) $5);
+	    }	
+ 	;
+
+
+attribute_target_specifier
+	:  ASSEMBLY	{ $$ = "assembly"; }
+	| MODULE	{ $$ = "module"; }
+	/* Only Assembly and Module are valid VB global-attribute
+	   targets. The old namespace_or_type_name fallback existed just
+	   to steer invalid targets into a custom error path, but it also
+	   reintroduced a reduce/reduce conflict once ASSEMBLY was allowed
+	   as a contextual identifier. Let invalid targets fall out as
+	   ordinary parse errors instead. */
+	;
+	
+			
+opt_attribute_arguments
+	: /* empty */ 	{ $$ = null; }
+	| OPEN_PARENS opt_attribute_arguments_list CLOSE_PARENS
+	  {
+		$$ = $2;
+	  }	
+	;
+
+opt_attribute_arguments_list
+	: /* empty */
+	| attribute_arguments_list
+	;		
+	
+attribute_arguments_list
+	: positional_argument_list
+	  {
+		ArrayList args = new ArrayList (4);
+		args.Add ($1);
+	
+		$$ = args;
+	  }
+        | positional_argument_list COMMA named_argument_list
+	  {
+		ArrayList args = new ArrayList (4);
+		args.Add ($1);
+		args.Add ($3);
+
+		$$ = args;
+	  }
+        | named_argument_list
+	  {
+		ArrayList args = new ArrayList (4);
+		args.Add (null);
+		args.Add ($1);
+		
+		$$ = args;
+	  }
+        ;
+
+positional_argument_list
+	: constant_expression
+	  {
+		ArrayList args = new ArrayList ();
+		args.Add (new Argument ((Expression) $1, Argument.AType.Expression));
+
+		$$ = args;
+	  }
+        | positional_argument_list COMMA constant_expression
+	 {
+		ArrayList args = (ArrayList) $1;
+		args.Add (new Argument ((Expression) $3, Argument.AType.Expression));
+
+		$$ = args;
+	 }
+        ;
+
+named_argument_list
+	: named_argument
+	  {
+		ArrayList args = new ArrayList ();
+		args.Add ($1);
+
+		$$ = args;
+	  }
+        | named_argument_list COMMA named_argument
+	  {	  
+		ArrayList args = (ArrayList) $1;
+		args.Add ($3);
+
+		$$ = args;
+	  }
+        ;
+
+named_argument
+	: identifier ATTR_ASSIGN constant_expression //FIXME: It should be identifier_or_keyword ATTR_ASSIGN constant_expression
+	  {
+		$$ = new DictionaryEntry (
+			(string) $1, 
+			new Argument ((Expression) $3, Argument.AType.Expression));
+	  }
+	;
+				
+namespace_declaration
+	: NAMESPACE qualified_identifier logical_end_of_line
+	{
+		if (current_attributes != null) {
+			Report.Error(1518, Lexer.Location, "Attributes cannot be applied to namespaces."
+					+ " Expected class, delegate, enum, interface, or struct");
+		}
+
+		MemberName name = (MemberName) $2;
+
+		if ((current_namespace.Parent != null) && (name.Left != null)) {
+			Report.Error (134, lexer.Location,
+				      "Cannot use qualified namespace names in nested " +
+				      "namespace declarations");
+		}
+
+		current_namespace = new NamespaceEntry (
+			current_namespace, file, name.GetName (), lexer.Location);
+	  } 
+	  opt_declarations
+	  END NAMESPACE logical_end_of_line
+	  { 
+		current_namespace = current_namespace.Parent;
+	  }
+
+	;
+
+declaration_qualifiers
+	: opt_attributes opt_modifiers 
+	;
+
+type_spec_declaration
+	: class_declaration
+	| module_declaration
+	| interface_declaration
+	| delegate_declaration
+	| struct_declaration
+	| enum_declaration
+	;
+
+class_declaration
+	: class_header logical_end_of_line
+	  opt_inherits opt_implements
+
+	  {
+		ArrayList bases = (ArrayList) $3;
+		ArrayList ifaces = (ArrayList) $4;
+
+		if (ifaces != null){
+			if (bases != null)	
+				bases.AddRange(ifaces);
+			else
+				bases = ifaces;
+		}
+
+		if (bases != null) {
+			if (current_class.Name == "System.Object") {
+				Report.Error (537, current_class.Location,
+					      "The class System.Object cannot have a base " +
+					      "class or implement an interface.");
+			}
+			current_class.Bases = (ArrayList) bases;
+		}
+	  }
+	  opt_class_member_declarations
+	  END CLASS logical_end_of_line
+	  {
+		$$ = PopDeclaredTypeState ();
+	  }
+	| class_header COLON INHERITS type_list logical_end_of_line opt_implements
+	  {
+		ArrayList bases = (ArrayList) $4;
+		ArrayList ifaces = (ArrayList) $6;
+
+		if (ifaces != null){
+			if (bases != null)
+				bases.AddRange(ifaces);
+			else
+				bases = ifaces;
+		}
+
+		if (bases != null) {
+			if (current_class.Name == "System.Object") {
+				Report.Error (537, current_class.Location,
+					      "The class System.Object cannot have a base " +
+					      "class or implement an interface.");
+			}
+			current_class.Bases = (ArrayList) bases;
+		}
+	  }
+	  opt_class_member_declarations
+	  END CLASS logical_end_of_line
+	  {
+		$$ = PopDeclaredTypeState ();
+	  }
+	;
+
+class_header
+	: CLASS identifier opt_type_params
+	  {
+		PushDeclaredTypeState ();
+
+		if (implicit_modifiers && ((current_modifiers & Modifiers.STATIC) != 0))
+			current_modifiers = (current_modifiers & ~Modifiers.STATIC);
+
+		ParsedTypeParameters type_params = (ParsedTypeParameters) $3;
+		TypeArguments type_args = type_params == null ? null : type_params.TypeArguments;
+		MemberName name = (type_args == null)
+			? MakeName (new MemberName ((string) $2))
+			: MakeName (new MemberName ((string) $2, type_args));
+		int mod_flags = current_modifiers;
+
+		// VB only requires one declaration to spell out Partial, so
+		// every class declaration has to keep part-local bases and
+		// members available for a later merge candidate.
+		EnterPartialType (name, mod_flags, Kind.Class);
+
+		// The merged partial container already owns the type-parameter
+		// names; each source part contributes its own constraint list
+		// for consistency checking through SetParameterInfo.
+		if (type_params != null)
+			current_class.SetParameterInfo (type_params.Constraints);
+	  }
+	;
+
+opt_inherits
+	: /* empty */				{ $$ = null; }
+	| INHERITS type_list logical_end_of_line 	{ $$ = $2; }
+	;
+
+opt_implements
+	: /* empty */				{ $$ = null; }
+	| IMPLEMENTS type_list logical_end_of_line 	{ $$ = $2; }
+	;
+
+opt_modifiers
+	: /* empty */		
+	{ 
+		$$ = (int) 0; 
+		current_modifiers = 0; 
+	}
+	| modifiers 		
+	{ 
+		$$ = $1; 
+		current_modifiers = (int) $1; 
+	}
+	;
+	
+modifiers
+	: modifier
+	| modifiers modifier
+	  { 
+		int m1 = (int) $1;
+		int m2 = (int) $2;
+
+		if ((m1 & m2) != 0) {
+			Location l = lexer.Location;
+			Report.Error (1004, l, "Duplicate modifier: `" + Modifiers.Name (m2) + "'");
+		}
+		$$ = (int) (m1 | m2);
+	  }
+        ;
+
+modifier
+	: PUBLIC			{ $$ = Modifiers.PUBLIC; }
+	| PROTECTED			{ $$ = Modifiers.PROTECTED; }
+	| PRIVATE			{ $$ = Modifiers.PRIVATE; }
+	| SHARED			{ $$ = Modifiers.STATIC; }
+	| FRIEND			{ $$ = Modifiers.INTERNAL; }
+	| NOTINHERITABLE		{ $$ = Modifiers.SEALED; } 
+	| OVERRIDABLE			{ $$ = Modifiers.VIRTUAL; }
+	| NOTOVERRIDABLE		{ $$ = Modifiers.SEALED; }
+	| OVERRIDES 			{ $$ = Modifiers.OVERRIDE; }
+	/* VB Overloads documents an overload set; it is not C# new/hide. */
+	| OVERLOADS			{ $$ = 0; }
+	| SHADOWS			{ $$ = Modifiers.SHADOWS; }
+	| MUSTINHERIT			{ $$ = Modifiers.ABSTRACT; }
+	/* MUSTOVERRIDE is handled separately in class_member_declaration
+	   because a MustOverride member has no body. Putting it in the
+	   general modifier rule would steer the parser into the normal
+	   body-bearing Sub/Function/Property paths and create conflicts. */
+	| READONLY 			{ $$ = Modifiers.READONLY; }
+	| DEFAULT 			{ $$ = Modifiers.DEFAULT; }
+	| WRITEONLY			{ $$ = Modifiers.WRITEONLY; }
+	| PARTIAL			{ $$ = Modifiers.PARTIAL; }
+	;
+
+module_declaration
+	: MODULE identifier logical_end_of_line
+	  { 
+		PushDeclaredTypeState ();
+		RejectInvalidPartialModifier (lexer.Location);
+
+		MemberName name = MakeName(new MemberName ((string) $2));
+		current_class = new VBModule (current_namespace, current_container, name, 
+					    current_modifiers, current_attributes, lexer.Location);
+
+		current_container = current_class;
+		RootContext.Tree.RecordDecl(name.GetName (true), current_class);
+
+		current_class.Register ();
+	  }
+	  opt_module_member_declarations
+	  END MODULE logical_end_of_line
+	  {
+		$$ = PopDeclaredTypeState ();
+// 	  	FIXME: ?????
+// 		TypeManager.AddStandardModule (current_class);
+	  }
+	;
+
+opt_module_member_declarations
+	: /* empty */
+	| module_member_declarations
+	;
+
+module_member_declarations
+	: module_member_declaration
+	| module_member_declarations module_member_declaration
+	;
+
+module_member_declaration
+	:  opt_attributes
+	   opt_modifiers
+	   { 
+	   	RejectInvalidPartialModifier (lexer.Location);
+	   	current_modifiers = ((int)$2) | Modifiers.STATIC; 
+		bool explicit_static = (((int) $2 & Modifiers.STATIC) > 0);
+		implicit_modifiers = (!explicit_static);
+	   }
+
+	   module_member_declarator
+	   {
+	   	implicit_modifiers = false;
+	   	$$ = $3;
+	   }
+	;
+
+module_member_declarator
+	:  constructor_declaration
+	|  method_declaration
+	|  field_declaration
+// 	|  withevents_declaration	/* This is a field but must be treated specially, see below */
+	|  constant_declaration
+	|  property_declaration			
+	|  event_declaration
+	|  type_spec_declaration			
+	;
+
+	
+constant_declaration
+	: CONST constant_declarators logical_end_of_line
+	{
+		if (implicit_modifiers && ((current_modifiers & Modifiers.STATIC) != 0))
+			current_modifiers = (current_modifiers & ~Modifiers.STATIC);
+		
+		int modflags = (int) current_modifiers;
+		
+		// Structure members are Public by default			
+		if (IsCurrentStructType () && (modflags == 0))
+			modflags = Modifiers.PUBLIC;			
+
+		ArrayList consts = (ArrayList) $2;
+		if(consts.Count > 0) 
+		{
+			VariableDeclaration.FixupTypes ((ArrayList) $2);
+			VariableDeclaration.FixupArrayTypes ((ArrayList) $2);
+
+			foreach (VariableDeclaration constant in (ArrayList) $2){
+				Location l = constant.Location;
+				Const c = new Const (current_class, 
+						     (Expression) constant.type, 
+						     (String) constant.identifier, 
+						     (Expression) constant.expression_or_array_initializer, 
+						     modflags, current_attributes, l);
+
+				current_container.AddConstant (c);
+			}
+		}
+	}
+	;
+	   
+opt_class_member_declarations
+	: /* empty */
+	| class_member_declarations
+	;
+
+class_member_declarations
+	: class_member_declaration
+	| class_member_declarations class_member_declaration
+	;
+
+class_member_declaration
+	:  opt_attributes
+	   opt_modifiers
+	   {
+		RejectInvalidPartialModifier (lexer.Location);
+	   }
+	   class_member_declarator
+	   {
+	   	$$ = $4;
+	   }
+	|  opt_attributes
+	   opt_modifiers
+	   {
+		RejectInvalidPartialModifier (lexer.Location);
+	   }
+	   MUSTOVERRIDE
+	   {
+		// Save the modifiers that appeared before MUSTOVERRIDE so a
+		// second opt_modifiers can extend them instead of resetting
+		// current_modifiers to 0.
+		oob_stack.Push ((int) current_modifiers);
+	   }
+	   opt_modifiers
+	   {
+		RejectInvalidPartialModifier (lexer.Location);
+		int pre = (int) oob_stack.Pop ();
+		current_modifiers = pre | (int) current_modifiers;
+	   }
+	   abstract_member_declarator
+	   {
+	   	$$ = $9;
+	   }
+	;
+
+class_member_declarator
+	:  field_declaration
+	|  constant_declaration
+	|  method_declaration
+	|  constructor_declaration
+	|  property_declaration			
+	|  event_declaration
+// 	|  withevents_declaration	/* This is a field but must be treated specially, see below */
+	|  type_spec_declaration
+	;
+	
+	
+method_declaration
+	: sub_declaration
+	| func_declaration
+	| operator_declaration
+// 	| must_override_declaration
+	;
+
+// VB operator declarations are real type members with dedicated metadata
+// names such as op_Equality, op_Concatenate, and op_IntegerDivision.
+// Keep the declaration-to-Operator mapping in one place by asking the
+// Operator class to translate the VB surface symbol plus parameter count
+// into the backend operator kind.
+operator_declaration
+	: opt_widening_narrowing OPERATOR operator_symbol opt_params opt_type_with_ranks logical_end_of_line
+	  {
+		Parameters pars = (Parameters) $4;
+		Operator.OpType op;
+		bool valid = Operator.TryResolveVBDeclaration ((string) $1,
+			(string) $3, pars, lexer.Location, out op);
+		current_local_parameters = (Parameters) $4;
+		start_block ();
+		oob_stack.Push (lexer.Location);
+		oob_stack.Push (valid);
+		oob_stack.Push (op);
+	  }
+	  opt_statement_list
+	  END OPERATOR logical_end_of_line
+	  {
+		Block body = end_block ();
+		Operator.OpType op = (Operator.OpType) oob_stack.Pop ();
+		bool valid = (bool) oob_stack.Pop ();
+		Location l = (Location) oob_stack.Pop ();
+		current_local_parameters = null;
+
+		if (valid) {
+			int mods = (int) current_modifiers;
+			if ((mods & Modifiers.Accessibility) == 0)
+				mods |= Modifiers.PUBLIC;
+
+			Operator oper = new Operator (current_class, op,
+				($5 != null) ? (Expression) $5 : TypeManager.system_object_expr,
+				mods, (Parameters) $4, (ToplevelBlock) body,
+				(Attributes) current_attributes, l);
+			current_container.AddOperator (oper);
+		}
+		$$ = null;
+	  }
+	;
+
+opt_widening_narrowing
+	: /* empty */		{ $$ = null; }
+	| WIDENING		{ $$ = "widening"; }
+	| NARROWING		{ $$ = "narrowing"; }
+	;
+
+operator_symbol
+	: OP_LT			{ $$ = "<"; }
+	| OP_GT			{ $$ = ">"; }
+	| OP_LE			{ $$ = "<="; }
+	| OP_GE			{ $$ = ">="; }
+	| OP_NE			{ $$ = "<>"; }
+	| ASSIGN		{ $$ = "="; }
+	| PLUS			{ $$ = "+"; }
+	| MINUS		{ $$ = "-"; }
+	| STAR			{ $$ = "*"; }
+	| DIV			{ $$ = "/"; }
+	| OP_IDIV		{ $$ = "\\"; }
+	| MOD			{ $$ = "mod"; }
+	| OP_EXP		{ $$ = "^"; }
+	| OP_CONCAT		{ $$ = "&"; }
+	| AND			{ $$ = "and"; }
+	| OR			{ $$ = "or"; }
+	| XOR			{ $$ = "xor"; }
+	| NOT			{ $$ = "not"; }
+	| OP_SHIFT_LEFT	{ $$ = "<<"; }
+	| OP_SHIFT_RIGHT	{ $$ = ">>"; }
+	| LIKE			{ $$ = "like"; }
+	| ISTRUE		{ $$ = "istrue"; }
+	| ISFALSE		{ $$ = "isfalse"; }
+	| CTYPE		{ $$ = "ctype"; }
+	;
+
+// Bodyless abstract declarations keyed by MUSTOVERRIDE in
+// class_member_declaration so the parser can choose the no-body form
+// cleanly instead of colliding with the normal body-bearing rules.
+abstract_member_declarator
+		: SUB identifier opt_type_params opt_params opt_member_implement_clause logical_end_of_line
+		  {
+			ParsedTypeParameters type_params = (ParsedTypeParameters) $3;
+		TypeArguments type_args = type_params == null ? null : type_params.TypeArguments;
+		MemberName name = (type_args == null)
+			? new MemberName ((string) $2)
+			: new MemberName ((string) $2, type_args);
+
+		int mods = (int) current_modifiers | Modifiers.ABSTRACT;
+
+		GenericMethod generic = null;
+		if (type_args != null) {
+			generic = new GenericMethod (current_namespace, current_container, name, lexer.Location);
+			generic.SetParameterInfo (type_params.Constraints);
+		}
+
+			Method method = new Method (current_class, generic, TypeManager.system_void_expr,
+						    mods, false, name,
+						    (Parameters) $4, (Attributes) current_attributes,
+						    lexer.Location);
+			method.ImplementsClauses = (ArrayList) $5;
+			current_container.AddMethod (method);
+			$$ = method;
+		  }
+		| FUNCTION identifier opt_type_params opt_type_character opt_params opt_type_with_ranks opt_member_implement_clause logical_end_of_line
+		  {
+		ParsedTypeParameters type_params = (ParsedTypeParameters) $3;
+		TypeArguments type_args = type_params == null ? null : type_params.TypeArguments;
+		MemberName name = (type_args == null)
+			? new MemberName ((string) $2)
+			: new MemberName ((string) $2, type_args);
+		Expression rettype = ($6 == null) ? (($4 == null) ? TypeManager.system_object_expr : (Expression) $4 ) : (Expression) $6;
+
+		int mods = (int) current_modifiers | Modifiers.ABSTRACT;
+
+		GenericMethod generic = null;
+		if (type_args != null) {
+			generic = new GenericMethod (current_namespace, current_container, name, lexer.Location);
+			generic.SetParameterInfo (type_params.Constraints);
+		}
+
+			Method method = new Method (current_class, generic, rettype, mods,
+						    false, name, (Parameters) $5, current_attributes,
+						    lexer.Location);
+			method.ImplementsClauses = (ArrayList) $7;
+			current_container.AddMethod (method);
+			$$ = method;
+		  }
+		| PROPERTY identifier opt_type_character opt_property_parameters opt_type_with_ranks opt_member_implement_clause logical_end_of_line
+		  {
+		Expression ptype = ($5 == null) ? (($3 == null) ?
+			TypeManager.system_object_expr : (Expression) $3) : (Expression) $5;
+		MemberName name = new MemberName ((string) $2);
+		int mods = (int) current_modifiers | Modifiers.ABSTRACT;
+
+		Parameters parms = (Parameters) $4;
+		Parameters get_params, set_params;
+		if (parms != Parameters.EmptyReadOnlyParameters) {
+			get_params = parms.Copy (lexer.Location);
+			set_params = parms.Copy (lexer.Location);
+		} else {
+			get_params = Parameters.EmptyReadOnlyParameters;
+			set_params = new Parameters (null, null, lexer.Location);
+		}
+
+		// Mirror the concrete-property path: ReadOnly omits the setter,
+		// WriteOnly omits the getter, and only the accessor that really
+		// exists gets a null-block Accessor. Passing null here means
+		// "dummy, reserved-but-not-emitted accessor", which is how the
+		// Property constructor models a forbidden ReadOnly/WriteOnly side.
+		Accessor get_block = null;
+		Accessor set_block = null;
+
+		if ((current_modifiers & Modifiers.WRITEONLY) == 0)
+			get_block = new Accessor (null, 0, null, lexer.Location);
+
+		if ((current_modifiers & Modifiers.READONLY) == 0) {
+			set_block = new Accessor (null, 0, null, lexer.Location);
+
+			Parameter implicit_value_parameter = new Parameter (
+				ptype, "Value", Parameter.Modifier.NONE, null);
+			set_params.AppendParameter (implicit_value_parameter);
+		}
+
+			Property prop = new Property (current_class, ptype, mods, false, name,
+				(Attributes) current_attributes, get_params, get_block,
+				set_params, set_block, lexer.Location);
+			prop.ImplementsClauses = (ArrayList) $6;
+			current_container.AddProperty (prop);
+			$$ = prop;
+		  }
+	;
+	
+// must_override_declaration
+// 	: must_override_sub_declaration
+// 	| must_override_func_declaration	
+// 	;
+	
+// must_override_sub_declaration
+// 	: MUSTOVERRIDE SUB identifier opt_params opt_implement_clause logical_end_of_line
+// 	  {	
+// // 	  	if (current_container is Module)
+// // 	  		Report.Error (433, "Methods in a Module cannot be declared 'MustOverride'.");
+	  		
+// 	  	if (current_container is Struct)
+// 	  		Report.Error (435, "Methods in a Structure cannot be declared 'MustOverride'.");
+	  	
+// 	  	current_modifiers |= Modifiers.ABSTRACT;
+	  			  	
+// 	  	Method method = new Method (TypeManager.system_void_expr, (int) current_modifiers, (string) $3,
+// 					    (Parameters) $4, null, (ArrayList) $5, lexer.Location);
+					    
+// 		if (!(current_container is Class))
+// 			Report.Error (9999, "THIS SHOULD NEVER HAPPEN!");		
+			
+// 		$$ = method; 			    
+// 	  }
+// 	;
+
+	
+// must_override_func_declaration
+// 	: MUSTOVERRIDE FUNCTION identifier opt_type_character opt_params opt_type_with_ranks opt_implement_clause logical_end_of_line
+// 	  {	
+// 		Expression ftype = ($6 == null) ? (($4 == null) ? TypeManager.	
+// 			system_object_expr : (Expression) $4 ) : (Expression) $6;
+
+// 	  	if (current_container is Module)
+// 	  		Report.Error (433, "Methods in a Module cannot be declared 'MustOverride'.");
+	  		
+// 	  	if (current_container is Struct)
+// 	  		Report.Error (435, "Methods in a Structure cannot be declared 'MustOverride'.");
+	  			
+// 		current_modifiers |= Modifiers.ABSTRACT;
+			  			  	
+// 	  	Method method = new Method ((Expression) ftype, (int) current_modifiers, 
+// 						(string) $3,(Parameters) $5, null, (ArrayList) $7, 
+// 						lexer.Location);
+					    
+// 		if (!(current_container is Class))
+// 			Report.Error (9999, "THIS SHOULD NEVER HAPPEN!");
+			
+// 		$$ = method; 					
+// 	  }	
+// 	;
+	
+
+sub_declaration
+	: SUB identifier opt_type_params opt_params
+	  {
+		ParsedTypeParameters type_params = (ParsedTypeParameters) $3;
+		TypeArguments type_args = type_params == null ? null : type_params.TypeArguments;
+		MemberName name = (type_args == null)
+			? new MemberName ((string) $2)
+			: new MemberName ((string) $2, type_args);
+
+		if (IsCurrentStructType () && (current_modifiers == 0))
+			current_modifiers = Modifiers.PUBLIC;
+
+
+		GenericMethod generic = null;
+		if (type_args != null) {
+			generic = new GenericMethod (current_namespace, current_container, name, lexer.Location);
+			generic.SetParameterInfo (type_params.Constraints);
+		}
+		Method method = new Method (current_class, generic, TypeManager.system_void_expr,
+					    (int) current_modifiers, false, name,
+					    (Parameters) $4, (Attributes) current_attributes,
+					    lexer.Location);
+
+		current_local_parameters = (Parameters) $4;
+		current_exit_target = ExitTargetKind.Sub;
+		$$ = method;
+
+		iterator_container = (IIteratorContainer) method;
+	  }
+		  opt_evt_handler opt_member_implement_clause logical_end_of_line
+		  // FIXME: opt_event_handler is not yet handled
+		  begin_block
+	  opt_statement_list
+	  end_block
+	  END SUB logical_end_of_line
+		  {
+			// Position shift: opt_type_args added as $3, so the mid-rule
+			// action is now at $5 and end_block at $11.
+				Method method = (Method) $5;
+				method.ImplementsClauses = (ArrayList) $7;
+				method.IsEmptyDeclarationBody = !((bool) $10);
+				Block b = (Block) $11;
+			const int extern_abstract = (Modifiers.EXTERN | Modifiers.ABSTRACT);
+
+		if (b == null){
+			if ((method.ModFlags & extern_abstract) == 0){
+				Report.Error (
+					501, lexer.Location,  current_container.MakeName (method.Name) +
+				        "must declare a body because it is not marked abstract or extern");
+			}
+		} else {
+			if ((method.ModFlags & Modifiers.EXTERN) != 0){
+				Report.Error (
+					179, lexer.Location, current_container.MakeName (method.Name) +
+					" is declared extern, but has a body");
+			}
+		}
+
+		method.Block = (ToplevelBlock) $11;
+		current_container.AddMethod (method);
+
+		current_local_parameters = null;
+		current_exit_target = ExitTargetKind.None;
+		iterator_container = null;
+	  }
+	;
+
+func_declaration
+	: FUNCTION identifier opt_type_params opt_type_character
+	  opt_params opt_type_with_ranks
+	  {
+		ParsedTypeParameters type_params = (ParsedTypeParameters) $3;
+		TypeArguments type_args = type_params == null ? null : type_params.TypeArguments;
+		MemberName name = (type_args == null)
+			? new MemberName ((string) $2)
+			: new MemberName ((string) $2, type_args);
+		Expression rettype = ($6 == null) ? (($4 == null) ? TypeManager.system_object_expr : (Expression) $4 ) : (Expression) $6;
+
+		GenericMethod generic = null;
+		if (type_args != null) {
+			generic = new GenericMethod (current_namespace, current_container, name, lexer.Location);
+			generic.SetParameterInfo (type_params.Constraints);
+		}
+
+		Method method = new Method (current_class, generic, rettype, current_modifiers,
+					    false, name,  (Parameters) $5, current_attributes,
+					    lexer.Location);
+
+		current_local_parameters = (Parameters) $5;
+		current_return_name = (string) $2;
+		current_method_is_shared = (current_modifiers & Modifiers.STATIC) != 0;
+		current_exit_target = ExitTargetKind.Function;
+
+		$$ = method;
+		iterator_container = method;
+	  }
+		  opt_member_implement_clause logical_end_of_line
+		  begin_block
+		  {
+			// Position shift: opt_type_args added as $3, so the first
+			// mid-rule action moved from $6 to $7.
+			Method method = (Method) $7;
+			method.ImplementsClauses = (ArrayList) $8;
+
+		ArrayList retval = new ArrayList ();
+		retval.Add (new VariableDeclaration ((string) $2, method.Type, lexer.Location));
+		declare_local_variables (method.Type, retval, lexer.Location);
+
+		// VB's implicit function variable starts at the default of the
+		// return type, and `End Function` returns its current value.
+		LocalVariableReference retvar = new LocalVariableReference (
+			current_block, (string) $2, lexer.Location);
+		Assign init = new Assign (retvar,
+			new DefaultValueExpression (method.Type, lexer.Location),
+			lexer.Location);
+		current_block.AddStatement (new StatementExpression (init, lexer.Location));
+	  }
+	  opt_statement_list
+	  {
+		LocalVariableReference retvar = new LocalVariableReference (
+			current_block, (string) $2, lexer.Location);
+		current_block.AddStatement (new Return (retvar, lexer.Location));
+	  }
+	  end_block
+	  END FUNCTION logical_end_of_line
+		  {
+			// Position shift: a new mid-rule after opt_statement_list moved
+			// end_block from $13 to $14.
+			Method method = (Method) $7;
+			method.IsEmptyDeclarationBody = !((bool) $12);
+			Block b = (Block) $14;
+			const int extern_abstract = (Modifiers.EXTERN | Modifiers.ABSTRACT);
+
+		if (b == null){
+			if ((method.ModFlags & extern_abstract) == 0){
+				Report.Error (
+					501, lexer.Location,  current_container.MakeName (method.Name) +
+				        "must declare a body because it is not marked abstract or extern");
+			}
+		} else {
+			if ((method.ModFlags & Modifiers.EXTERN) != 0){
+				Report.Error (
+					179, lexer.Location, current_container.MakeName (method.Name) +
+					" is declared extern, but has a body");
+			}
+		}
+
+		method.Block = (ToplevelBlock) b;
+		current_container.AddMethod (method);
+
+		current_return_name = null;
+		current_method_is_shared = false;
+		current_exit_target = ExitTargetKind.None;
+		current_local_parameters = null;
+		iterator_container = null;
+	  }
+	;		
+
+struct_declaration
+	: STRUCTURE identifier logical_end_of_line
+	  opt_implement_clause
+	  { 
+		PushDeclaredTypeState ();
+
+		MemberName name = MakeName (new MemberName ((string) $2));
+
+		if (implicit_modifiers && ((current_modifiers & Modifiers.STATIC) != 0))
+			current_modifiers = (current_modifiers & ~Modifiers.STATIC);
+
+		EnterPartialType (name, current_modifiers, Kind.Struct);
+
+		if ($4 != null)
+			current_class.Bases = (ArrayList) $4;
+	  }
+	  opt_struct_member_declarations
+	  END STRUCTURE logical_end_of_line
+	  {
+		$$ = PopDeclaredTypeState ();
+	  }
+	;
+
+
+
+// FIXME: logical_end_of_line is actually part of the opt_implements_clause
+// This rule is temporary
+
+opt_logical_end_of_line
+	: /* empty */
+	| logical_end_of_line
+	;
+
+
+opt_struct_member_declarations
+	: /* empty */
+	| struct_member_declarations
+	;
+
+struct_member_declarations
+	: struct_member_declaration
+	| struct_member_declarations struct_member_declaration
+	;
+
+struct_member_declaration
+	: opt_attributes
+	  opt_modifiers
+	  {
+		RejectInvalidPartialModifier (lexer.Location);
+	  }
+	  struct_member_declarator
+	  {
+		$$ = $4;
+	  }
+	;
+	
+struct_member_declarator	
+	: field_declaration
+	| constant_declaration
+	| constructor_declaration
+	| method_declaration
+	| property_declaration
+	| event_declaration
+	| type_spec_declaration
+
+	
+// 	 * This is only included so we can flag error 575:
+// 	 * destructors only allowed on class types
+// 	| destructor_declaration
+	;
+	
+// event_declaration
+// 	: EVENT identifier AS type opt_implement_clause logical_end_of_line
+// 	  {
+// 	  	VariableDeclaration var = new VariableDeclaration ((string) $2, (Expression) $4, lexer.Location);
+
+// 		Event e = new Event ((Expression) $4, var.identifier, 
+// 				     null, current_modifiers, 
+// 				     current_attributes, (ArrayList) $5,
+// 				     lexer.Location);
+
+// 		CheckDef (current_container.AddEvent (e), e.Name, e.Location);
+// 	  }
+// 	| EVENT identifier opt_params opt_implement_clause logical_end_of_line
+// 	  {
+// 		string delName = null;
+
+// 		if ($4 == null) {
+// 			delName = (string) $2;
+// 			delName = delName + "EventHandler";
+// 			Mono.MonoBASIC.Delegate del = new Mono.MonoBASIC.Delegate 
+// 							(current_container, TypeManager.system_void_expr, 
+// 							(int) current_modifiers, MakeName(delName), (Parameters) $3, 
+// 							(Attributes) current_attributes, lexer.Location);
+						     	  
+// 			del.Namespace = current_namespace;
+// 			CheckDef (current_container.AddDelegate (del), del.Name, lexer.Location);
+// 		} else {
+// 			ArrayList impls = (ArrayList) $4;
+// 			if (impls.Count > 1) {
+// 				string expstr = "Event '" + ((Expression) impls[1]).ToString () +
+// 					"' can not be implemented with Event '" +
+// 					(string) $2 + "', since it's delegate type does not match " +
+// 					"with the delegate type of '" + ((Expression) impls[0]).ToString () + "'";
+// 				Report.Error (31407, lexer.Location, expstr);
+// 			}			
+// 			Expression impl = (Expression) impls[0];  
+// 			delName = impl.ToString();
+// 			delName = delName.Substring (delName.LastIndexOf(".") + 1);
+// 			delName = delName + "EventHandler";
+// 		}
+		
+// 		Event e = new Event (DecomposeQI (delName, lexer.Location),
+// 					 (string) $2, 
+// 				     null, current_modifiers, 
+// 				     current_attributes, (ArrayList) $4, 
+// 				     lexer.Location);
+
+// 		CheckDef (current_container.AddEvent (e), e.Name, e.Location);
+// 	  }
+// 	;
+	
+
+
+event_declaration
+		: EVENT identifier AS type opt_member_implement_clause logical_end_of_line
+		  {
+	  	VariableDeclaration var = new VariableDeclaration ((string) $2, (Expression) $4, lexer.Location);
+
+		MemberName name = new MemberName ((string) $2);
+
+		Event e = new EventField (current_class, (Expression) $4, current_modifiers, false, name,
+					  var.expression_or_array_initializer, current_attributes,
+					  lexer.Location);
+
+		current_container.AddEvent (e);
+	  }
+
+// 	| EVENT identifier opt_params opt_implement_clause logical_end_of_line
+// 	  {
+// 		string delName = null;
+
+// 		if ($4 == null) {
+// 			delName = (string) $2;
+// 			delName = delName + "EventHandler";
+// 			Mono.MonoBASIC.Delegate del = new Mono.MonoBASIC.Delegate 
+// 							(current_container, TypeManager.system_void_expr, 
+// 							(int) current_modifiers, MakeName(delName), (Parameters) $3, 
+// 							(Attributes) current_attributes, lexer.Location);
+						     	  
+// 			del.Namespace = current_namespace;
+// 			CheckDef (current_container.AddDelegate (del), del.Name, lexer.Location);
+// 		} else {
+// 			ArrayList impls = (ArrayList) $4;
+// 			if (impls.Count > 1) {
+// 				string expstr = "Event '" + ((Expression) impls[1]).ToString () +
+// 					"' can not be implemented with Event '" +
+// 					(string) $2 + "', since it's delegate type does not match " +
+// 					"with the delegate type of '" + ((Expression) impls[0]).ToString () + "'";
+// 				Report.Error (31407, lexer.Location, expstr);
+// 			}			
+// 			Expression impl = (Expression) impls[0];  
+// 			delName = impl.ToString();
+// 			delName = delName.Substring (delName.LastIndexOf(".") + 1);
+// 			delName = delName + "EventHandler";
+// 		}
+		
+// 		Event e = new Event (DecomposeQI (delName, lexer.Location),
+// 					 (string) $2, 
+// 				     null, current_modifiers, 
+// 				     current_attributes, (ArrayList) $4, 
+// 				     lexer.Location);
+
+// 		CheckDef (current_container.AddEvent (e), e.Name, e.Location);
+// 	  }
+	;
+
+enum_declaration
+	: ENUM identifier opt_type_spec logical_end_of_line
+	  opt_enum_member_declarations 
+	  { 
+		PushDeclaredTypeState ();
+		RejectInvalidPartialModifier (lexer.Location);
+
+		Location enum_location = lexer.Location;
+
+		Expression base_type = TypeManager.system_int32_expr;
+		if ((Expression) $3 != null)
+			base_type = (Expression) $3;
+
+		ArrayList enum_members = (ArrayList) $5;
+		if (enum_members.Count == 0)
+			Report.Error (30280, enum_location,
+				      "Enum can not have empty member list");
+
+
+		if (implicit_modifiers && ((current_modifiers & Modifiers.STATIC) != 0))
+			current_modifiers = (current_modifiers & ~Modifiers.STATIC);
+			
+		MemberName full_name = MakeName (new MemberName ((string) $2));
+		Enum e = new Enum (current_namespace, current_container, base_type, 
+				   (int) current_modifiers, full_name, 
+				   (Attributes) current_attributes, enum_location);
+		
+		foreach (VariableDeclaration ev in (ArrayList) $5) {
+			e.AddEnumMember (ev.identifier, 
+					 (Expression) ev.expression_or_array_initializer,
+					 ev.Location, ev.OptAttributes, ev.DocComment);
+		}
+
+		string name = full_name.GetName ();
+		current_container.AddEnum (e);
+		RootContext.Tree.RecordDecl (name, e);
+
+	  }
+	  END ENUM logical_end_of_line
+	  {
+		$$ = PopDeclaredTypeState ();
+	  }
+	;
+
+opt_enum_member_declarations
+	: /* empty */			{ $$ = new ArrayList (4); }
+	| enum_member_declarations  	{ $$ = $1; }
+	;
+
+enum_member_declarations
+	: enum_member_declaration 
+	  {
+		ArrayList l = new ArrayList ();
+
+		l.Add ($1);
+		$$ = l;
+	  }
+	| enum_member_declarations  enum_member_declaration
+	  {
+		ArrayList l = (ArrayList) $1;
+
+		l.Add ($2);
+
+		$$ = l;
+	  }
+	;
+
+enum_member_declaration
+	: opt_attributes identifier logical_end_of_line
+	  {
+		$$ = new VariableDeclaration ((string) $2, null, lexer.Location, (Attributes) $1);
+	  }
+	| opt_attributes identifier
+	  {
+		  $$ = lexer.Location;
+	  }
+          ASSIGN expression logical_end_of_line
+	  { 
+		$$ = new VariableDeclaration ((string) $2, $5, lexer.Location, (Attributes) $1);
+	  }
+	;
+
+// interface_property_declaration
+// 	: PROPERTY identifier opt_type_character opt_property_parameters opt_type_with_ranks logical_end_of_line
+// 	  {
+// 		Expression ftype = ($5 == null) ? (($3 == null) ? 
+// 				TypeManager.system_object_expr : (Expression) $3 ) : (Expression) $5;
+
+// 		current_local_parameters = (Parameters) $4;
+// 		if (current_local_parameters != Parameters.EmptyReadOnlyParameters) { 
+// 			get_parameters = current_local_parameters.Copy (lexer.Location);
+// 			set_parameters = current_local_parameters.Copy (lexer.Location);
+			
+// 			Parameter implicit_value_parameter = new Parameter (
+// 					ftype, "Value", Parameter.Modifier.NONE, null);
+			
+// 			set_parameters.AppendParameter (implicit_value_parameter);
+// 		}
+// 		else
+// 		{
+// 			get_parameters = Parameters.EmptyReadOnlyParameters;
+// 			set_parameters = new Parameters (null, null ,lexer.Location); 
+			
+// 			Parameter implicit_value_parameter = new Parameter (
+// 					ftype, "Value", Parameter.Modifier.NONE, null);
+			
+// 			set_parameters.AppendParameter (implicit_value_parameter);
+// 		}
+// 		lexer.PropertyParsing = true;
+		
+// 		Accessor get_block = new Accessor (null, null);	
+// 		Accessor set_block = new Accessor (null, null);	
+				
+// 		Property prop = new Property ((Expression) ftype, (string) $2, current_modifiers,
+// 					 get_block, set_block, current_attributes, lexer.Location,
+// 					 null, get_parameters, set_parameters, null);
+    
+// 		CheckDef (current_interface.AddProperty (prop), prop.Name, lexer.Location);
+		
+// 		get_implicit_value_parameter_type = null;
+// 		set_implicit_value_parameter_type = null;
+// 		get_parameters = null;
+// 		set_parameters = null;
+// 		current_local_parameters = null;			
+// 	  }
+// 	;
+	
+// interface_event_declaration
+// 	: EVENT identifier AS type logical_end_of_line
+// 	  {
+// 	  	VariableDeclaration var = new VariableDeclaration ((string) $2, (Expression) $4, lexer.Location);
+
+// 		Event e = new Event ((Expression) $4, var.identifier, 
+// 				     null, current_modifiers, 
+// 				     current_attributes, lexer.Location);
+
+// 		CheckDef (current_interface.AddEvent (e), e.Name, e.Location);
+
+// 	  }
+// 	| EVENT identifier opt_params logical_end_of_line
+// 	  {
+// 		string delName = (string) $2;
+// 		delName = delName + "EventHandler";
+// 		int delModifiers = (current_modifiers & ~Modifiers.ABSTRACT);
+// 	    Mono.MonoBASIC.Delegate del = new Mono.MonoBASIC.Delegate 
+// 						(current_container, TypeManager.system_void_expr, 
+// 					     (int) delModifiers, MakeName(delName), (Parameters) $3, 
+// 					     (Attributes) current_attributes, lexer.Location);
+					     	  
+// 		del.Namespace = current_namespace;
+// 		CheckDef (current_interface.AddDelegate (del), del.Name, lexer.Location);
+	  
+// 		Event e = new Event (DecomposeQI (delName, lexer.Location),
+// 					 (string) $2, 
+// 				     null, current_modifiers, 
+// 				     current_attributes, lexer.Location);
+
+// 		CheckDef (current_interface.AddEvent (e), e.Name, e.Location);
+// 	  }
+// 	;
+
+
+
+//FIXME: This apparently doesn't seem to emit the right code with property 
+//having opt_property_parameters defined
+
+interface_property_declaration
+	: PROPERTY identifier opt_type_character opt_property_parameters opt_type_with_ranks logical_end_of_line
+	  {
+		get_implicit_value_parameter_type  = 
+			($5 == null) ? (($3 == null) ? 
+				TypeManager.system_object_expr : (Expression) $3 ) : (Expression) $5;
+
+			current_local_parameters = (Parameters) $4;
+			if (current_local_parameters != Parameters.EmptyReadOnlyParameters) { 
+				get_parameters = current_local_parameters.Copy (lexer.Location);
+				set_parameters = current_local_parameters.Copy (lexer.Location);
+			}
+			else
+			{
+				get_parameters = Parameters.EmptyReadOnlyParameters;
+				set_parameters = new Parameters (null, null ,lexer.Location); 
+			}
+			lexer.PropertyParsing = true;
+		
+		Location loc = lexer.Location;
+		MemberName name = new MemberName ((string) $2);
+
+			Accessor get_block = ((current_modifiers & Modifiers.WRITEONLY) != 0)
+				? null : new Accessor (null, 0, null, loc);
+			Accessor set_block = ((current_modifiers & Modifiers.READONLY) != 0)
+				? null : new Accessor (null, 0, null, loc);
+
+			if (set_block != null) {
+				Parameter implicit_value_parameter = new Parameter (
+					get_implicit_value_parameter_type, "Value", Parameter.Modifier.NONE, null);
+				set_parameters.AppendParameter (implicit_value_parameter);
+			}
+
+			Property prop = new Property (current_class, get_implicit_value_parameter_type, 
+				     (int) current_modifiers, true,
+				     name, current_attributes, 
+				     get_parameters, get_block, 
+				     set_parameters, set_block, lexer.Location);
+		
+		current_container.AddProperty (prop);
+		
+		get_implicit_value_parameter_type = null;
+		set_implicit_value_parameter_type = null;
+		get_parameters = null;
+		set_parameters = null;
+		current_local_parameters = null;			
+	  }
+	;
+
+
+// interface_event_declaration
+// 	: EVENT identifier AS type logical_end_of_line
+// 	  {
+// 	  	VariableDeclaration var = new VariableDeclaration ((string) $2, (Expression) $4, lexer.Location);
+
+// 		Event e = new Event ((Expression) $4, var.identifier, 
+// 				     null, current_modifiers, 
+// 				     current_attributes, lexer.Location);
+
+// 		CheckDef (current_interface.AddEvent (e), e.Name, e.Location);
+
+// 	  }
+// 	| EVENT identifier opt_params logical_end_of_line
+// 	  {
+// 		string delName = (string) $2;
+// 		delName = delName + "EventHandler";
+// 		int delModifiers = (current_modifiers & ~Modifiers.ABSTRACT);
+// 	    Mono.MonoBASIC.Delegate del = new Mono.MonoBASIC.Delegate 
+// 						(current_container, TypeManager.system_void_expr, 
+// 					     (int) delModifiers, MakeName(delName), (Parameters) $3, 
+// 					     (Attributes) current_attributes, lexer.Location);
+					     	  
+// 		del.Namespace = current_namespace;
+// 		CheckDef (current_interface.AddDelegate (del), del.Name, lexer.Location);
+	  
+// 		Event e = new Event (DecomposeQI (delName, lexer.Location),
+// 					 (string) $2, 
+// 				     null, current_modifiers, 
+// 				     current_attributes, lexer.Location);
+
+// 		CheckDef (current_interface.AddEvent (e), e.Name, e.Location);
+// 	  }
+// 	;
+
+interface_declaration
+	: INTERFACE identifier logical_end_of_line
+	  {
+		PushDeclaredTypeState ();
+		RejectInvalidPartialModifier (lexer.Location);
+
+		MemberName name = new MemberName ((string) $2);
+
+		current_class = new Interface (current_namespace, current_container, 
+					       name, (int) current_modifiers, 
+					       (Attributes) current_attributes, lexer.Location);
+
+		current_container = current_class;
+		RootContext.Tree.RecordDecl (name.GetName (true), current_class);
+
+	  }
+	  opt_interface_base
+	  {
+		current_class.Bases = (ArrayList) $5;
+		current_class.Register ();
+	  }
+	  interface_body
+	  {
+		$$ = PopDeclaredTypeState ();
+	  }
+	  END INTERFACE logical_end_of_line
+	;
+
+opt_interface_base
+	: /* empty */			  { $$ = null; }
+	| interface_bases		  { $$ = $1; }
+	;
+
+interface_bases
+	: interface_base
+	| interface_bases interface_base
+	  {
+		ArrayList bases = (ArrayList) $1;
+		bases.AddRange ((ArrayList) $2);
+		$$ = bases;
+	  }
+	;
+
+interface_base
+	: INHERITS type_list logical_end_of_line  { $$ = $2; }
+	;
+
+interface_body
+	: opt_interface_member_declarations
+	;
+
+opt_interface_member_declarations
+	: /* empty */
+	| interface_member_declarations
+	;
+
+interface_member_declarations
+	: interface_member_declaration
+	| interface_member_declarations interface_member_declaration
+	;
+
+interface_member_declaration
+	: opt_attributes opt_modifiers interface_member_declarator
+	;
+	
+interface_member_declarator
+	: interface_method_declaration	
+	  { 
+		Method m = (Method) $1;
+
+		current_container.AddMethod (m);
+	  }
+	| interface_property_declaration	
+// 	| interface_event_declaration 
+	;
+
+interface_method_declaration
+	: SUB identifier opt_params logical_end_of_line
+	  {
+		MemberName name = (MemberName) new MemberName ((string) $2);
+
+		GenericMethod generic = null;
+
+		$$ = new Method (current_class, generic, TypeManager.system_void_expr, 
+				 (int) current_modifiers, true, name, (Parameters) $3,  
+				 (Attributes) current_attributes, lexer.Location);
+	  }
+
+	| FUNCTION identifier opt_type_character opt_params opt_type_with_ranks logical_end_of_line
+	  {
+		MemberName name = new MemberName ((string) $2);
+		Expression return_type = ($5 == null) ? 
+			(($3 == null) ? TypeManager.system_object_expr : (Expression) $3 ) 
+			: (Expression) $5;
+
+		GenericMethod generic = null;
+		$$ = new Method (current_class, generic, return_type, (int) current_modifiers, 
+				 true, name, (Parameters) $4, (Attributes) current_attributes,
+				 lexer.Location);
+	  }
+	;
+
+property_declaration
+	: non_abstract_propery_declaration
+// 	| abstract_propery_declaration 
+	;
+	
+// abstract_propery_declaration
+// 	: MUSTOVERRIDE PROPERTY identifier opt_type_character opt_property_parameters opt_type_with_ranks logical_end_of_line
+// 	  {	
+// 		Expression ftype = ($6 == null) ? (($4 == null) ? 
+// 				TypeManager.system_object_expr : (Expression) $4 ) : (Expression) $6;
+
+// 	  	if (current_container is Module)
+// 	  		Report.Error (30503, "Properties in a Module cannot be declared 'MustOverride'.");
+	  		
+// 	  	if (current_container is Struct)
+// 	  		Report.Error (435, "Methods in a Structure cannot be declared 'MustOverride'.");
+	  			
+// 		current_modifiers |= Modifiers.ABSTRACT;
+		
+// 		current_local_parameters = (Parameters) $5;
+// 		if (current_local_parameters != Parameters.EmptyReadOnlyParameters) { 
+// 			get_parameters = current_local_parameters.Copy (lexer.Location);
+// 			set_parameters = current_local_parameters.Copy (lexer.Location);
+			
+// 			Parameter implicit_value_parameter = new Parameter (
+// 					ftype, "Value", Parameter.Modifier.NONE, null);
+			
+// 			set_parameters.AppendParameter (implicit_value_parameter);
+// 		}
+// 		else
+// 		{
+// 			get_parameters = Parameters.EmptyReadOnlyParameters;
+// 			set_parameters = new Parameters (null, null ,lexer.Location); 
+			
+// 			Parameter implicit_value_parameter = new Parameter (
+// 					ftype, "Value", Parameter.Modifier.NONE, null);
+			
+// 			set_parameters.AppendParameter (implicit_value_parameter);
+// 		}
+// 		lexer.PropertyParsing = true;
+		
+// 		Accessor get_block = new Accessor (null, null);	
+// 		Accessor set_block = new Accessor (null, null);	
+				
+// 		Property prop = new Property ((Expression) ftype, (string) $3, current_modifiers, 
+// 					 get_block, set_block, current_attributes, lexer.Location,
+// 					 null, get_parameters, set_parameters, null);
+    
+// 		if (!(current_container is Class))
+// 			Report.Error (9999, "THIS SHOULD NEVER HAPPEN!");
+			
+// 		CheckDef (current_container.AddProperty (prop), prop.Name, lexer.Location);
+		
+// 		get_implicit_value_parameter_type = null;
+// 		set_implicit_value_parameter_type = null;
+// 		get_parameters = null;
+// 		set_parameters = null;
+// 		current_local_parameters = null;				
+// 	  }	
+// 	;
+	
+non_abstract_propery_declaration
+	  : PROPERTY identifier opt_type_character opt_property_parameters opt_type_with_ranks opt_member_implement_clause logical_end_of_line
+	  {
+		get_implicit_value_parameter_type  = 
+			($5 == null) ? (($3 == null) ? 
+				TypeManager.system_object_expr : (Expression) $3 ) : (Expression) $5;
+		get_implicit_value_parameter_name = (string) $2;
+		
+		current_local_parameters = (Parameters) $4;
+		if (current_local_parameters != Parameters.EmptyReadOnlyParameters) { 
+			get_parameters = current_local_parameters.Copy (lexer.Location);
+			set_parameters = current_local_parameters.Copy (lexer.Location);
+		}
+		else
+		{
+			get_parameters = Parameters.EmptyReadOnlyParameters;
+			set_parameters = new Parameters (null, null ,lexer.Location);		
+		}
+		lexer.PropertyParsing = true;
+
+		$$ = lexer.Location;
+	  }
+	  accessor_declarations 
+	  END PROPERTY logical_end_of_line
+	  {
+		lexer.PropertyParsing = false;
+
+		Property prop;
+		Pair pair = (Pair) $9;
+		
+		Accessor get_block = (Accessor) pair.First; 
+		Accessor set_block = (Accessor) pair.Second; 
+		
+		Location loc = lexer.Location;
+		MemberName name = new MemberName ((string) $2);
+
+		if (IsCurrentStructType () && (current_modifiers == 0))
+			current_modifiers = Modifiers.PUBLIC;				
+
+
+		prop = new Property (current_class, get_implicit_value_parameter_type, 
+				     (int) current_modifiers, false,
+				     name, (Attributes) current_attributes, 
+				     get_parameters, get_block, 
+				     set_parameters, set_block, lexer.Location);
+		prop.ImplementsClauses = (ArrayList) $6;
+		
+		current_container.AddProperty (prop);
+		get_implicit_value_parameter_type = null;
+		set_implicit_value_parameter_type = null;
+		get_parameters = null;
+		set_parameters = null;
+		current_local_parameters = null;
+	  }
+	;
+
+opt_property_parameters
+	: /* empty */
+	  {
+	  	$$ = Parameters.EmptyReadOnlyParameters;
+	  }
+	| OPEN_PARENS
+	  {
+		parameter_owner_attributes = current_attributes;
+	  }
+	  opt_formal_parameter_list CLOSE_PARENS
+	  {
+		current_attributes = parameter_owner_attributes;
+	  	$$ = $3;
+	  }
+	;
+	
+opt_implement_clause
+	: /* empty */
+	  {
+	  	$$ = null;
+	  }
+	| IMPLEMENTS implement_clause_list
+	  {
+		$$ = $2;
+	  }
+	;
+
+opt_member_implement_clause
+	: /* empty */
+	  {
+	  	$$ = null;
+	  }
+	| IMPLEMENTS member_implement_clause_list
+	  {
+		$$ = $2;
+	  }
+	;
+
+member_implement_clause_list
+	: type_name DOT identifier
+	  {
+		  ArrayList impl_list = new ArrayList ();
+		  impl_list.Add (new MemberName ((MemberName) $1, (string) $3, null));
+		  $$ = impl_list;
+	  }
+	| member_implement_clause_list COMMA type_name DOT identifier
+	  {
+		  ArrayList impl_list = (ArrayList) $1;
+		  impl_list.Add (new MemberName ((MemberName) $3, (string) $5, null));
+		  $$ = impl_list;
+	  }
+	;
+	
+implement_clause_list
+	: type_name
+	  {
+		  MemberName mname = (MemberName) $1;
+		  ArrayList impl_list = new ArrayList ();
+		  impl_list.Add (mname.GetTypeExpression (lexer.Location));
+		  $$ = impl_list;
+	  }	
+	| implement_clause_list COMMA type_name
+	  {
+		  MemberName mname = (MemberName) $3;
+		  ArrayList impl_list = (ArrayList) $1;
+		  impl_list.Add (mname.GetTypeExpression (lexer.Location));
+		  $$ = impl_list;
+	  }	
+	;
+
+accessor_declarations
+	: get_accessor_declaration opt_set_accessor_declaration
+	  { 
+		$$ = new Pair ($1, $2);
+	  }
+	| set_accessor_declaration opt_get_accessor_declaration
+	  {
+		$$ = new Pair ($2, $1);
+	  }
+	;
+
+opt_get_accessor_declaration
+	: /* empty */			{ $$ = null; }
+	| get_accessor_declaration
+	;
+
+// Accessor visibility is semantically meaningful: PropertyMethod already
+// stores accessor ModFlags and PropertyBase enforces the VB rules that an
+// accessor modifier must be more restrictive than the property and that
+// only one accessor may differ.  Parse the accessor modifier into a
+// dedicated flag set instead of leaking it through current_modifiers.
+opt_accessor_modifiers
+	: /* empty */
+	  {
+		$$ = (int) 0;
+	  }
+	| accessor_modifiers
+	  {
+		$$ = $1;
+	  }
+	;
+
+accessor_modifiers
+	: accessor_modifier
+	| accessor_modifiers accessor_modifier
+	  {
+		int m1 = (int) $1;
+		int m2 = (int) $2;
+
+		if ((m1 & m2) != 0) {
+			Location l = lexer.Location;
+			Report.Error (1004, l, "Duplicate modifier: `" + Modifiers.Name (m2) + "'");
+		}
+
+		$$ = (int) (m1 | m2);
+	  }
+	;
+
+accessor_modifier
+	: PUBLIC		{ $$ = Modifiers.PUBLIC; }
+	| PROTECTED		{ $$ = Modifiers.PROTECTED; }
+	| FRIEND		{ $$ = Modifiers.INTERNAL; }
+	| PRIVATE		{ $$ = Modifiers.PRIVATE; }
+	;
+
+opt_set_accessor_declaration
+	: /* empty */			{ $$ = null; }
+	| set_accessor_declaration
+	;
+
+get_accessor_declaration
+	: opt_attributes opt_accessor_modifiers GET logical_end_of_line
+	  {
+		if ((current_modifiers & Modifiers.WRITEONLY) != 0)
+	  		Report.Error (30023, "'WriteOnly' properties cannot have a 'Get' accessor");
+	  
+		current_local_parameters = get_parameters;
+		current_return_name = get_implicit_value_parameter_name;
+		current_method_is_shared = (current_modifiers & Modifiers.STATIC) != 0;
+		current_exit_target = ExitTargetKind.Property;
+		
+		lexer.PropertyParsing = false;
+		
+	  }
+	  begin_block
+	  {
+		ArrayList retval = new ArrayList ();
+		retval.Add (new VariableDeclaration (get_implicit_value_parameter_name, get_implicit_value_parameter_type, lexer.Location));
+		declare_local_variables (get_implicit_value_parameter_type, retval, lexer.Location);
+
+		LocalVariableReference retvar = new LocalVariableReference (
+			current_block, get_implicit_value_parameter_name, lexer.Location);
+		Assign init = new Assign (retvar,
+			new DefaultValueExpression (
+				get_implicit_value_parameter_type, lexer.Location),
+			lexer.Location);
+		current_block.AddStatement (new StatementExpression (init, lexer.Location));
+	  }
+	  opt_statement_list
+	  {
+		LocalVariableReference retvar = new LocalVariableReference (
+			current_block, get_implicit_value_parameter_name, lexer.Location);
+		current_block.AddStatement (new Return (retvar, lexer.Location));
+	  }
+	  end_block
+	  END GET logical_end_of_line
+	  {
+		// See comment in set_accessor_declaration below: accessor
+		// modifiers are distinct from property-level modifiers.
+		// Position shift: a new mid-rule after opt_statement_list moved
+		// end_block from $9 to $10.
+		$$ = new Accessor ((ToplevelBlock) $10, (int) $2,
+				   (Attributes) $1, lexer.Location);
+
+		current_return_name = null;
+		current_method_is_shared = false;
+		current_exit_target = ExitTargetKind.None;
+		current_local_parameters = null;
+		lexer.PropertyParsing = true;
+	  }
+	;
+
+
+
+set_accessor_declaration
+	: opt_attributes opt_accessor_modifiers SET opt_set_parameter logical_end_of_line
+	  {
+        if ((current_modifiers & Modifiers.READONLY) != 0)
+	  		Report.Error (30022, "'ReadOnly' properties cannot have a 'Set' accessor");
+	  		
+		Parameter implicit_value_parameter = new Parameter (
+			set_implicit_value_parameter_type, 
+			set_implicit_value_parameter_name, 
+			Parameter.Modifier.NONE, null);
+
+		set_parameters.AppendParameter (implicit_value_parameter);
+		current_local_parameters = set_parameters;
+		current_exit_target = ExitTargetKind.Property;
+
+		lexer.PropertyParsing = false;
+	  }
+	  begin_block
+	  opt_statement_list
+	  end_block
+	  END SET logical_end_of_line
+	  {
+		// Accessor modifiers are a distinct set from property-level
+		// modifiers; ReadOnly / WriteOnly live on the Property.  Passing
+		// current_modifiers here would leak property-level flags into
+		// the accessor and trip Modifiers.Check (which has a much
+		// smaller allowed set for accessors).
+		$$ = new Accessor ((ToplevelBlock) $9, (int) $2,
+				   (Attributes) $1, lexer.Location);
+		current_local_parameters = null;
+		current_exit_target = ExitTargetKind.None;
+		lexer.PropertyParsing = true;
+	  }
+	;
+
+opt_set_parameter
+	: /* empty */
+	{
+		set_implicit_value_parameter_type = (Expression) get_implicit_value_parameter_type; // TypeManager.system_object_expr;
+		set_implicit_value_parameter_name = "Value";
+	}	
+	|OPEN_PARENS CLOSE_PARENS
+	{
+		set_implicit_value_parameter_type = (Expression) get_implicit_value_parameter_type;
+		set_implicit_value_parameter_name = "Value";
+	}	
+	| OPEN_PARENS opt_parameter_modifier opt_identifier opt_type_with_ranks CLOSE_PARENS
+	{
+		Parameter.Modifier pm = (Parameter.Modifier)$2;
+		if ((pm | Parameter.Modifier.VAL) != 0)
+			Report.Error (31065, 
+				lexer.Location, 
+				"Set cannot have a paremeter modifier other than 'ByVal'");
+				
+		set_implicit_value_parameter_type = (Expression) $4;
+		
+		if (set_implicit_value_parameter_type.ToString () != get_implicit_value_parameter_type.ToString ())
+			Report.Error (31064, 
+				lexer.Location, 
+				"Set value parameter type can not be different from property type");
+				
+		if ($2 != null)
+			set_implicit_value_parameter_name = (string) $3;
+		else
+			set_implicit_value_parameter_name = "Value";
+	}
+	;
+
+field_declaration
+	: opt_dim_stmt 
+	  variable_declarators logical_end_of_line
+	  {   		  
+		int mod = (int) current_modifiers;
+
+		VariableDeclaration.FixupTypes ((ArrayList) $2);
+		VariableDeclaration.FixupArrayTypes ((ArrayList) $2);
+		
+// 		if (current_container is Module)
+// 			mod = mod | Modifiers.STATIC;
+			
+		// Structure members are Public by default			
+		if (IsCurrentStructType () && (mod == 0))
+			mod = Modifiers.PUBLIC;			
+		
+		if ((mod & Modifiers.Accessibility) == 0)
+			mod |= Modifiers.PRIVATE;
+					
+		foreach (VariableDeclaration var in (ArrayList) $2){
+			Location l = var.Location;
+			Field field = new Field (current_class, var.type, mod, 
+						 var.identifier, var.expression_or_array_initializer, 
+						 (Attributes) null, l);
+
+			current_container.AddField (field);
+		}
+	  }
+	;
+
+	
+// withevents_declaration
+// 	: opt_dim_stmt WITHEVENTS variable_declarators logical_end_of_line
+// 	  {
+// 		// Module members are static by default, but delegates *can't* be declared static
+// 		// so we must fix it, if mbas was the one actually responsible for this
+// 		// instead of triggering an error.
+// 		if (implicit_modifiers && ((current_modifiers & Modifiers.STATIC) != 0))
+// 			current_modifiers = (current_modifiers & ~Modifiers.STATIC);
+	  
+// 	  	/* WithEvents Fields must be resolved into properties
+// 	  	   with a bit of magic behind the scenes */
+	  	  
+// 	  	VariableDeclaration.FixupTypes ((ArrayList) $3);
+	  	
+// 		foreach (VariableDeclaration var in (ArrayList) $3) {
+// 			// 1 - We create a private field
+// 			Location l = var.Location;
+// 			Property prop;
+// 			if ((current_modifiers & Modifiers.STATIC) > 0) 
+// 				Report.Error (30234, l, "'Static' is not valid on a WithEvents declaration.");
+			
+// 			Field field = new Field (var.type, Modifiers.PRIVATE, "_" + var.identifier, 
+// 						 var.expression_or_array_initializer, 
+// 						 (Attributes) null, l);
+						 
+// 			CheckDef (current_container.AddField (field), field.Name, l);	
+			
+// 			// 2 - Public property
+				
+// 			prop = BuildSimpleProperty (var.type, (string) var.identifier, 
+// 						field, (int) current_modifiers, 
+// 					     	(Attributes) current_attributes, l);
+			
+// 			CheckDef (current_container.AddProperty (prop), prop.Name, l);
+// 		}		
+// 	  }
+// 	;
+	
+opt_dim_stmt 
+	: /* empty */
+	| DIM
+	; 
+		
+delegate_declaration
+	: DELEGATE SUB  
+	  {
+		PushDeclaredTypeState ();
+		RejectInvalidPartialModifier (lexer.Location);
+	  }
+	  identifier opt_type_params OPEN_PARENS 
+	  opt_formal_parameter_list
+	  CLOSE_PARENS 
+	  logical_end_of_line
+	  {
+		Location l = lexer.Location;
+		ParsedTypeParameters type_params = (ParsedTypeParameters) $5;
+		TypeArguments type_args = type_params == null ? null : type_params.TypeArguments;
+		MemberName name = (type_args == null)
+			? MakeName (new MemberName ((string) $4))
+			: MakeName (new MemberName ((string) $4, type_args));
+
+		if (implicit_modifiers && ((current_modifiers & Modifiers.STATIC) != 0))
+			current_modifiers = (current_modifiers & ~Modifiers.STATIC);
+
+		Delegate del = new Delegate (current_namespace, current_container, TypeManager.system_void_expr,
+					     current_modifiers, name, (Parameters) $7, current_attributes, l);
+
+		if (type_params != null)
+			del.SetParameterInfo (type_params.Constraints);
+
+		current_container.AddDelegate (del);
+		RootContext.Tree.RecordDecl (name.GetName (true), del);
+		$$ = PopDeclaredTypeState ();
+	  }	
+	
+	| DELEGATE FUNCTION	  
+	  {
+		PushDeclaredTypeState ();
+		RejectInvalidPartialModifier (lexer.Location);
+	  }
+	  identifier opt_type_params OPEN_PARENS 
+	  opt_formal_parameter_list
+	  CLOSE_PARENS opt_type_with_ranks logical_end_of_line
+	  {
+		Location l = lexer.Location;
+		ParsedTypeParameters type_params = (ParsedTypeParameters) $5;
+		TypeArguments type_args = type_params == null ? null : type_params.TypeArguments;
+		MemberName name = (type_args == null)
+			? MakeName (new MemberName ((string) $4))
+			: MakeName (new MemberName ((string) $4, type_args));
+
+		if (implicit_modifiers && ((current_modifiers & Modifiers.STATIC) != 0))
+			current_modifiers = (current_modifiers & ~Modifiers.STATIC);
+
+		Expression rettype = ($9 == null) ? TypeManager.system_object_expr : (Expression) $9;
+		Delegate del = new Delegate (current_namespace, current_container, rettype,
+					     current_modifiers, name, (Parameters) $7, current_attributes, l);
+
+		if (type_params != null)
+			del.SetParameterInfo (type_params.Constraints);
+
+		current_container.AddDelegate (del);
+		RootContext.Tree.RecordDecl (name.GetName (true), del);
+		$$ = PopDeclaredTypeState ();
+	  }	
+
+	;
+
+
+opt_evt_handler
+	: /* empty */		{ 	$$ = null; }
+// 	  | HANDLES evt_handler		{ 	$$ = $2; }
+    ;
+
+// evt_handler
+// 	: qualified_identifier
+// 	  {
+// 		$$ = (Expression) DecomposeQI ((string)$1, lexer.Location);	
+// 	  }
+// 	| base_access
+// 	  {
+// 		$$ = $1;
+// 	  }
+// 	| ME DOT qualified_identifier
+// 	  {
+// 		$$ = (Expression) DecomposeQI ((string)$3, lexer.Location);	
+// 	  }
+// 	/*| MYBASE DOT qualified_identifier
+// 	  {
+// 	  	// FIXME: this is blatantly wrong and crash-prone
+// 		$$ = (Expression) DecomposeQI ("MyBase." + (string)$4, lexer.Location);
+// 	  }*/
+// 	;
+
+
+constructor_declaration
+	: SUB NEW opt_params logical_end_of_line
+	  {
+	  	current_local_parameters = (Parameters) $3;
+		current_exit_target = ExitTargetKind.Sub;
+		$$ = new Constructor (current_class, current_container.Basename, 0, (Parameters) $3, 
+				      (ConstructorInitializer) null, lexer.Location);
+	  }
+	  begin_block
+	  opt_statement_list
+	  end_block
+	  { 
+		Constructor c = (Constructor) $5;
+		c.Block = (ToplevelBlock) $8;
+		c.ModFlags = (int) current_modifiers;
+		c.OptAttributes = current_attributes;
+
+		// FIXME: Some more error checking from mcs needs to be merged here ???
+		
+		c.Initializer = CheckConstructorInitializer (ref c.Block.statements);
+
+		current_container.AddConstructor(c);
+		current_local_parameters = null;
+		current_exit_target = ExitTargetKind.None;
+	  }
+	  END SUB logical_end_of_line
+	;
+
+opt_formal_parameter_list
+	: /* empty */			
+	  { 
+		$$ = Parameters.EmptyReadOnlyParameters; 
+	  }
+	| formal_parameter_list	
+	  { 
+	  	$$ = $1;	
+	  }
+	;
+	
+formal_parameter_list
+	: parameters		
+	  { 
+		ArrayList pars_list = (ArrayList) $1;
+		Parameter [] pars = null; 
+		Parameter array_parameter = null;
+		int non_array_count = pars_list.Count;
+		if (pars_list.Count > 0 && (((Parameter) pars_list [pars_list.Count - 1]).ModFlags & Parameter.Modifier.PARAMS) != 0) {
+			array_parameter = (Parameter) pars_list [pars_list.Count - 1];
+			non_array_count = pars_list.Count - 1;
+		}
+		foreach (Parameter par in pars_list)
+			if (par != array_parameter && (par.ModFlags & Parameter.Modifier.PARAMS) != 0) {
+		  		Report.Error (30192, lexer.Location, "ParamArray parameters must be last");
+			  	non_array_count = 0; 
+				array_parameter = null;
+				break;
+			}
+		if (non_array_count > 0) {
+			pars = new Parameter [non_array_count];
+			pars_list.CopyTo (0, pars, 0, non_array_count);
+		}
+	  	$$ = new Parameters (pars, array_parameter, lexer.Location); 
+	  } 
+	;
+
+parameters
+	: parameter	
+	  {
+		ArrayList pars = new ArrayList ();
+
+		pars.Add ($1);
+		$$ = pars;
+	  }
+	| parameters COMMA parameter
+	  {
+		ArrayList pars = (ArrayList) $1;
+
+		pars.Add ($3);
+		$$ = $1;
+	  }
+	;
+
+parameter
+	: opt_attributes
+	  opt_parameter_modifier
+	  identifier opt_type_character opt_rank_specifiers opt_type_with_ranks opt_variable_initializer
+	  {
+	  	Parameter.Modifier pm = (Parameter.Modifier)$2;
+	  	bool opt_parm = ((pm & Parameter.Modifier.OPTIONAL) != 0);
+	  	Expression ptype;
+	  	
+	  	if (opt_parm && ($7 == null))
+	  		Report.Error (30812, lexer.Location, "Optional parameters must have a default value");
+
+	  	if (!opt_parm && ($7 != null))
+	  		Report.Error (32024, lexer.Location, "Non-Optional parameters should not have a default value");
+
+	  	if ((pm & Parameter.Modifier.PARAMS) != 0) {
+		  	if ((pm & ~Parameter.Modifier.PARAMS) != 0)
+	  			Report.Error (30667, lexer.Location, "ParamArray parameters must be ByVal");
+		}
+	  	
+  		if ((pm & Parameter.Modifier.REF) !=0)
+  			pm |= Parameter.Modifier.ISBYREF;
+		
+	  	if ($4 != null && $6 != null && $4 != $6)
+			Report.Error (30302, lexer.Location, "Type character conflicts with declared type."); // TODO: Correct error number and message text
+
+		ptype = (Expression)(($6 == null) ? (($4 == null) ? TypeManager.system_object_expr : $4) : $6);
+		if ($5 != null)	{
+	  		string t = ptype.ToString ();
+	  		if (t.IndexOf('[') >= 0)
+				Report.Error (31087, lexer.Location, "Array types specified in too many places");
+			else	
+	  			ptype = DecomposeQI (t + VariableDeclaration.BuildRanks ((ArrayList) $5, true, lexer.Location), lexer.Location);
+	  	}
+		if ((pm & Parameter.Modifier.PARAMS) != 0 && ptype.ToString ().IndexOf('[') < 0)
+	  		Report.Error (30050, lexer.Location, "ParamArray parameters must be an array type");
+
+		// opt_attributes updates current_attributes as a side effect.
+		// Restore the enclosing member/property attributes after every
+		// parameter so parameter attributes do not leak outward.
+		current_attributes = parameter_owner_attributes;
+
+		$$ = new Parameter (ptype, (string) $3, pm,
+					(Attributes) $1, (Expression) $7, opt_parm);
+	  }
+	;
+	
+opt_parameter_modifier
+	: /* empty */		{ $$ = Parameter.Modifier.VAL; 	}
+	| parameter_modifiers	{ $$ = $1;			}
+	;
+
+parameter_modifiers
+	: parameter_modifiers parameter_modifier 	{ $$ = (Parameter.Modifier)$1 | (Parameter.Modifier)$2;	}
+	| parameter_modifier				{ $$ = $1;	}
+	;
+	
+parameter_modifier
+	: BYREF			{ $$ = Parameter.Modifier.REF | Parameter.Modifier.ISBYREF; }
+	| BYVAL			{ $$ = Parameter.Modifier.VAL; }
+	| OPTIONAL		{ $$ = Parameter.Modifier.OPTIONAL; } 
+	| PARAM_ARRAY		{ $$ = Parameter.Modifier.PARAMS; } 
+	;	
+
+opt_statement_list
+	: /* empty */			{ $$ = false; }
+	| statement_list end_of_stmt	{ $$ = true; }
+	;
+
+statement_list
+	: statement 
+	| statement_list end_of_stmt statement
+	;
+
+block
+	: begin_block 
+	  opt_statement_list
+	  end_block { $$ = $3; }
+	;
+
+begin_block
+	: /* empty */
+	{
+		  if (current_block == null){
+			  current_block = new ToplevelBlock ((ToplevelBlock) top_current_block, current_local_parameters, lexer.Location);
+			  top_current_block = current_block;
+		  } else {
+		  current_block = new Block (current_block, current_local_parameters,
+						 lexer.Location, Location.Null);
+		  }
+	} 
+	;
+
+
+end_block
+	: /* empty */
+	  { 
+		while (current_block.Implicit)
+			current_block = current_block.Parent;
+		$$ = current_block;
+		current_block.SetEndLocation (lexer.Location);
+		current_block = current_block.Parent;
+		if (current_block == null)
+			top_current_block = null;
+	  }
+	;
+
+statement 
+	  : declaration_statement
+	    {
+		  if ($1 != null && (Block) $1 != current_block){
+			current_block.AddStatement ((Statement) $1);
+			current_block = (Block) $1;
+		  }
+	    }
+	  | embedded_statement
+	    {
+		  Statement s = (Statement) $1;
+
+		  current_block.AddStatement ((Statement) $1);
+	    } 
+	  | labeled_statement
+	    {
+		  // labeled_statement adds the label node itself, and any
+		  // same-line statement is added by its nested statement action.
+	    }
+	  | ADDHANDLER prefixed_unary_expression COMMA expression
+	    {
+		// VB AddHandler/RemoveHandler takes a delegate-valued expression,
+		// not just the bare `AddressOf method` form. Model it as its own
+		// statement so resolution can preserve event access and then call
+		// the event's add/remove accessor directly.
+		Location loc = lexer.Location;
+
+		Statement stmt = new EventSubscription ((Expression) $2,
+					 (Expression) $4, true, loc);
+
+		current_block.AddStatement (stmt);
+
+	    }
+
+	  | REMOVEHANDLER prefixed_unary_expression COMMA expression
+	    {
+		Location loc = lexer.Location;
+
+		Statement stmt = new EventSubscription ((Expression) $2,
+					 (Expression) $4, false, loc);
+
+		current_block.AddStatement (stmt);
+
+	    }
+	  | RAISEEVENT identifier opt_raise_event_args  //OPEN_PARENS opt_argument_list CLOSE_PARENS
+	    {
+	      Location loc = lexer.Location;
+	      MemberName mname = new MemberName ((string) $2);
+	      Expression expr = mname.GetTypeExpression (loc);
+
+	      Invocation inv_expr = new Invocation (expr, (ArrayList) $3, loc);
+	      Statement stmt = new StatementExpression (inv_expr, loc); 
+	      current_block.AddStatement (stmt);	
+	    }
+// 	  /* | array_handling_statement */
+// 	  /* | empty_statement */
+// 	  | with_statement 
+// 	    {
+// 		  Statement s = (Statement) $1;
+
+// 	      current_block.AddStatement ((Statement) $1);
+// 	    }	  
+	  ;	
+	
+	  
+opt_raise_event_args 
+	: /* empty */	{ $$ = null; }
+	| OPEN_PARENS opt_argument_list CLOSE_PARENS
+	  {
+		$$ = $2;
+	  }
+	;
+
+// VB label declarations are only recognized at the beginning of a local
+// line.  The tokenizer enforces that position-sensitive rule and merges
+// the leading name into LABEL_NAME, leaving the ':' token in the stream
+// so same-line 'label: statement' forms still parse as ordinary statement
+// sequencing.
+label_name
+	: IDENTIFIER
+	  {
+		$$ = $1;
+	  }
+	| LITERAL_INTEGER
+	  {
+		$$ = MakeLabelName ($1);
+	  }
+	;
+
+labeled_statement
+	: LABEL_NAME COLON
+	  {
+		AddLabelToCurrentBlock ((string) $1, lexer.Location);
+	  }
+	| LABEL_NAME COLON
+	  {
+		AddLabelToCurrentBlock ((string) $1, lexer.Location);
+	  }
+	  statement
+	;
+
+embedded_statement
+	: expression_statement
+	| selection_statement
+	| iteration_statement
+	| redim_statement
+	| stop_statement
+	| using_statement
+	| with_statement
+	| try_statement
+	| synclock_statement
+	| jump_statement
+// 	| array_handling_statement 
+	;
+
+// /*        
+// empty_statement
+// 	: end_of_stmt
+// 	  {
+// 		  $$ = new EmptyStatement ();
+// 	  }
+// 	;        
+// */
+
+with_statement
+	: WITH
+	  {
+		// The tokenizer has to know we are entering a With body before it
+		// lexes the first body token, otherwise a leading '.' on the first
+		// line would already be tokenized as an ordinary DOT.
+		lexer.with_depth++;
+		oob_stack.Push (lexer.Location);
+	  }
+	  expression end_of_stmt
+	  {
+		with_stack.Push (new WithTarget ((Expression) $3, lexer.Location));
+	  }
+	  block
+	  END WITH
+	  {
+		lexer.with_depth--;
+		WithTarget target = (WithTarget) with_stack.Pop ();
+		$$ = new VBWith (target, (Statement) $6, (Location) oob_stack.Pop ());
+	  }
+	;
+	
+	
+// VB ReDim clauses parse as invocations here because
+// 'target(bound, ...)' shares the same surface syntax.  We unpack
+// them into target/bounds pairs and let semantic analysis decide
+// whether the target is a real array lvalue.
+redim_statement
+	: REDIM opt_preserve redim_clauses
+	  {
+		ArrayList raw = (ArrayList) $3;
+		ArrayList clauses = new ArrayList (raw.Count);
+		foreach (Expression e in raw) {
+			if (!(e is Invocation)) {
+				Report.Error (30049, lexer.Location,
+					"'ReDim' clause must be of the form 'target(bound)'");
+				continue;
+			}
+
+			Invocation inv = (Invocation) e;
+			if (inv.Arguments == null || inv.Arguments.Count == 0) {
+				Report.Error (30049, lexer.Location,
+					"'ReDim' clause must specify at least one bound");
+				continue;
+			}
+
+			ArrayList bounds = new ArrayList (inv.Arguments.Count);
+			foreach (Argument a in inv.Arguments)
+				bounds.Add (a.Expr);
+
+			clauses.Add (new VBReDimClause (inv.expr, bounds));
+		}
+
+		$$ = new VBReDim (clauses, (bool) $2, lexer.Location);
+	  }
+	;
+
+opt_preserve
+	: /* empty */ 	{ $$ = false; }
+	| PRESERVE	{ $$ = true;  }
+	;
+
+redim_clauses
+	: redim_clause
+	  {
+		ArrayList clauses = new ArrayList (2);
+		clauses.Add ($1);
+		$$ = clauses;
+	  }
+	| redim_clauses COMMA redim_clause
+	  {
+		ArrayList clauses = (ArrayList) $1;
+		clauses.Add ($3);
+		$$ = clauses;
+	  }
+	;
+
+redim_clause
+	: invocation_expression
+	  { $$ = $1; }
+	;
+
+stop_statement
+	: STOP
+	  {
+		// VB Stop is a debugger break. Bootstrap builds only need the
+		// control-flow shape, so keep it as an explicit no-op instead of
+		// pretending to hook a debugger.
+		$$ = EmptyStatement.Value;
+	  }
+	;
+
+using_statement
+	: USING using_resource_declarators end_of_stmt
+	  {
+		// The spec defines multi-resource declaration-form Using as
+		// nested Using statements with one read-only local per resource.
+		// Build that scope chain up front so later resources see earlier
+		// ones, while earlier initializers cannot see later locals.
+		oob_stack.Push (PrepareUsingStatementResources ((ArrayList) $2));
+		start_block ();
+	  }
+	  opt_statement_list
+	  END USING
+	  {
+		Block body = end_block ();
+		ArrayList resources = (ArrayList) oob_stack.Pop ();
+		$$ = FinishUsingStatementResources (resources, body);
+	  }
+	| USING expression end_of_stmt
+	  block
+	  END USING
+	  {
+		$$ = new Using ((Expression) $2, (Statement) $4, lexer.Location);
+	  }
+	;
+
+using_resource_declarators
+	: using_resource_declarator
+	  {
+		ArrayList decl = new ArrayList ();
+		decl.AddRange ((ArrayList) $1);
+		$$ = decl;
+	  }
+	| using_resource_declarators COMMA using_resource_declarator
+	  {
+		ArrayList decls = (ArrayList) $1;
+		decls.AddRange ((ArrayList) $3);
+		$$ = $1;
+	  }
+	;
+
+using_resource_declarator
+	: using_variable_names ASSIGN variable_initializer
+	  {
+		$$ = BuildUsingResourceDeclarators (
+			(ArrayList) $1, null, $3, lexer.Location);
+	  }
+	| using_variable_names using_nonnew_type_decl ASSIGN variable_initializer
+	  {
+		$$ = BuildUsingResourceDeclarators (
+			(ArrayList) $1, $2, $4, lexer.Location);
+	  }
+	| using_variable_names using_nonnew_type_decl
+	  {
+		$$ = BuildUsingResourceDeclarators (
+			(ArrayList) $1, $2, null, lexer.Location);
+	  }
+	| using_variable_names using_new_type_decl
+	  {
+		$$ = BuildUsingResourceDeclarators (
+			(ArrayList) $1, $2, null, lexer.Location);
+	  }
+	;
+
+using_variable_names
+	: using_variable_name
+	  {
+		ArrayList list = new ArrayList ();
+		list.Add ($1);
+		$$ = list;
+	  }
+	| using_variable_names COMMA using_variable_name
+	  {
+		ArrayList list = (ArrayList) $1;
+		list.Add ($3);
+		$$ = list;
+	  }
+	;
+
+using_variable_name
+	: identifier opt_type_character
+	  {
+		// Declaration-form Using resources must stay distinguishable from
+		// expression-form resource expressions like 'Using MakeResource()'.
+		// Do not admit the name-side array-rank syntax here; array resources
+		// are not valid disposable locals anyway, and allowing 'name()' would
+		// steal invocation expressions from the expression-form grammar.
+		$$ = new VarName ($1, $2, null);
+	  }
+	;
+
+using_nonnew_type_decl
+	: AS type
+	  {
+		$$ = (Expression) $2;
+	  }
+	| AS type rank_specifiers
+	  {
+		string dims = VariableDeclaration.BuildRanks ((ArrayList) $3, true, lexer.Location);
+		$$ = new ComposedCast ((Expression) $2, dims, lexer.Location);
+	  }
+	;
+
+using_new_type_decl
+	: AS NEW type
+	  {
+	  	New n = new New ((Expression)$3, null, lexer.Location);
+	  	$$ = (Expression) n;
+	  }
+	| AS NEW type OPEN_PARENS opt_argument_list CLOSE_PARENS
+	  {
+	  	New n = new New ((Expression)$3, (ArrayList) $5, lexer.Location);
+	  	$$ = (Expression) n;
+	  }
+	;
+
+// erase_statement
+// 	: ERASE erase_clauses
+// 	{
+// 	  	ArrayList list = (ArrayList) $2;
+// 		foreach(Expression e in list)
+// 		{
+// 	  		Erase r = new Erase (e, lexer.Location);
+// 	  		$$ = r;
+// 		}
+// 	}
+// 	;
+
+// erase_clauses
+// 	: erase_clause
+// 	  {
+// 		ArrayList clauses = new ArrayList ();
+
+// 		clauses.Add ($1);
+// 		$$ = clauses;
+// 	  }
+// 	| erase_clauses COMMA erase_clause
+// 	  {
+// 		ArrayList clauses = (ArrayList) ($1);
+// 		clauses.Add ($2);
+
+// 		$$ = clauses;
+// 	  }
+// 	;
+
+// erase_clause
+// 	: primary_expression
+// 	;	
+		        
+jump_statement
+	: /*break_statement
+	| continue_statement
+	| */return_statement
+	| goto_statement	
+	| throw_statement	
+	| exit_statement
+// 	| yield_statement
+	;
+	        
+goto_statement
+	: GOTO label_name  
+	  {
+		$$ = new Goto (current_block, (string) $2, lexer.Location);
+	  }
+	;
+	
+throw_statement
+	: THROW opt_expression
+	  {
+		$$ = new Throw ((Expression) $2, lexer.Location);
+	  }
+	;	
+		        
+exit_statement
+	: EXIT DO
+	  {
+		$$ = new VBExitLoop (VBLoopKind.Do, lexer.Location);
+	  }
+	| EXIT FOR
+	  {
+		$$ = new VBExitLoop (VBLoopKind.For, lexer.Location);
+	  }
+	| EXIT WHILE
+	  {
+		$$ = new VBExitLoop (VBLoopKind.While, lexer.Location);
+	  }
+	| EXIT SELECT
+	  {
+		Report.Error (30066, lexer.Location,
+			"'Exit Select' is not supported by this bootstrap compiler");
+		$$ = EmptyStatement.Value;
+	  }
+	| EXIT TRY
+	  {
+		Report.Error (30066, lexer.Location,
+			"'Exit Try' is not supported by this bootstrap compiler");
+		$$ = EmptyStatement.Value;
+	  }
+	| EXIT SUB
+	  {
+		if (current_exit_target != ExitTargetKind.Sub) {
+			Report.Error (30067, lexer.Location,
+				"'Exit Sub' is only valid inside a Sub or constructor body");
+			$$ = EmptyStatement.Value;
+		} else
+			$$ = new Return (null, lexer.Location);
+	  }
+	| EXIT FUNCTION
+	  {
+		if (current_exit_target != ExitTargetKind.Function) {
+			Report.Error (30067, lexer.Location,
+				"'Exit Function' is only valid inside a Function body");
+			$$ = EmptyStatement.Value;
+		} else
+			$$ = new Return (new SimpleName (current_return_name, lexer.Location),
+				lexer.Location);
+	  }
+	| EXIT PROPERTY
+	  {
+		if (current_exit_target != ExitTargetKind.Property) {
+			Report.Error (30067, lexer.Location,
+				"'Exit Property' is only valid inside a Property accessor");
+			$$ = EmptyStatement.Value;
+		} else {
+			Expression ret = current_return_name != null
+				? (Expression) new SimpleName (current_return_name, lexer.Location)
+				: null;
+			$$ = new Return (ret, lexer.Location);
+		}
+	  }
+	| CONTINUE continue_loop_kind
+	  {
+		$$ = new VBContinueLoop ((VBLoopKind) $2, lexer.Location);
+	  }
+	| CONTINUE SELECT
+	  {
+		Report.Error (30066, lexer.Location,
+			"'Continue Select' is not supported by this bootstrap compiler");
+		$$ = EmptyStatement.Value;
+	  }
+	| CONTINUE TRY
+	  {
+		Report.Error (30066, lexer.Location,
+			"'Continue Try' is not supported by this bootstrap compiler");
+		$$ = EmptyStatement.Value;
+	  }
+	;
+
+return_statement
+	: RETURN opt_expression 
+	  {	  
+		$$ = new Return ((Expression) $2, lexer.Location);
+	  }
+	;
+	        
+iteration_statement
+	: while_statement
+	| do_statement
+	| for_statement
+	| foreach_statement
+	;
+
+foreach_statement
+	: FOR EACH identifier opt_type_spec IN
+	  {
+		bool declared_loop_local = false;
+		if ($4 != null) {
+			start_block ();
+			LocalInfo li = current_block.AddVariable (
+				(Expression) $4, (string) $3, current_local_parameters, lexer.Location);
+			declared_loop_local = li != null;
+		}
+
+		oob_stack.Push (lexer.Location);
+		oob_stack.Push ($3);
+		oob_stack.Push (declared_loop_local);
+	  }
+	  expression end_of_stmt
+	  {
+		Location l = lexer.Location;
+		LocalVariableReference v = null;
+
+		if ($4 != null) {
+			if ((bool) oob_stack.Peek ()) {
+				LocalInfo li = current_block.GetLocalInfo ((string) $3);
+				if (li != null && li.Block == current_block)
+					v = new LocalVariableReference (current_block, (string) $3, l, li, false);
+			}
+		} else {
+			LocalInfo li = current_block.GetLocalInfo ((string) $3);
+			if (li != null)
+				v = new LocalVariableReference (current_block, (string) $3, l, li, false);
+			else
+				Report.Error (451, l, "Name '" + (string) $3 + "' is not declared.");
+		}
+
+		oob_stack.Push (v);
+		start_block ();
+	  }
+	  opt_statement_list
+	  NEXT opt_identifier
+	  {
+		LocalVariableReference v = (LocalVariableReference) oob_stack.Pop ();
+		bool declared_loop_local = (bool) oob_stack.Pop ();
+		string loop_name = (string) oob_stack.Pop ();
+		Location l = (Location) oob_stack.Pop ();
+		Block foreach_block = end_block ();
+		string next_name = (string) $12;
+
+		if (next_name != null && String.Compare (loop_name, next_name, true) != 0)
+			Report.Error (30070, lexer.Location,
+				"'Next {0}' does not match loop control variable '{1}'",
+				next_name, loop_name);
+
+		Foreach f = null;
+		if (v != null) {
+			Expression loop_type = (Expression) $4;
+			if (loop_type == null && v.local_info != null)
+				loop_type = v.local_info.Type;
+			f = new Foreach (loop_type, v, (Expression) $7, foreach_block, l);
+		}
+
+		if ($4 != null) {
+			if (declared_loop_local && f != null)
+				current_block.AddStatement (f);
+			$$ = end_block ();
+		} else
+			$$ = (Statement) (f != null ? (Statement) f : EmptyStatement.Value);
+	  }
+	;
+
+// yield_statement 
+// 	: YIELD expression
+// 	  {
+// 		if (!UseExtendedSyntax)
+// 		{
+// 			ReportError9998();
+// 			$$ = null;
+// 		}
+// /*		else
+// 			if (iterator_container == null){
+// 				Report.Error (204, lexer.Location, "yield statement can only be used within a method, operator or property");
+// 				$$ = null;
+// 			} else {
+// 				iterator_container.SetYields ();
+// 				$$ = new Yield ((Expression) $2, lexer.Location);
+// 			} */
+// 	  }
+// 	| YIELD STOP
+// 	  {
+// 		if (!UseExtendedSyntax)
+// 		{
+// 			ReportError9998();
+// 			$$ = null;
+// 		}
+// /*		else
+// 			if (iterator_container == null){
+// 				Report.Error (204, lexer.Location, "yield statement can only be used within a method, operator or property");
+// 				$$ = null;
+// 			} else {
+// 				iterator_container.SetYields ();
+// 				$$ = new YieldBreak (lexer.Location);
+// 			} */
+// 	  }
+// 	;
+
+synclock_statement
+	: SYNCLOCK expression end_of_stmt
+	  block
+	  END SYNCLOCK
+	  {
+		$$ = new Lock ((Expression) $2, (Statement) $4, lexer.Location);
+	  }
+	;
+
+try_statement
+	: try_catch
+	| try_catch_finally
+	;
+				
+					
+try_catch
+	: TRY end_of_stmt block opt_catch_clauses END TRY
+ 	  {
+		Catch g = null;
+		
+		ArrayList c = (ArrayList)$4;
+		for (int i = 0; i < c.Count; ++i) {
+			Catch cc = (Catch) c [i];
+			if (cc.IsGeneral) {
+				if (i != c.Count - 1)
+					Report.Error (1017, cc.loc, "Empty catch block must be the last in a series of catch blocks");
+				g = cc;
+				c.RemoveAt (i);
+				i--;
+			}
+		}
+
+		// Now s contains the list of specific catch clauses
+		// and g contains the general one.
+		
+		$$ = new Try ((Block) $3, c, g, null, ((Block) $3).loc);
+	  }
+	;	
+	  
+try_catch_finally
+	: TRY end_of_stmt 
+	  block 
+	  opt_catch_clauses 
+	  FINALLY end_of_stmt
+	  block
+	  END TRY
+	  {
+		Catch g = null;
+		ArrayList s = new ArrayList (4);
+		ArrayList catch_list = (ArrayList) $4;
+
+		if (catch_list != null){
+			foreach (Catch cc in catch_list) {
+				if (cc.IsGeneral)
+					g = cc;
+				else
+					s.Add (cc);
+			}
+		}
+
+		$$ = new Try ((Block) $3, s, g, (Block) $7, ((Block) $3).loc);
+	  }
+	  ;	  	
+
+opt_catch_clauses
+	: /* empty */  {  $$ = null;  }
+        | catch_clauses
+	;
+
+catch_clauses
+	: catch_clause 
+	  {
+		ArrayList l = new ArrayList (4);
+
+		l.Add ($1);
+		$$ = l;
+	  }
+	| catch_clauses catch_clause
+	  {
+		ArrayList l = (ArrayList) $1;
+
+		l.Add ($2);
+		$$ = l;
+	  }
+	;
+
+opt_identifier
+	: /* empty */	{  $$ = null;  }
+	| identifier
+	;
+
+// opt_when
+// 	: /* empty */	{  $$ = null;  }
+// 	| WHEN boolean_expression { $$ = $2; }
+// 	;
+	
+
+catch_clause 
+// 	: CATCH opt_catch_args opt_when end_of_stmt
+	: CATCH opt_catch_args end_of_stmt
+	{
+		// FIXME: opt_when needs to be hnadled
+		Expression type = null;
+		string id = null;
+		
+		if ($2 != null) {
+			DictionaryEntry cc = (DictionaryEntry) $2;
+			type = (Expression) cc.Key;
+			id   = (string) cc.Value;
+
+			if (id != null){
+				ArrayList one = new ArrayList (4);
+				Location loc = lexer.Location;
+
+				one.Add (new VariableDeclaration (id, type, loc));
+
+				$1 = current_block;
+				current_block = new Block (current_block);
+				Block b = declare_local_variables (type, one, loc);
+				current_block = b;
+			}
+		}
+	}
+	block
+	{
+		Expression type = null;
+		string id = null;
+
+		if ($2 != null){
+			DictionaryEntry cc = (DictionaryEntry) $2;
+			type = (Expression) cc.Key;
+			id   = (string) cc.Value;
+
+			if ($1 != null){
+				//
+				// FIXME: I can change this for an assignment.
+				//
+				while (current_block != (Block) $1)
+					current_block = current_block.Parent;
+			}
+		}
+
+
+		$$ = new Catch (type, id , (Block) $5, ((Block) $5).loc);
+	}
+    ;
+
+opt_catch_args
+	: /* empty */ {  $$ = null; }
+        | catch_args
+	;	  
+
+catch_args 
+        : identifier AS type
+        {
+		 $$ = new DictionaryEntry ($3, $1); 
+	}
+        ;
+
+
+do_statement
+	: DO opt_do_construct end_of_stmt
+	  {
+		oob_stack.Push (lexer.Location);
+		oob_stack.Push ($2);
+		start_block ();
+	  }
+	  opt_statement_list
+	  LOOP opt_do_construct
+	  {
+		Block body = end_block ();
+		object before = oob_stack.Pop ();
+		Location l = (Location) oob_stack.Pop ();
+		object after = $7;
+
+		if (before != null && after != null)
+			Report.Error (30238, l,
+				"'Loop' cannot have a condition if matching 'Do' has one.");
+
+		object cond_pair = before != null ? before : after;
+		bool test_before = before != null;
+		Expression cond;
+		bool until = false;
+
+		if (cond_pair == null)
+			cond = new BoolLiteral (true);
+		else {
+			Pair p = (Pair) cond_pair;
+			bool is_until = (bool) p.First;
+			cond = (Expression) p.Second;
+			until = is_until;
+		}
+
+		$$ = new Do (body, cond, test_before, until, l);
+	  }
+	;
+
+opt_do_construct
+	: /* empty */ { $$ = null; }
+	| WHILE boolean_expression
+	  { $$ = new Pair (false, $2); }
+	| UNTIL boolean_expression
+	  { $$ = new Pair (true, $2); }
+	;
+
+while_statement
+	: WHILE
+	{
+		oob_stack.Push (lexer.Location);
+	}
+	boolean_expression end_of_stmt
+	begin_block
+	opt_statement_list
+	end_block
+	END WHILE
+	{
+		Location l = (Location) oob_stack.Pop ();
+		$$ = new While ((Expression) $3, (Statement) $7, l);
+	}
+	;
+
+for_statement
+	// Block-form For needs a real logical line break here. If we leave
+	// COLON inside the same rule, `For ... :` is always claimed by the
+	// block-form path before the same-line body has a chance to parse.
+	: FOR identifier opt_type_spec ASSIGN expression TO expression opt_step logical_end_of_line
+	  {
+		bool declared_loop_local = false;
+		if ($3 != null) {
+			start_block ();
+			LocalInfo li = current_block.AddVariable (
+				(Expression) $3, (string) $2, current_local_parameters, lexer.Location);
+			declared_loop_local = li != null;
+		}
+
+		oob_stack.Push (lexer.Location);
+		oob_stack.Push ($2);
+		oob_stack.Push (declared_loop_local);
+		start_block ();
+	  }
+	  opt_statement_list
+	  NEXT opt_identifier
+	  {
+		Block inner_statement = end_block ();
+		bool declared_loop_local = (bool) oob_stack.Pop ();
+		string loop_name = (string) oob_stack.Pop ();
+		Location l = (Location) oob_stack.Pop ();
+		string next_name = (string) $13;
+
+		if (next_name != null && String.Compare (loop_name, next_name, true) != 0)
+			Report.Error (30070, lexer.Location,
+				"'Next {0}' does not match loop control variable '{1}'",
+				next_name, loop_name);
+
+		VBFor f = new VBFor (loop_name, (Expression) $5, (Expression) $7,
+			(Expression) $8, inner_statement, l);
+		if ($3 != null) {
+			if (declared_loop_local)
+				current_block.AddStatement (f);
+			$$ = end_block ();
+		} else
+			$$ = f;
+	  }
+	| FOR identifier opt_type_spec ASSIGN expression TO expression opt_step
+	  {
+		bool declared_loop_local = false;
+		if ($3 != null) {
+			start_block ();
+			LocalInfo li = current_block.AddVariable (
+				(Expression) $3, (string) $2, current_local_parameters, lexer.Location);
+			declared_loop_local = li != null;
+		}
+
+		oob_stack.Push (lexer.Location);
+		oob_stack.Push ($2);
+		oob_stack.Push (declared_loop_local);
+		start_block ();
+	  }
+	  COLON for_line_body NEXT opt_identifier
+	  {
+		Block inner_statement = end_block ();
+		bool declared_loop_local = (bool) oob_stack.Pop ();
+		string loop_name = (string) oob_stack.Pop ();
+		Location l = (Location) oob_stack.Pop ();
+		string next_name = (string) $13;
+
+		if (next_name != null && String.Compare (loop_name, next_name, true) != 0)
+			Report.Error (30070, lexer.Location,
+				"'Next {0}' does not match loop control variable '{1}'",
+				next_name, loop_name);
+
+		VBFor f = new VBFor (loop_name, (Expression) $5, (Expression) $7,
+			(Expression) $8, inner_statement, l);
+		if ($3 != null) {
+			if (declared_loop_local)
+				current_block.AddStatement (f);
+			$$ = end_block ();
+		} else
+			$$ = f;
+	  }
+	;
+
+opt_step
+	: /* empty */ 		{ $$ = new IntLiteral ((Int32) 1); }
+	| STEP expression 	{ $$ = $2; }
+	;
+
+continue_loop_kind
+	: DO		{ $$ = VBLoopKind.Do; }
+	| FOR		{ $$ = VBLoopKind.For; }
+	| WHILE		{ $$ = VBLoopKind.While; }
+	;
+
+selection_statement
+	: if_statement
+	| select_statement
+	;
+
+// if_statement
+// 	: IF boolean_expression opt_then end_of_stmt 
+// 	  if_statement_rest
+// // 	| IF boolean_expression THEN block opt_else_pre_embedded_statement
+// // 	| IF boolean_expression else_pre_embedded_statement
+// 	;
+
+
+// FXIME: The rule for LineIfThenStatement needs to be still enabled
+// FIXME: The lexer.Location that is calculated may have to replaced with the most correct one
+
+if_statement
+	: IF boolean_expression opt_then end_of_stmt
+	  block
+	  END IF
+	  {
+		oob_stack.Push (lexer.Location);
+		Location l = (Location) oob_stack.Pop ();
+
+		$$ = new If ((Expression) $2, (Statement) $5, l);
+
+		if (RootContext.WarningLevel >= 3){
+			if ($5 == EmptyStatement.Value)
+				Report.Warning (642, lexer.Location, "Possible mistaken empty statement");
+		}
+
+	  }
+
+	| IF boolean_expression opt_then end_of_stmt
+	  block
+	  ELSE end_of_stmt
+	  block
+	  END IF
+	  {
+		oob_stack.Push (lexer.Location);
+		Location l = (Location) oob_stack.Pop ();
+
+		$$ = new If ((Expression) $2, (Statement) $5, (Statement) $8, l);
+	  }
+
+	| IF boolean_expression opt_then end_of_stmt
+	  block
+	  else_if_statement_rest
+	  {
+		oob_stack.Push (lexer.Location);
+		Location l = (Location) oob_stack.Pop ();
+
+		$$ = new If ((Expression) $2, (Statement) $5, (Statement) $6, l);
+	  }
+
+	// Single-line If-Then, no trailing end_of_stmt: the outer
+	// statement_list rule consumes the EOL between statements.
+	// Using THEN (not opt_then) makes the single-line form
+	// distinguishable from the block forms above after 1-token
+	// lookahead: 'THEN <EOL>' goes to block, 'THEN <stmt>' here.
+	| IF boolean_expression THEN line_if_body
+	  {
+		$$ = new If ((Expression) $2, (Statement) $4, lexer.Location);
+	  }
+	| IF boolean_expression THEN line_if_body ELSE line_if_body
+	  {
+		$$ = new If ((Expression) $2, (Statement) $4, (Statement) $6, lexer.Location);
+	  }
+	;
+
+line_if_body
+	: begin_block line_statement_list end_block
+	  { $$ = $3; }
+	;
+
+// Same-line For bodies use ordinary colon-separated statements too, but
+// unlike a standalone line If they must stop before `: Next'.  Encode the
+// separator as a right-recursive tail so a trailing colon can terminate the
+// body only when the following token is not another statement.
+for_line_body
+	: begin_block for_line_statement_list end_block
+	  { $$ = $3; }
+	;
+
+for_line_statement_list
+	: for_line_statement for_line_statement_tail
+	;
+
+for_line_statement_tail
+	: /* empty */
+	| COLON
+	| COLON for_line_statement for_line_statement_tail
+	;
+
+for_line_statement
+	  : declaration_statement
+	    {
+		  if ($1 != null && (Block) $1 != current_block){
+			current_block.AddStatement ((Statement) $1);
+			current_block = (Block) $1;
+		  }
+	    }
+	  | for_line_if_statement
+	    {
+		  current_block.AddStatement ((Statement) $1);
+	    }
+	  | for_line_embedded_statement
+	    {
+		  current_block.AddStatement ((Statement) $1);
+	    }
+	  | ADDHANDLER prefixed_unary_expression COMMA expression
+	    {
+		Location loc = lexer.Location;
+
+		Statement stmt = new EventSubscription ((Expression) $2,
+					 (Expression) $4, true, loc);
+
+		current_block.AddStatement (stmt);
+
+	    }
+
+	  | REMOVEHANDLER prefixed_unary_expression COMMA expression
+	    {
+		Location loc = lexer.Location;
+
+		Statement stmt = new EventSubscription ((Expression) $2,
+					 (Expression) $4, false, loc);
+
+		current_block.AddStatement (stmt);
+
+	    }
+	  | RAISEEVENT identifier opt_raise_event_args
+	    {
+	      Location loc = lexer.Location;
+	      MemberName mname = new MemberName ((string) $2);
+	      Expression expr = mname.GetTypeExpression (loc);
+
+	      Invocation inv_expr = new Invocation (expr, (ArrayList) $3, loc);
+	      Statement stmt = new StatementExpression (inv_expr, loc);
+	      current_block.AddStatement (stmt);
+	    }
+	;
+
+for_line_embedded_statement
+	: expression_statement
+	| iteration_statement
+	| redim_statement
+	| stop_statement
+	| using_statement
+	| with_statement
+	| try_statement
+	| synclock_statement
+	| jump_statement
+	| select_statement
+	;
+
+for_line_if_statement
+	: IF boolean_expression THEN for_line_if_body
+	  {
+		$$ = new If ((Expression) $2, (Statement) $4, lexer.Location);
+	  }
+	| IF boolean_expression THEN for_line_if_body ELSE for_line_if_body
+	  {
+		$$ = new If ((Expression) $2, (Statement) $4, (Statement) $6, lexer.Location);
+	  }
+	;
+
+for_line_if_body
+	: begin_block for_line_statement_list end_block
+	  { $$ = $3; }
+	;
+
+// VB line If uses the same colon-separated statement-list shape
+// as an ordinary logical line, but it does not consume a trailing
+// end_of_stmt of its own.  Using COLON here lets:
+//   If x Then Foo() : Bar() Else Baz()
+// parse as one line If statement instead of truncating the true
+// branch after the first statement.
+line_statement_list
+	: line_if_statement
+	| line_statement_list COLON line_if_statement
+	;
+
+// The VB spec allows all statements except label declarations inside
+// a line If statement. Reuse the normal statement forms, but keep
+// labeled_statement out so "If b Then Foo() : L: Bar()" is rejected.
+line_if_statement
+	  : declaration_statement
+	    {
+		  if ($1 != null && (Block) $1 != current_block){
+			current_block.AddStatement ((Statement) $1);
+			current_block = (Block) $1;
+		  }
+	    }
+	  | embedded_statement
+	    {
+		  current_block.AddStatement ((Statement) $1);
+	    }
+	  | ADDHANDLER prefixed_unary_expression COMMA expression
+	    {
+		Location loc = lexer.Location;
+
+		Statement stmt = new EventSubscription ((Expression) $2,
+					 (Expression) $4, true, loc);
+
+		current_block.AddStatement (stmt);
+
+	    }
+
+	  | REMOVEHANDLER prefixed_unary_expression COMMA expression
+	    {
+		Location loc = lexer.Location;
+
+		Statement stmt = new EventSubscription ((Expression) $2,
+					 (Expression) $4, false, loc);
+
+		current_block.AddStatement (stmt);
+
+	    }
+	  | RAISEEVENT identifier opt_raise_event_args
+	    {
+	      Location loc = lexer.Location;
+	      MemberName mname = new MemberName ((string) $2);
+	      Expression expr = mname.GetTypeExpression (loc);
+
+	      Invocation inv_expr = new Invocation (expr, (ArrayList) $3, loc);
+	      Statement stmt = new StatementExpression (inv_expr, loc);
+	      current_block.AddStatement (stmt);
+	    }
+	;
+
+else_if_statement_rest
+	: ELSEIF boolean_expression opt_then end_of_stmt 
+	  block
+	  END IF
+	  { 
+		oob_stack.Push (lexer.Location);	  
+		Location l = (Location) oob_stack.Pop ();
+
+		$$ = new If ((Expression) $2, (Statement) $5, l);
+
+		if (RootContext.WarningLevel >= 3){
+			if ($5 == EmptyStatement.Value)
+				Report.Warning (642, lexer.Location, "Possible mistaken empty statement");
+		}
+
+	  }
+
+	| ELSEIF boolean_expression opt_then end_of_stmt 
+	  block
+	  ELSE end_of_stmt 
+	  block
+	  END IF	
+	  {
+		oob_stack.Push (lexer.Location);	  
+		Location l = (Location) oob_stack.Pop ();
+
+		$$ = new If ((Expression) $2, (Statement) $5, (Statement) $8, l);
+	  }	
+
+ 	| ELSEIF boolean_expression opt_then end_of_stmt 
+	  block
+	  else_if_statement_rest 
+	  {
+		oob_stack.Push (lexer.Location);	  
+		Location l = (Location) oob_stack.Pop ();
+
+		$$ = new If ((Expression) $2, (Statement) $5, (Statement) $6, l);
+	  }	
+	;
+
+
+// opt_else_pre_embedded_statement
+// 	: /* empty */
+// 	| else_pre_embedded_statement
+// 	;
+	
+// else_pre_embedded_statement	
+// 	: ELSE
+// 	  {
+// 		Block bl = end_block(); 
+//         tmp_blocks.Push(bl); 
+        
+// 	  	start_block();
+// 	  }
+// 	| ELSE embedded_statement 
+// 	  {
+// 		Block bl = end_block(); 
+//         tmp_blocks.Push(bl); 
+        
+// 	  	start_block();
+// 		Statement s = (Statement) $2;
+// 		current_block.AddStatement ((Statement) $2);
+// 	  } 
+// 	;	
+
+	
+opt_then
+	: /* empty */
+	| THEN
+	;
+	
+
+// VB Select Case is NOT a C-style switch: the case clauses can
+// be arbitrary runtime expressions, ranges (Case x To y), or
+// comparisons (Case Is > x).  vbnc's own reference implementation
+// (mono-basic/vbnc/.../CaseClause.ResolveCode) lowers each case
+// clause to a runtime comparison expression against a cached
+// copy of the selector and chains them with OrElse / ElseIf.
+// We do the same, but defer all lowering to the VBSelect
+// statement's Resolve() - see statement.cs - because the
+// selector's runtime type isn't known at parse time.
+//
+// VB's grammar makes the "Case" keyword after "Select" optional,
+// but a trailing "Case Else" section can appear at most once and
+// only after all ordinary Case sections.  We model that ordering
+// directly here instead of accepting arbitrary order and repairing
+// it later.
+select_statement
+	: SELECT opt_case expression end_of_stmt
+	  {
+		oob_stack.Push (lexer.Location);
+	  }
+	  opt_case_sections
+	  END SELECT
+	  {
+		Location sel_loc = (Location) oob_stack.Pop ();
+		ArrayList sections = (ArrayList) $6;
+		$$ = new VBSelect ((Expression) $3, sections, sel_loc);
+	  }
+	;
+
+opt_case_sections
+	: /* empty */ 	{ $$ = new ArrayList (); }
+	| case_statement_sections opt_case_else_section
+	  {
+		ArrayList sections = (ArrayList) $1;
+		if ($2 != null)
+			sections.Add ($2);
+		$$ = sections;
+	  }
+	| case_else_section
+	  {
+		ArrayList sections = new ArrayList (1);
+		sections.Add ($1);
+		$$ = sections;
+	  }
+	;
+
+case_statement_sections
+	: case_statement_sections case_statement_section
+	  {
+		ArrayList sections = (ArrayList) $1;
+		sections.Add ($2);
+		$$ = sections;
+	  }
+	| case_statement_section
+	  {
+		ArrayList sections = new ArrayList (4);
+		sections.Add ($1);
+		$$ = sections;
+	  }
+	;
+
+ends
+	: end_of_stmt
+	| ends end_of_stmt
+	;
+
+// A case_section produces a VBSelectSection (list of case
+// clauses, body block).  A null clause list marks Case Else.
+case_statement_section
+	: CASE case_clauses ends
+	  {
+		start_block();
+	  }
+	  opt_statement_list
+	  {
+		Block body = end_block();
+		while (body.Implicit)
+			body = body.Parent;
+		$$ = new VBSelectSection ((ArrayList) $2, body);
+	  }
+	;
+
+opt_case_else_section
+	: /* empty */ { $$ = null; }
+	| case_else_section { $$ = $1; }
+	;
+
+case_else_section
+	: CASE ELSE ends
+	  {
+		start_block();
+	  }
+	  opt_statement_list
+	  {
+		Block body = end_block();
+		while (body.Implicit)
+			body = body.Parent;
+		$$ = new VBSelectSection (null, body);
+	  }
+	;
+
+
+case_clauses
+	: case_clause
+	  {
+		ArrayList clauses = new ArrayList ();
+		clauses.Add ($1);
+		$$ = clauses;
+	  }
+	| case_clauses COMMA case_clause
+	  {
+		ArrayList clauses = (ArrayList) $1;
+		clauses.Add ($3);
+		$$ = clauses;
+	  }
+	;
+
+// Each case_clause returns a VBCaseClause descriptor; the
+// cached selector's type isn't known yet, so we just record
+// the raw expressions and let VBSelect.Resolve build the
+// Binary predicates at semantic time.
+case_clause
+	: expression
+	  {
+		$$ = new VBCaseClause (VBCaseClause.K_Equal,
+			(Expression) $1, null, Binary.Operator.Equality);
+	  }
+	| expression TO expression
+	  {
+		$$ = new VBCaseClause (VBCaseClause.K_Range,
+			(Expression) $1, (Expression) $3,
+			Binary.Operator.Equality);
+	  }
+	| IS comparison_operator expression
+	  {
+		$$ = new VBCaseClause (VBCaseClause.K_Compare,
+			(Expression) $3, null,
+			(Binary.Operator) $2);
+	  }
+	| comparison_operator expression
+	  {
+		// 'Is' is optional.
+		$$ = new VBCaseClause (VBCaseClause.K_Compare,
+			(Expression) $2, null,
+			(Binary.Operator) $1);
+	  }
+	;
+
+comparison_operator
+	: OP_LT		{ $$ = Binary.Operator.LessThan; }
+	| OP_GT		{ $$ = Binary.Operator.GreaterThan; }
+	| OP_LE		{ $$ = Binary.Operator.LessThanOrEqual; }
+	| OP_GE		{ $$ = Binary.Operator.GreaterThanOrEqual; }
+	| OP_NE		{ $$ = Binary.Operator.Inequality; }
+	| ASSIGN	{ $$ = Binary.Operator.Equality; }
+	;
+
+opt_case
+	: /* empty */
+	| CASE
+	;
+
+expression_statement
+	: statement_expression 
+	  {
+		 $$ = $1; 
+	  }
+	;
+
+
+statement_expression
+	: invocation_expression		{ $$ = new StatementExpression ((ExpressionStatement) $1, lexer.Location);  }
+	| object_creation_expression	{ $$ = new StatementExpression ((ExpressionStatement) $1, lexer.Location);  }
+	| assignment_expression		{ $$ = new StatementExpression ((ExpressionStatement) $1, lexer.Location);  }
+	;
+
+object_creation_expression
+	: NEW type OPEN_PARENS opt_argument_list CLOSE_PARENS
+	  {
+		$$ = new New ((Expression) $2, (ArrayList) $4, lexer.Location);
+	  }
+	| NEW type
+	  {
+		$$ = new New ((Expression) $2, new ArrayList(), lexer.Location);
+	  }
+	;
+	
+
+array_creation_expression
+	: object_creation_expression array_initializer
+	  {
+		// Reuse object_creation_expression for the shared 'New T(...)'
+		// prefix, then reinterpret it as an array creation once a
+		// trailing initializer appears. The argument list already
+		// preserves VB's omitted-bound forms like '(,)' as
+		// EmptyExpression entries, so we can distinguish
+		// 'New T(1,2) {...}' from 'New T(,) {...}' here without a
+		// second array-only prefix grammar.
+		New n = (New) $1;
+		$$ = VariableDeclaration.BuildArrayCreationFromObjectCreation (
+			n, n.RequestedType, (ArrayList) $2, lexer.Location);
+	  }
+	| object_creation_expression empty_rank_specifiers array_initializer
+	  {
+		New n = (New) $1;
+
+		// VB array creation allows one size-initialization modifier
+		// followed by zero or more empty array-type modifiers:
+		//   New Integer()() { ... }
+		//   New Integer(1)(,) { ... }
+		// Keep the trailing modifiers in the existing empty-rank
+		// grammar so the parser does not have to guess between
+		// array-type syntax and arbitrary invocation/index syntax.
+		string inner_dims = VariableDeclaration.BuildRanks (
+			(ArrayList) $2, true, lexer.Location);
+		Expression elem_type = new ComposedCast (
+			n.RequestedType, inner_dims, lexer.Location);
+
+		$$ = VariableDeclaration.BuildArrayCreationFromObjectCreation (
+			n, elem_type, (ArrayList) $3, lexer.Location);
+	  }
+	;	
+
+new_expression
+	: object_creation_expression
+	| array_creation_expression
+	;
+
+declaration_statement
+	: local_variable_declaration 
+	  {
+		if ($1 != null){
+			DictionaryEntry de = (DictionaryEntry) $1;
+
+			$$ = declare_local_variables ((Expression) de.Key, (ArrayList) de.Value, lexer.Location);
+		}
+	  }
+	| local_constant_declaration 
+	  {
+		if ($1 != null){
+			DictionaryEntry de = (DictionaryEntry) $1;
+
+			$$ = declare_local_constant ((Expression) de.Key, (ArrayList) de.Value);
+		}
+	  }
+	;	 
+
+local_variable_declaration
+	: DIM variable_declarators
+	  {
+		$$ = new DictionaryEntry (DecomposeQI("_local_vars_", lexer.Location), $2);		
+	  }
+	| STATIC variable_declarators
+	  {
+		// VB Static locals need shared backing storage with
+		// once-only initialization and recursive-call visibility.
+		// bmcs does not implement that lowering safely, so reject
+		// them instead of silently treating them like ordinary locals.
+		Report.Error (30826, lexer.Location,
+			"'Static' local variables are not supported by this " +
+			"bootstrap compiler; rewrite as a Shared or instance " +
+			"field on the enclosing class");
+		$$ = new DictionaryEntry (DecomposeQI("_local_vars_", lexer.Location), $2);
+	  }
+ 	;
+
+	
+local_constant_declaration
+	: CONST constant_declarators
+	  {
+		if ($2 != null)
+			$$ = new DictionaryEntry (DecomposeQI("_local_consts_", lexer.Location), $2);
+		else
+			$$ = null;
+	  }
+	;	 
+
+constant_declarators
+	: constant_declarator 
+	  {
+		ArrayList decl = new ArrayList ();
+		if ($1 != null) 
+			decl.Add ($1);
+			
+		$$ = decl;
+	  }
+	| constant_declarators COMMA constant_declarator
+	  {
+	  	ArrayList decls = (ArrayList) $1;
+		if ($3 != null)
+			decls.Add ($3);
+
+		$$ = $1;
+	  }
+	;
+
+constant_declarator
+	: variable_name opt_type_decl opt_variable_initializer
+	  {
+		VarName vname = (VarName) $1;
+		string varname = (string) vname.Name;
+		current_rank_specifiers = (ArrayList) vname.Rank;
+		object varinit = $3;
+		ArrayList a_dims = null;
+
+		if (varinit == null)
+			Report.Error (
+				30438, lexer.Location, "Constant should have a value"
+				);
+
+		if (vname.Type != null && $2 != null)
+			Report.Error (
+				30302, lexer.Location, 
+				"Type character cannot be used with explicit type declaration" );
+
+		Expression vartype = ($2 == null) ? ((vname.Type == null) ? TypeManager.system_object_expr : (Expression) vname.Type ) : (Expression) $2;
+
+		if (current_rank_specifiers != null) 
+		{
+			Report.Error (30424, lexer.Location, "Constant doesn't support array");
+			$$ = null;
+	  	}
+	  	else
+	  	  	$$ = new VariableDeclaration (varname, vartype, varinit, lexer.Location, null);
+	  }
+	;		
+
+variable_declarators
+	: variable_declarator 
+	  {
+		ArrayList decl = new ArrayList ();
+		decl.AddRange ((ArrayList) $1);
+		$$ = decl;
+	  }
+	| variable_declarators COMMA variable_declarator
+	  {
+		ArrayList decls = (ArrayList) $1;
+		decls.AddRange ((ArrayList) $3);
+		$$ = $1;
+	  }
+	;
+
+variable_declarator
+	: variable_names opt_type_decl opt_variable_initializer
+	  {
+	    ArrayList names = (ArrayList) $1;
+		object varinit = $3;
+		ArrayList VarDeclarations = new ArrayList();
+	  	Expression vartype;
+	  	ArrayList a_dims = null;
+
+		if ((names.Count > 1) && (varinit != null)) 
+			Report.Error (
+				30671, lexer.Location, 
+				"Multiple variables with single type can not have " +
+				"a explicit initialization" );
+
+				
+		foreach (VarName vname in names)
+		{
+			string varname = (string) vname.Name;
+			current_rank_specifiers = (ArrayList) vname.Rank;
+			a_dims = null;
+			varinit = $3;
+
+	  		if(vname.Type != null && $2 != null)
+				Report.Error (
+					30302, lexer.Location, 
+					"Type character cannot be used with explicit type declaration" );
+
+	  		// Some checking is required for particularly weird declarations
+	  		// like Dim a As Integer(,)
+	  		if ($2 is Pair) {
+	  			vartype = (Expression) ((Pair) $2).First;
+				
+	  			/*if ($3 != null && $3 is ArrayList)
+	  				Report.Error (205, "End of statement expected.");*/
+		  			
+				ArrayList args = (ArrayList) ((Pair) $2).Second;
+				if (current_rank_specifiers != null)
+					Report.Error (31087, lexer.Location,
+						 "Array types specified in too many places");	
+				
+				if (VariableDeclaration.IndexesSpecifiedInRank (args))	  	  
+					Report.Error (30638, "Array bounds cannot appear in type specifiers.");	
+				
+				current_rank_specifiers = new ArrayList ();
+				current_rank_specifiers.Add (args);				
+	  		}
+	  		else
+				vartype = ($2 == null) ? ((vname.Type == null) ? TypeManager.system_object_expr : (Expression) vname.Type ) : (Expression) $2;
+
+			Expression declared_type = vartype;
+
+			// if the variable is an array with explicit bound
+			// and having explicit initialization throw exception
+			if (current_rank_specifiers != null && varinit != null) 
+			{
+				bool broken = false;
+				foreach (ArrayList exprs in current_rank_specifiers)
+				{
+					foreach (Expression expr in exprs)
+					{
+						if (!((Expression)expr is EmptyExpression ))
+						{
+							Report.Error (
+								30672, lexer.Location, 
+								"Array declared with explicit bound " +
+								" can not have explicit initialization");
+							broken = true;
+							break;
+						}
+					}
+					if (broken)
+						break;
+				}
+	  		}
+			
+			// Handle the prefix array-on-name form: 'Dim values() As
+			// Integer' puts the rank specifier on the name side of the
+			// Per the VB spec, a declaration cannot specify an array
+			// modifier on both the variable name and the type name in the
+			// same declaration. Reject 'values() As Integer()' instead of
+			// silently building an array-of-array type here.
+			//
+			// Name-side bounds also allocate the array in VB:
+			//   Dim buffer(1023) As Byte
+			// so synthesize that ArrayCreation before composing the final
+			// declared array type.
+			if (current_rank_specifiers != null && varinit == null && !(vartype is New))
+				varinit = VariableDeclaration.BuildArrayCreationFromDeclaration (
+					declared_type, current_rank_specifiers, lexer.Location);
+
+			if (current_rank_specifiers != null && !(vartype is New)) {
+				string t = vartype.ToString ();
+				if (t.IndexOf ('[') >= 0)
+					Report.Error (31087, lexer.Location, "Array types specified in too many places");
+				else {
+					string dims = VariableDeclaration.BuildRanks (current_rank_specifiers, false, lexer.Location);
+					vartype = new ComposedCast (vartype, dims, lexer.Location);
+				}
+			}
+
+			if (vartype is New) {
+				if (varinit != null) {
+					Report.Error (30205, lexer.Location, "End of statement expected");
+					$$ = null;
+				}
+				else
+				{
+					varinit = vartype;
+					vartype = ((New)vartype).RequestedType;
+				}
+			}
+	  		VarDeclarations.Add (new VariableDeclaration (varname, vartype, varinit, lexer.Location, null));
+	    }// end of for
+	    $$ = VarDeclarations;
+	  } 
+	;
+
+variable_names
+	: variable_name
+	  {
+		ArrayList list = new ArrayList ();
+		list.Add ($1);
+		$$ = list;
+	  }
+	| variable_names COMMA variable_name
+	  {
+		ArrayList list = (ArrayList) $1;
+		list.Add ($3);
+		$$ = list;
+	  }
+	;
+	
+variable_name
+	: identifier opt_type_character opt_array_name_modifier 
+	  {
+		$$ = new VarName ($1, $2, $3);
+	  }
+	;
+
+opt_type_spec
+	: /* empty */	
+	  { 
+	  	$$ = null; 		
+	  }
+	| AS type	
+	  { 
+	  	$$ = (Expression) $2;
+	  }
+	;
+		
+opt_type_with_ranks
+	: opt_type_spec
+	| AS type rank_specifiers
+	  {
+		// 'As SomeType(, ,)' in a field/local/parameter declaration
+		// means an array of SomeType with the given rank specifier.
+		// Wrap the base type in a ComposedCast whose 'dim' string is
+		// '[]', '[,]', etc. so the existing type-resolution machinery
+		// builds the right array Type.
+		string dims = VariableDeclaration.BuildRanks ((ArrayList) $3, true, lexer.Location);
+		$$ = new ComposedCast ((Expression) $2, dims, lexer.Location);
+	  }
+	;
+	
+opt_type_decl
+	: opt_type_with_ranks
+	  {
+	  	$$ = $1;
+	  }
+	| AS NEW type
+	  {
+	  	New n = new New ((Expression)$3, null, lexer.Location);
+	  	$$ = (Expression) n;
+	  }
+	| AS NEW type OPEN_PARENS opt_argument_list CLOSE_PARENS 
+	  {
+	  	New n = new New ((Expression)$3, (ArrayList) $5, lexer.Location);
+	  	$$ = (Expression) n;
+	  }
+	/*| AS NEW type OPEN_PARENS ADDRESSOF expression CLOSE_PARENS 
+	  {
+	    ArrayList args = new ArrayList();
+		Argument arg = new Argument ((Expression) $6, Argument.AType.Expression);
+		args.Add (arg);
+		
+	  	New n = new New ((Expression)$3, (ArrayList) args, lexer.Location);
+	  	$$ = (Expression) n;
+	  }*/
+ 	;
+		
+opt_array_name_modifier
+	: /* empty */ 				{ $$ = null; }
+	| rank_specifier opt_trailing_empty_rank_specifiers
+	  {
+		ArrayList rs = new ArrayList ();
+		rs.Add ($1);
+		if ($2 != null)
+			rs.AddRange ((ArrayList) $2);
+		$$ = rs;
+	  }
+	;
+
+opt_trailing_empty_rank_specifiers
+	: /* empty */				{ $$ = null; }
+	| empty_rank_specifiers			{ $$ = $1; }
+	;
+
+empty_rank_specifiers
+	: empty_rank_specifier
+	  {
+		  ArrayList rs = new ArrayList();
+		  rs.Add ($1);
+		  $$ = rs;
+	  }
+	| empty_rank_specifiers empty_rank_specifier
+	  {
+		  ArrayList rs = (ArrayList) $1;
+		  rs.Add ($2);
+		  $$ = rs;
+	  }
+	;
+
+empty_rank_specifier
+	: OPEN_PARENS empty_dim_specifiers CLOSE_PARENS
+	  {
+		$$ = $2;
+	  }
+	;
+
+empty_dim_specifiers
+	: /* empty */
+	  {
+	  	ArrayList ds = new ArrayList();
+	  	ds.Add (new EmptyExpression());
+	  	$$ = ds;
+	  }
+	| empty_dim_specifiers COMMA
+	  {
+		ArrayList ds = (ArrayList) $1;
+	  	ds.Add (new EmptyExpression());
+	  	$$ = ds;
+	  }
+	;
+	
+opt_variable_initializer
+	: /* empty */ 			{ $$ = null; }
+	| ASSIGN variable_initializer  	{ $$ = $2; }
+	;
+		
+variable_initializer
+	: expression
+	  {
+		$$ = $1;
+	  }
+	| array_initializer
+	  {
+		$$ = $1;
+	  }
+	
+	;	
+	
+array_initializer
+	: OPEN_BRACE CLOSE_BRACE
+	  {
+		ArrayList list = new ArrayList ();
+		$$ = list;
+	  }
+	| OPEN_BRACE variable_initializer_list CLOSE_BRACE
+	  {
+		$$ = (ArrayList) $2;
+	  }
+	;
+
+variable_initializer_list
+	: variable_initializer
+	  {
+		ArrayList list = new ArrayList ();
+		list.Add ($1);
+		$$ = list;
+	  }
+	| variable_initializer_list COMMA variable_initializer
+	  {
+		ArrayList list = (ArrayList) $1;
+		list.Add ($3);
+		$$ = list;
+	  }
+	;
+
+opt_rank_specifiers
+	: /* empty */
+	  {
+		  // $$ = "";
+		  $$ = null;
+	  }
+	| rank_specifiers
+	  {
+			$$ = $1;
+	  }
+	;      
+	
+rank_specifiers
+	: rank_specifier
+	  {
+		  ArrayList rs = new ArrayList();
+		  rs.Add ($1);
+		  $$ = rs;
+	  }
+	| rank_specifiers rank_specifier
+	  {
+		  ArrayList rs = (ArrayList) $1;
+		  rs.Add ($2);
+		  $$ = rs;
+	  }     	
+        ;	  	
+	
+rank_specifier
+	: OPEN_PARENS opt_dim_specifiers CLOSE_PARENS
+	  {
+		$$ = $2;
+	  }
+	;
+		
+opt_dim_specifiers
+	: /* empty */
+	  {
+	  	ArrayList ds = new ArrayList();
+	  	ds.Add (new EmptyExpression());
+	  	$$ = ds;
+	  }	
+	| expression
+	  {
+	  	ArrayList ds = new ArrayList();
+	  	ds.Add ((Expression) $1);
+	  	$$ = ds;
+	  }	
+	| opt_dim_specifiers COMMA expression
+	  {
+		ArrayList ds = (ArrayList) $1;
+	  	ds.Add ((Expression) $3);
+	  	$$ = ds;		
+	  }	
+	| opt_dim_specifiers COMMA 
+	  {
+		ArrayList ds = (ArrayList) $1;
+	  	ds.Add (new EmptyExpression());
+	  	$$ = ds;		
+	  }	
+	;
+	
+// primary_expression
+// 	: literal
+// 	  {
+// 	  	//TODO
+// 	  }
+// 	| parenthesized_expression
+// 	| this_access
+// 	| base_access
+// 	| qualified_identifier
+// 	  {
+// 		string name = (string) $1;
+// 		$$ = DecomposeQI (name, lexer.Location);
+// 	  }
+// 	| get_type_expression
+// 	| member_access
+// 	| invocation_expression
+// 	//| element_access
+// 	| new_expression
+// 	| cast_expression
+// 	;
+
+primary_expression
+	: literal
+	  {
+	  	//TODO
+	  }
+	| parenthesized_expression
+	| this_access
+	| base_access
+	| type_name
+	  {
+		$$ = ((MemberName) $1).GetTypeExpression (lexer.Location);
+	  }
+	| get_type_expression
+	| member_access
+	| with_member_access
+	| invocation_expression
+	//| element_access
+	| new_expression
+	| cast_expression
+	| if_ternary_expression
+	;
+
+// VB's If expression has both the normal 3-argument conditional form
+// and the 2-argument null-coalescing form.  The semantic difference
+// from IIf is handled in expression.cs: only the taken branch is
+// evaluated, and the 2-argument form must evaluate its first operand
+// exactly once.
+if_ternary_expression
+	: IF OPEN_PARENS expression COMMA expression COMMA expression CLOSE_PARENS
+	  {
+		$$ = new Conditional ((Expression) $3, (Expression) $5, (Expression) $7, lexer.Location);
+	  }
+	| IF OPEN_PARENS expression COMMA expression CLOSE_PARENS
+	  {
+		$$ = new VBIfCoalesce ((Expression) $3, (Expression) $5, lexer.Location);
+	  }
+	;
+
+with_member_access
+	: DOT_WITH identifier opt_type_args
+	  {
+		if (with_stack == null || with_stack.Count == 0) {
+			Report.Error (30157, lexer.Location,
+				"Leading '.' member access is only valid inside a 'With' block");
+			$$ = null;
+		} else {
+			string id_name = (string) $2;
+			if (id_name.ToUpper () == "NEW")
+				id_name = ".ctor";
+
+			// The receiver is a WithTarget-backed proxy expression rather than
+			// the raw target expression.  VB requires the With target to be
+			// evaluated once on entry; reusing the raw tree here would repeat
+			// side effects and would mishandle mutable structure lvalues.
+			$$ = new MemberAccess (
+				new WithReceiver ((WithTarget) with_stack.Peek (), lexer.Location),
+				id_name,
+				(TypeArguments) $3,
+				lexer.Location);
+		}
+	  }
+	;
+
+
+
+literal
+	: boolean_literal
+	| integer_literal
+	| real_literal
+ 	| LITERAL_DATE		{ $$ = new DateLiteral ((DateTime)lexer.Value); }
+	| LITERAL_CHARACTER     { $$ = new CharLiteral ((char) lexer.Value); }
+	| LITERAL_STRING        { $$ = new StringLiteral ((string) lexer.Value); }
+	| NOTHING		{ $$ = NullLiteral.Null; }
+	;
+
+real_literal
+	: LITERAL_SINGLE        { $$ = new FloatLiteral ((float) lexer.Value); }
+	| LITERAL_DOUBLE        { $$ = new DoubleLiteral ((double) lexer.Value); }
+	| LITERAL_DECIMAL       { $$ = new DecimalLiteral ((decimal) lexer.Value); }
+	;
+
+integer_literal
+	: LITERAL_INTEGER       {
+		object v = lexer.Value;
+
+		if (v is int)
+			$$ = new IntLiteral ((Int32)v);
+		else if (v is short)
+			$$ = new ShortLiteral ((Int16)v);
+		else if (v is ushort)
+			$$ = new UShortLiteral ((UInt16)v);
+		else if (v is uint)
+			$$ = new UIntLiteral ((UInt32)v);
+		else if (v is long)
+			$$ = new LongLiteral ((Int64)v);
+		else if (v is ulong)
+			$$ = new ULongLiteral ((UInt64)v);
+		else if (v is SignedMinValueMagnitude)
+			$$ = new OverflowIntegerLiteral ((SignedMinValueMagnitude) v, lexer.Location);
+		else
+			Console.WriteLine ("OOPS.  Unexpected result from scanner");
+			
+	  }
+	;
+
+boolean_literal
+	: TRUE			{ $$ = new BoolLiteral (true); }
+	| FALSE			{ $$ = new BoolLiteral (false); }
+	;
+
+parenthesized_expression
+	: OPEN_PARENS expression CLOSE_PARENS
+	  { $$ = $2; }
+	;
+
+member_access
+	: primary_expression DOT identifier opt_type_args
+	  {
+	  	if ($1 != null) {
+	  		string id_name = (string)$3;
+	  		if (id_name.ToUpper() == "NEW")
+	  			id_name = ".ctor";
+			$$ = new MemberAccess ((Expression) $1, id_name, (TypeArguments) $4, lexer.Location);
+		}
+		else
+		{
+		}
+	  }
+/*	| primary_expression DOT NEW
+	  {
+		$$ = new MemberAccess ((Expression) $1, (string) ".ctor", lexer.Location);
+	  }	  */
+	| predefined_type DOT identifier opt_type_args
+	  {
+	  	if ($1 != null)
+			$$ = new MemberAccess ((Expression) $1, (string) $3, (TypeArguments) $4, lexer.Location);
+		else
+		{
+		}
+	  }
+	;
+	
+predefined_type
+	: builtin_types
+	;
+
+invocation_expression
+	: primary_expression OPEN_PARENS opt_argument_list CLOSE_PARENS
+	  {
+		if ($1 == null) {
+			Location l = lexer.Location;
+			Report.Error (1, l, "Parse error");
+		}
+		Expression prim = DisambiguateReturnNameInvocation ((Expression) $1);
+		$$ = new Invocation (prim, (ArrayList) $3, lexer.Location);
+	  }
+	| CALL primary_expression OPEN_PARENS opt_argument_list CLOSE_PARENS
+	  {
+		if ($2 == null) {
+			Location l = lexer.Location;
+			Report.Error (1, l, "THIS IS CRAZY");
+		}
+		Expression prim = DisambiguateReturnNameInvocation ((Expression) $2);
+		$$ = new Invocation (prim, (ArrayList) $3, lexer.Location);
+	  }
+	;
+	
+base_access
+	: MYBASE DOT IDENTIFIER opt_type_args
+	  {
+		string id_name = (string) $3;
+		if (id_name.ToUpper() == "NEW")
+			id_name = "New";
+		$$ = new BaseAccess (id_name, (TypeArguments) $4, lexer.Location);
+	  }
+/*	| MYBASE DOT NEW
+	  {
+		$$ = new BaseAccess ("New", lexer.Location);
+	  }*/
+	;	
+
+opt_argument_list
+	: argument_list
+	  { 
+		/*
+		   The 'argument' rule returns an 'empty' argument
+		   of type NoArg (used for default arguments in invocations)
+		   if no arguments are actually passed.
+
+		   If there is only one argument and it is o type NoArg,
+		   we return a null (empty) list
+		*/
+		ArrayList args = (ArrayList) $1;
+		if (args.Count == 1 &&
+		    ((Argument)args[0]).ArgType == Argument.AType.NoArg)
+			$$ = null;
+		else
+			$$ = $1;
+	  }
+	;
+
+argument_list
+	: argument
+	  {
+		ArrayList list = new ArrayList ();
+		list.Add ($1);
+		$$ = list;
+	  }
+	| argument_list COMMA argument
+	  {
+		ArrayList list = (ArrayList) $1;
+		list.Add ($3);
+		$$ = list;
+	  }
+	;
+
+argument
+	: expression
+	  {
+		$$ = new Argument ((Expression) $1, Argument.AType.Expression);
+	  }
+	| identifier ATTR_ASSIGN expression
+	  {
+		// VB named arguments are legal source syntax, but bmcs still
+		// models call arguments as positional-only values.  Keep the
+		// failure explicit here instead of silently dropping the name
+		// and misbinding reordered arguments during overload resolution.
+		Report.Error (30661, lexer.Location,
+			"Named arguments are not supported by this bootstrap compiler; rewrite the call to use positional arguments");
+		$$ = new Argument ((Expression) $3, Argument.AType.Expression);
+	  }
+	| BYREF variable_reference
+	  {
+		$$ = new Argument ((Expression) $2, Argument.AType.Ref);
+	  }
+	| /* empty */
+	  {
+	  	$$ = new Argument (new EmptyExpression (), Argument.AType.NoArg);
+	  }
+	| ADDRESSOF expression
+	  {
+		Expression aoexpr = DisambiguateReturnNameInvocation ((Expression) $2);
+		$$ = new Argument (aoexpr, Argument.AType.AddressOf);
+	  }
+	;
+
+variable_reference
+	: expression {/* note ("section 5.4"); */  $$ = $1;  }
+	;
+
+		
+expression
+	: conditional_xor_expression { $$ = $1; }
+	/*| assignment_expression*/
+	;
+
+opt_expression
+	: /* empty */
+	| expression
+	;
+		
+this_access
+	: ME
+	  {
+		$$ = new This (current_block, lexer.Location);
+	  }
+	| MYCLASS
+	  {
+		// FIXME: This is actually somewhat different from Me
+		// because it is for accessing static (classifier) methods/properties/fields
+		$$ = new This (current_block, lexer.Location);
+	  }
+	;
+
+cast_expression
+        : DIRECTCAST OPEN_PARENS expression COMMA type_in_expression CLOSE_PARENS
+	  {
+		// DirectCast has its own CLR-native conversion rules. Keep it
+		// distinct from CType so Object->primitive casts remain real
+		// unbox operations instead of going through VB runtime helpers.
+		$$ = new VBDirectCast ((Expression) $5, (Expression) $3, lexer.Location);
+	  }
+	| TRYCAST OPEN_PARENS expression COMMA type_in_expression CLOSE_PARENS
+	  {
+		// VB TryCast returns Nothing for a failed reference cast.
+		// Keep it separate from the C# 'as' node because VB TryCast is
+		// restricted to native CLR conversions and must reject value-typed
+		// operands instead of silently boxing them.
+		$$ = new VBTryCast ((Expression) $3, (Expression) $5, lexer.Location);
+	  }
+	| CTYPE OPEN_PARENS expression COMMA type_in_expression CLOSE_PARENS
+	  {
+		  $$ = new Cast ((Expression) $5, (Expression) $3, lexer.Location);
+	  }
+        | cast_operator OPEN_PARENS expression CLOSE_PARENS
+	  {
+		  $$ = new Cast ((Expression) $1, (Expression) $3, lexer.Location);
+	  }
+	;
+	
+cast_operator
+	: CBOOL		{ $$ = TypeManager.system_boolean_expr; 	}
+	| CBYTE		{ $$ = TypeManager.system_byte_expr;	 	}
+	| CSBYTE	{ $$ = TypeManager.system_sbyte_expr; 		}
+	| CCHAR		{ $$ = TypeManager.system_char_expr; 		}
+ 	| CDATE		{ $$ = TypeManager.system_date_expr;	 	}
+	| CDBL		{ $$ = TypeManager.system_double_expr; 		}
+	| CDEC		{ $$ = TypeManager.system_decimal_expr; 	}
+	| CINT		{ $$ = TypeManager.system_int32_expr; 		}
+	| CLNG		{ $$ = TypeManager.system_int64_expr; 		}
+	| COBJ		{ $$ = TypeManager.system_object_expr; 		}
+	| CUINT		{ $$ = TypeManager.system_uint32_expr; 		}
+	| CULNG		{ $$ = TypeManager.system_uint64_expr; 		}
+	| CUSHORT	{ $$ = TypeManager.system_uint16_expr; 		}
+	| CSHORT	{ $$ = TypeManager.system_int16_expr; 		}
+	| CSNG		{ $$ = TypeManager.system_single_expr; 		}
+	| CSTR		{ $$ = TypeManager.system_string_expr; 	}
+	;
+
+// VB gives GetType its own grammar for open generic names such as
+// Dictionary(Of ,). Parse that form here so it goes through bmcs's
+// unbound-generic type path instead of being misread as empty type args.
+get_type_expression
+	: GETTYPE OPEN_PARENS get_type_operand CLOSE_PARENS
+	  {
+		$$ = new TypeOf ((Expression) $3, lexer.Location);
+  	  }
+	;
+
+get_type_operand
+	: get_type_name
+	  {
+		$$ = ((MemberName) $1).GetTypeExpression (lexer.Location);
+	  }
+	| get_type_name INTERR
+	  {
+		Expression te = ((MemberName) $1).GetTypeExpression (lexer.Location);
+		$$ = new NullableType (te, lexer.Location);
+	  }
+	| builtin_types
+	| builtin_types INTERR
+	  {
+		$$ = new NullableType ((Expression) $1, lexer.Location);
+	  }
+	| get_type_operand rank_specifiers
+	  {
+		string dims = VariableDeclaration.BuildRanks ((ArrayList) $2, true, lexer.Location);
+		$$ = new ComposedCast ((Expression) $1, dims, lexer.Location);
+	  }
+	;
+
+get_type_name
+	: identifier opt_get_type_args
+	  {
+		$$ = new MemberName ((string) $1, (TypeArguments) $2);
+	  }
+	| get_type_name DOT identifier opt_get_type_args
+	  {
+		$$ = new MemberName ((MemberName) $1, (string) $3, (TypeArguments) $4);
+	  }
+	;
+
+opt_get_type_args
+	: /* empty */
+	  { $$ = null; }
+	| OPEN_PARENS_OF type_argument_list CLOSE_PARENS
+	  { $$ = $2; }
+	| OPEN_PARENS_OF open_type_argument_commas CLOSE_PARENS
+	  { $$ = new TypeArguments (((int) $2) + 1, lexer.Location); }
+	;
+
+open_type_argument_commas
+	: COMMA
+	  { $$ = 1; }
+	| open_type_argument_commas COMMA
+	  { $$ = ((int) $1) + 1; }
+	;
+	
+exponentiation_expression
+	: primary_expression
+	| exponentiation_expression OP_EXP primary_expression
+	  {
+		$$ = new Binary (Binary.Operator.Exponentiation,
+			         (Expression) $1, (Expression) $3, lexer.Location);
+	  }			  	
+	;
+	
+prefixed_unary_expression
+	: exponentiation_expression
+	| ADDRESSOF expression
+	  {
+		Expression aoexpr = DisambiguateReturnNameInvocation ((Expression) $2);
+		$$ = new VBAddressOfExpression (aoexpr, lexer.Location);
+	  }
+	| PLUS prefixed_unary_expression
+	  {
+	  	//FIXME: Is this rule correctly defined ?
+	  	$$ = new Unary (Unary.Operator.UnaryPlus, (Expression) $2, lexer.Location);
+	  }
+	| MINUS prefixed_unary_expression
+	  {
+	  	//FIXME: Is this rule correctly defined ?
+		$$ = new Unary (Unary.Operator.UnaryNegation, (Expression) $2, lexer.Location);
+	  }
+	;
+
+multiplicative_expression
+	: prefixed_unary_expression
+	| multiplicative_expression STAR prefixed_unary_expression
+	  {
+		$$ = new Binary (Binary.Operator.Multiply,
+			         (Expression) $1, (Expression) $3, lexer.Location);
+	  }
+	| multiplicative_expression DIV prefixed_unary_expression
+	  {
+		$$ = new Binary (Binary.Operator.Division,
+			         (Expression) $1, (Expression) $3, lexer.Location);
+	  }
+	;
+
+integer_division_expression
+	: multiplicative_expression
+	| integer_division_expression OP_IDIV multiplicative_expression
+          {
+	      $$ = new Binary (Binary.Operator.IntegerDivision,
+			   (Expression) $1, (Expression) $3, lexer.Location);
+          }
+	;
+
+mod_expression
+	: integer_division_expression
+	| mod_expression MOD integer_division_expression
+	  {
+	      $$ = new Binary (Binary.Operator.Modulus,
+			       (Expression) $1, (Expression) $3, lexer.Location);
+	  }
+	;
+	
+additive_expression
+	: mod_expression
+	| additive_expression PLUS mod_expression
+	  {
+	      $$ = new Binary (Binary.Operator.Addition,
+			       (Expression) $1, (Expression) $3, lexer.Location);
+	  }
+	| additive_expression MINUS mod_expression
+	  {
+	      $$ = new Binary (Binary.Operator.Subtraction,
+			       (Expression) $1, (Expression) $3, lexer.Location);
+	  }
+	;
+
+concat_expression
+	: additive_expression
+	| concat_expression OP_CONCAT additive_expression
+          {
+	      $$ = new Binary (Binary.Operator.Concatenation,
+			       (Expression) $1, (Expression) $3, lexer.Location);
+	  }	
+	;
+
+shift_expression
+	: concat_expression
+	| shift_expression OP_SHIFT_LEFT concat_expression
+	  {
+              $$ = new Binary (Binary.Operator.LeftShift, 
+                               (Expression) $1, (Expression) $3, lexer.Location);
+	  }
+	| shift_expression OP_SHIFT_RIGHT concat_expression
+	  {
+              $$ = new Binary (Binary.Operator.RightShift, 
+                               (Expression) $1, (Expression) $3, lexer.Location);
+	  }
+	;
+
+relational_expression
+	: shift_expression
+	| relational_expression ASSIGN shift_expression
+	  {
+		$$ = new Binary (Binary.Operator.Equality,
+			         (Expression) $1, (Expression) $3, lexer.Location);
+	  }
+	| relational_expression OP_NE shift_expression
+	  {
+		$$ = new Binary (Binary.Operator.Inequality, 
+			         (Expression) $1, (Expression) $3, lexer.Location);
+	  }	  
+	| relational_expression OP_LT shift_expression
+	  {
+		$$ = new Binary (Binary.Operator.LessThan,
+			         (Expression) $1, (Expression) $3, lexer.Location);
+	  }
+	| relational_expression OP_GT shift_expression
+	  {
+		$$ = new Binary (Binary.Operator.GreaterThan,
+			         (Expression) $1, (Expression) $3, lexer.Location);
+	  }
+	| relational_expression OP_LE shift_expression
+	  {
+		$$ = new Binary (Binary.Operator.LessThanOrEqual,
+			         (Expression) $1, (Expression) $3, lexer.Location);
+	  }
+	| relational_expression OP_GE shift_expression
+	  {
+		$$ = new Binary (Binary.Operator.GreaterThanOrEqual,
+			         (Expression) $1, (Expression) $3, lexer.Location);
+	  }
+	| relational_expression IS shift_expression
+	  {
+		$$ = new Binary (Binary.Operator.Is,
+			         (Expression) $1, (Expression) $3, lexer.Location);
+	  }
+	| relational_expression ISNOT shift_expression
+	  {
+		// VB9 'IsNot': desugar to Not (a Is b).  No IL support path
+		// is needed because LogicalNot of a reference-comparison is
+		// handled by the existing Unary emit path.
+		Binary cmp = new Binary (Binary.Operator.Is,
+			         (Expression) $1, (Expression) $3, lexer.Location);
+		$$ = new Unary (Unary.Operator.LogicalNot, cmp, lexer.Location);
+	  }
+	| relational_expression LIKE shift_expression
+	  {
+		$$ = new Binary (Binary.Operator.Like,
+			         (Expression) $1, (Expression) $3, lexer.Location);
+	  }
+	| TYPEOF shift_expression IS type_in_expression
+	  {
+                $$ = new Is ((Expression) $2, (Expression) $4, lexer.Location);
+	  }
+	;
+
+negation_expression
+	: relational_expression
+	| NOT negation_expression 
+	  {
+		// VB source `Not` is one operator. Whether it is logical
+		// negation or bitwise complement depends on the resolved
+		// operand type, including lifted Nullable(Of T) cases.
+	  	$$ = new Unary (Unary.Operator.LogicalNot, (Expression) $2, lexer.Location);
+	  }
+	;
+	
+conditional_and_expression
+	: negation_expression
+	| conditional_and_expression AND negation_expression
+	  {
+		$$ = new Binary (Binary.Operator.BitwiseAnd,
+			         (Expression) $1, (Expression) $3, lexer.Location);
+	  }
+	| conditional_and_expression ANDALSO negation_expression
+	  {	
+		$$ = new Binary (Binary.Operator.LogicalAndAlso,
+			         (Expression) $1, (Expression) $3, lexer.Location);
+	  }
+	;
+
+conditional_or_expression
+	: conditional_and_expression
+	| conditional_or_expression OR conditional_and_expression
+	  {
+		$$ = new Binary (Binary.Operator.BitwiseOr,
+			         (Expression) $1, (Expression) $3, lexer.Location);
+	  }
+	| conditional_or_expression ORELSE conditional_and_expression
+	  {	
+		$$ = new Binary (Binary.Operator.LogicalOrElse,
+			         (Expression) $1, (Expression) $3, lexer.Location);
+	  }
+	;
+
+conditional_xor_expression
+	: conditional_or_expression
+	| conditional_xor_expression XOR conditional_or_expression
+	{
+	      $$ = new Binary (Binary.Operator.ExclusiveOr,
+			       (Expression) $1, (Expression) $3, lexer.Location);
+	}
+	;
+
+assignment_expression
+	: prefixed_unary_expression ASSIGN expression
+	  { 
+		$$ = new Assign ((Expression) $1, (Expression) $3, lexer.Location);
+	  }
+	| prefixed_unary_expression STAR ASSIGN expression
+	  {
+		Location l = lexer.Location;
+
+		$$ = new CompoundAssign (
+			Binary.Operator.Multiply, (Expression) $1, (Expression) $4, l);
+	  }
+	| prefixed_unary_expression DIV ASSIGN expression
+	  {
+		Location l = lexer.Location;
+
+		$$ = new CompoundAssign (
+			Binary.Operator.Division, (Expression) $1, (Expression) $4, l);
+	  }
+	| prefixed_unary_expression PLUS ASSIGN expression
+	  {
+		Location l = lexer.Location;
+
+		$$ = new CompoundAssign (
+			Binary.Operator.Addition, (Expression) $1, (Expression) $4, l);
+	  }
+	| prefixed_unary_expression MINUS ASSIGN expression
+	  {
+		Location l = lexer.Location;
+
+		$$ = new CompoundAssign (
+			Binary.Operator.Subtraction, (Expression) $1, (Expression) $4, l);
+	  }
+	| prefixed_unary_expression OP_SHIFT_LEFT ASSIGN expression
+	  {
+		Location l = lexer.Location;
+
+		$$ = new CompoundAssign (
+			Binary.Operator.LeftShift, (Expression) $1, (Expression) $4, l);
+	  }
+	| prefixed_unary_expression OP_SHIFT_RIGHT ASSIGN expression
+	  {
+		Location l = lexer.Location;
+
+		$$ = new CompoundAssign (
+			Binary.Operator.RightShift, (Expression) $1, (Expression) $4, l);
+	  }
+	| prefixed_unary_expression OP_CONCAT ASSIGN expression
+	  {
+		Location l = lexer.Location;
+
+		$$ = new CompoundAssign (
+			Binary.Operator.Concatenation, (Expression) $1, (Expression) $4, l);
+	  }
+	| prefixed_unary_expression OP_EXP ASSIGN expression
+	  {
+		Location l = lexer.Location;
+
+		/* TODO: $$ = new CompoundAssign (
+			Binary.Operator.ExclusiveOr, (Expression) $1, (Expression) $4, l); */
+	  }
+	;
+
+constant_expression
+	: expression
+	;
+
+boolean_expression
+	: expression
+	;
+
+opt_type_args
+	: /* empty */
+	  { $$ = null; }
+	| OPEN_PARENS_OF type_argument_list CLOSE_PARENS
+	  { $$ = $2; }
+	;
+
+opt_type_params
+	: /* empty */
+	  { $$ = null; }
+	| OPEN_PARENS_OF type_parameter_list CLOSE_PARENS
+	  { $$ = $2; }
+	;
+
+type_parameter_list
+	: type_parameter_declaration
+	  {
+		ParsedTypeParameters type_params = new ParsedTypeParameters (lexer.Location);
+		TypeParameterDeclaration decl = (TypeParameterDeclaration) $1;
+		type_params.Add (decl.Name, decl.Constraints, lexer.Location);
+		$$ = type_params;
+	  }
+	| type_parameter_list COMMA type_parameter_declaration
+	  {
+		ParsedTypeParameters type_params = (ParsedTypeParameters) $1;
+		TypeParameterDeclaration decl = (TypeParameterDeclaration) $3;
+		type_params.Add (decl.Name, decl.Constraints, lexer.Location);
+		$$ = type_params;
+	  }
+	;
+
+type_parameter_declaration
+	: identifier
+	  {
+		$$ = new TypeParameterDeclaration ((string) $1, null);
+	  }
+	| identifier AS type_parameter_constraints
+	  {
+		$$ = new TypeParameterDeclaration ((string) $1, (ArrayList) $3);
+	  }
+	;
+
+// Generic type-parameter constraints in VB can be a single constraint
+// after 'As' or a brace-wrapped list such as '{Class, IFoo, New}'.
+// Parse them into the existing Constraints/SpecialConstraint model so
+// the generic backend enforces the same rules it already uses elsewhere.
+type_parameter_constraints
+	: type_parameter_constraint
+	  {
+		ArrayList list = new ArrayList ();
+		list.Add ($1);
+		$$ = list;
+	  }
+	| OPEN_BRACE type_parameter_constraint_list CLOSE_BRACE
+	  {
+		$$ = $2;
+	  }
+	;
+
+type_parameter_constraint_list
+	: type_parameter_constraint
+	  {
+		ArrayList list = new ArrayList ();
+		list.Add ($1);
+		$$ = list;
+	  }
+	| type_parameter_constraint_list COMMA type_parameter_constraint
+	  {
+		ArrayList list = (ArrayList) $1;
+		list.Add ($3);
+		$$ = list;
+	  }
+	;
+
+type_parameter_constraint
+	: type
+	| CLASS
+	  {
+		$$ = SpecialConstraint.ReferenceType;
+	  }
+	| STRUCTURE
+	  {
+		$$ = SpecialConstraint.ValueType;
+	  }
+	| NEW
+	  {
+		$$ = SpecialConstraint.Constructor;
+	  }
+	;
+
+type_argument_list
+	: type_with_array_modifiers
+	  {
+		TypeArguments args = new TypeArguments (lexer.Location);
+		args.Add ((Expression) $1);
+		$$ = args;
+	  }
+	| type_argument_list COMMA type_with_array_modifiers
+	  {
+		TypeArguments args = (TypeArguments) $1;
+		args.Add ((Expression) $3);
+		$$ = args;
+	  }
+	;
+
+type
+	: type_name
+	  {
+		$$ = ((MemberName) $1).GetTypeExpression (lexer.Location);
+	  }
+	| type_name INTERR
+	  {
+		// VB nullable shorthand: T? is exactly
+		// System.Nullable(Of T) at the type-name level.
+		Expression te = ((MemberName) $1).GetTypeExpression (lexer.Location);
+		$$ = new NullableType (te, lexer.Location);
+	  }
+	| builtin_types
+	| builtin_types INTERR
+	  {
+		$$ = new NullableType ((Expression) $1, lexer.Location);
+	  }
+	//| array_type
+	;
+
+// Type arguments and expression-side type contexts both use TypeName in
+// the VB grammar, which includes ArrayTypeName. Keep the array suffixes
+// separate from the general 'type' nonterminal so declarations can
+// continue to use their dedicated rank-parsing productions.
+type_with_array_modifiers
+	: type
+	| type rank_specifiers
+	  {
+		string dims = VariableDeclaration.BuildRanks ((ArrayList) $2, true, lexer.Location);
+		$$ = new ComposedCast ((Expression) $1, dims, lexer.Location);
+	  }
+	;
+
+type_in_expression
+	: type_with_array_modifiers
+	;
+
+type_list
+	: type
+	  {
+		ArrayList types = new ArrayList ();
+
+		types.Add ($1);
+		$$ = types;
+	  }
+	| type_list COMMA type
+	  {
+		ArrayList types = (ArrayList) $1;
+
+		types.Add ($3);
+		$$ = types;
+	  }
+	;
+
+namespace_or_type_name
+	: qualified_identifier
+	;
+
+builtin_types
+	: OBJECT	{ $$ = TypeManager.system_object_expr; }
+	| primitive_type
+	;
+
+primitive_type
+	: numeric_type
+	| BOOLEAN	{ $$ = TypeManager.system_boolean_expr; }
+ 	| DATE		{ $$ = TypeManager.system_date_expr; }
+	| CHAR		{ $$ = TypeManager.system_char_expr; }
+	| STRING	{ $$ = TypeManager.system_string_expr; }
+	;
+	
+
+numeric_type
+	: integral_type
+	| floating_point_type
+	| DECIMAL	{ $$ = TypeManager.system_decimal_expr; }
+	;
+
+integral_type
+	: BYTE		{ $$ = TypeManager.system_byte_expr; }
+	| SBYTE		{ $$ = TypeManager.system_sbyte_expr; }
+	| SHORT		{ $$ = TypeManager.system_int16_expr; }
+	| USHORT	{ $$ = TypeManager.system_uint16_expr; }
+	| INTEGER	{ $$ = TypeManager.system_int32_expr; }
+	| UINTEGER	{ $$ = TypeManager.system_uint32_expr; }
+	| LONG		{ $$ = TypeManager.system_int64_expr; }
+	| ULONG		{ $$ = TypeManager.system_uint64_expr; }
+	;
+	
+floating_point_type
+	: SINGLE	{ $$ = TypeManager.system_single_expr; }
+	| DOUBLE	{ $$ = TypeManager.system_double_expr; }
+	;
+
+%%
+
+
+Tokenizer lexer;
+
+public Tokenizer Lexer {
+	get {
+		return lexer;
+	}
+}		   
+
+public static Expression DecomposeQI (string name, Location loc)
+{
+	Expression o;
+
+	if (name.IndexOf ('.') == -1){
+		return new SimpleName (name, loc);
+	} else {
+		int pos = name.LastIndexOf (".");
+		string left = name.Substring (0, pos);
+		string right = name.Substring (pos + 1);
+
+		o = DecomposeQI (left, loc);
+
+		return new MemberAccess (o, right, loc);
+	}
+}
+
+sealed class TypeParameterDeclaration
+{
+	public readonly string Name;
+	public readonly ArrayList Constraints;
+
+	public TypeParameterDeclaration (string name, ArrayList constraints)
+	{
+		Name = name;
+		Constraints = constraints;
+	}
+}
+
+sealed class ParsedTypeParameters
+{
+	readonly TypeArguments type_arguments;
+	ArrayList constraints;
+
+	public ParsedTypeParameters (Location loc)
+	{
+		type_arguments = new TypeArguments (loc);
+	}
+
+	public TypeArguments TypeArguments {
+		get { return type_arguments; }
+	}
+
+	public ArrayList Constraints {
+		get { return constraints; }
+	}
+
+	public void Add (string name, ArrayList parameter_constraints, Location loc)
+	{
+		type_arguments.Add (new SimpleName (name, loc));
+
+		if (parameter_constraints == null)
+			return;
+
+		if (constraints == null)
+			constraints = new ArrayList ();
+
+		constraints.Add (new Constraints (name, parameter_constraints, loc));
+	}
+}
+
+static string MakeLabelName (object label_literal)
+{
+	return System.Convert.ToString (label_literal, System.Globalization.CultureInfo.InvariantCulture);
+}
+
+void AddLabelToCurrentBlock (string label_name, Location loc)
+{
+	LabeledStatement labeled = new LabeledStatement (label_name, loc);
+
+	// Block.AddLabel already reports duplicate/shadowing diagnostics.
+	current_block.AddLabel (label_name, labeled, loc);
+	current_block.AddStatement (labeled);
+}
+
+Block declare_local_variables (Expression dummy_type, ArrayList variable_declarators, Location loc)
+{
+	Block implicit_block;
+	ArrayList inits = null;
+
+	//
+	// We use the `Used' property to check whether statements
+	// have been added to the current block.  If so, we need
+	// to create another block to contain the new declaration
+	// otherwise, as an optimization, we use the same block to
+	// add the declaration.
+	//
+	// FIXME: A further optimization is to check if the statements
+	// that were added were added as part of the initialization
+	// below.  In which case, no other statements have been executed
+	// and we might be able to reduce the number of blocks for
+	// situations like this:
+	//
+	// int j = 1;  int k = j + 1;
+	//
+	
+	VariableDeclaration.FixupTypes (variable_declarators);
+	// FIXME: Should VariableDeclaration.FixupArrayTypes be called here
+
+	if (current_block.Used)
+		implicit_block = new Block (current_block, Block.Flags.Implicit, loc, Location.Null);
+	else
+		implicit_block = current_block;
+
+
+	foreach (VariableDeclaration decl in variable_declarators){
+		Expression type = decl.type;
+		if (implicit_block.AddVariable (type, decl.identifier, current_local_parameters, decl.Location) != null) {
+			if (decl.expression_or_array_initializer != null){
+				if (inits == null)
+					inits = new ArrayList ();
+				inits.Add (decl);
+			}
+		}
+	}
+
+	if (inits == null)
+		return implicit_block;
+
+	foreach (VariableDeclaration decl in inits){
+		Assign assign;
+		Expression expr;
+		Expression type = decl.type;
+		
+		if ((decl.expression_or_array_initializer is Expression) || 
+		    (decl.expression_or_array_initializer is New)) {
+			expr = (Expression) decl.expression_or_array_initializer;
+		} else {
+			ArrayList init = (ArrayList) decl.expression_or_array_initializer;
+			
+			expr = new ArrayCreation (type, "", init, decl.Location);
+		}
+
+		LocalVariableReference var;
+		var = new LocalVariableReference (implicit_block, decl.identifier, loc);
+
+		assign = new Assign (var, expr, decl.Location);
+
+		implicit_block.AddStatement (new StatementExpression (assign, lexer.Location));
+	}
+	
+	return implicit_block;
+}
+
+Block declare_local_constant (Expression dummy_type, ArrayList variable_declarators)
+{
+	Block implicit_block;
+	VariableDeclaration.FixupTypes (variable_declarators);
+
+	if (current_block.Used)
+		implicit_block = new Block (current_block, Block.Flags.Implicit);
+	else
+		implicit_block = current_block;
+
+	foreach (VariableDeclaration decl in variable_declarators){
+		Expression type = decl.type;
+		implicit_block.AddConstant (type, decl.identifier, (Expression) decl.expression_or_array_initializer,
+					  current_local_parameters, decl.Location);
+	}
+	
+	return implicit_block;
+}
+
+ArrayList BuildUsingResourceDeclarators (ArrayList names, object opt_type_decl, object opt_initializer, Location loc)
+{
+	ArrayList declarations = new ArrayList ();
+
+	if ((names.Count > 1) && (opt_initializer != null))
+		Report.Error (30671, loc,
+			"Multiple variables with single type can not have " +
+			"a explicit initialization" );
+
+	foreach (VarName vname in names)
+	{
+		string varname = (string) vname.Name;
+		current_rank_specifiers = (ArrayList) vname.Rank;
+		object varinit = opt_initializer;
+		Expression vartype;
+
+		if (vname.Type != null && opt_type_decl != null)
+			Report.Error (
+				30302, loc,
+				"Type character cannot be used with explicit type declaration" );
+
+		vartype = (opt_type_decl == null) ?
+			((vname.Type == null) ? TypeManager.system_object_expr : (Expression) vname.Type) :
+			(Expression) opt_type_decl;
+
+		if (current_rank_specifiers != null && varinit != null)
+		{
+			bool broken = false;
+			foreach (ArrayList exprs in current_rank_specifiers)
+			{
+				foreach (Expression expr in exprs)
+				{
+					if (!((Expression)expr is EmptyExpression))
+					{
+						Report.Error (
+							30672, loc,
+							"Array declared with explicit bound " +
+							" can not have explicit initialization");
+						broken = true;
+						break;
+					}
+				}
+				if (broken)
+					break;
+			}
+		}
+
+		if (current_rank_specifiers != null && !(vartype is New)) {
+			string dims = VariableDeclaration.BuildRanks (current_rank_specifiers, false, loc);
+			vartype = new ComposedCast (vartype, dims, loc);
+		}
+
+		if (vartype is New) {
+			if (varinit != null) {
+				Report.Error (30205, loc, "End of statement expected");
+			} else {
+				varinit = vartype;
+				vartype = ((New)vartype).RequestedType;
+			}
+		}
+
+		declarations.Add (new VariableDeclaration (varname, vartype, varinit, loc, null));
+	}
+
+	return declarations;
+}
+
+ArrayList PrepareUsingStatementResources (ArrayList variable_declarators)
+{
+	VariableDeclaration.FixupTypes (variable_declarators);
+
+	ArrayList resources = new ArrayList (variable_declarators.Count);
+	foreach (VariableDeclaration decl in variable_declarators) {
+		start_block ();
+
+		if (decl.expression_or_array_initializer == null) {
+			Report.Error (30830, decl.Location,
+				"'Using' resource variables must include an initializer");
+			resources.Add (new Pair (null, decl.Location));
+			continue;
+		}
+
+		LocalInfo vi = current_block.AddVariable (
+			decl.type, decl.identifier, current_local_parameters, decl.Location);
+
+		if (vi == null) {
+			resources.Add (new Pair (null, decl.Location));
+			continue;
+		}
+
+		vi.ReadOnly = true;
+
+		ArrayList var_entries = new ArrayList (1);
+		var_entries.Add (new DictionaryEntry (
+			// The synthesized initialization inside the Using node must write
+			// the resource once even though user code sees the local as
+			// read-only inside the block.
+			new LocalVariableReference (current_block, decl.identifier, decl.Location, vi, false),
+			decl.expression_or_array_initializer));
+
+		resources.Add (new Pair (
+			new DictionaryEntry (decl.type, var_entries), decl.Location));
+	}
+
+	return resources;
+}
+
+Statement FinishUsingStatementResources (ArrayList resources, Block body)
+{
+	Statement stmt = body;
+
+	for (int i = resources.Count - 1; i >= 0; --i) {
+		Pair resource = (Pair) resources [i];
+
+		if (resource.First != null)
+			current_block.AddStatement (new Using (resource.First, stmt, (Location) resource.Second));
+		else
+			current_block.AddStatement (stmt);
+
+		stmt = end_block ();
+	}
+
+	return stmt;
+}
+
+Expression DisambiguateReturnNameInvocation (Expression primary)
+{
+	if (current_return_name == null)
+		return primary;
+
+	SimpleName sn = primary as SimpleName;
+	if (sn == null || sn.Name != current_return_name)
+		return primary;
+
+	Expression target;
+	if (current_method_is_shared)
+		target = new SimpleName (current_class.Name, sn.Location);
+	else
+		target = new This (sn.Location);
+
+	return new MemberAccess (target, sn.Name, sn.Arguments, sn.Location);
+}
+
+
+
+struct VarName {
+                public object Name;
+                public object Type;
+		public object Rank;
+                                                                                
+                public VarName (object n, object t, object r)
+                {
+                        Name = n;
+                        Type = t;
+			Rank = r;
+                }
+        }
+
+
+// <summary>
+//   A class used to pass around variable declarations and constants
+// </summary>
+public class VariableDeclaration {
+	public string identifier;
+	public object expression_or_array_initializer;
+	public Location Location;
+	public Attributes OptAttributes;
+	public string DocComment;
+	public Expression type;
+	public ArrayList dims;
+		
+	public VariableDeclaration (string id, Expression t, object eoai, Location l, Attributes opt_attrs)
+	{
+		this.identifier = id;
+		this.expression_or_array_initializer = eoai;
+		this.Location = l;
+		this.OptAttributes = opt_attrs;
+		this.type = t;
+		this.dims = null;
+	}	
+
+	public VariableDeclaration (string id, object eoai, Location l) : this (id, eoai, l, null)
+	{
+	}
+	
+	public VariableDeclaration (string id, Expression t, Location l) : this (id, t, null, l, null)
+	{
+	}	
+	
+	public VariableDeclaration (string id, object eoai, Location l, Attributes opt_attrs) :	this 
+					(id, TypeManager.system_object_expr, eoai, l, opt_attrs)
+	{
+	}	
+	
+	public static ArrayCreation BuildArrayCreator (Expression vartype, ArrayList a_dims, ArrayList varinit, Location l)
+	{	
+		// FIXME : This is broken: only the first rank is parsed
+		return new ArrayCreation (vartype, (ArrayList) a_dims[0], "", varinit, l);
+	}
+
+	public static ArrayCreation BuildArrayCreationFromObjectCreation (
+		New n, Expression requested_type, ArrayList varinit, Location l)
+	{
+		ArrayList dims = new ArrayList ();
+
+		if (n.Arguments != null) {
+			foreach (Argument a in n.Arguments)
+				dims.Add (a.Expr);
+		}
+		// VB distinguishes 'New T() {}' from an omitted initializer: the empty
+		// braces create a zero-length array when the rank has no explicit bounds.
+		// When bounds are explicit, '{}' is just the no-element form of a sized
+		// array creation and should keep the old null path instead of being
+		// validated like a populated initializer list.
+		if (varinit != null && varinit.Count == 0 && IndexesSpecifiedInRank (dims))
+			varinit = null;
+
+		if (IndexesSpecifiedInRank (dims)) {
+			// VB array bounds are upper bounds, but ArrayCreation
+			// consumes lengths.
+			VBFixIndexList (ref dims);
+			return new ArrayCreation (requested_type, dims, "", varinit, l);
+		}
+
+		string rank = BuildRank (dims);
+		return new ArrayCreation (requested_type, rank, varinit, l);
+	}
+
+	public static ArrayCreation BuildArrayCreationFromDeclaration (
+		Expression base_type, ArrayList rank_specifiers, Location l)
+	{
+		if (rank_specifiers == null || !IndexesSpecified (rank_specifiers))
+			return null;
+
+		ArrayList first_rank = (ArrayList) rank_specifiers [0];
+		Expression element_type = base_type;
+
+		if (rank_specifiers.Count > 1) {
+			ArrayList trailing_ranks = new ArrayList ();
+			for (int i = 1; i < rank_specifiers.Count; ++i)
+				trailing_ranks.Add (rank_specifiers [i]);
+
+			string dims = BuildRanks (trailing_ranks, true, l);
+			element_type = new ComposedCast (base_type, dims, l);
+		}
+
+		ArrayList args = new ArrayList (first_rank.Count);
+		foreach (Expression expr in first_rank)
+			args.Add (new Argument (expr, Argument.AType.Expression));
+
+		New n = new New (element_type, args, l);
+		return BuildArrayCreationFromObjectCreation (n, element_type, null, l);
+	}
+	
+	public static void FixupTypes (ArrayList vars)
+	{
+		int varcount = 	vars.Count;
+		VariableDeclaration last_var = (VariableDeclaration) vars[varcount - 1];
+			
+		if (last_var.type == null)
+			last_var.type = TypeManager.system_object_expr;
+			
+		Expression cur_type = last_var.type;
+		int n = varcount - 1;
+		
+		while (n >= 0) {
+			VariableDeclaration var = (VariableDeclaration) vars[n--];
+			if (var.type == null)
+				var.type = cur_type;
+			else
+				cur_type = var.type;
+		}
+	}
+	
+	public static bool IndexesSpecifiedInRank (ArrayList IndexList)
+	{
+		bool res = false;
+		
+		if (IndexList != null) {
+			foreach (Expression e in IndexList)
+				if (!(e is EmptyExpression)) {
+					res = true;
+					break;
+				}	
+		}
+		return (res);
+	}	
+	
+	
+	public static bool IndexesSpecified (ArrayList ranks)
+	{
+		bool res = false;
+		
+		if (ranks != null) {
+			foreach (ArrayList IndexList in ranks) {
+				if (IndexesSpecifiedInRank (IndexList)) {
+					res = true;
+					break;
+				}	
+			}	
+		}
+		return (res);
+	}
+	
+	public static string StripDims (string varname, ref string d)
+	{
+		string res = varname;
+		string dres = "";
+		
+		if (varname.IndexOf("[") >= 0) {
+			dres = varname.Substring(varname.IndexOf("["), (varname.LastIndexOf("]") - varname.IndexOf("["))+1);
+			res = varname.Substring(0, varname.IndexOf("["));
+		}
+		d = dres;
+		return (res);
+	}	
+	
+	public static string StripDims (string varname)
+	{
+		string dres = "";
+		
+		return (StripDims(varname, ref dres));
+	}	
+	
+	public static string StripIndexesFromDims (string dims)
+	{
+		StringBuilder sb = new StringBuilder();
+
+		foreach (char c in dims) 
+			if (c == ',' || c == ']' || c == '[')
+				sb.Append (c);
+				
+		return sb.ToString();				
+	}
+	
+	public static string BuildRank (ArrayList rank)
+	{
+		bool allEmpty;
+		return BuildRank(rank, out allEmpty);
+	}
+            
+	public static string BuildRank (ArrayList rank, out bool allEmpty)
+	{
+		string res = "";
+
+		res += "[";
+		allEmpty = true;
+		bool first = true;
+		foreach (object e in rank) {
+			if (!(e is EmptyExpression))
+				allEmpty = false;
+			if (!first)
+				res += ",";
+			first = false;
+		}
+			
+		res += "]";
+		return res;
+	}
+		
+	public static string BuildRanks (ArrayList rank_specifiers, bool mustBeEmpty, Location loc)
+	{
+		string res = "";
+
+		bool allEmpty = true;
+		foreach (ArrayList rank in rank_specifiers) {
+			bool tmp;
+			res = BuildRank (rank, out tmp) + res;
+			if (!tmp)
+				allEmpty = false;
+		}
+		if (!allEmpty && mustBeEmpty)
+			Report.Error (30638, loc, "Array bounds cannot appear in type specifiers.");	
+
+		return res;
+	}	
+	
+	public static void VBFixIndexList (ref ArrayList IndexList)
+	{
+		if (IndexList != null) {
+			for (int x = 0; x < IndexList.Count; x++) {
+				Expression e = (Expression) IndexList[x];
+				if (!(e is EmptyExpression)) {
+					IndexList[x] = new Binary (Binary.Operator.Addition, e, new IntLiteral(1), Location.Null);
+				}
+			}
+		}
+	}		
+	
+// 	public static bool IsArrayDecl (Parser t)
+// 	{
+// 		// return (varname.IndexOf("[") >= 0);
+// 		return (t.current_rank_specifiers != null);
+// 	}			
+	
+	public static void VBFixIndexLists (ref ArrayList ranks)
+	{	
+		if (ranks != null) {
+			for (int x = 0; x < ranks.Count; x++) {
+				ArrayList IndexList = (ArrayList) ranks[x];
+				VBFixIndexList (ref IndexList);
+			}	
+		}	
+	}
+		
+	public static void FixupArrayTypes (ArrayList vars)
+	{
+		int varcount = 	vars.Count;
+		string dims;
+		
+		foreach (VariableDeclaration var in vars) {
+		  	if (var.identifier.EndsWith(",")) {
+		  		dims = "[" + var.identifier.Substring(var.identifier.IndexOf (","), 
+		  						var.identifier.LastIndexOf(",")) + "]";
+				var.identifier = var.identifier.Substring (0, var.identifier.IndexOf (","));
+				var.type = new ComposedCast (var.type, (string) dims, var.Location);
+		  	}
+		}
+	}				
+}
+
+
+// public Property BuildSimpleProperty (Expression p_type, string name, 
+// 					Field p_fld, int mod_flags,
+// 			 		Attributes attrs, Location loc) 
+// {
+// 	Property p;
+// 	Block get_block, set_block;
+// 	Accessor acc_set, acc_get;
+// 	StatementExpression a_set;
+// 	Statement a_get;
+// 	Parameter [] args;
+	
+// 	// Build SET Block
+// 	Parameter implicit_value_parameter = new Parameter (p_type, "value", Parameter.Modifier.NONE, null);	
+// 	args  = new Parameter [1];
+// 	args [0] = implicit_value_parameter;
+		
+// 	Parameters set_params = new Parameters (args, null, loc);
+// 	a_set = new StatementExpression ((ExpressionStatement) new Assign ((Expression) DecomposeQI(p_fld.Name, loc), 
+// 			    (Expression) new SimpleName("value", loc), loc), loc);
+			    
+// 	set_block = new Block (current_block, set_params, loc, Location.Null);
+// 	set_block.AddStatement ((Statement) a_set);					    
+// 	acc_set = new Accessor (set_block, attrs);
+	
+// 	// Build GET Block
+// 	a_get = (Statement) new Return ((Expression) DecomposeQI(p_fld.Name, loc), loc);
+// 	get_block = new Block (current_block, null, loc, Location.Null);
+// 	get_block.AddStatement ((Statement) a_get);					    
+// 	acc_get = new Accessor (get_block, attrs);
+		
+// 	p = new Property (p_type, name, mod_flags, (Accessor) acc_get, (Accessor) acc_set, attrs, loc);
+	
+// 	return (p);
+// }
+	
+void start_block () 
+{
+	  if (current_block == null){
+		  current_block = new ToplevelBlock ((ToplevelBlock) top_current_block, 
+					     current_local_parameters, lexer.Location);
+		  top_current_block = current_block;
+	  } else {
+		  current_block = new Block (current_block, current_local_parameters,
+						 lexer.Location, Location.Null);
+	  }
+} 
+
+
+Block end_block ()
+{ 
+	Block res;
+
+	while (current_block.Implicit)
+		current_block = current_block.Parent;
+	res = current_block;
+	current_block.SetEndLocation (lexer.Location);
+	current_block = current_block.Parent;
+	if (current_block == null)
+		top_current_block = null;
+
+	return res;
+}
+
+// private void AddHandler (Expression evt_definition, Expression handler_exp)
+// {
+// 	AddHandler (current_block, evt_definition, handler_exp);
+// }
+
+void CheckAttributeTarget (string a)
+{
+	switch (a) {
+
+	case "assembly" : case "field" : case "method" : case "param" : case "property" : case "type" :
+		return;
+		
+	default :
+		Location l = lexer.Location;
+		Report.Error (658, l, "`" + a + "' is an invalid attribute target");
+		break;
+	}
+}
+
+// private void AddHandler (Block b, Expression evt_id, Expression handles_exp)
+// {
+// 	Expression evt_target;
+// 	Location loc = lexer.Location;
+	
+// 	Statement addhnd = (Statement) new AddHandler (evt_id, 
+// 													handles_exp, 
+// 													loc);													
+													
+// 	b.AddStatement (addhnd);
+// }
+
+// private void RaiseEvent (string evt_name, ArrayList args)
+// {
+// 	Location loc = lexer.Location;
+	
+// 	Invocation evt_call = new Invocation (DecomposeQI(evt_name, loc), args, lexer.Location);
+//    	Statement s = (Statement)(new StatementExpression ((ExpressionStatement) evt_call, loc)); 
+//    	current_block.AddStatement (s);	
+// }
+
+// private void RemoveHandler (Block b, Expression evt_definition, Expression handler_exp)
+// {
+// 	Expression evt_target;
+// 	Location loc = lexer.Location;
+	
+// 	Statement rmhnd = (Statement) new RemoveHandler (evt_definition, 
+// 													handler_exp, 
+// 													loc);
+// 	b.AddStatement (rmhnd);
+// }
+
+// <summary>
+//  This method is used to get at the complete string representation of
+//  a fully-qualified type name, hiding inside a MemberAccess ;-)
+//  This is necessary because local_variable_type admits primary_expression
+//  as the type of the variable. So we do some extra checking
+// </summary>
+string GetQualifiedIdentifier (Expression expr)
+{
+	if (expr is SimpleName)
+		return ((SimpleName)expr).Name;
+	else if (expr is MemberAccess)
+		return GetQualifiedIdentifier (((MemberAccess)expr).Expr) + "." + ((MemberAccess) expr).Identifier;
+	else 
+		throw new Exception ("Expr has to be either SimpleName or MemberAccess! (" + expr + ")");
+	
+}
+
+// private void RemoveHandler (Expression evt_definition, Expression handler_exp)
+// {
+// 	RemoveHandler (current_block, evt_definition, handler_exp);
+// }
+
+// FIXME: This needs to be fixed for This and Base access because the way the name of the
+// mbas' constructor is changed from "New" to current_container.Basename
+
+private ConstructorInitializer CheckConstructorInitializer (ref ArrayList s)
+{
+	ConstructorInitializer ci = null;
+	
+	if (s.Count > 0) {
+		if (s[0] is StatementExpression && ((StatementExpression) s[0]).expr is Invocation) {
+			Invocation i = (Invocation) ((StatementExpression) s[0]).expr;
+			
+			if (i.expr is BaseAccess) {
+				BaseAccess ba = (BaseAccess) i.expr;
+				if (ba.member == "New" || ba.member == ".ctor") {
+					ci = new ConstructorBaseInitializer (i.Arguments, current_local_parameters, lexer.Location);
+					s.RemoveAt(0);
+				}
+			}
+			MemberAccess ma = i.expr as MemberAccess;
+			if (ma != null && ma.Expr is This &&
+			    (ma.Identifier == "New" || ma.Identifier == ".ctor")) {
+				// Me.New/MyClass.New are parsed as member access on This.
+				// Detect them structurally here instead of relying on a
+				// fragile ToString() shape from the raw expression tree.
+				ci = new ConstructorThisInitializer (i.Arguments, current_local_parameters, lexer.Location); 
+				s.RemoveAt(0);
+			}
+		}
+	}
+	return ci;
+}
+
+void Error_ExpectingTypeName (Location l, Expression expr)
+{
+	if (expr is Invocation){
+		Report.Error (1002, l, "; expected");
+	} else {
+		Report.Error (-1, l, "Invalid Type definition");
+	}
+}
+
+static bool AlwaysAccept (MemberInfo m, object filterCriteria) {
+	return true;
+}
+
+void PushDeclaredTypeState ()
+{
+	type_stack.Push (new DeclaredTypeState (current_container, current_class));
+}
+
+TypeContainer PopDeclaredTypeState ()
+{
+	TypeContainer completed = current_container;
+	DeclaredTypeState state = (DeclaredTypeState) type_stack.Pop ();
+	current_container = state.Container;
+	current_class = state.Type;
+	return completed;
+}
+
+ClassPart EnterPartialType (MemberName name, int mod_flags, Kind kind)
+{
+	ClassPart part = PartialContainer.CreatePart (
+		current_namespace, current_container, name, mod_flags,
+		(Attributes) current_attributes, kind, lexer.Location);
+
+	current_class = part;
+	current_container = part.PartialContainer;
+	return part;
+}
+
+bool IsCurrentStructType ()
+{
+	return current_class != null && current_class.Kind == Kind.Struct;
+}
+
+void RejectInvalidPartialModifier (Location loc)
+{
+	if ((current_modifiers & Modifiers.PARTIAL) == 0)
+		return;
+
+	Report.Error (30001, loc,
+		"The Partial modifier is only valid on class and structure declarations");
+	current_modifiers &= ~Modifiers.PARTIAL;
+}
+
+private void ReportError9998()
+{
+	Report.Error (29998, lexer.Location, "This construct is only available in MonoBASIC extended syntax.");
+}
+
+public CSharpParser (SeekableStreamReader reader, SourceFile file, ArrayList defines)
+{
+	string root_namespace = RootContext.RootNamespace;
+	current_namespace = new NamespaceEntry (
+		null,
+		file,
+		(root_namespace != null && root_namespace.Length > 0) ? root_namespace : null,
+		Location.Null);
+	this.name = file.Name;
+	this.file = file;
+	current_container = RootContext.Tree.Types;
+	current_container.NamespaceEntry = current_namespace;
+	oob_stack = new Stack ();
+	switch_stack = new Stack ();
+	with_stack = new Stack ();
+	type_stack = new Stack ();
+
+	lexer = new Tokenizer (reader, file, defines);
+}
+
+public void parse ()
+{
+	try {
+		if (yacc_verbose_flag > 1)
+			yyparse (lexer, new yydebug.yyDebugSimple ());
+		else
+			yyparse (lexer);
+		Tokenizer tokenizer = lexer as Tokenizer;
+		tokenizer.cleanup ();		
+	} catch (Exception e){
+		// 
+		// Removed for production use, use parser verbose to get the output.
+		//
+		// Console.WriteLine (e);
+		Report.Error (-25, lexer.Location, "Parsing error");
+		if (yacc_verbose_flag > 0)
+			Console.WriteLine (e);
+	}
+}
+
+/* end end end */
+
+// <summary>
+//   Given the @class_name name, it creates a fully qualified name
+//   based on the containing declaration space
+// </summary>
+MemberName
+MakeName (MemberName class_name)
+{
+	string ns = current_namespace.FullName;
+
+	if (current_container.Name == ""){
+		if (ns != "")
+			return new MemberName (new MemberName (ns), class_name);
+		else
+			return class_name;
+	} else {
+		return new MemberName (current_container.MemberName, class_name);
+	}
+}
+
+}

@@ -16,9 +16,9 @@ test -z "$srcdir" && srcdir=.
 }
 
 if [ -z "$LIBTOOL" ]; then
-  LIBTOOL=`which glibtool 2>/dev/null` 
+  LIBTOOL=$(command -v glibtool 2>/dev/null || true)
   if [ ! -x "$LIBTOOL" ]; then
-    LIBTOOL=`which libtool`
+    LIBTOOL=$(command -v libtool 2>/dev/null || true)
   fi
 fi
 
