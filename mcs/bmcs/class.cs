@@ -4323,6 +4323,7 @@ namespace Mono.CSharp {
 				return true;
 			}
 
+			base_method = (MethodInfo) AttributeTester.NormalizeConditionalLookupMethod (base_method);
 			IMethodData md = TypeManager.GetMethod (base_method);
 			if (md == null) {
 				if (AttributeTester.IsConditionalMethodExcluded (base_method)) {
@@ -4779,25 +4780,25 @@ namespace Mono.CSharp {
 				Initializer.Emit (ec);
 			}
 
-			//
-			// Classes can have base initializers and instance field initializers.
-			// Instance field initializers run after the selected base constructor
-			// has been invoked. If we chain with "this (...)", the delegated-to
-			// constructor is responsible for running them exactly once.
-			//
-			if (Parent.Kind == Kind.Class){
-				if ((ModFlags & Modifiers.STATIC) == 0){
-					TypeContainer field_init_parent = Parent;
-					if (field_init_parent is ClassPart)
-						field_init_parent = ((ClassPart) field_init_parent).PartialContainer;
+				//
+				// Classes can have base initializers and instance field initializers.
+				// Instance field initializers run after the selected base constructor
+				// has been invoked. If we chain with "this (...)", the delegated-to
+				// constructor is responsible for running them exactly once.
+				//
+				TypeContainer field_init_parent = Parent;
+				if (field_init_parent is ClassPart)
+					field_init_parent = ((ClassPart) field_init_parent).PartialContainer;
 
-					if (!(Initializer != null && Initializer is ConstructorThisInitializer))
-						field_init_parent.EmitFieldInitializers (ec);
+				if (Parent.Kind == Kind.Class){
+					if ((ModFlags & Modifiers.STATIC) == 0){
+						if (!(Initializer != null && Initializer is ConstructorThisInitializer))
+							field_init_parent.EmitFieldInitializers (ec);
+					}
 				}
-			}
-			
-			if ((ModFlags & Modifiers.STATIC) != 0)
-				Parent.EmitFieldInitializers (ec);
+				
+				if ((ModFlags & Modifiers.STATIC) != 0)
+					field_init_parent.EmitFieldInitializers (ec);
 
 			if (OptAttributes != null) 
 				OptAttributes.Emit (ec, this);
