@@ -634,13 +634,15 @@ namespace Mono.CSharp {
 			
 			object default_value = 0;
 			
-		
 			foreach (string name in ordered_enums) {
 				//
 				// Have we already been defined, thanks to some cross-referencing ?
 				// 
-				if (member_to_value.Contains (name))
+				if (member_to_value.Contains (name)) {
+					default_value = member_to_value [name];
+					default_value = GetNextDefaultValue (default_value);
 					continue;
+				}
 				
 				Location loc = (Mono.CSharp.Location) member_to_location [name];
 
