@@ -1185,6 +1185,15 @@ namespace Mono.CSharp {
 					action = Action.LeaveOnStack;
 
 				warning_always_matches = true;
+			} else if (probe_type.IsGenericParameter) {
+				if (expr is NullLiteral)
+					action = Action.AlwaysFalse;
+				else {
+					if (etype.IsGenericParameter || TypeManager.IsValueType (etype))
+						expr = new BoxedCast (expr, etype);
+
+					action = Action.Probe;
+				}
 			} else if (Convert.NarrowingReferenceConversionExists (etype, probe_type)){
 				if (etype.IsGenericParameter)
 					expr = new BoxedCast (expr, etype);
