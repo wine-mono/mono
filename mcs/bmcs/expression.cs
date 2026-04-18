@@ -7560,6 +7560,8 @@ namespace Mono.CSharp {
 			if (method.IsConstructor)
 				return false;
 
+			method = AttributeTester.NormalizeConditionalLookupMethod (method);
+
 			IMethodData md = TypeManager.GetMethod (method);
 			if (md != null)
 				return md.IsExcluded (ec);

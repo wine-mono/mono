@@ -1689,11 +1689,15 @@ namespace Mono.CSharp {
 			if (excluded != null)
 				return excluded == TRUE ? true : false;
 
-			MethodInfo mi = mb as MethodInfo;
-			if (mi != null && mi.IsGenericMethod && !mi.IsGenericMethodDefinition)
-				return false;
-			
-			ConditionalAttribute[] attrs = mb.GetCustomAttributes (TypeManager.conditional_attribute_type, true) as ConditionalAttribute[];
+			mb = NormalizeConditionalLookupMethod (mb);
+			excluded = analyzed_method_excluded [mb];
+			if (excluded != null)
+				return excluded == TRUE ? true : false;
+
+			// ConditionalAttribute is not inheritable, and asking reflection for
+			// inherited lookup on older Mono drives MethodInfo.GetBaseDefinition()
+			// through a crashy path during emit.
+			ConditionalAttribute[] attrs = mb.GetCustomAttributes (TypeManager.conditional_attribute_type, false) as ConditionalAttribute[];
 			if (attrs.Length == 0) {
 				analyzed_method_excluded.Add (mb, FALSE);
 				return false;
@@ -1707,6 +1711,59 @@ namespace Mono.CSharp {
 			}
 			analyzed_method_excluded.Add (mb, TRUE);
 			return true;
+		}
+
+		// Mono 2.4.2 can hand us a MonoGenericMethod for a method on a constructed
+		// generic type while emitting the current assembly. Reflecting custom
+		// attributes on that inflated method crashes in MonoMethod.GetBaseDefinition().
+		// Reduce the lookup to the corresponding method on the generic type
+		// definition first; ConditionalAttribute lives there anyway.
+		public static MethodBase NormalizeConditionalLookupMethod (MethodBase mb)
+		{
+			MethodInfo mi = mb as MethodInfo;
+			if (mi != null && mi.IsGenericMethod && !mi.IsGenericMethodDefinition)
+				mb = mi.GetGenericMethodDefinition ();
+
+			Type declaring = mb.DeclaringType;
+			if (declaring == null || !declaring.IsGenericType || declaring.IsGenericTypeDefinition)
+				return mb;
+
+			Type definition = TypeManager.DropGenericTypeArguments (declaring);
+			if (definition == declaring)
+				return mb;
+
+			MethodBase[] candidates;
+			BindingFlags flags = BindingFlags.DeclaredOnly | BindingFlags.Instance |
+				BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+
+			if (mb.IsConstructor) {
+				ConstructorInfo[] ctors = definition.GetConstructors (flags);
+				candidates = new MethodBase [ctors.Length];
+				for (int i = 0; i < ctors.Length; ++i)
+					candidates [i] = ctors [i];
+			} else {
+				MethodInfo[] methods = definition.GetMethods (flags);
+				candidates = new MethodBase [methods.Length];
+				for (int i = 0; i < methods.Length; ++i)
+					candidates [i] = methods [i];
+			}
+
+			int token;
+			try {
+				token = mb.MetadataToken;
+			} catch {
+				return mb;
+			}
+
+			foreach (MethodBase candidate in candidates) {
+				try {
+					if (candidate.MetadataToken == token)
+						return candidate;
+				} catch {
+				}
+			}
+
+			return mb;
 		}
 	}
 }
