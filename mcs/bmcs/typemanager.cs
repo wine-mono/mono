@@ -2088,11 +2088,12 @@ public partial class TypeManager {
 		return IsBuiltinType (tc.TypeBuilder);
 	}
 
-	//
-	// This is like IsBuiltinType, but lacks decimal_type, we should also clean up
-	// the pieces in the code where we use IsBuiltinType and special case decimal_type.
-	// 
-	public static bool IsCLRType (Type t)
+		//
+		// Narrower than IsBuiltinType: this gates CLR metadata operator lookup.
+		// Decimal is intentionally excluded so VB decimal semantics stay on the
+		// intrinsic/helper path instead of binding to CLR operators.
+		//
+		public static bool IsCLRType (Type t)
 	{
 		if (t == object_type || t == string_type || t == int32_type || t == _uint32_type ||
 		    t == int64_type || t == _uint64_type || t == float_type || t == double_type ||

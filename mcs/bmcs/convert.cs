@@ -607,7 +607,8 @@ namespace Mono.CSharp {
 
 		/// <summary>
 		///  Same as WideningStandardConversionExists except that it also looks at
-		///  implicit user defined conversions - needed for overload resolution
+		///  implicit user-defined CType operators.  Overload applicability and
+		///  conversion binding must agree on this question.
 		/// </summary>
 		public static bool WideningConversionExists (EmitContext ec, Expression expr, Type target_type)
 		{
@@ -624,28 +625,15 @@ namespace Mono.CSharp {
 			if (WideningStandardConversionExists (ec, expr, target_type))
 				return true;
 
-			//
-			// VB.NET has no notion of User defined conversions
-			//
-
-// 			Expression dummy = ImplicitUserConversion (ec, expr, target_type, Location.Null);
-
-// 			if (dummy != null)
-// 				return true;
-
-			return false;
+			return ImplicitUserDefinedConversionExists (ec, expr.Type, target_type);
 		}
 
-		//
-		// VB.NET has no notion of User defined conversions
-		//
-
-// 		public static bool ImplicitUserConversionExists (EmitContext ec, Type source, Type target)
-// 		{
-// 			Expression dummy = ImplicitUserConversion (
-// 				ec, new EmptyExpression (source), target, Location.Null);
-// 			return dummy != null;
-// 		}
+		public static bool ImplicitUserDefinedConversionExists (EmitContext ec, Type source, Type target)
+		{
+			Expression dummy = UserDefinedConversion (
+				ec, new EmptyExpression (source), target, Location.Null, false);
+			return dummy != null;
+		}
 
 		/// <summary>
 		///  Determines if a standard implicit conversion exists from
@@ -1112,33 +1100,9 @@ namespace Mono.CSharp {
 				return FindMostEncompassingType (ec, tgt_types_set);
 		}
 		
-		/// <summary>
-		///  User-defined Implicit conversions
-		/// </summary>
-
-		//
-		// VB.NET has no notion of User defined conversions
-		//
-
-// 		static public Expression ImplicitUserConversion (EmitContext ec, Expression source,
-// 								 Type target, Location loc)
-// 		{
-// 			return UserDefinedConversion (ec, source, target, loc, false);
-// 		}
-
-		/// <summary>
-		///  User-defined Explicit conversions
-		/// </summary>
-
-		//
-		// VB.NET has no notion of User defined conversions
-		//
-
-// 		static public Expression ExplicitUserConversion (EmitContext ec, Expression source,
-// 								 Type target, Location loc)
-// 		{
-// 			return UserDefinedConversion (ec, source, target, loc, true);
-// 		}
+		// User-defined CType operators are handled directly by
+		// UserDefinedConversion; the old implicit/explicit wrapper stubs were
+		// redundant and only encouraged comment drift.
 
 		static DoubleHash explicit_conv = new DoubleHash (100);
 		static DoubleHash implicit_conv = new DoubleHash (100);
@@ -1220,9 +1184,8 @@ namespace Mono.CSharp {
 		///   User-defined conversions
 		/// </summary>
 
-		//
-		// VB.NET has no notion of User defined conversions. This method is not used.
-		//
+		// VB user-defined conversions are declared with CType and participate once
+		// no intrinsic conversion applies.
 		static public Expression UserDefinedConversion (EmitContext ec, Expression source,
 								Type target, Location loc,
 								bool look_for_explicit)
@@ -2548,10 +2511,8 @@ namespace Mono.CSharp {
 				return ne;
 			
 			
-			//
-			// VB.NET has no notion of User defined conversions
-			//
-
+			// After intrinsic explicit conversions fail, VB considers user-defined
+			// CType operators.
 			ne = UserDefinedConversion (ec, expr, target_type, loc, true);
 			if (ne != null)
 				return ne;
