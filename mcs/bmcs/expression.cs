@@ -6286,22 +6286,6 @@ namespace Mono.CSharp {
 			//
 			// We cant tell if IFoo.DoIt is better than IBar.DoIt
 			//
-			// VB overload-resolution tie-break 71 prefers a candidate that does
-			// not declare ParamArray over one that does, even when the ParamArray
-			// method is applicable with the current argument count. Without this,
-			// zero-argument calls like Trim() are left ambiguous against
-			// Trim(ParamArray Char()).
-			if (cand_declares_params != best_declares_params)
-				return !cand_declares_params && best_declares_params;
-
-			if (cand_declares_params && best_declares_params) {
-				int candidate_params_arguments = Math.Max (0, argument_count - (cand_count - 1));
-				int best_params_arguments = Math.Max (0, argument_count - (best_count - 1));
-
-				if (candidate_params_arguments != best_params_arguments)
-					return candidate_params_arguments < best_params_arguments;
-			}
-
 			if (cand_count > 0 &&
 			    (candidate_pd.ParameterModifier (cand_count - 1) != Parameter.Modifier.PARAMS) &&
 			    (candidate_pd.ParameterModifier (cand_count - 1) != Parameter.Modifier.ARGLIST))
@@ -6375,6 +6359,29 @@ namespace Mono.CSharp {
 				if (TypeManager.IsGenericMethod (best) && !TypeManager.IsGenericMethod (candidate))
 					return true;
 				else if (!TypeManager.IsGenericMethod (best) && TypeManager.IsGenericMethod (candidate))
+					return false;
+			}
+
+			if (!better_at_least_one) {
+				// VB tie-break 71: prefer the candidate that does not declare
+				// ParamArray, but only after specificity has failed to choose.
+				if (cand_declares_params != best_declares_params)
+					return !cand_declares_params && best_declares_params;
+
+				if (cand_declares_params && best_declares_params) {
+					int candidate_params_arguments = Math.Max (0, argument_count - (cand_count - 1));
+					int best_params_arguments = Math.Max (0, argument_count - (best_count - 1));
+
+					if (candidate_params_arguments != best_params_arguments)
+						return candidate_params_arguments < best_params_arguments;
+				}
+
+				// VB tie-break 72: if specificity still ties, prefer the member
+				// defined in the more derived type.
+				if (IsAncestralType (best.DeclaringType, candidate.DeclaringType))
+					return true;
+
+				if (IsAncestralType (candidate.DeclaringType, best.DeclaringType))
 					return false;
 			}
 
@@ -6677,7 +6684,6 @@ namespace Mono.CSharp {
 		{
 			MethodBase method = null;
 			bool method_params = false;
-			Type applicable_type = null;
 			int arg_count = 0;
 			ArrayList candidates = new ArrayList ();
 
@@ -6704,17 +6710,7 @@ namespace Mono.CSharp {
                         //
                         // First we construct the set of applicable methods
                         //
- 			bool is_sorted = true;
 			for (int i = 0; i < methods.Length; i++){
-                                Type decl_type = methods [i].DeclaringType;
-
-                                //
-                                // If we have already found an applicable method
-                                // we eliminate all base types (Section 14.5.5.1)
-                                //
-                                if ((applicable_type != null) &&
-				    IsAncestralType (decl_type, applicable_type))
-					continue;
 
 				//
 				// Check if candidate is applicable (section 14.4.2.1)
@@ -6738,14 +6734,6 @@ namespace Mono.CSharp {
                                         continue;
 
 				candidates.Add (methods [i]);
-
-				if (applicable_type == null)
-					applicable_type = decl_type;
-				else if (applicable_type != decl_type) {
-					is_sorted = false;
-					if (IsAncestralType (applicable_type, decl_type))
-						applicable_type = decl_type;
-				}
 			}
 
 			int candidate_top = candidates.Count;
@@ -6804,56 +6792,6 @@ namespace Mono.CSharp {
 				}
 
 				return null;
-			}
-
-			if (!is_sorted) {
-				//
-				// At this point, applicable_type is _one_ of the most derived types
-				// in the set of types containing the methods in this MethodGroup.
-				// Filter the candidates so that they only contain methods from the
-				// most derived types.
-				//
-
-				int finalized = 0; // Number of finalized candidates
-
-				do {
-					// Invariant: applicable_type is a most derived type
-					
-					// We'll try to complete Section 14.5.5.1 for 'applicable_type' by 
-					// eliminating all it's base types.  At the same time, we'll also move
-					// every unrelated type to the end of the array, and pick the next
-					// 'applicable_type'.
-
-					Type next_applicable_type = null;
-					int j = finalized; // where to put the next finalized candidate
-					int k = finalized; // where to put the next undiscarded candidate
-					for (int i = finalized; i < candidate_top; ++i) {
-						Type decl_type = ((MethodBase) candidates[i]).DeclaringType;
-
-						if (decl_type == applicable_type) {
-							candidates[k++] = candidates[j];
-							candidates[j++] = candidates[i];
-							continue;
-						}
-
-						if (IsAncestralType (decl_type, applicable_type))
-							continue;
-
-						if (next_applicable_type != null &&
-						    IsAncestralType (decl_type, next_applicable_type))
-							continue;
-
-						candidates[k++] = candidates[i];
-
-						if (next_applicable_type == null ||
-						    IsAncestralType (next_applicable_type, decl_type))
-							next_applicable_type = decl_type;
-					}
-
-					applicable_type = next_applicable_type;
-					finalized = j;
-					candidate_top = k;
-				} while (applicable_type != null);
 			}
 
                         //
