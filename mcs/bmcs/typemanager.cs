@@ -2248,6 +2248,238 @@ public partial class TypeManager {
 		return GetNextVBSignedType (unsigned_rank, oper);
 	}
 
+	static bool IsVBRelationalBinaryOperator (Binary.Operator oper)
+	{
+		switch (oper) {
+		case Binary.Operator.Equality:
+		case Binary.Operator.Inequality:
+		case Binary.Operator.LessThan:
+		case Binary.Operator.LessThanOrEqual:
+		case Binary.Operator.GreaterThan:
+		case Binary.Operator.GreaterThanOrEqual:
+			return true;
+		}
+
+		return false;
+	}
+
+	static bool IsVBBitwiseBinaryOperator (Binary.Operator oper)
+	{
+		switch (oper) {
+		case Binary.Operator.BitwiseAnd:
+		case Binary.Operator.BitwiseOr:
+		case Binary.Operator.ExclusiveOr:
+			return true;
+		}
+
+		return false;
+	}
+
+	// Central source of truth for intrinsic VB binary typing.  Keep the
+	// "is this type valid", "what should it coerce to", and "what result
+	// type wins" policy here so Binary no longer carries shadow copies.
+	public static bool IsVBBinaryOperatorDefinedForType (Binary.Operator oper, Type type)
+	{
+		if (type == null_type)
+			return true;
+
+		switch (oper) {
+		case Binary.Operator.Exponentiation:
+			return type == double_type;
+
+		case Binary.Operator.Concatenation:
+		case Binary.Operator.Like:
+			return type == string_type;
+
+		case Binary.Operator.BitwiseAnd:
+		case Binary.Operator.BitwiseOr:
+		case Binary.Operator.ExclusiveOr:
+			return type == bool_type || IsFixedNumericType (type) || IsEnumType (type);
+
+		case Binary.Operator.LogicalAndAlso:
+		case Binary.Operator.LogicalOrElse:
+			return type == bool_type;
+
+		case Binary.Operator.RightShift:
+		case Binary.Operator.LeftShift:
+			return IsFixedNumericType (type);
+
+		case Binary.Operator.Equality:
+		case Binary.Operator.Inequality:
+		case Binary.Operator.LessThan:
+		case Binary.Operator.LessThanOrEqual:
+		case Binary.Operator.GreaterThan:
+		case Binary.Operator.GreaterThanOrEqual:
+			return type == bool_type || type == date_type || type == char_type ||
+				type == string_type || IsNumericType (type) || IsEnumType (type);
+
+		case Binary.Operator.Addition:
+			return type == string_type || IsNumericType (type);
+
+		case Binary.Operator.Subtraction:
+		case Binary.Operator.Multiply:
+		case Binary.Operator.Division:
+		case Binary.Operator.Modulus:
+			return IsNumericType (type);
+
+		case Binary.Operator.IntegerDivision:
+			return IsFixedNumericType (type);
+		}
+
+		return false;
+	}
+
+	public static bool IsVBBinaryOperandCoercionExplicit (Binary.Operator oper)
+	{
+		switch (oper) {
+		case Binary.Operator.Like:
+		case Binary.Operator.Concatenation:
+		case Binary.Operator.LogicalAndAlso:
+		case Binary.Operator.LogicalOrElse:
+		case Binary.Operator.Exponentiation:
+			return true;
+		}
+
+		return false;
+	}
+
+	public static Type GetVBBinaryOperandCoercionTarget (Binary.Operator oper, Type operandType)
+	{
+		if (IsVBBinaryOperatorDefinedForType (oper, operandType))
+			return operandType;
+
+		switch (oper) {
+		case Binary.Operator.Addition:
+		case Binary.Operator.Subtraction:
+		case Binary.Operator.Multiply:
+			if (operandType == bool_type)
+				return short_type;
+			if (operandType == char_type || operandType == date_type)
+				return string_type;
+			break;
+
+		case Binary.Operator.Like:
+		case Binary.Operator.Concatenation:
+			return string_type;
+
+		case Binary.Operator.LogicalAndAlso:
+		case Binary.Operator.LogicalOrElse:
+			return bool_type;
+
+		case Binary.Operator.Exponentiation:
+			return double_type;
+		}
+
+		if (IsEnumType (operandType)) {
+			switch (oper) {
+			case Binary.Operator.Multiply:
+			case Binary.Operator.Division:
+			case Binary.Operator.Modulus:
+			case Binary.Operator.IntegerDivision:
+				return EnumToUnderlying (operandType);
+			}
+		}
+
+		return null;
+	}
+
+	public static Type GetVBStringOperandCoercionTarget (Type otherType)
+	{
+		if (otherType == date_type)
+			return date_type;
+		if (otherType == bool_type)
+			return bool_type;
+
+		return double_type;
+	}
+
+	public static Type GetVBBinaryPromotionInputType (Binary.Operator oper, Type type, Type other)
+	{
+		if (IsVBRelationalBinaryOperator (oper)) {
+			if (!IsEnumType (type))
+				return type;
+
+			if (IsEnumType (other))
+				return type;
+
+			return EnumToUnderlying (type);
+		}
+
+		if (!IsVBBitwiseBinaryOperator (oper))
+			return type;
+
+		if (!IsEnumType (type))
+			return type;
+
+		if (IsEnumType (other))
+			return type;
+
+		return EnumToUnderlying (type);
+	}
+
+	public static Type GetVBBinaryResultType (Binary.Operator oper, Type left, Type right)
+	{
+		return GetVBBinaryPromotedResultType (
+			oper,
+			GetVBBinaryPromotionInputType (oper, left, right),
+			GetVBBinaryPromotionInputType (oper, right, left));
+	}
+
+	static Type GetVBBinaryPromotedResultType (Binary.Operator oper, Type left, Type right)
+	{
+		if (left == right)
+			return left;
+
+		if (left == null_type)
+			return right;
+
+		if (right == null_type)
+			return left;
+
+		if (left == date_type || left == char_type) {
+			if (right == string_type)
+				return right;
+			return null;
+		}
+
+		if (right == date_type || right == char_type) {
+			if (left == string_type)
+				return left;
+			return null;
+		}
+
+		if (oper == Binary.Operator.Division) {
+			if (left == double_type || right == double_type)
+				return double_type;
+
+			if (left == float_type || right == float_type)
+				return float_type;
+
+			if (left == decimal_type || right == decimal_type)
+				return decimal_type;
+
+			if (IsFixedNumericType (left) && IsFixedNumericType (right))
+				return double_type;
+		}
+
+		Type integral_type = GetVBBinaryIntegralResultType (oper, left, right);
+		if (integral_type != null)
+			return integral_type;
+
+		object left_order = relative_type_order[left];
+		if (left_order == null)
+			return null;
+
+		object right_order = relative_type_order[right];
+		if (right_order == null)
+			return null;
+
+		if ((int) left_order > (int) right_order)
+			return left;
+
+		return right;
+	}
+
 	public static Type GetVBUnaryMinusResultType (Type type)
 	{
 		if (type == sbyte_type)

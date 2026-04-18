@@ -3320,13 +3320,7 @@ namespace Mono.CSharp {
 					break;
 
 				if (target_left_expr_type == TypeManager.string_type) {
-					Type target_type;
-					if (target_right_expr_type == TypeManager.date_type)
-						target_type = TypeManager.date_type;
-					else if (target_right_expr_type == TypeManager.bool_type)
-						target_type = TypeManager.bool_type;
-					else
-						target_type = TypeManager.double_type;
+					Type target_type = TypeManager.GetVBStringOperandCoercionTarget (target_right_expr_type);
 
 					if (l == target_type)
 						target_left_expr = left;
@@ -3343,13 +3337,7 @@ namespace Mono.CSharp {
 				}
 
 				if (target_right_expr_type == TypeManager.string_type) {
-					Type target_type;
-					if (target_left_expr_type == TypeManager.date_type)
-						target_type = TypeManager.date_type;
-					else if (target_left_expr_type == TypeManager.bool_type)
-						target_type = TypeManager.bool_type;
-					else
-						target_type = TypeManager.double_type;
+					Type target_type = TypeManager.GetVBStringOperandCoercionTarget (target_left_expr_type);
 
 					if (r == target_type)
 						target_right_expr = right;
@@ -3376,249 +3364,26 @@ namespace Mono.CSharp {
 
 		bool IsOperatorDefinedForType (Type t)
 		{
-			if (t == TypeManager.null_type)
-				return true;
-		
-			switch (oper) {
-
-			case Operator.Exponentiation:
-				if (t == TypeManager.double_type)
-					return true;
-				break;
-
-			case Operator.Concatenation:
-			case Operator.Like:	
-				if (t == TypeManager.string_type)
-					return true;
-
-				break;
-
-			case Operator.BitwiseAnd:
-			case Operator.BitwiseOr:
-			case Operator.ExclusiveOr:
-				if (t == TypeManager.bool_type ||
-				    TypeManager.IsFixedNumericType (t) ||
-				    TypeManager.IsEnumType (t))
-					return true;
-
-				break;
-
-			case Operator.LogicalAndAlso:
-			case Operator.LogicalOrElse:
-				if (t == TypeManager.bool_type)
-					return true;
-				break;
-
-			case Operator.RightShift:
-			case Operator.LeftShift:
-
-				if (TypeManager.IsFixedNumericType (t))
-					return true;
-
-				break;
-
-			case Operator.Equality:
-			case Operator.Inequality:
-			case Operator.LessThan:
-			case Operator.LessThanOrEqual:
-			case Operator.GreaterThan:
-			case Operator.GreaterThanOrEqual:
-				// VB enums participate in numeric comparison through their
-				// underlying integral type, and the later enum-specific
-				// operator path handles the actual coercion/result typing.
-				if (t == TypeManager.bool_type ||
-				    t == TypeManager.date_type ||
-				    t == TypeManager.char_type ||
-				    t == TypeManager.string_type ||
-				    TypeManager.IsNumericType (t) ||
-				    TypeManager.IsEnumType (t))
-					return true;
-
-				break;
-				
-			case Operator.Addition:
-				if (t == TypeManager.string_type ||
-				    TypeManager.IsNumericType (t))
-					return true;
-				break;
-				
-			case Operator.Subtraction:
-			case Operator.Multiply:
-			case Operator.Division:
-			case Operator.Modulus:				
-				if (TypeManager.IsNumericType (t))
-					return true;
-				break;
-
-			case Operator.IntegerDivision:
-				if (TypeManager.IsFixedNumericType (t))
-					return true;
-				
-				break;
-			}
-
-			return false;
+			return TypeManager.IsVBBinaryOperatorDefinedForType (oper, t);
 		}
 
 
 		Expression ConvertOperandToDefinedType (EmitContext ec, Expression expr)
 		{
-			Type target_type = null;
 			Type operand_type = expr.Type;
 			
 			if (IsOperatorDefinedForType (operand_type))
 				return expr;
-				
-			switch (oper) {
-			case Operator.Addition:
-			case Operator.Subtraction:
-			case Operator.Multiply:
-				if (operand_type == TypeManager.bool_type)
-					target_type = TypeManager.short_type;
-					
-				if (operand_type == TypeManager.char_type)
-					target_type = TypeManager.string_type;
 
-				if (operand_type == TypeManager.date_type)
-					target_type = TypeManager.string_type;
-					
-				break;
-
-			case Operator.Division:
-			case Operator.Modulus:
-			case Operator.IntegerDivision:
-				break;
-
-			case Operator.Like:
-			case Operator.Concatenation:
-				return Convert.ExplicitVBConversion(ec, expr, TypeManager.string_type, expr.Location);
-				break;
-
-			case Operator.LogicalAndAlso:
-			case Operator.LogicalOrElse:
-				return Convert.ExplicitVBConversion(ec, expr, TypeManager.bool_type, expr.Location);
-				break;
-
-			case Operator.Exponentiation:
-				return Convert.ExplicitVBConversion(ec, expr, TypeManager.double_type, expr.Location);
-				break;
-
-			}
-
-			if (target_type == null && TypeManager.IsEnumType (operand_type)) {
-				switch (oper) {
-				case Operator.Multiply:
-				case Operator.Division:
-				case Operator.Modulus:
-				case Operator.IntegerDivision:
-					// VB keeps enum-specific + / - behavior in TryResolveEnumArithmetic.
-					// The remaining arithmetic operators first widen enums to their
-					// underlying integral type and then use the ordinary numeric binder.
-					target_type = TypeManager.EnumToUnderlying (operand_type);
-					break;
-				}
-			}
+			Type target_type = TypeManager.GetVBBinaryOperandCoercionTarget (oper, operand_type);
 
 			if (target_type != null)
-				return Convert.ImplicitVBConversion(ec, expr, target_type, expr.Location);
+				if (TypeManager.IsVBBinaryOperandCoercionExplicit (oper))
+					return Convert.ExplicitVBConversion (ec, expr, target_type, expr.Location);
+				else
+					return Convert.ImplicitVBConversion (ec, expr, target_type, expr.Location);
 
 			return null;
-		}
-
-		Type GetWiderOfTypes (Type t1, Type t2)
-		{
-			// char array and Nothing should be handled here ?
-
-		
-			if (t1 == t2)
-				return t1;
-
-			if(t1 == TypeManager.null_type)
-				return t2;
-
-			if (t2 == TypeManager.null_type)
-				return t1;
-
-			if (t1 == TypeManager.date_type || t1 == TypeManager.char_type) {
-				if (t2 == TypeManager.string_type)
-					return t2;
-				else
-					return null;
-			}
-			
-			if (t2 == TypeManager.date_type || t2 == TypeManager.char_type) {
-				if (t1 == TypeManager.string_type)
-					return t1;
-				else
-					return null;
-			}
-
-			if (oper == Operator.Division) {
-				if (t1 == TypeManager.double_type || t2 == TypeManager.double_type)
-					return TypeManager.double_type;
-
-				if (t1 == TypeManager.float_type || t2 == TypeManager.float_type)
-					return TypeManager.float_type;
-
-				if (t1 == TypeManager.decimal_type || t2 == TypeManager.decimal_type)
-					return TypeManager.decimal_type;
-
-				if (TypeManager.IsFixedNumericType (t1) && TypeManager.IsFixedNumericType (t2))
-					return TypeManager.double_type;
-			}
-
-			Type integral_type = TypeManager.GetVBBinaryIntegralResultType (oper, t1, t2);
-			if (integral_type != null)
-				return integral_type;
-
-			object order1 = TypeManager.relative_type_order[t1];
-			if (order1 == null)
-				return null;
-			
-			object order2 = TypeManager.relative_type_order[t2];
-
-			if (order2 == null)
-				return null;
-			
-			if ((int) order1 > (int) order2)
-				return t1;
-			else
-				return t2;
-
-		}
-
-		Type GetPromotionType (Type t, Type other)
-		{
-			if (IsRelationalExpression) {
-				if (!TypeManager.IsEnumType (t))
-					return t;
-
-				// Mixed enum/numeric comparisons follow the enum's underlying
-				// integral type. Keep enum/enum comparisons on the enum path so
-				// different enum types still fail instead of silently collapsing
-				// to their shared underlying primitive type.
-				if (TypeManager.IsEnumType (other))
-					return t;
-
-				return TypeManager.EnumToUnderlying (t);
-			}
-
-			if (oper != Operator.BitwiseAnd &&
-			    oper != Operator.BitwiseOr &&
-			    oper != Operator.ExclusiveOr)
-				return t;
-
-			if (!TypeManager.IsEnumType (t))
-				return t;
-
-			// VB permits flags-style masks such as `value And 16` by widening
-			// the enum operand to its underlying integral type. Keep enum/enum
-			// bitwise expressions on the enum path so `Bits.A And Bits.B`
-			// still yields the enum type.
-			if (TypeManager.IsEnumType (other))
-				return t;
-
-			return TypeManager.EnumToUnderlying (t);
 		}
 
 		bool DoOperandPromotions (EmitContext ec, Expression target_left_expr, Expression target_right_expr)
@@ -3626,9 +3391,7 @@ namespace Mono.CSharp {
 			Type l = target_left_expr.Type;
 			Type r = target_right_expr.Type;
 
-			Type target_type = GetWiderOfTypes (
-				GetPromotionType (l, r),
-				GetPromotionType (r, l));
+			Type target_type = TypeManager.GetVBBinaryResultType (oper, l, r);
 
 			//Console.WriteLine ("		DoingOperandPromotions");
 			//Console.WriteLine ("         left => " + l + " right => " + r);
