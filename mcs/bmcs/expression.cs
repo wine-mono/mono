@@ -9157,7 +9157,7 @@ namespace Mono.CSharp {
 		{
 			ILGenerator ig = ec.ig;
 			
-			if (ec.TypeContainer is Struct){
+			if (TypeManager.IsValueType (type)){
 				ec.EmitThis ();
 				source.Emit (ec);
 				if (leave_copy)
@@ -9173,7 +9173,7 @@ namespace Mono.CSharp {
 			ILGenerator ig = ec.ig;
 
 			ec.EmitThis ();
-			if (ec.TypeContainer is Struct)
+			if (TypeManager.IsValueType (type))
 				ig.Emit (OpCodes.Ldobj, type);
 		}
 
