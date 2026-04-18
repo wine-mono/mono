@@ -554,7 +554,16 @@ namespace Mono.CSharp {
 			for (int i = 0; i <= top; i++)
 				ParameterReference.EmitLdArg (ig, i);
 
-			ig.Emit (OpCodes.Call, base_method);
+			//
+			// Interface dispatch on an overriding type must see the most-derived
+			// implementation, not the inherited base body that triggered proxy
+			// synthesis. Use virtual dispatch for overridable reference-type
+			// methods and fall back to a direct call otherwise.
+			//
+			if (base_method.IsVirtual && !base_method.IsFinal && !base_method.DeclaringType.IsValueType)
+				ig.Emit (OpCodes.Callvirt, base_method);
+			else
+				ig.Emit (OpCodes.Call, base_method);
 			ig.Emit (OpCodes.Ret);
 
 			container.TypeBuilder.DefineMethodOverride (proxy, iface_method);
