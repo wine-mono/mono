@@ -36,7 +36,7 @@ namespace Mono.CSharp {
 				      TypeManager.CSharpName (target) + "'");
 		}
 
-		static Expression TypeParameter_to_Null (Expression expr, Type target_type,
+		static Expression TypeParameter_to_Null (EmitContext ec, Expression expr, Type target_type,
 							 Location loc)
 		{
 			if (!TypeParameter_to_Null (target_type)) {
@@ -44,8 +44,10 @@ namespace Mono.CSharp {
 				// default value of that target type. Unconstrained type
 				// parameters therefore lower to default(T) instead of using
 				// the C#-style CS0403 error.
+				// Resolve immediately so DefaultValueExpression can allocate
+				// its temporary storage before emit.
 				return new DefaultValueExpression (
-					new TypeExpression (target_type, loc), loc);
+					new TypeExpression (target_type, loc), loc).Resolve (ec);
 			}
 
 			return new NullCast (expr, target_type);
@@ -1337,7 +1339,7 @@ namespace Mono.CSharp {
 
 			if (expr is NullLiteral) {
 				if (target_type.IsGenericParameter)
-					return TypeParameter_to_Null (expr, target_type, loc);
+					return TypeParameter_to_Null (ec, expr, target_type, loc);
 
 				if (TypeManager.IsNullableType (target_type))
 					return new Nullable.NullableLiteral (target_type, loc);
@@ -2610,7 +2612,7 @@ namespace Mono.CSharp {
 
 			if (expr is NullLiteral) {
 				if (target_type.IsGenericParameter)
-					return TypeParameter_to_Null (expr, target_type, loc);
+					return TypeParameter_to_Null (ec, expr, target_type, loc);
 
 				if (TypeManager.IsNullableType (target_type))
 					return new Nullable.NullableLiteral (target_type, loc);
