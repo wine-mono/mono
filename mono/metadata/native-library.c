@@ -512,7 +512,7 @@ legacy_probe_for_module_relative_directories (MonoImage *image, const char *file
 
 		switch (j) {
 			case 0:
-				mdirname = g_path_get_dirname (image->filename);
+				mdirname = image->filename ? g_path_get_dirname (image->filename) : NULL;
 				break;
 			case 1: // @executable_path@/../lib
 			{
