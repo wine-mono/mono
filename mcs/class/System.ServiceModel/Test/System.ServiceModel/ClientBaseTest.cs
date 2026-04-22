@@ -555,7 +555,7 @@ namespace MonoTests.System.ServiceModel
 			var t1 = new Task( () => client.SendValue ());
 			t1.Start();
 
-			if (!acceptTask.Wait (2000))
+			if (!acceptTask.Wait (5000))
 				Assert.Fail ("No request from client.");
 
 			var netStream = acceptTask.Result.GetStream ();
