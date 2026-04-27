@@ -56,14 +56,21 @@ namespace MonoTests.System.Windows.Forms
 		[Test]
 		public void PreferredHeight ()
 		{
+			Form f = new Form ();
+			f.ShowInTaskbar = false;
+			f.Show ();
+
 			Label l = new Label();
-			Assert.AreEqual (l.PreferredHeight, (l.Font.Height + 3), "#1");
+			l.AutoSize = true;
+			f.Controls.Add (l);
+
+			Assert.AreEqual ((l.Font.Height + 3), l.PreferredHeight, "#1");
 			
 			l.BorderStyle = BorderStyle.None;
-			Assert.AreEqual (l.PreferredHeight, (l.Font.Height + 3), "#2");
+			Assert.AreEqual ((l.Font.Height + 3), l.PreferredHeight, "#2");
 			
 			l.BorderStyle = BorderStyle.FixedSingle;
-			Assert.AreEqual (l.PreferredHeight, (l.Font.Height + 6), "#3");
+			Assert.AreEqual ((l.Font.Height + 6), l.PreferredHeight, "#3");
 			
 			l.BorderStyle = BorderStyle.Fixed3D;
 			Assert.AreEqual (l.PreferredHeight, (l.Font.Height + 6), "#4");
@@ -71,13 +78,15 @@ namespace MonoTests.System.Windows.Forms
 			l.UseCompatibleTextRendering = false;
 			
 			l.BorderStyle = BorderStyle.None;
-			Assert.AreEqual (l.PreferredHeight, (l.Font.Height), "#5");
+			Assert.AreEqual ((l.Font.Height), l.PreferredHeight, "#5");
 			
 			l.BorderStyle = BorderStyle.FixedSingle;
-			Assert.AreEqual (l.PreferredHeight, (l.Font.Height), "#6");
+			Assert.AreEqual ((l.Font.Height + 2), l.PreferredHeight, "#6");
 			
 			l.BorderStyle = BorderStyle.Fixed3D;
-			Assert.AreEqual (l.PreferredHeight, (l.Font.Height), "#7");
+			Assert.AreEqual ((l.Font.Height + 2), l.PreferredHeight, "#7");
+
+			f.Dispose ();
 		}
 		
 		[Test]
