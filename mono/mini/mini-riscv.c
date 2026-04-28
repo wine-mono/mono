@@ -432,16 +432,6 @@ mono_arch_regalloc_cost (MonoCompile *cfg, MonoMethodVar *vmv)
 	return cfg->varinfo [vmv->idx]->opcode == OP_ARG ? 1 : 2;
 }
 
-#ifdef ENABLE_LLVM
-
-LLVMCallInfo*
-mono_arch_get_llvm_call_info (MonoCompile *cfg, MonoMethodSignature *sig)
-{
-	NOT_IMPLEMENTED;
-}
-
-#endif
-
 void
 mono_arch_create_vars (MonoCompile *cfg)
 {

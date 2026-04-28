@@ -191,14 +191,6 @@
   <Import Project="mono.external.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
-  <Target Name="_SetupMonoLLVMLinkItems" Condition="$(MONO_ENABLE_LLVM)=='true'">
-    <ItemGroup>
-      <Link>
-        <AdditionalLibraryDirectories>$(MONO_LLVM_LIB_DIR);%(Lib.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-        <AdditionalDependencies>$(MONO_LLVM_LIBS);%(Lib.AdditionalDependencies)</AdditionalDependencies>
-      </Link>
-    </ItemGroup>
-  </Target>
   <Target Name="_ConfigureExternalLinkDependency" DependsOnTargets="_ConfigureExternalMonoBuildEnvironment;_SetupMonoLLVMBuildProperties;_SetupMonoLLVMLinkItems" />
   <PropertyGroup>
     <ComputeLibInputsTargets>

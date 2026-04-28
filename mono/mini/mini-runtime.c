@@ -99,12 +99,6 @@
 #include "mini-runtime.h"
 #include "interp/interp.h"
 
-#ifdef MONO_ARCH_LLVM_SUPPORTED
-#ifdef ENABLE_LLVM
-#include "mini-llvm-cpp.h"
-#include "llvm-jit.h"
-#endif
-#endif
 #include "mono/metadata/icall-signatures.h"
 #include "mono/utils/mono-tls-inline.h"
 
@@ -4260,22 +4254,10 @@ mini_free_jit_domain_info (MonoDomain *domain)
 		g_hash_table_destroy (info->llvm_jit_callees);
 	}
 	mono_internal_hash_table_destroy (&info->interp_code_hash);
-#ifdef ENABLE_LLVM
-	mono_llvm_free_domain_info (domain);
-#endif
 
 	g_free (domain->runtime_info);
 	domain->runtime_info = NULL;
 }
-
-#ifdef ENABLE_LLVM
-static gboolean
-llvm_init_inner (void)
-{
-	mono_llvm_init (!mono_compile_aot);
-	return TRUE;
-}
-#endif
 
 /*
  * mini_llvm_init:
@@ -4286,20 +4268,7 @@ llvm_init_inner (void)
 gboolean
 mini_llvm_init (void)
 {
-#ifdef ENABLE_LLVM
-	static gboolean llvm_inited;
-	static gboolean init_result;
-
-	mono_loader_lock_if_inited ();
-	if (!llvm_inited) {
-		init_result = llvm_init_inner ();
-		llvm_inited = TRUE;
-	}
-	mono_loader_unlock_if_inited ();
-	return init_result;
-#else
 	return FALSE;
-#endif
 }
 
 void
@@ -4521,11 +4490,6 @@ mini_init (const char *filename, const char *runtime_version)
 	}
 #endif
 
-#ifdef ENABLE_LLVM
-	if (mono_use_llvm)
-		mono_llvm_init (!mono_compile_aot);
-#endif
-
 	mono_trampolines_init ();
 
 	if (default_opt & MONO_OPT_AOT)
@@ -4723,14 +4687,6 @@ register_icalls (void)
 	register_icall (mono_llvm_clear_exception, NULL, TRUE);
 	register_icall (mono_llvm_load_exception, mono_icall_sig_object, TRUE);
 	register_icall (mono_llvm_throw_corlib_exception, mono_icall_sig_void_int, TRUE);
-#if defined(ENABLE_LLVM) && defined(HAVE_UNWIND_H)
-	register_icall (mono_llvm_set_unhandled_exception_handler, NULL, TRUE);
-
-	// FIXME: This is broken
-#ifndef TARGET_WASM
-	register_icall (mono_debug_personality, mono_icall_sig_int_int_int_ptr_ptr_ptr, TRUE);
-#endif
-#endif
 
 	if (!mono_llvm_only) {
 		register_dyn_icall (mono_get_throw_exception (), mono_arch_throw_exception, mono_icall_sig_void_object, TRUE);
@@ -5110,11 +5066,6 @@ mini_cleanup (MonoDomain *domain)
 	mono_domain_free (domain, TRUE);
 #endif
 	free_jit_tls_data (mono_tls_get_jit_tls ());
-
-#ifdef ENABLE_LLVM
-	if (mono_use_llvm)
-		mono_llvm_cleanup ();
-#endif
 
 	mono_aot_cleanup ();
 

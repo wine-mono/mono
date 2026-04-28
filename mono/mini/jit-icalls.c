@@ -29,10 +29,6 @@
 #include <mono/utils/mono-math.h>
 #include "mono/utils/mono-tls-inline.h"
 
-#ifdef ENABLE_LLVM
-#include "mini-llvm-cpp.h"
-#endif
-
 void*
 mono_ldftn (MonoMethod *method)
 {

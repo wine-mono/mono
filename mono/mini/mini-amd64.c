@@ -2072,140 +2072,6 @@ emit_sig_cookie (MonoCompile *cfg, MonoCallInst *call, CallInfo *cinfo)
 	MONO_EMIT_NEW_STORE_MEMBASE (cfg, OP_STORE_MEMBASE_REG, AMD64_RSP, cinfo->sig_cookie.offset, sig_reg);
 }
 
-#ifdef ENABLE_LLVM
-static LLVMArgStorage
-arg_storage_to_llvm_arg_storage (MonoCompile *cfg, ArgStorage storage)
-{
-	switch (storage) {
-	case ArgInIReg:
-		return LLVMArgInIReg;
-	case ArgNone:
-		return LLVMArgNone;
-	case ArgGSharedVtInReg:
-	case ArgGSharedVtOnStack:
-		return LLVMArgGSharedVt;
-	default:
-		g_assert_not_reached ();
-		return LLVMArgNone;
-	}
-}
-
-LLVMCallInfo*
-mono_arch_get_llvm_call_info (MonoCompile *cfg, MonoMethodSignature *sig)
-{
-	int i, n;
-	CallInfo *cinfo;
-	ArgInfo *ainfo;
-	int j;
-	LLVMCallInfo *linfo;
-	MonoType *t, *sig_ret;
-
-	n = sig->param_count + sig->hasthis;
-	sig_ret = mini_get_underlying_type (sig->ret);
-
-	cinfo = get_call_info (cfg->mempool, sig);
-
-	linfo = mono_mempool_alloc0 (cfg->mempool, sizeof (LLVMCallInfo) + (sizeof (LLVMArgInfo) * n));
-
-	/*
-	 * LLVM always uses the native ABI while we use our own ABI, the
-	 * only difference is the handling of vtypes:
-	 * - we only pass/receive them in registers in some cases, and only 
-	 *   in 1 or 2 integer registers.
-	 */
-	switch (cinfo->ret.storage) {
-	case ArgNone:
-		linfo->ret.storage = LLVMArgNone;
-		break;
-	case ArgInIReg:
-	case ArgInFloatSSEReg:
-	case ArgInDoubleSSEReg:
-		linfo->ret.storage = LLVMArgNormal;
-		break;
-	case ArgValuetypeInReg: {
-		ainfo = &cinfo->ret;
-
-		if (sig->pinvoke &&
-			(ainfo->pair_storage [0] == ArgInFloatSSEReg || ainfo->pair_storage [0] == ArgInDoubleSSEReg ||
-			 ainfo->pair_storage [1] == ArgInFloatSSEReg || ainfo->pair_storage [1] == ArgInDoubleSSEReg)) {
-			cfg->exception_message = g_strdup ("pinvoke + vtype ret");
-			cfg->disable_llvm = TRUE;
-			return linfo;
-		}
-
-		linfo->ret.storage = LLVMArgVtypeInReg;
-		for (j = 0; j < 2; ++j)
-			linfo->ret.pair_storage [j] = arg_storage_to_llvm_arg_storage (cfg, ainfo->pair_storage [j]);
-		break;
-	}
-	case ArgValuetypeAddrInIReg:
-	case ArgGsharedvtVariableInReg:
-		/* Vtype returned using a hidden argument */
-		linfo->ret.storage = LLVMArgVtypeRetAddr;
-		linfo->vret_arg_index = cinfo->vret_arg_index;
-		break;
-	default:
-		g_assert_not_reached ();
-		break;
-	}
-
-	for (i = 0; i < n; ++i) {
-		ainfo = cinfo->args + i;
-
-		if (i >= sig->hasthis)
-			t = sig->params [i - sig->hasthis];
-		else
-			t = mono_get_int_type ();
-		t = mini_type_get_underlying_type (t);
-
-		linfo->args [i].storage = LLVMArgNone;
-
-		switch (ainfo->storage) {
-		case ArgInIReg:
-			linfo->args [i].storage = LLVMArgNormal;
-			break;
-		case ArgInDoubleSSEReg:
-		case ArgInFloatSSEReg:
-			linfo->args [i].storage = LLVMArgNormal;
-			break;
-		case ArgOnStack:
-			if (MONO_TYPE_ISSTRUCT (t))
-				linfo->args [i].storage = LLVMArgVtypeByVal;
-			else
-				linfo->args [i].storage = LLVMArgNormal;
-			break;
-		case ArgValuetypeInReg:
-			if (sig->pinvoke &&
-				(ainfo->pair_storage [0] == ArgInFloatSSEReg || ainfo->pair_storage [0] == ArgInDoubleSSEReg ||
-				 ainfo->pair_storage [1] == ArgInFloatSSEReg || ainfo->pair_storage [1] == ArgInDoubleSSEReg)) {
-				cfg->exception_message = g_strdup ("pinvoke + vtypes");
-				cfg->disable_llvm = TRUE;
-				return linfo;
-			}
-
-			linfo->args [i].storage = LLVMArgVtypeInReg;
-			for (j = 0; j < 2; ++j)
-				linfo->args [i].pair_storage [j] = arg_storage_to_llvm_arg_storage (cfg, ainfo->pair_storage [j]);
-			break;
-		case ArgGSharedVtInReg:
-		case ArgGSharedVtOnStack:
-			linfo->args [i].storage = LLVMArgGSharedVt;
-			break;
-		case ArgValuetypeAddrInIReg:
-		case ArgValuetypeAddrOnStack:
-			linfo->args [i].storage = LLVMArgVtypeAddr;
-			break;
-		default:
-			cfg->exception_message = g_strdup ("ainfo->storage");
-			cfg->disable_llvm = TRUE;
-			break;
-		}
-	}
-
-	return linfo;
-}
-#endif
-
 void
 mono_arch_emit_call (MonoCompile *cfg, MonoCallInst *call)
 {
@@ -2219,12 +2085,6 @@ mono_arch_emit_call (MonoCompile *cfg, MonoCallInst *call)
 	n = sig->param_count + sig->hasthis;
 
 	cinfo = get_call_info (cfg->mempool, sig);
-
-	if (COMPILE_LLVM (cfg)) {
-		/* We shouldn't be called in the llvm case */
-		cfg->disable_llvm = TRUE;
-		return;
-	}
 
 	/* 
 	 * Emit all arguments which are passed on the stack to prevent register
@@ -2517,10 +2377,7 @@ mono_arch_emit_setret (MonoCompile *cfg, MonoMethod *method, MonoInst *val)
 	MonoType *ret = mini_get_underlying_type (mono_method_signature_internal (method)->ret);
 
 	if (ret->type == MONO_TYPE_R4) {
-		if (COMPILE_LLVM (cfg))
-			MONO_EMIT_NEW_UNALU (cfg, OP_FMOVE, cfg->ret->dreg, val->dreg);
-		else
-			MONO_EMIT_NEW_UNALU (cfg, OP_AMD64_SET_XMMREG_R4, cfg->ret->dreg, val->dreg);
+		MONO_EMIT_NEW_UNALU (cfg, OP_AMD64_SET_XMMREG_R4, cfg->ret->dreg, val->dreg);
 		return;
 	} else if (ret->type == MONO_TYPE_R8) {
 		MONO_EMIT_NEW_UNALU (cfg, OP_FMOVE, cfg->ret->dreg, val->dreg);

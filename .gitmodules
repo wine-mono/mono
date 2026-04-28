@@ -61,10 +61,6 @@
 [submodule "external/illinker-test-assets"]
 	path = external/illinker-test-assets
 	url = https://github.com/mono/illinker-test-assets.git
-[submodule "external/llvm-project"]
-	path = external/llvm-project
-	url = https://github.com/dotnet/llvm-project.git
-	branch = release/6.x
 [submodule "external/bdwgc"]
 	path = external/bdwgc
 	url = https://gitlab.winehq.org/mono/bdwgc.git

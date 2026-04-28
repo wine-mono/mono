@@ -164,11 +164,6 @@ mono_llvm_add_param_attr (LLVMValueRef param, AttrKind kind);
 void
 mono_llvm_add_instr_attr (LLVMValueRef val, int index, AttrKind kind);
 
-#if defined(ENABLE_LLVM) && defined(HAVE_UNWIND_H)
-G_EXTERN_C _Unwind_Reason_Code mono_debug_personality (int a, _Unwind_Action b,
-	uint64_t c, struct _Unwind_Exception *d, struct _Unwind_Context *e);
-#endif
-
 void*
 mono_llvm_create_di_builder (LLVMModuleRef module);
 

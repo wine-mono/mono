@@ -46,8 +46,3 @@ $(AOTDIR)/%.exe: %.exe
 
 $(AOTDIR)/tests.exe: $(AOTDIR)/TestDriver.dll $(AOTDIR)/jitonly.dll $(AOTDIR)/interponly.dll
 
-if ENABLE_LLVM
-check: $(AOT_IMAGES)
-	MONO_PATH=$(AOTDIR) $(MONO_EXE) --aot-path=$(AOTDIR) --llvmonly-interp $(AOTDIR)/tests.exe
-endif
-

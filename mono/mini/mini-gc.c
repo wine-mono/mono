@@ -1283,9 +1283,6 @@ thread_mark_func (gpointer user_data, guint8 *stack_start, guint8 *stack_end, gb
 static void
 mini_gc_init_gc_map (MonoCompile *cfg)
 {
-	if (COMPILE_LLVM (cfg))
-		return;
-
 	if (!mono_gc_is_moving ())
 		return;
 

@@ -110,220 +110,6 @@ mini_emit_inst_for_ctor (MonoCompile *cfg, MonoMethod *cmethod, MonoMethodSignat
 }
 
 static MonoInst*
-llvm_emit_inst_for_method (MonoCompile *cfg, MonoMethod *cmethod, MonoMethodSignature *fsig, MonoInst **args, gboolean in_corlib)
-{
-	MonoInst *ins = NULL;
-	int opcode = 0;
-	// Convert Math and MathF methods into LLVM intrinsics, e.g. MathF.Sin -> @llvm.sin.f32
-	if (in_corlib && !strcmp (m_class_get_name (cmethod->klass), "MathF") && cfg->r4fp) {
-		// (float)
-		if (fsig->param_count == 1 && fsig->params [0]->type == MONO_TYPE_R4) {
-			if (!strcmp (cmethod->name, "Ceiling")) {
-				opcode = OP_CEILF;
-			} else if (!strcmp (cmethod->name, "Cos")) {
-				opcode = OP_COSF;
-			} else if (!strcmp (cmethod->name, "Exp")) {
-				opcode = OP_EXPF;
-			} else if (!strcmp (cmethod->name, "Floor")) {
-				opcode = OP_FLOORF;
-			} else if (!strcmp (cmethod->name, "Log2")) {
-				opcode = OP_LOG2F;
-			} else if (!strcmp (cmethod->name, "Log10")) {
-				opcode = OP_LOG10F;
-			} else if (!strcmp (cmethod->name, "Sin")) {
-				opcode = OP_SINF;
-			} else if (!strcmp (cmethod->name, "Sqrt")) {
-				opcode = OP_SQRTF;
-			} else if (!strcmp (cmethod->name, "Truncate")) {
-				opcode = OP_TRUNCF;
-			}
-#if defined(TARGET_X86) || defined(TARGET_AMD64)
-			else if (!strcmp (cmethod->name, "Round") && (mini_get_cpu_features (cfg) & MONO_CPU_X86_SSE41) != 0) {
-				// special case: emit vroundps for MathF.Round directly instead of what llvm.round.f32 emits
-				// to align with CoreCLR behavior
-				int xreg = alloc_xreg (cfg);
-				EMIT_NEW_UNALU (cfg, ins, OP_FCONV_TO_R4_X, xreg, args [0]->dreg);
-				EMIT_NEW_UNALU (cfg, ins, OP_SSE41_ROUNDS, xreg, xreg);
-				ins->inst_c0 = 0x4; // vroundss xmm0, xmm0, xmm0, 0x4 (mode for rounding)
-				ins->inst_c1 = MONO_TYPE_R4;
-				int dreg = alloc_freg (cfg);
-				EMIT_NEW_UNALU (cfg, ins, OP_EXTRACT_R4, dreg, xreg);
-				return ins;
-			}
-#endif
-		}
-		// (float, float)
-		if (fsig->param_count == 2 && fsig->params [0]->type == MONO_TYPE_R4 && fsig->params [1]->type == MONO_TYPE_R4) {
-			if (!strcmp (cmethod->name, "Pow")) {
-				opcode = OP_RPOW;
-			} else if (!strcmp (cmethod->name, "CopySign")) {
-				opcode = OP_RCOPYSIGN;
-			}
-		}
-		// (float, float, float)
-		if (fsig->param_count == 3 && fsig->params [0]->type == MONO_TYPE_R4 && fsig->params [1]->type == MONO_TYPE_R4 && fsig->params [2]->type == MONO_TYPE_R4) {
-			if (!strcmp (cmethod->name, "FusedMultiplyAdd")) {
-				opcode = OP_FMAF;
-			}
-		}
-
-		if (opcode) {
-			MONO_INST_NEW (cfg, ins, opcode);
-			ins->type = STACK_R8;
-			ins->dreg = mono_alloc_dreg (cfg, (MonoStackType)ins->type);
-			ins->sreg1 = args [0]->dreg;
-			if (fsig->param_count > 1) {
-				ins->sreg2 = args [1]->dreg;
-			}
-			if (fsig->param_count > 2) {
-				ins->sreg3 = args [2]->dreg;
-			}
-			g_assert (fsig->param_count <= 3);
-			MONO_ADD_INS (cfg->cbb, ins);
-		}
-	}
-
-	if (cmethod->klass == mono_class_try_get_math_class ()) {
-		// (double)
-		if (fsig->param_count == 1 && fsig->params [0]->type == MONO_TYPE_R8) {
-			if (!strcmp (cmethod->name, "Abs")) {
-				opcode = OP_ABS;
-			} else if (!strcmp (cmethod->name, "Ceiling")) {
-				opcode = OP_CEIL;
-			} else if (!strcmp (cmethod->name, "Cos")) {
-				opcode = OP_COS;
-			} else if (!strcmp (cmethod->name, "Exp")) {
-				opcode = OP_EXP;
-			} else if (!strcmp (cmethod->name, "Floor")) {
-				opcode = OP_FLOOR;
-			} else if (!strcmp (cmethod->name, "Log")) {
-				opcode = OP_LOG;
-			} else if (!strcmp (cmethod->name, "Log2")) {
-				opcode = OP_LOG2;
-			} else if (!strcmp (cmethod->name, "Log10")) {
-				opcode = OP_LOG10;
-			} else if (!strcmp (cmethod->name, "Sin")) {
-				opcode = OP_SIN;
-			} else if (!strcmp (cmethod->name, "Sqrt")) {
-				opcode = OP_SQRT;
-			} else if (!strcmp (cmethod->name, "Truncate")) {
-				opcode = OP_TRUNC;
-			}
-		}
-		// (double, double)
-		if (fsig->param_count == 2 && fsig->params [0]->type == MONO_TYPE_R8 && fsig->params [1]->type == MONO_TYPE_R8) {
-			// Max and Min can only be optimized in fast math mode
-			if (!strcmp (cmethod->name, "Max") && mono_use_fast_math) {
-				opcode = OP_FMAX; 
-			} else if (!strcmp (cmethod->name, "Min") && mono_use_fast_math) {
-				opcode = OP_FMIN;
-			} else if (!strcmp (cmethod->name, "Pow")) {
-				opcode = OP_FPOW;
-			} else if (!strcmp (cmethod->name, "CopySign")) {
-				opcode = OP_FCOPYSIGN;
-			}
-		}
-		// (double, double, double)
-		if (fsig->param_count == 3 && fsig->params [0]->type == MONO_TYPE_R8 && fsig->params [1]->type == MONO_TYPE_R8 && fsig->params [2]->type == MONO_TYPE_R8) {
-			if (!strcmp (cmethod->name, "FusedMultiplyAdd")) {
-				opcode = OP_FMA;
-			}
-		}
-
-		// Math also contains overloads for floats (MathF inlines them)
-		// (float)
-		if (fsig->param_count == 1 && fsig->params [0]->type == MONO_TYPE_R4) {
-			if (!strcmp (cmethod->name, "Abs")) {
-				opcode = OP_ABSF;
-			}
-		}
-		// (float, float)
-		if (fsig->param_count == 2 && fsig->params [0]->type == MONO_TYPE_R4 && fsig->params [1]->type == MONO_TYPE_R4) {
-			if (!strcmp (cmethod->name, "Max") && mono_use_fast_math) {
-				opcode = OP_RMAX; 
-			} else if (!strcmp (cmethod->name, "Min") && mono_use_fast_math) {
-				opcode = OP_RMIN;
-			} else if (!strcmp (cmethod->name, "Pow")) {
-				opcode = OP_RPOW;
-			}
-		}
-
-		if (opcode && fsig->param_count > 0) {
-			MONO_INST_NEW (cfg, ins, opcode);
-			ins->type = STACK_R8;
-			ins->dreg = mono_alloc_dreg (cfg, (MonoStackType)ins->type);
-			ins->sreg1 = args [0]->dreg;
-			if (fsig->param_count > 1) {
-				ins->sreg2 = args [1]->dreg;
-			}
-			if (fsig->param_count > 2) {
-				ins->sreg3 = args [2]->dreg;
-			}
-			g_assert (fsig->param_count <= 3);
-			MONO_ADD_INS (cfg->cbb, ins);
-		}
-
-		opcode = 0;
-		if (cfg->opt & MONO_OPT_CMOV) {
-			if (strcmp (cmethod->name, "Min") == 0) {
-				if (fsig->params [0]->type == MONO_TYPE_I4)
-					opcode = OP_IMIN;
-				if (fsig->params [0]->type == MONO_TYPE_U4)
-					opcode = OP_IMIN_UN;
-				else if (fsig->params [0]->type == MONO_TYPE_I8)
-					opcode = OP_LMIN;
-				else if (fsig->params [0]->type == MONO_TYPE_U8)
-					opcode = OP_LMIN_UN;
-			} else if (strcmp (cmethod->name, "Max") == 0) {
-				if (fsig->params [0]->type == MONO_TYPE_I4)
-					opcode = OP_IMAX;
-				if (fsig->params [0]->type == MONO_TYPE_U4)
-					opcode = OP_IMAX_UN;
-				else if (fsig->params [0]->type == MONO_TYPE_I8)
-					opcode = OP_LMAX;
-				else if (fsig->params [0]->type == MONO_TYPE_U8)
-					opcode = OP_LMAX_UN;
-			}
-		}
-
-		if (opcode && fsig->param_count == 2) {
-			MONO_INST_NEW (cfg, ins, opcode);
-			ins->type = fsig->params [0]->type == MONO_TYPE_I4 ? STACK_I4 : STACK_I8;
-			ins->dreg = mono_alloc_dreg (cfg, (MonoStackType)ins->type);
-			ins->sreg1 = args [0]->dreg;
-			ins->sreg2 = args [1]->dreg;
-			MONO_ADD_INS (cfg->cbb, ins);
-		}
-	}
-
-	if (in_corlib && !strcmp (m_class_get_name (cmethod->klass), "Buffer")) {
-		if (!strcmp (cmethod->name, "Memmove") && fsig->param_count == 3 && fsig->params [0]->type == MONO_TYPE_PTR && fsig->params [1]->type == MONO_TYPE_PTR) {
-			MonoBasicBlock *end_bb;
-			NEW_BBLOCK (cfg, end_bb);
-
-			// do nothing if len == 0 (even if src or dst are nulls)
-			MONO_EMIT_NEW_BIALU_IMM (cfg, OP_COMPARE_IMM, -1, args [2]->dreg, 0);
-			MONO_EMIT_NEW_BRANCH_BLOCK (cfg, OP_IBEQ, end_bb);
-
-			// throw NRE if src or dst are nulls
-			MONO_EMIT_NEW_BIALU_IMM (cfg, OP_COMPARE_IMM, -1, args [0]->dreg, 0);
-			MONO_EMIT_NEW_COND_EXC (cfg, EQ, "NullReferenceException");
-			MONO_EMIT_NEW_BIALU_IMM (cfg, OP_COMPARE_IMM, -1, args [1]->dreg, 0);
-			MONO_EMIT_NEW_COND_EXC (cfg, EQ, "NullReferenceException");
-
-			MONO_INST_NEW (cfg, ins, OP_MEMMOVE);
-			ins->sreg1 = args [0]->dreg; // i1* dst
-			ins->sreg2 = args [1]->dreg; // i1* src
-			ins->sreg3 = args [2]->dreg; // i32/i64 len
-			MONO_ADD_INS (cfg->cbb, ins);
-			MONO_START_BB (cfg, end_bb);
-		}
-	}
-
-	return ins;
-}
-
-static MonoInst*
 emit_span_intrinsics (MonoCompile *cfg, MonoMethod *cmethod, MonoMethodSignature *fsig, MonoInst **args)
 {
 	MonoInst *ins;
@@ -677,12 +463,8 @@ mini_emit_inst_for_method (MonoCompile *cfg, MonoMethod *cmethod, MonoMethodSign
 			int add_reg = alloc_preg (cfg);
 
 #if SIZEOF_REGISTER == 8
-			if (COMPILE_LLVM (cfg)) {
-				MONO_EMIT_NEW_UNALU (cfg, OP_ZEXT_I4, index_reg, args [1]->dreg);
-			} else {
-				/* The array reg is 64 bits but the index reg is only 32 */
-				MONO_EMIT_NEW_UNALU (cfg, OP_SEXT_I4, index_reg, args [1]->dreg);
-			}
+			/* The array reg is 64 bits but the index reg is only 32 */
+			MONO_EMIT_NEW_UNALU (cfg, OP_SEXT_I4, index_reg, args [1]->dreg);
 #else
 			index_reg = args [1]->dreg;
 #endif	
@@ -1193,7 +975,7 @@ mini_emit_inst_for_method (MonoCompile *cfg, MonoMethod *cmethod, MonoMethodSign
 			}
 
 			// For now, only Add is supported in non-LLVM back-ends
-			if (opcode && (COMPILE_LLVM (cfg) || mono_arch_opcode_supported (opcode))) {
+			if (opcode && mono_arch_opcode_supported (opcode)) {
 				MONO_INST_NEW (cfg, ins, opcode);
 				ins->dreg = mono_alloc_ireg (cfg);
 				ins->inst_basereg = args [0]->dreg;
@@ -1615,12 +1397,6 @@ mini_emit_inst_for_method (MonoCompile *cfg, MonoMethod *cmethod, MonoMethodSign
 			return ins;
 		}
 
-		// While it is not required per
-		//  https://msdn.microsoft.com/en-us/library/system.reflection.assembly.getcallingassembly(v=vs.110).aspx.
-		// have GetCallingAssembly be consistent independently of varying optimization.
-		// This fixes mono/tests/test-inline-call-stack.cs under FullAOT+LLVM.
-		cfg->no_inline |= COMPILE_LLVM (cfg) && strcmp (cmethod->name, "GetCallingAssembly") == 0;
-
 	} else if (in_corlib &&
 			   (strcmp (cmethod_klass_name_space, "System.Reflection") == 0) &&
 			   (strcmp (cmethod_klass_name, "MethodBase") == 0)) {
@@ -1915,12 +1691,6 @@ mini_emit_inst_for_method (MonoCompile *cfg, MonoMethod *cmethod, MonoMethodSign
 	ins = mono_emit_native_types_intrinsics (cfg, cmethod, fsig, args);
 	if (ins)
 		return ins;
-
-	if (COMPILE_LLVM (cfg)) {
-		ins = llvm_emit_inst_for_method (cfg, cmethod, fsig, args, in_corlib);
-		if (ins)
-			return ins;
-	}
 
 	return mono_arch_emit_inst_for_method (cfg, cmethod, fsig, args);
 }

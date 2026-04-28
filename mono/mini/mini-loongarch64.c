@@ -1112,8 +1112,6 @@ mono_arch_decompose_opts (MonoCompile *cfg, MonoInst *ins)
 		tmp2 = mono_alloc_ireg (cfg);
 		NEW_BBLOCK (cfg, target_bb);
 		NEW_BBLOCK (cfg, pos_ov);
-		if (COMPILE_LLVM (cfg))
-			break;
 		//first,judge whether the two sreg signs are same (sreg1 > 0 && sreg2 > 0) || (sreg1 < 0 && sreg 2 < 0)
 		ins->opcode = OP_LADD;
 		EMIT_NEW_BIALU_IMM (cfg, inst_tmp1, OP_LA_SLTI, tmp1, ins->sreg1, 0);
@@ -1140,8 +1138,6 @@ mono_arch_decompose_opts (MonoCompile *cfg, MonoInst *ins)
 		MONO_START_BB (cfg, target_bb);
 		break;
 	case OP_LADD_OVF_UN:
-		if (COMPILE_LLVM (cfg))
-			break;
 		ins->opcode = OP_LADD;
 		MONO_EMIT_NEW_BIALU (cfg, OP_LCOMPARE, -1, ins->dreg, ins->sreg1);
 		MONO_EMIT_NEW_COND_EXC (cfg, LT_UN, "OverflowException");
@@ -1151,8 +1147,6 @@ mono_arch_decompose_opts (MonoCompile *cfg, MonoInst *ins)
 		tmp2 = mono_alloc_ireg (cfg);
 		NEW_BBLOCK (cfg, target_bb);
 		NEW_BBLOCK (cfg, pos_ov);
-		if (COMPILE_LLVM (cfg))
-			break;
 		//first,judge whether the two sreg signs are different
 		ins->opcode = OP_LSUB;
 		EMIT_NEW_BIALU_IMM (cfg, inst_tmp1, OP_LA_SLTI, tmp1, ins->sreg1, 0);
@@ -1179,8 +1173,6 @@ mono_arch_decompose_opts (MonoCompile *cfg, MonoInst *ins)
 		MONO_START_BB (cfg, target_bb);
 		break;
 	case OP_LSUB_OVF_UN:
-		if (COMPILE_LLVM (cfg))
-			break;
 		ins->opcode = OP_LSUB;
 		MONO_EMIT_NEW_BIALU (cfg, OP_LCOMPARE, -1, ins->sreg1, ins->sreg2);
 		MONO_EMIT_NEW_COND_EXC (cfg, LT_UN, "OverflowException");
@@ -1941,93 +1933,6 @@ mono_arch_allocate_vars (MonoCompile *cfg)
 
 	cfg->stack_offset = offset;
 }
-
-#ifdef ENABLE_LLVM
-LLVMCallInfo*
-mono_arch_get_llvm_call_info (MonoCompile *cfg, MonoMethodSignature *sig)
-{
-	int i, n;
-	CallInfo *cinfo;
-	ArgInfo *ainfo;
-	LLVMCallInfo *linfo;
-
-	n = sig->param_count + sig->hasthis;
-
-	cinfo = get_call_info (cfg->mempool, sig);
-
-	linfo = mono_mempool_alloc0 (cfg->mempool, sizeof (LLVMCallInfo) + (sizeof (LLVMArgInfo) * n));
-
-	switch (cinfo->ret.storage) {
-	case ArgInIReg:
-	case ArgInFReg:
-	case ArgInFRegR4:
-	case ArgNone:
-		break;
-	case ArgVtypeByRef:
-		linfo->ret.storage = LLVMArgVtypeByRef;
-		break;
-	default:
-		g_assert_not_reached ();
-		break;
-	}
-
-	for (i = 0; i < n; ++i) {
-		LLVMArgInfo *lainfo = &linfo->args [i];
-
-		ainfo = cinfo->args + i;
-
-		lainfo->storage = LLVMArgNone;
-
-		switch (ainfo->storage) {
-		case ArgInIReg:
-		case ArgInFReg:
-		case ArgInFRegR4:
-		case ArgOnStack:
-		case ArgOnStackR4:
-		case ArgOnStackR8:
-			lainfo->storage = LLVMArgNormal;
-			break;
-		case ArgVtypeByRef:
-		case ArgVtypeByRefOnStack:
-			lainfo->storage = LLVMArgVtypeByRef;
-			break;
-		case ArgHFA: {
-			int j;
-
-			lainfo->storage = LLVMArgAsFpArgs;
-			lainfo->nslots = ainfo->nregs;
-			lainfo->esize = ainfo->esize;
-			for (j = 0; j < ainfo->nregs; ++j)
-				lainfo->pair_storage [j] = LLVMArgInFPReg;
-			break;
-		}
-		case ArgVtypeInIRegs:
-			lainfo->storage = LLVMArgAsIArgs;
-			lainfo->nslots = ainfo->nregs;
-			break;
-		case ArgVtypeOnStack:
-			if (ainfo->hfa) {
-				int j;
-				/* Same as above */
-				lainfo->storage = LLVMArgAsFpArgs;
-				lainfo->nslots = ainfo->nregs;
-				lainfo->esize = ainfo->esize;
-				for (j = 0; j < ainfo->nregs; ++j)
-					lainfo->pair_storage [j] = LLVMArgInFPReg;
-			} else {
-				lainfo->storage = LLVMArgAsIArgs;
-				lainfo->nslots = ainfo->size / 8;
-			}
-			break;
-		default:
-			g_assert_not_reached ();
-			break;
-		}
-	}
-
-	return linfo;
-}
-#endif
 
 static void
 add_outarg_reg (MonoCompile *cfg, MonoCallInst *call, ArgStorage storage, int reg, MonoInst *arg, gboolean isR4, gboolean fin_ireg)

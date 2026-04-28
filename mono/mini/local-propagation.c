@@ -374,7 +374,7 @@ mono_strength_reduction_ins (MonoCompile *cfg, MonoInst *ins, const char **spec)
 	}
 	case OP_IDIV_UN_IMM:
 	case OP_IDIV_IMM: {
-		if ((!COMPILE_LLVM (cfg)) && (!cfg->backend->optimized_div))
+		if (!cfg->backend->optimized_div)
 			allocated_vregs = mono_strength_reduction_division (cfg, ins);
 		break;
 	}
@@ -417,8 +417,6 @@ mono_strength_reduction_ins (MonoCompile *cfg, MonoInst *ins, const char **spec)
 	}
 #if SIZEOF_REGISTER == 4
 	case OP_LSHR_IMM: {
-		if (COMPILE_LLVM (cfg))
-			break;
 		if (ins->inst_c1 == 32) {
 			MONO_EMIT_NEW_UNALU (cfg, OP_MOVE, MONO_LVREG_LS (ins->dreg), MONO_LVREG_MS (ins->sreg1));
 			MONO_EMIT_NEW_BIALU_IMM (cfg, OP_ISHR_IMM, MONO_LVREG_MS (ins->dreg), MONO_LVREG_MS (ins->sreg1), 31);
@@ -439,8 +437,6 @@ mono_strength_reduction_ins (MonoCompile *cfg, MonoInst *ins, const char **spec)
 		break;
 	}
 	case OP_LSHR_UN_IMM: {
-		if (COMPILE_LLVM (cfg))
-			break;
 		if (ins->inst_c1 == 32) {
 			MONO_EMIT_NEW_UNALU (cfg, OP_MOVE, MONO_LVREG_LS (ins->dreg), MONO_LVREG_MS (ins->sreg1));
 			MONO_EMIT_NEW_ICONST (cfg, MONO_LVREG_MS (ins->dreg), 0);
@@ -461,8 +457,6 @@ mono_strength_reduction_ins (MonoCompile *cfg, MonoInst *ins, const char **spec)
 		break;
 	}
 	case OP_LSHL_IMM: {
-		if (COMPILE_LLVM (cfg))
-			break;
 		if (ins->inst_c1 == 32) {
 			/* just move the lower half to the upper and zero the lower word */
 			MONO_EMIT_NEW_UNALU (cfg, OP_MOVE, MONO_LVREG_MS (ins->dreg), MONO_LVREG_LS (ins->sreg1));

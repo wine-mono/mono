@@ -181,14 +181,6 @@ emit_int32 (MonoDwarfWriter *w, int value)
 	mono_img_writer_emit_int32 (w->w, value); 
 }
 
-#if defined(ENABLE_LLVM) && !defined(TARGET_MACH)
-static void
-emit_symbol (MonoDwarfWriter *w, const char *symbol)
-{
-	mono_img_writer_emit_symbol (w->w, symbol);
-}
-#endif
-
 static void
 emit_symbol_diff (MonoDwarfWriter *w, const char *end, const char* start, int offset) 
 { 
@@ -851,11 +843,7 @@ mono_dwarf_writer_emit_base_info (MonoDwarfWriter *w, const char *cu_name, GSLis
 	emit_symbol_diff (w, ".Ldebug_info_end", ".Ldebug_info_begin", 0); /* length */
 	emit_label (w, ".Ldebug_info_begin");
 	emit_int16 (w, 0x2); /* DWARF version 2 */
-#if defined(ENABLE_LLVM) && !defined(TARGET_MACH)
-	emit_symbol (w, ".Ldebug_abbrev_start"); /* .debug_abbrev offset */
-#else
 	emit_int32 (w, 0); /* .debug_abbrev offset */
-#endif
 	emit_byte (w, sizeof (target_mgreg_t)); /* address size */
 
 	/* Compilation unit */

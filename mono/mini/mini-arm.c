@@ -1028,7 +1028,7 @@ mono_arch_get_global_int_regs (MonoCompile *cfg)
 		regs = g_list_prepend (regs, GUINT_TO_POINTER (ARMREG_V7));
 	else
 		regs = g_list_prepend (regs, GUINT_TO_POINTER (ARMREG_V4));
-	if (!(cfg->compile_aot || cfg->uses_rgctx_reg || COMPILE_LLVM (cfg)))
+	if (!(cfg->compile_aot || cfg->uses_rgctx_reg))
 		/* V5 is reserved for passing the vtable/rgctx/IMT method */
 		regs = g_list_prepend (regs, GUINT_TO_POINTER (ARMREG_V5));
 	/*regs = g_list_prepend (regs, GUINT_TO_POINTER (ARMREG_V6));*/
@@ -1948,7 +1948,7 @@ mono_arch_allocate_vars (MonoCompile *cfg)
 	if (cfg->frame_reg != ARMREG_SP)
 		cfg->used_int_regs |= 1 << cfg->frame_reg;
 
-	if (cfg->compile_aot || cfg->uses_rgctx_reg || COMPILE_LLVM (cfg))
+	if (cfg->compile_aot || cfg->uses_rgctx_reg)
 		/* V5 is reserved for passing the vtable/rgctx/IMT method */
 		cfg->used_int_regs |= (1 << MONO_ARCH_IMT_REG);
 
@@ -2290,106 +2290,6 @@ emit_sig_cookie (MonoCompile *cfg, MonoCallInst *call, CallInfo *cinfo)
 
 	MONO_EMIT_NEW_STORE_MEMBASE (cfg, OP_STORE_MEMBASE_REG, ARMREG_SP, cinfo->sig_cookie.offset, sig_reg);
 }
-
-#ifdef ENABLE_LLVM
-LLVMCallInfo*
-mono_arch_get_llvm_call_info (MonoCompile *cfg, MonoMethodSignature *sig)
-{
-	int i, n;
-	CallInfo *cinfo;
-	ArgInfo *ainfo;
-	LLVMCallInfo *linfo;
-
-	n = sig->param_count + sig->hasthis;
-
-	cinfo = get_call_info (cfg->mempool, sig);
-
-	linfo = mono_mempool_alloc0 (cfg->mempool, sizeof (LLVMCallInfo) + (sizeof (LLVMArgInfo) * n));
-
-	/*
-	 * LLVM always uses the native ABI while we use our own ABI, the
-	 * only difference is the handling of vtypes:
-	 * - we only pass/receive them in registers in some cases, and only 
-	 *   in 1 or 2 integer registers.
-	 */
-	switch (cinfo->ret.storage) {
-	case RegTypeGeneral:
-	case RegTypeNone:
-	case RegTypeFP:
-	case RegTypeIRegPair:
-		break;
-	case RegTypeStructByAddr:
-		if (sig->pinvoke) {
-			linfo->ret.storage = LLVMArgVtypeByRef;
-		} else {
-			/* Vtype returned using a hidden argument */
-			linfo->ret.storage = LLVMArgVtypeRetAddr;
-			linfo->vret_arg_index = cinfo->vret_arg_index;
-		}
-		break;
-#if TARGET_WATCHOS
-	case RegTypeStructByVal:
-		/* LLVM models this by returning an int array */
-		linfo->ret.storage = LLVMArgAsIArgs;
-		linfo->ret.nslots = cinfo->ret.nregs;
-		break;
-#endif
-	case RegTypeHFA:
-		linfo->ret.storage = LLVMArgFpStruct;
-		linfo->ret.nslots = cinfo->ret.nregs;
-		linfo->ret.esize = cinfo->ret.esize;
-		break;
-	default:
-		cfg->exception_message = g_strdup_printf ("unknown ret conv (%d)", cinfo->ret.storage);
-		cfg->disable_llvm = TRUE;
-		return linfo;
-	}
-
-	for (i = 0; i < n; ++i) {
-		LLVMArgInfo *lainfo = &linfo->args [i];
-		ainfo = cinfo->args + i;
-
-		lainfo->storage = LLVMArgNone;
-
-		switch (ainfo->storage) {
-		case RegTypeGeneral:
-		case RegTypeIRegPair:
-		case RegTypeBase:
-		case RegTypeBaseGen:
-		case RegTypeFP:
-			lainfo->storage = LLVMArgNormal;
-			break;
-		case RegTypeStructByVal: {
-			lainfo->storage = LLVMArgAsIArgs;
-			int slotsize = eabi_supported && ainfo->align == 8 ? 8 : 4;
-			lainfo->nslots = ALIGN_TO (ainfo->struct_size, slotsize) / slotsize;
-			lainfo->esize = slotsize;
-			break;
-		}
-		case RegTypeStructByAddr:
-		case RegTypeStructByAddrOnStack:
-			lainfo->storage = LLVMArgVtypeByRef;
-			break;
-		case RegTypeHFA: {
-			int j;
-
-			lainfo->storage = LLVMArgAsFpArgs;
-			lainfo->nslots = ainfo->nregs;
-			lainfo->esize = ainfo->esize;
-			for (j = 0; j < ainfo->nregs; ++j)
-				lainfo->pair_storage [j] = LLVMArgInFPReg;
-			break;
-		}
-		default:
-			cfg->exception_message = g_strdup_printf ("ainfo->storage (%d)", ainfo->storage);
-			cfg->disable_llvm = TRUE;
-			break;
-		}
-	}
-
-	return linfo;
-}
-#endif
 
 void
 mono_arch_emit_call (MonoCompile *cfg, MonoCallInst *call)
@@ -2761,14 +2661,10 @@ mono_arch_emit_setret (MonoCompile *cfg, MonoMethod *method, MonoInst *val)
 		if (ret->type == MONO_TYPE_I8 || ret->type == MONO_TYPE_U8) {
 			MonoInst *ins;
 
-			if (COMPILE_LLVM (cfg)) {
-				MONO_EMIT_NEW_UNALU (cfg, OP_MOVE, cfg->ret->dreg, val->dreg);
-			} else {
-				MONO_INST_NEW (cfg, ins, OP_SETLRET);
-				ins->sreg1 = MONO_LVREG_LS (val->dreg);
-				ins->sreg2 = MONO_LVREG_MS (val->dreg);
-				MONO_ADD_INS (cfg->cbb, ins);
-			}
+			MONO_INST_NEW (cfg, ins, OP_SETLRET);
+			ins->sreg1 = MONO_LVREG_LS (val->dreg);
+			ins->sreg2 = MONO_LVREG_MS (val->dreg);
+			MONO_ADD_INS (cfg->cbb, ins);
 			return;
 		}
 		switch (arm_fpu) {

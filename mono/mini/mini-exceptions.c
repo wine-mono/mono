@@ -81,10 +81,6 @@
 #include "mini-runtime.h"
 #include "interp/interp.h"
 
-#ifdef ENABLE_LLVM
-#include "mini-llvm-cpp.h"
-#endif
-
 #ifdef TARGET_ARM
 #include "mini-arm.h"
 #endif
@@ -3679,13 +3675,6 @@ mono_llvm_match_exception (MonoJitInfo *jinfo, guint32 region_start, guint32 reg
 	return index;
 }
 
-#if defined(ENABLE_LLVM) && defined(HAVE_UNWIND_H)
-G_EXTERN_C _Unwind_Reason_Code mono_debug_personality (int a, _Unwind_Action b,
-	uint64_t c, struct _Unwind_Exception *d, struct _Unwind_Context *e)
-{
-	g_assert_not_reached ();
-}
-#else
 G_EXTERN_C void mono_debug_personality (void);
 
 void
@@ -3693,4 +3682,3 @@ mono_debug_personality (void)
 {
 	g_assert_not_reached ();
 }
-#endif

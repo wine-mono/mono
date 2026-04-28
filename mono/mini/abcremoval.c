@@ -1190,45 +1190,6 @@ process_block (MonoCompile *cfg, MonoBasicBlock *bb, MonoVariableRelationsEvalua
 				NULLIFY_INS (ins);
 			}
 		}
-
-		/*
-		 * Eliminate MONO_INST_FAULT flags if possible.
-		 */
-		if (COMPILE_LLVM (cfg) && (ins->opcode == OP_LDLEN ||
-								   ins->opcode == OP_BOUNDS_CHECK ||
-								   ins->opcode == OP_STRLEN ||
-								   (MONO_IS_LOAD_MEMBASE (ins) && (ins->flags & MONO_INST_FAULT)) ||
-								   (MONO_IS_STORE_MEMBASE (ins) && (ins->flags & MONO_INST_FAULT)))) {
-			int reg;
-
-			if (MONO_IS_STORE_MEMBASE (ins))
-				reg = ins->inst_destbasereg;
-			else if (MONO_IS_LOAD_MEMBASE (ins))
-				reg = ins->inst_basereg;
-			else
-				reg = ins->sreg1;
-
-			/*
-			 * This doesn't work because LLVM can move the non-faulting loads before the faulting
-			 * ones (test_0_llvm_moving_faulting_loads ()).
-			 * So only do it if we know the load cannot be moved before the instruction which ensures it is not
-			 * null (i.e. the def of its sreg).
-			 */
-			if (area->defs [reg] && area->defs [reg]->opcode == OP_NEWARR) {
-				if (REPORT_ABC_REMOVAL)
-					printf ("ARRAY-ACCESS: removed MONO_INST_FAULT flag.\n");
-				ins->flags &= ~MONO_INST_FAULT;
-			}
-			/*
-			if (eval_non_null (area, reg)) {
-				if (REPORT_ABC_REMOVAL)
-					printf ("ARRAY-ACCESS: removed MONO_INST_FAULT flag.\n");
-				ins->flags &= ~MONO_INST_FAULT;
-			} else {
-				add_non_null (area, cfg, reg, &check_relations);
-			}
-			*/
-		}
 	}	
 	
 	for (dominated_bb = bb->dominated; dominated_bb != NULL; dominated_bb = dominated_bb->next) {

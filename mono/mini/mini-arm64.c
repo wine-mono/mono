@@ -2416,109 +2416,6 @@ mono_arch_allocate_vars (MonoCompile *cfg)
 	cfg->stack_offset = offset;
 }
 
-#ifdef ENABLE_LLVM
-LLVMCallInfo*
-mono_arch_get_llvm_call_info (MonoCompile *cfg, MonoMethodSignature *sig)
-{
-	int i, n;
-	CallInfo *cinfo;
-	ArgInfo *ainfo;
-	LLVMCallInfo *linfo;
-
-	n = sig->param_count + sig->hasthis;
-
-	cinfo = get_call_info (cfg->mempool, sig);
-
-	linfo = mono_mempool_alloc0 (cfg->mempool, sizeof (LLVMCallInfo) + (sizeof (LLVMArgInfo) * n));
-
-	switch (cinfo->ret.storage) {
-	case ArgInIReg:
-	case ArgInFReg:
-	case ArgInFRegR4:
-	case ArgNone:
-		break;
-	case ArgVtypeByRef:
-		linfo->ret.storage = LLVMArgVtypeByRef;
-		break;
-		//
-		// FIXME: This doesn't work yet since the llvm backend represents these types as an i8
-		// array which is returned in int regs
-		//
-	case ArgHFA:
-		linfo->ret.storage = LLVMArgFpStruct;
-		linfo->ret.nslots = cinfo->ret.nregs;
-		linfo->ret.esize = cinfo->ret.esize;
-		break;
-	case ArgVtypeInIRegs:
-		/* LLVM models this by returning an int */
-		linfo->ret.storage = LLVMArgVtypeAsScalar;
-		linfo->ret.nslots = cinfo->ret.nregs;
-		linfo->ret.esize = cinfo->ret.esize;
-		break;
-	default:
-		g_assert_not_reached ();
-		break;
-	}
-
-	for (i = 0; i < n; ++i) {
-		LLVMArgInfo *lainfo = &linfo->args [i];
-
-		ainfo = cinfo->args + i;
-
-		lainfo->storage = LLVMArgNone;
-
-		switch (ainfo->storage) {
-		case ArgInIReg:
-		case ArgInFReg:
-		case ArgInFRegR4:
-		case ArgOnStack:
-		case ArgOnStackR4:
-		case ArgOnStackR8:
-			lainfo->storage = LLVMArgNormal;
-			break;
-		case ArgVtypeByRef:
-		case ArgVtypeByRefOnStack:
-			lainfo->storage = LLVMArgVtypeByRef;
-			break;
-		case ArgHFA: {
-			int j;
-
-			lainfo->storage = LLVMArgAsFpArgs;
-			lainfo->nslots = ainfo->nregs;
-			lainfo->esize = ainfo->esize;
-			for (j = 0; j < ainfo->nregs; ++j)
-				lainfo->pair_storage [j] = LLVMArgInFPReg;
-			break;
-		}
-		case ArgVtypeInIRegs:
-			lainfo->storage = LLVMArgAsIArgs;
-			lainfo->nslots = ainfo->nregs;
-			break;
-		case ArgVtypeOnStack:
-			if (ainfo->hfa) {
-				int j;
-				/* Same as above */
-				lainfo->storage = LLVMArgAsFpArgs;
-				lainfo->nslots = ainfo->nregs;
-				lainfo->esize = ainfo->esize;
-				lainfo->ndummy_fpargs = ainfo->nfregs_to_skip;
-				for (j = 0; j < ainfo->nregs; ++j)
-					lainfo->pair_storage [j] = LLVMArgInFPReg;
-			} else {
-				lainfo->storage = LLVMArgAsIArgs;
-				lainfo->nslots = ainfo->size / 8;
-			}
-			break;
-		default:
-			g_assert_not_reached ();
-			break;
-		}
-	}
-
-	return linfo;
-}
-#endif
-
 static void
 add_outarg_reg (MonoCompile *cfg, MonoCallInst *call, ArgStorage storage, int reg, MonoInst *arg)
 {
@@ -2540,9 +2437,7 @@ add_outarg_reg (MonoCompile *cfg, MonoCallInst *call, ArgStorage storage, int re
 		mono_call_inst_add_outarg_reg (cfg, call, ins->dreg, reg, TRUE);
 		break;
 	case ArgInFRegR4:
-		if (COMPILE_LLVM (cfg))
-			MONO_INST_NEW (cfg, ins, OP_FMOVE);
-		else if (cfg->r4fp)
+		if (cfg->r4fp)
 			MONO_INST_NEW (cfg, ins, OP_RMOVE);
 		else
 			MONO_INST_NEW (cfg, ins, OP_ARM_SETFREG_R4);
@@ -2809,9 +2704,7 @@ mono_arch_emit_setret (MonoCompile *cfg, MonoMethod *method, MonoInst *val)
 		MONO_EMIT_NEW_UNALU (cfg, OP_FMOVE, cfg->ret->dreg, val->dreg);
 		break;
 	case ArgInFRegR4:
-		if (COMPILE_LLVM (cfg))
-			MONO_EMIT_NEW_UNALU (cfg, OP_FMOVE, cfg->ret->dreg, val->dreg);
-		else if (cfg->r4fp)
+		if (cfg->r4fp)
 			MONO_EMIT_NEW_UNALU (cfg, OP_RMOVE, cfg->ret->dreg, val->dreg);
 		else
 			MONO_EMIT_NEW_UNALU (cfg, OP_ARM_SETFREG_R4, cfg->ret->dreg, val->dreg);
