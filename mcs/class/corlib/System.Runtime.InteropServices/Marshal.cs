@@ -727,7 +727,7 @@ namespace System.Runtime.InteropServices
 #if DISABLE_REMOTING
 			throw new NotImplementedException ();
 #else
-			ComInteropProxy proxy = new ComInteropProxy (pUnk, t);
+			ComInteropProxy proxy = new ComInteropProxy (pUnk, t.IsInterface ? typeof(__ComObject) : t);
 			__ComObject co = (__ComObject)proxy.GetTransparentProxy ();
 			foreach (Type itf in t.GetInterfaces ()) {
 				if ((itf.Attributes & TypeAttributes.Import) == TypeAttributes.Import) {

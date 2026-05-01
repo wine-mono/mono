@@ -673,6 +673,17 @@ public class Tests
 			if (TestITest (itest) != 0)
 				return 177;
 
+			if (com_obj.GetType().FullName != "System.__ComObject")
+				return 178;
+
+			if (mono_test_marshal_com_object_create (out pUnk) != 0)
+				return 179;
+
+			com_obj = Marshal.GetTypedObjectForIUnknown (pUnk, typeof(ITest));
+
+			if (com_obj.GetType().FullName != "System.__ComObject")
+				return 180;
+
 #endif
 
 			#endregion // Runtime Callable Wrapper Tests

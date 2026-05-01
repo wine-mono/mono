@@ -390,6 +390,8 @@ namespace System.Windows.Forms
 
 			if (use_compatible_text_rendering) {
 				borders_and_paddings.Height += border_style == BorderStyle.None ? 3 : 6;
+			} else if (border_style != BorderStyle.None) {
+				borders_and_paddings.Height += 2;
 			}
 
 			if (MaximumSize.Width > 0 && (proposed.Width < 1 || proposed.Width > MaximumSize.Width))
