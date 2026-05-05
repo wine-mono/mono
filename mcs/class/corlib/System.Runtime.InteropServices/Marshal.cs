@@ -532,7 +532,7 @@ namespace System.Runtime.InteropServices
 
 		public static int GetExceptionCode ()
 		{
-			throw new PlatformNotSupportedException ();
+			return 0; // FIXME
 		}
 
 		public static int GetHRForException (Exception e)
