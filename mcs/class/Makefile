@@ -291,6 +291,7 @@ net_4_x_parallel_dirs = \
 	ICSharpCode.SharpZipLib		\
 	Microsoft.CSharp	\
 	Microsoft.VisualBasic	\
+	Microsoft.VisualBasic.Compatibility	\
 	System.ServiceModel.Internals	\
 	SMDiagnostics	\
 	System.Runtime.Serialization	\
