@@ -1479,7 +1479,7 @@ namespace MonoTests.System
 		{
 			CultureInfo ci = Thread.CurrentThread.CurrentCulture;
 			try {
-				Thread.CurrentThread.CurrentCulture = new CultureInfo ("en-US");
+				Thread.CurrentThread.CurrentCulture = new CultureInfo ("en-US", false);
 				DateTime d1 = DateTime.ParseExact ("2004/06/30", "yyyy/MM/dd", null);
 				DateTime d2 = DateTime.ParseExact ("2004/06/30Z", "yyyy/MM/dd'Z'", null);
 				DateTime d3 = DateTime.ParseExact ("Wed, 30 Jun 2004 00:00:00 GMT", "ddd, dd MMM yyyy HH':'mm':'ss 'GMT'", null);
