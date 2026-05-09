@@ -301,7 +301,9 @@ namespace System.Drawing
 			setProperties (prototype.FontFamily, prototype.Size, newStyle, prototype.Unit, prototype.GdiCharSet, prototype.GdiVerticalFont);
 				
 			Status status = GDIPlus.GdipCreateFont (_fontFamily.NativeFamily, Size, Style, Unit, out nativeFont);
-			GDIPlus.CheckStatus (status);			
+			GDIPlus.CheckStatus (status);
+			_fontFamily = new FontFamily (prototype.FontFamily.NativeFamily);
+			GC.SuppressFinalize (_fontFamily);
 		}
 
 		public Font (FontFamily family, float emSize,  GraphicsUnit unit)
@@ -344,6 +346,8 @@ namespace System.Drawing
 			setProperties (family, emSize, style, unit, gdiCharSet,  gdiVerticalFont );		
 			status = GDIPlus.GdipCreateFont (family.NativeFamily, emSize,  style,   unit,  out nativeFont);
 			GDIPlus.CheckStatus (status);
+			_fontFamily = new FontFamily (family.NativeFamily);
+			GC.SuppressFinalize (_fontFamily);
 		}
 
 		public Font (string familyName, float emSize)
