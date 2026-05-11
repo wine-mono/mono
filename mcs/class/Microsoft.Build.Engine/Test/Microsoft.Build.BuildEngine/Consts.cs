@@ -38,6 +38,7 @@ public static class Consts {
 	
 	public static string BinPath {
 		get {
+/* WINE MONO HACK: This makes an implicit assumption that we are running from a build tree, which is generally not the case when testing Wine Mono
 			if (RunningOnMono ()) {
 #if XBUILD_14
 				string profile = "xbuild_14";
@@ -51,7 +52,7 @@ public static class Consts {
 				var corlib = typeof (object).Assembly.Location;
 				var lib = Path.GetDirectoryName (Path.GetDirectoryName (corlib));
 				return Path.Combine (lib, profile);
-			} else {
+			} else*/ {
 #if XBUILD_14
 				return ToolLocationHelper.GetPathToBuildTools ("14.0");
 #elif XBUILD_12
