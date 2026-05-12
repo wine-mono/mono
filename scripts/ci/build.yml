@@ -28,6 +28,26 @@ linux-amd64-build:
             - mcs/class/monolite-*.tar.gz
         expire_in: 1 week
 
+macos-arm64-build:
+    stage: build
+    image: winehq-sequoia-pristine
+    variables:
+        TART_EXECUTOR_SSH_USERNAME: "gitlab"
+        TART_EXECUTOR_SSH_PASSWORD: "gitlab"
+    rules:
+        - if: $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_PROJECT_NAMESPACE == 'mono'
+    interruptible: true
+    tags:
+        - mac
+    before_script:
+        - export BASEDIR="$PWD"
+        - export CI_PLATFORM=mac
+        - git config --global --add safe.directory $CI_PROJECT_DIR
+        - rm -fr .git/rebase-merge  # in case a previous CI run failed in git rebase
+    script:
+        - "scripts/ci/update-submodules.sh"
+        - "scripts/ci/build.sh"
+
 build-dist:
     stage: build
     image: $CI_REGISTRY/mono/mono:debian-trixie-linux-build
