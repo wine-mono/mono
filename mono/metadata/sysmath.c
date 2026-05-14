@@ -30,12 +30,12 @@ static __huge_val_t __huge_val = { __HUGE_VAL_bytes };
 #endif
 
 
-gdouble ves_icall_System_Math_Floor (gdouble x) {
+gdouble MONO_ICALL_FP_ABI ves_icall_System_Math_Floor (gdouble x) {
 	MONO_ARCH_SAVE_REGS;
 	return floor(x);
 }
 
-gdouble ves_icall_System_Math_Round (gdouble x) {
+gdouble MONO_ICALL_FP_ABI ves_icall_System_Math_Round (gdouble x) {
 	double int_part, dec_part;
 	MONO_ARCH_SAVE_REGS;
 	int_part = floor(x);
@@ -48,7 +48,7 @@ gdouble ves_icall_System_Math_Round (gdouble x) {
 	return int_part;
 }
 
-gdouble ves_icall_System_Math_Round2 (gdouble value, gint32 digits) {
+gdouble MONO_ICALL_FP_ABI ves_icall_System_Math_Round2 (gdouble value, gint32 digits) {
 	double p, int_part, dec_part;
 	MONO_ARCH_SAVE_REGS;
 	if (value == HUGE_VAL)
@@ -67,7 +67,7 @@ gdouble ves_icall_System_Math_Round2 (gdouble value, gint32 digits) {
 	return int_part + dec_part;
 }
 
-gdouble 
+gdouble MONO_ICALL_FP_ABI
 ves_icall_System_Math_Sin (gdouble x)
 {
 	MONO_ARCH_SAVE_REGS;
@@ -75,7 +75,7 @@ ves_icall_System_Math_Sin (gdouble x)
 	return sin (x);
 }
 
-gdouble 
+gdouble MONO_ICALL_FP_ABI
 ves_icall_System_Math_Cos (gdouble x)
 {
 	MONO_ARCH_SAVE_REGS;
@@ -83,7 +83,7 @@ ves_icall_System_Math_Cos (gdouble x)
 	return cos (x);
 }
 
-gdouble 
+gdouble MONO_ICALL_FP_ABI
 ves_icall_System_Math_Tan (gdouble x)
 {
 	MONO_ARCH_SAVE_REGS;
@@ -91,7 +91,7 @@ ves_icall_System_Math_Tan (gdouble x)
 	return tan (x);
 }
 
-gdouble 
+gdouble MONO_ICALL_FP_ABI
 ves_icall_System_Math_Sinh (gdouble x)
 {
 	MONO_ARCH_SAVE_REGS;
@@ -99,7 +99,7 @@ ves_icall_System_Math_Sinh (gdouble x)
 	return sinh (x);
 }
 
-gdouble 
+gdouble MONO_ICALL_FP_ABI
 ves_icall_System_Math_Cosh (gdouble x)
 {
 	MONO_ARCH_SAVE_REGS;
@@ -107,7 +107,7 @@ ves_icall_System_Math_Cosh (gdouble x)
 	return cosh (x);
 }
 
-gdouble 
+gdouble MONO_ICALL_FP_ABI
 ves_icall_System_Math_Tanh (gdouble x)
 {
 	MONO_ARCH_SAVE_REGS;
@@ -115,7 +115,7 @@ ves_icall_System_Math_Tanh (gdouble x)
 	return tanh (x);
 }
 
-gdouble 
+gdouble MONO_ICALL_FP_ABI
 ves_icall_System_Math_Acos (gdouble x)
 {
 	MONO_ARCH_SAVE_REGS;
@@ -126,7 +126,7 @@ ves_icall_System_Math_Acos (gdouble x)
 	return acos (x);
 }
 
-gdouble 
+gdouble MONO_ICALL_FP_ABI
 ves_icall_System_Math_Asin (gdouble x)
 {
 	MONO_ARCH_SAVE_REGS;
@@ -137,7 +137,7 @@ ves_icall_System_Math_Asin (gdouble x)
 	return asin (x);
 }
 
-gdouble 
+gdouble MONO_ICALL_FP_ABI
 ves_icall_System_Math_Atan (gdouble x)
 {
 	MONO_ARCH_SAVE_REGS;
@@ -145,7 +145,7 @@ ves_icall_System_Math_Atan (gdouble x)
 	return atan (x);
 }
 
-gdouble 
+gdouble MONO_ICALL_FP_ABI
 ves_icall_System_Math_Atan2 (gdouble y, gdouble x)
 {
 	double result;
@@ -161,7 +161,7 @@ ves_icall_System_Math_Atan2 (gdouble y, gdouble x)
 	return (result == -0)? 0: result;
 }
 
-gdouble 
+gdouble MONO_ICALL_FP_ABI
 ves_icall_System_Math_Exp (gdouble x)
 {
 	MONO_ARCH_SAVE_REGS;
@@ -169,7 +169,7 @@ ves_icall_System_Math_Exp (gdouble x)
 	return exp (x);
 }
 
-gdouble 
+gdouble MONO_ICALL_FP_ABI
 ves_icall_System_Math_Log (gdouble x)
 {
 	MONO_ARCH_SAVE_REGS;
@@ -182,7 +182,7 @@ ves_icall_System_Math_Log (gdouble x)
 	return log (x);
 }
 
-gdouble 
+gdouble MONO_ICALL_FP_ABI
 ves_icall_System_Math_Log10 (gdouble x)
 {
 	MONO_ARCH_SAVE_REGS;
@@ -195,7 +195,7 @@ ves_icall_System_Math_Log10 (gdouble x)
 	return log10 (x);
 }
 
-gdouble 
+gdouble MONO_ICALL_FP_ABI
 ves_icall_System_Math_Pow (gdouble x, gdouble y)
 {
 	double result;
@@ -231,7 +231,7 @@ ves_icall_System_Math_Pow (gdouble x, gdouble y)
 	return (result == -0)? 0: result;
 }
 
-gdouble 
+gdouble MONO_ICALL_FP_ABI
 ves_icall_System_Math_Sqrt (gdouble x)
 {
 	MONO_ARCH_SAVE_REGS;

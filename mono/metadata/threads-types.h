@@ -84,14 +84,14 @@ extern gint64 ves_icall_System_Threading_Interlocked_Decrement_Long(gint64 * loc
 extern gint32 ves_icall_System_Threading_Interlocked_Exchange_Int(gint32 *location, gint32 value) MONO_INTERNAL;
 extern gint64 ves_icall_System_Threading_Interlocked_Exchange_Long(gint64 *location, gint64 value) MONO_INTERNAL;
 extern MonoObject *ves_icall_System_Threading_Interlocked_Exchange_Object(MonoObject **location, MonoObject *value) MONO_INTERNAL;
-extern gfloat ves_icall_System_Threading_Interlocked_Exchange_Single(gfloat *location, gfloat value) MONO_INTERNAL;
-extern gdouble ves_icall_System_Threading_Interlocked_Exchange_Double(gdouble *location, gdouble value) MONO_INTERNAL;
+extern gfloat MONO_ICALL_FP_ABI ves_icall_System_Threading_Interlocked_Exchange_Single(gfloat *location, gfloat value) MONO_INTERNAL;
+extern gdouble MONO_ICALL_FP_ABI ves_icall_System_Threading_Interlocked_Exchange_Double(gdouble *location, gdouble value) MONO_INTERNAL;
 
 extern gint32 ves_icall_System_Threading_Interlocked_CompareExchange_Int(gint32 *location, gint32 value, gint32 comparand) MONO_INTERNAL;
 extern gint64 ves_icall_System_Threading_Interlocked_CompareExchange_Long(gint64 *location, gint64 value, gint64 comparand) MONO_INTERNAL;
 extern MonoObject *ves_icall_System_Threading_Interlocked_CompareExchange_Object(MonoObject **location, MonoObject *value, MonoObject *comparand) MONO_INTERNAL;
-extern gfloat ves_icall_System_Threading_Interlocked_CompareExchange_Single(gfloat *location, gfloat value, gfloat comparand) MONO_INTERNAL;
-extern gdouble ves_icall_System_Threading_Interlocked_CompareExchange_Double(gdouble *location, gdouble value, gdouble comparand) MONO_INTERNAL;
+extern gfloat MONO_ICALL_FP_ABI ves_icall_System_Threading_Interlocked_CompareExchange_Single(gfloat *location, gfloat value, gfloat comparand) MONO_INTERNAL;
+extern gdouble MONO_ICALL_FP_ABI ves_icall_System_Threading_Interlocked_CompareExchange_Double(gdouble *location, gdouble value, gdouble comparand) MONO_INTERNAL;
 extern MonoObject* ves_icall_System_Threading_Interlocked_CompareExchange_T(MonoObject **location, MonoObject *value, MonoObject *comparand) MONO_INTERNAL;
 extern MonoObject* ves_icall_System_Threading_Interlocked_Exchange_T(MonoObject **location, MonoObject *value) MONO_INTERNAL;
 

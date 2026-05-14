@@ -872,7 +872,7 @@ DECINLINE static int calcDigits(guint64 alo, guint64 ahi)
     return tlog10+1;
 }
 
-gint32 mono_double2decimal(/*[Out]*/decimal_repr* pA, double val, gint32 digits)
+gint32 MONO_ICALL_FP_ABI mono_double2decimal(/*[Out]*/decimal_repr* pA, double val, gint32 digits)
 {
     guint64 alo, ahi;
     guint64* p = (guint64*)(&val);
@@ -1481,7 +1481,7 @@ DECINLINE static void buildIEEE754Double(double* pd, int sign, int texp, guint64
 #endif
 }
 
-double mono_decimal2double(/*[In]*/decimal_repr* pA)
+double MONO_ICALL_FP_ABI mono_decimal2double(/*[In]*/decimal_repr* pA)
 {
     double d;
     guint64 alo, ahi, mantisse;
@@ -1571,4 +1571,3 @@ gint32 mono_decimalSetExponent(/*[In, Out]*/decimal_repr* pA, gint32 texp)
 }
 
 #endif /* DISABLE_DECIMAL */
-

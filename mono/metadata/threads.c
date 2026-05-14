@@ -1587,7 +1587,7 @@ MonoObject * ves_icall_System_Threading_Interlocked_Exchange_Object (MonoObject 
 	return (MonoObject *) InterlockedExchangePointer((gpointer *) location, value);
 }
 
-gfloat ves_icall_System_Threading_Interlocked_Exchange_Single (gfloat *location, gfloat value)
+gfloat MONO_ICALL_FP_ABI ves_icall_System_Threading_Interlocked_Exchange_Single (gfloat *location, gfloat value)
 {
 	IntFloatUnion val, ret;
 
@@ -1620,7 +1620,7 @@ ves_icall_System_Threading_Interlocked_Exchange_Long (gint64 *location, gint64 v
 #endif
 }
 
-gdouble 
+gdouble MONO_ICALL_FP_ABI
 ves_icall_System_Threading_Interlocked_Exchange_Double (gdouble *location, gdouble value)
 {
 #if SIZEOF_VOID_P == 8
@@ -1660,7 +1660,7 @@ MonoObject * ves_icall_System_Threading_Interlocked_CompareExchange_Object (Mono
 	return (MonoObject *) InterlockedCompareExchangePointer((gpointer *) location, value, comparand);
 }
 
-gfloat ves_icall_System_Threading_Interlocked_CompareExchange_Single (gfloat *location, gfloat value, gfloat comparand)
+gfloat MONO_ICALL_FP_ABI ves_icall_System_Threading_Interlocked_CompareExchange_Single (gfloat *location, gfloat value, gfloat comparand)
 {
 	IntFloatUnion val, ret, cmp;
 
@@ -1673,7 +1673,7 @@ gfloat ves_icall_System_Threading_Interlocked_CompareExchange_Single (gfloat *lo
 	return ret.fval;
 }
 
-gdouble
+gdouble MONO_ICALL_FP_ABI
 ves_icall_System_Threading_Interlocked_CompareExchange_Double (gdouble *location, gdouble value, gdouble comparand)
 {
 #if SIZEOF_VOID_P == 8

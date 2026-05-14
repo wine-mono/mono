@@ -5,6 +5,22 @@
 
 #include "mini.h"
 
+/*
+ * The ARM JIT in this Mono version defines MONO_ARCH_SOFT_FLOAT for EABI
+ * targets and lowers floating-point helper calls using the base AAPCS: float
+ * and double arguments/results travel through core registers.  armhf C code is
+ * compiled with the VFP procedure-call standard instead, so an unannotated C
+ * helper with a float/double in its signature expects different registers than
+ * the JIT supplies.  Mark only these JIT ABI-boundary helpers with the base
+ * AAPCS so the compiler emits entry/return code that matches the existing ARM
+ * backend, while ordinary C calls in the runtime keep using the system ABI.
+ */
+#if defined(__arm__) && defined(__GNUC__) && defined(__ARM_PCS_VFP)
+#define MONO_JIT_ICALL_FP_ABI __attribute__((pcs("aapcs")))
+#else
+#define MONO_JIT_ICALL_FP_ABI
+#endif
+
 void* mono_ldftn (MonoMethod *method) MONO_INTERNAL;
 
 void* mono_ldftn_nosync (MonoMethod *method) MONO_INTERNAL;
@@ -33,7 +49,7 @@ gint32 mono_imul_ovf (gint32 a, gint32 b) MONO_INTERNAL;
 
 gint32 mono_imul_ovf_un (guint32 a, guint32 b) MONO_INTERNAL;
 
-double mono_fdiv (double a, double b) MONO_INTERNAL;
+double MONO_JIT_ICALL_FP_ABI mono_fdiv (double a, double b) MONO_INTERNAL;
 
 gint64 mono_lldiv (gint64 a, gint64 b) MONO_INTERNAL;
 
@@ -55,27 +71,31 @@ gpointer mono_class_static_field_address (MonoDomain *domain, MonoClassField *fi
 
 gpointer mono_ldtoken_wrapper (MonoImage *image, int token, MonoGenericContext *context) MONO_INTERNAL;
 
-guint64 mono_fconv_u8 (double v) MONO_INTERNAL;
+guint64 MONO_JIT_ICALL_FP_ABI mono_fconv_u8 (double v) MONO_INTERNAL;
 
-gint64 mono_fconv_i8 (double v) MONO_INTERNAL;
+gint64 MONO_JIT_ICALL_FP_ABI mono_fconv_i8 (double v) MONO_INTERNAL;
 
-guint32 mono_fconv_u4 (double v) MONO_INTERNAL;
+guint32 MONO_JIT_ICALL_FP_ABI mono_fconv_u4 (double v) MONO_INTERNAL;
 
-gint64 mono_fconv_ovf_i8 (double v) MONO_INTERNAL;
+gint64 MONO_JIT_ICALL_FP_ABI mono_fconv_ovf_i8 (double v) MONO_INTERNAL;
 
-guint64 mono_fconv_ovf_u8 (double v) MONO_INTERNAL;
+guint64 MONO_JIT_ICALL_FP_ABI mono_fconv_ovf_u8 (double v) MONO_INTERNAL;
 
-double mono_lconv_to_r8 (gint64 a) MONO_INTERNAL;
+double MONO_JIT_ICALL_FP_ABI mono_lconv_to_r8 (gint64 a) MONO_INTERNAL;
 
-double mono_conv_to_r8 (gint32 a) MONO_INTERNAL;
+double MONO_JIT_ICALL_FP_ABI mono_conv_to_r8 (gint32 a) MONO_INTERNAL;
 
-double mono_conv_to_r4 (gint32 a) MONO_INTERNAL;
+double MONO_JIT_ICALL_FP_ABI mono_conv_to_r4 (gint32 a) MONO_INTERNAL;
 
-float mono_lconv_to_r4 (gint64 a) MONO_INTERNAL;
+#ifdef MONO_ARCH_SOFT_FLOAT
+double MONO_JIT_ICALL_FP_ABI mono_lconv_to_r4 (gint64 a) MONO_INTERNAL;
+#else
+float MONO_JIT_ICALL_FP_ABI mono_lconv_to_r4 (gint64 a) MONO_INTERNAL;
+#endif
 
-double mono_conv_to_r8_un (guint32 a) MONO_INTERNAL;
+double MONO_JIT_ICALL_FP_ABI mono_conv_to_r8_un (guint32 a) MONO_INTERNAL;
 
-double mono_lconv_to_r8_un (guint64 a) MONO_INTERNAL;
+double MONO_JIT_ICALL_FP_ABI mono_lconv_to_r8_un (guint64 a) MONO_INTERNAL;
 
 gpointer mono_helper_compile_generic_method (MonoObject *obj, MonoMethod *method, MonoGenericContext *context, gpointer *this_arg) MONO_INTERNAL;
 
@@ -85,61 +105,65 @@ MonoString *mono_helper_ldstr_mscorlib (guint32 idx) MONO_INTERNAL;
 
 MonoObject *mono_helper_newobj_mscorlib (guint32 idx) MONO_INTERNAL;
 
-double mono_fsub (double a, double b) MONO_INTERNAL;
+double MONO_JIT_ICALL_FP_ABI mono_fsub (double a, double b) MONO_INTERNAL;
 
-double mono_fadd (double a, double b) MONO_INTERNAL;
+double MONO_JIT_ICALL_FP_ABI mono_fadd (double a, double b) MONO_INTERNAL;
 
-double mono_fmul (double a, double b) MONO_INTERNAL;
+double MONO_JIT_ICALL_FP_ABI mono_fmul (double a, double b) MONO_INTERNAL;
 
-double mono_fneg (double a) MONO_INTERNAL;
+double MONO_JIT_ICALL_FP_ABI mono_fneg (double a) MONO_INTERNAL;
 
-double mono_fconv_r4 (double a) MONO_INTERNAL;
+double MONO_JIT_ICALL_FP_ABI mono_fconv_r4 (double a) MONO_INTERNAL;
 
-gint8 mono_fconv_i1 (double a) MONO_INTERNAL;
+gint8 MONO_JIT_ICALL_FP_ABI mono_fconv_i1 (double a) MONO_INTERNAL;
 
-gint16 mono_fconv_i2 (double a) MONO_INTERNAL;
+gint16 MONO_JIT_ICALL_FP_ABI mono_fconv_i2 (double a) MONO_INTERNAL;
 
-gint32 mono_fconv_i4 (double a) MONO_INTERNAL;
+gint32 MONO_JIT_ICALL_FP_ABI mono_fconv_i4 (double a) MONO_INTERNAL;
 
-guint8 mono_fconv_u1 (double a) MONO_INTERNAL;
+guint8 MONO_JIT_ICALL_FP_ABI mono_fconv_u1 (double a) MONO_INTERNAL;
 
-guint16 mono_fconv_u2 (double a) MONO_INTERNAL;
+guint16 MONO_JIT_ICALL_FP_ABI mono_fconv_u2 (double a) MONO_INTERNAL;
 
-gboolean mono_fcmp_eq (double a, double b) MONO_INTERNAL;
+gboolean MONO_JIT_ICALL_FP_ABI mono_fcmp_eq (double a, double b) MONO_INTERNAL;
 
-gboolean mono_fcmp_ge (double a, double b) MONO_INTERNAL;
+gboolean MONO_JIT_ICALL_FP_ABI mono_fcmp_ge (double a, double b) MONO_INTERNAL;
 
-gboolean mono_fcmp_gt (double a, double b) MONO_INTERNAL;
+gboolean MONO_JIT_ICALL_FP_ABI mono_fcmp_gt (double a, double b) MONO_INTERNAL;
 
-gboolean mono_fcmp_le (double a, double b) MONO_INTERNAL;
+gboolean MONO_JIT_ICALL_FP_ABI mono_fcmp_le (double a, double b) MONO_INTERNAL;
 
-gboolean mono_fcmp_lt (double a, double b) MONO_INTERNAL;
+gboolean MONO_JIT_ICALL_FP_ABI mono_fcmp_lt (double a, double b) MONO_INTERNAL;
 
-gboolean mono_fcmp_ne_un (double a, double b) MONO_INTERNAL;
+gboolean MONO_JIT_ICALL_FP_ABI mono_fcmp_ne_un (double a, double b) MONO_INTERNAL;
 
-gboolean mono_fcmp_ge_un (double a, double b) MONO_INTERNAL;
+gboolean MONO_JIT_ICALL_FP_ABI mono_fcmp_ge_un (double a, double b) MONO_INTERNAL;
 
-gboolean mono_fcmp_gt_un (double a, double b) MONO_INTERNAL;
+gboolean MONO_JIT_ICALL_FP_ABI mono_fcmp_gt_un (double a, double b) MONO_INTERNAL;
 
-gboolean mono_fcmp_le_un (double a, double b) MONO_INTERNAL;
+gboolean MONO_JIT_ICALL_FP_ABI mono_fcmp_le_un (double a, double b) MONO_INTERNAL;
 
-gboolean mono_fcmp_lt_un (double a, double b) MONO_INTERNAL;
+gboolean MONO_JIT_ICALL_FP_ABI mono_fcmp_lt_un (double a, double b) MONO_INTERNAL;
 
-gboolean mono_fceq (double a, double b) MONO_INTERNAL;
+gboolean MONO_JIT_ICALL_FP_ABI mono_fceq (double a, double b) MONO_INTERNAL;
 
-gboolean mono_fcgt (double a, double b) MONO_INTERNAL;
+gboolean MONO_JIT_ICALL_FP_ABI mono_fcgt (double a, double b) MONO_INTERNAL;
 
-gboolean mono_fcgt_un (double a, double b) MONO_INTERNAL;
+gboolean MONO_JIT_ICALL_FP_ABI mono_fcgt_un (double a, double b) MONO_INTERNAL;
 
-gboolean mono_fclt (double a, double b) MONO_INTERNAL;
+gboolean MONO_JIT_ICALL_FP_ABI mono_fclt (double a, double b) MONO_INTERNAL;
 
-gboolean mono_fclt_un (double a, double b) MONO_INTERNAL;
+gboolean MONO_JIT_ICALL_FP_ABI mono_fclt_un (double a, double b) MONO_INTERNAL;
 
-double   mono_fload_r4 (float *ptr);
+double   MONO_JIT_ICALL_FP_ABI mono_fload_r4 (float *ptr);
 
-void     mono_fstore_r4 (double val, float *ptr);
+void     MONO_JIT_ICALL_FP_ABI mono_fstore_r4 (double val, float *ptr);
 
-guint32  mono_fload_r4_arg (double val);
+guint32  MONO_JIT_ICALL_FP_ABI mono_fload_r4_arg (double val);
+
+#if defined(__arm__) && defined(__ARM_PCS_VFP)
+double MONO_JIT_ICALL_FP_ABI mono_frem (double a, double b) MONO_INTERNAL;
+#endif
 
 #endif /* __MONO_JIT_ICALLS_H__ */
 
