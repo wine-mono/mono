@@ -108,5 +108,19 @@
 #define MONO_INTERNAL 
 #endif
 
+/*
+ * Mono 1.9.1's ARM EABI backend defines MONO_ARCH_SOFT_FLOAT and emits
+ * managed internal-call wrappers that pass and return floating-point values in
+ * core registers.  On armhf, the C compiler uses the VFP procedure-call
+ * standard for ordinary C functions.  Mark native icall entry points that
+ * expose float/double with base AAPCS so the generated managed wrapper and
+ * native function agree at that ABI boundary.
+ */
+#if defined(__arm__) && defined(__GNUC__) && defined(__ARM_PCS_VFP)
+#define MONO_ICALL_FP_ABI __attribute__((pcs("aapcs")))
+#else
+#define MONO_ICALL_FP_ABI
+#endif
+
 #endif /* __UTILS_MONO_COMPILER_H__*/
 

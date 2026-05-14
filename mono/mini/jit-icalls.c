@@ -322,6 +322,14 @@ mono_fdiv (double a, double b)
 }
 #endif
 
+#if defined(__arm__) && defined(__ARM_PCS_VFP)
+double MONO_JIT_ICALL_FP_ABI
+mono_frem (double a, double b)
+{
+	return fmod (a, b);
+}
+#endif
+
 gint64 
 mono_lldiv (gint64 a, gint64 b)
 {
@@ -757,11 +765,26 @@ mono_lconv_to_r8 (gint64 a)
 #endif
 
 #ifdef MONO_ARCH_EMULATE_LCONV_TO_R4
-float
+#ifdef MONO_ARCH_SOFT_FLOAT
+double MONO_JIT_ICALL_FP_ABI
+mono_lconv_to_r4 (gint64 a)
+{
+	/*
+	 * Soft-float mini represents IL evaluation-stack floating-point values
+	 * as double-width register pairs.  conv.r4 rounds to single precision,
+	 * but the helper result must stay in the internal F representation.
+	 * Returning a C float makes opcode emulation spill through CEE_STIND_R4,
+	 * which this soft-float ARM selector cannot lower for that synthetic use.
+	 */
+	return (float)a;
+}
+#else
+float MONO_JIT_ICALL_FP_ABI
 mono_lconv_to_r4 (gint64 a)
 {
 	return (float)a;
 }
+#endif
 #endif
 
 #ifdef MONO_ARCH_EMULATE_CONV_R8_UN
