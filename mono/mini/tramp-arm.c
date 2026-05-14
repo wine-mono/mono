@@ -112,7 +112,7 @@ mono_arch_patch_plt_entry (guint8 *code, guint8 *addr)
 		((guint32*)code) [0] = ins;
 	else
 		/* Patch the jump address */
-		((guint32*)code) [1] = addr;
+		((guint32*)code) [1] = (guint32)(guintptr)addr;
 	mono_arch_flush_icache ((char*)code, 4);
 }
 

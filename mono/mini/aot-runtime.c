@@ -2048,7 +2048,7 @@ init_plt (MonoAotModule *info)
 	 for (i = 1; i < n_entries; ++i)
 		 /* Each PLT entry is 8 bytes long, the jump target is at offset 4 */
 		 /* Each default PLT target is 12 bytes long */
-		 ((guint32*)info->plt)[(i * 2) + 1] = (guint8*)info->plt_end + ((i - 1) * 12);
+		 ((guint32*)info->plt)[(i * 2) + 1] = (guint32)(guintptr)((guint8*)info->plt_end + ((i - 1) * 12));
 #else
 	g_assert_not_reached ();
 #endif
