@@ -72,7 +72,7 @@ public class GenVB
 		int lineNum = 0;
 		int ifDepth = 0;
 
-		output.WriteLine (string.Format("'BEGIN contents of {0}", inputFileName));
+		output.WriteLine (string.Format("'BEGIN contents of {0}", inputFileName.Replace("\\", "/")));
 
 		while ((line = input.ReadLine ()) != null)
 		{
@@ -161,7 +161,7 @@ public class GenVB
 			throw new Exception(string.Format ("#ifdef or #ifndef without matching #endif in {0}", inputFileName));
 		}
 
-		output.WriteLine (string.Format("'END contents of {0}", inputFileName));
+		output.WriteLine (string.Format("'END contents of {0}", inputFileName.Replace("\\", "/")));
 	}
 
 	static int Main (string[] args)
@@ -177,6 +177,7 @@ public class GenVB
 
 		using (var output = new StreamWriter (outputFileName))
 		{
+			output.NewLine = "\n";
 			ProcessFile (inputFileName, output, new Dictionary<string, string> ());
 		}
 
