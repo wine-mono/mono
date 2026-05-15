@@ -24,10 +24,10 @@ GENERATED_CLASSES = \
 	ToolStripMenuItemArray
 
 genvb.exe: genvb.cs
-	$(CSCOMPILE) $< -r:$(topdir)/class/lib/$(PROFILE)/mscorlib.dll
+	$(CSCOMPILE) "$<" -r:$(topdir)/class/lib/$(PROFILE)/mscorlib.dll
 
 %.generated.vb: %.vb.cpp genvb.exe Microsoft.VisualBasic.Compatibility.VB6/ControlArrayCommon.vb.h
-	MONO_PATH="$(topdir)/class/lib/$(PROFILE)$(PLATFORM_PATH_SEPARATOR)$$MONO_PATH" $(RUNTIME) $(RUNTIME_FLAGS) genvb.exe $< $@
+	MONO_PATH="$(topdir)/class/lib/$(PROFILE)$(PLATFORM_PATH_SEPARATOR)$$MONO_PATH" $(RUNTIME) $(RUNTIME_FLAGS) genvb.exe "$<" "$@"
 
 gen-sources: $(GENERATED_CLASSES:%=Microsoft.VisualBasic.Compatibility.VB6/%.generated.vb)
 
