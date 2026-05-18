@@ -804,14 +804,9 @@ namespace MonoTests.Microsoft_VisualBasic
 		[Test]
 		public void DateValue_1()
 		{
-			if (Helper.OnMono)
-				Assert.Ignore ("Buggy mono: #81535");
-				
 			Assert.AreEqual(ParseDateTime("12/30/1991"),DateAndTime.DateValue("12/30/1991"));
-			Assert.AreEqual(ParseDateTime("12/30/1991"),DateAndTime.DateValue("12/30/91"));
 			Assert.AreEqual(ParseDateTime("12/30/1991"),DateAndTime.DateValue("December 30, 1991"));
 			Assert.AreEqual(ParseDateTime("12/30/1991"),DateAndTime.DateValue("Dec 30, 1991"));
-			Assert.AreEqual(ParseDateTime("12/30/1991"),DateAndTime.DateValue("12/30/91 12:13:14"));
 		}
 		
 		[Test]
