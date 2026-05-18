@@ -148,95 +148,99 @@ namespace MonoTests.Microsoft_VisualBasic
 			}
 		}
 
+		private DateTime ParseDateTime (string str)
+		{
+			return DateTime.Parse (str, new CultureInfo ("en-US", false));
+		}
 		
 		[Test]
 		public void DateAdd_DateInterval_1()
 		{
-			Assert.AreEqual(DateTime.Parse("12/7/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.Day, 2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/7/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.DayOfYear, 2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2003 02:00:00"),DateAndTime.DateAdd(DateInterval.Hour, 2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2003 00:02:00"),DateAndTime.DateAdd(DateInterval.Minute, 2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("2/5/2004 00:00:00"),DateAndTime.DateAdd(DateInterval.Month, 2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("6/5/2004 00:00:00"),DateAndTime.DateAdd(DateInterval.Quarter, 2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2003 00:00:02"),DateAndTime.DateAdd(DateInterval.Second, 2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/7/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.Weekday, 2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/19/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.WeekOfYear, 2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2005 00:00:00"),DateAndTime.DateAdd(DateInterval.Year, 2, DateTime.Parse("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/7/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.Day, 2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/7/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.DayOfYear, 2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2003 02:00:00"),DateAndTime.DateAdd(DateInterval.Hour, 2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2003 00:02:00"),DateAndTime.DateAdd(DateInterval.Minute, 2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("2/5/2004 00:00:00"),DateAndTime.DateAdd(DateInterval.Month, 2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("6/5/2004 00:00:00"),DateAndTime.DateAdd(DateInterval.Quarter, 2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2003 00:00:02"),DateAndTime.DateAdd(DateInterval.Second, 2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/7/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.Weekday, 2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/19/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.WeekOfYear, 2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2005 00:00:00"),DateAndTime.DateAdd(DateInterval.Year, 2, ParseDateTime("12/5/03")));
 		}
 
 		[Test]
 		public void DateAdd_String_1()
 		{
-			Assert.AreEqual(DateTime.Parse("12/7/2003 00:00:00"),DateAndTime.DateAdd("d", 2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/7/2003 00:00:00"),DateAndTime.DateAdd("y", 2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2003 02:00:00"),DateAndTime.DateAdd("h", 2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2003 00:02:00"),DateAndTime.DateAdd("n", 2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("2/5/2004 00:00:00"),DateAndTime.DateAdd("m", 2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("6/5/2004 00:00:00"),DateAndTime.DateAdd("q", 2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2003 00:00:02"),DateAndTime.DateAdd("s", 2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/7/2003 00:00:00"),DateAndTime.DateAdd("w", 2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/19/2003 00:00:00"),DateAndTime.DateAdd("ww", 2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2005 00:00:00"),DateAndTime.DateAdd("yyyy", 2, DateTime.Parse("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/7/2003 00:00:00"),DateAndTime.DateAdd("d", 2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/7/2003 00:00:00"),DateAndTime.DateAdd("y", 2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2003 02:00:00"),DateAndTime.DateAdd("h", 2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2003 00:02:00"),DateAndTime.DateAdd("n", 2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("2/5/2004 00:00:00"),DateAndTime.DateAdd("m", 2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("6/5/2004 00:00:00"),DateAndTime.DateAdd("q", 2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2003 00:00:02"),DateAndTime.DateAdd("s", 2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/7/2003 00:00:00"),DateAndTime.DateAdd("w", 2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/19/2003 00:00:00"),DateAndTime.DateAdd("ww", 2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2005 00:00:00"),DateAndTime.DateAdd("yyyy", 2, ParseDateTime("12/5/03")));
 		}
 
 		[Test]
 		public void DateAdd_DateInterval_2()
 		{
-			Assert.AreEqual(DateTime.Parse("12/3/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.Day, -2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/3/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.DayOfYear, -2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/4/2003 22:00:00"),DateAndTime.DateAdd(DateInterval.Hour, -2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/4/2003 23:58:00"),DateAndTime.DateAdd(DateInterval.Minute, -2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("10/5/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.Month, -2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("6/5/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.Quarter, -2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/4/2003 23:59:58"),DateAndTime.DateAdd(DateInterval.Second, -2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/3/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.Weekday, -2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("11/21/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.WeekOfYear, -2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2001 00:00:00"),DateAndTime.DateAdd(DateInterval.Year, -2, DateTime.Parse("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/3/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.Day, -2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/3/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.DayOfYear, -2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/4/2003 22:00:00"),DateAndTime.DateAdd(DateInterval.Hour, -2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/4/2003 23:58:00"),DateAndTime.DateAdd(DateInterval.Minute, -2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("10/5/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.Month, -2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("6/5/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.Quarter, -2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/4/2003 23:59:58"),DateAndTime.DateAdd(DateInterval.Second, -2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/3/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.Weekday, -2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("11/21/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.WeekOfYear, -2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2001 00:00:00"),DateAndTime.DateAdd(DateInterval.Year, -2, ParseDateTime("12/5/03")));
 		}
 
 		[Test]
 		public void DateAdd_String_2()
 		{
-			Assert.AreEqual(DateTime.Parse("12/3/2003 00:00:00"),DateAndTime.DateAdd("d", -2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/3/2003 00:00:00"),DateAndTime.DateAdd("y", -2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/4/2003 22:00:00"),DateAndTime.DateAdd("h", -2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/4/2003 23:58:00"),DateAndTime.DateAdd("n", -2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("10/5/2003 00:00:00"),DateAndTime.DateAdd("m", -2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("6/5/2003 00:00:00"),DateAndTime.DateAdd("q", -2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/4/2003 23:59:58"),DateAndTime.DateAdd("s", -2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/3/2003 00:00:00"),DateAndTime.DateAdd("w", -2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("11/21/2003 00:00:00"),DateAndTime.DateAdd("ww", -2, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2001 00:00:00"),DateAndTime.DateAdd("yyyy", -2, DateTime.Parse("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/3/2003 00:00:00"),DateAndTime.DateAdd("d", -2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/3/2003 00:00:00"),DateAndTime.DateAdd("y", -2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/4/2003 22:00:00"),DateAndTime.DateAdd("h", -2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/4/2003 23:58:00"),DateAndTime.DateAdd("n", -2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("10/5/2003 00:00:00"),DateAndTime.DateAdd("m", -2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("6/5/2003 00:00:00"),DateAndTime.DateAdd("q", -2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/4/2003 23:59:58"),DateAndTime.DateAdd("s", -2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/3/2003 00:00:00"),DateAndTime.DateAdd("w", -2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("11/21/2003 00:00:00"),DateAndTime.DateAdd("ww", -2, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2001 00:00:00"),DateAndTime.DateAdd("yyyy", -2, ParseDateTime("12/5/03")));
 		}
 		
 		[Test]
 		public void DateAdd_DateInterval_3()
 		{
-			Assert.AreEqual(DateTime.Parse("12/5/03 00:00:00"),DateAndTime.DateAdd(DateInterval.Day, 0, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.DayOfYear, 0, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.Hour, 0, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.Minute, 0, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.Month, 0, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.Quarter, 0, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.Second, 0, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.Weekday, 0, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.WeekOfYear, 0, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.Year, 0, DateTime.Parse("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/03 00:00:00"),DateAndTime.DateAdd(DateInterval.Day, 0, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.DayOfYear, 0, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.Hour, 0, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.Minute, 0, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.Month, 0, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.Quarter, 0, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.Second, 0, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.Weekday, 0, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.WeekOfYear, 0, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2003 00:00:00"),DateAndTime.DateAdd(DateInterval.Year, 0, ParseDateTime("12/5/03")));
 		}
 
 		[Test]
 		public void DateAdd_String_3()
 		{
-			Assert.AreEqual(DateTime.Parse("12/5/2003 00:00:00"),DateAndTime.DateAdd("d", 0, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2003 00:00:00"),DateAndTime.DateAdd("y", 0, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2003 00:00:00"),DateAndTime.DateAdd("h", 0, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2003 00:00:00"),DateAndTime.DateAdd("n", 0, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2003 00:00:00"),DateAndTime.DateAdd("m", 0, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2003 00:00:00"),DateAndTime.DateAdd("q", 0, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2003 00:00:00"),DateAndTime.DateAdd("s", 0, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2003 00:00:00"),DateAndTime.DateAdd("w", 0, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2003 00:00:00"),DateAndTime.DateAdd("ww", 0, DateTime.Parse("12/5/03")));
-			Assert.AreEqual(DateTime.Parse("12/5/2003 00:00:00"),DateAndTime.DateAdd("yyyy", 0, DateTime.Parse("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2003 00:00:00"),DateAndTime.DateAdd("d", 0, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2003 00:00:00"),DateAndTime.DateAdd("y", 0, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2003 00:00:00"),DateAndTime.DateAdd("h", 0, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2003 00:00:00"),DateAndTime.DateAdd("n", 0, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2003 00:00:00"),DateAndTime.DateAdd("m", 0, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2003 00:00:00"),DateAndTime.DateAdd("q", 0, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2003 00:00:00"),DateAndTime.DateAdd("s", 0, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2003 00:00:00"),DateAndTime.DateAdd("w", 0, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2003 00:00:00"),DateAndTime.DateAdd("ww", 0, ParseDateTime("12/5/03")));
+			Assert.AreEqual(ParseDateTime("12/5/2003 00:00:00"),DateAndTime.DateAdd("yyyy", 0, ParseDateTime("12/5/03")));
 		}
 
 		[Test]
@@ -251,7 +255,7 @@ namespace MonoTests.Microsoft_VisualBasic
 		[ExpectedException(typeof(OverflowException))]
 		public void DateAdd_2()
 		{
-			DateAndTime.DateAdd("yyyy", 9999999999999999999L, DateTime.Parse("12/5/03"));
+			DateAndTime.DateAdd("yyyy", 9999999999999999999L, ParseDateTime("12/5/03"));
 		}
 
 		[Test]
@@ -265,7 +269,7 @@ namespace MonoTests.Microsoft_VisualBasic
 		[ExpectedException(typeof(ArgumentException))]
 		public void DateAdd_5()
 		{
-			DateAndTime.DateAdd("yyy", 5, DateTime.Parse("12/5/03"));
+			DateAndTime.DateAdd("yyy", 5, ParseDateTime("12/5/03"));
 		}
 
 		#endregion
@@ -314,154 +318,154 @@ namespace MonoTests.Microsoft_VisualBasic
 		[Test]
 		public void DateDiff_DateInterval_1()
 		{
-			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.Day, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.DayOfYear, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(17448,DateAndTime.DateDiff(DateInterval.Hour, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(1046880,DateAndTime.DateDiff(DateInterval.Minute, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(24,DateAndTime.DateDiff(DateInterval.Month, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(8,DateAndTime.DateDiff(DateInterval.Quarter, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(62812800,DateAndTime.DateDiff(DateInterval.Second, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(103,DateAndTime.DateDiff(DateInterval.Weekday, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));			
-			Assert.AreEqual(2,DateAndTime.DateDiff(DateInterval.Year, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.Day, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.DayOfYear, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(17448,DateAndTime.DateDiff(DateInterval.Hour, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(1046880,DateAndTime.DateDiff(DateInterval.Minute, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(24,DateAndTime.DateDiff(DateInterval.Month, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(8,DateAndTime.DateDiff(DateInterval.Quarter, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(62812800,DateAndTime.DateDiff(DateInterval.Second, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(103,DateAndTime.DateDiff(DateInterval.Weekday, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));			
+			Assert.AreEqual(2,DateAndTime.DateDiff(DateInterval.Year, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
 		}
 
 		[Test]
 		public void DateDiff_String_1()
 		{
-			Assert.AreEqual(727,DateAndTime.DateDiff("d", DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(727,DateAndTime.DateDiff("y", DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(17448,DateAndTime.DateDiff("h", DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(1046880,DateAndTime.DateDiff("n", DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(24,DateAndTime.DateDiff("m", DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(8,DateAndTime.DateDiff("q", DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(62812800,DateAndTime.DateDiff("s", DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(103,DateAndTime.DateDiff("w", DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));			
-			Assert.AreEqual(2,DateAndTime.DateDiff("yyyy", DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(727,DateAndTime.DateDiff("d", ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(727,DateAndTime.DateDiff("y", ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(17448,DateAndTime.DateDiff("h", ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(1046880,DateAndTime.DateDiff("n", ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(24,DateAndTime.DateDiff("m", ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(8,DateAndTime.DateDiff("q", ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(62812800,DateAndTime.DateDiff("s", ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(103,DateAndTime.DateDiff("w", ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));			
+			Assert.AreEqual(2,DateAndTime.DateDiff("yyyy", ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
 		}
 
 		[Test]
 		public void DateDiff_FirstDayOfWeek_1()
 		{
-			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.Day, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
-			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.DayOfYear, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
-			Assert.AreEqual(17448,DateAndTime.DateDiff(DateInterval.Hour, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
-			Assert.AreEqual(1046880,DateAndTime.DateDiff(DateInterval.Minute, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
-			Assert.AreEqual(24,DateAndTime.DateDiff(DateInterval.Month, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
-			Assert.AreEqual(8,DateAndTime.DateDiff(DateInterval.Quarter, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
-			Assert.AreEqual(62812800,DateAndTime.DateDiff(DateInterval.Second, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
-			Assert.AreEqual(103,DateAndTime.DateDiff(DateInterval.Weekday, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));			
-			Assert.AreEqual(2,DateAndTime.DateDiff(DateInterval.Year, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
+			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.Day, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
+			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.DayOfYear, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
+			Assert.AreEqual(17448,DateAndTime.DateDiff(DateInterval.Hour, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
+			Assert.AreEqual(1046880,DateAndTime.DateDiff(DateInterval.Minute, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
+			Assert.AreEqual(24,DateAndTime.DateDiff(DateInterval.Month, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
+			Assert.AreEqual(8,DateAndTime.DateDiff(DateInterval.Quarter, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
+			Assert.AreEqual(62812800,DateAndTime.DateDiff(DateInterval.Second, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
+			Assert.AreEqual(103,DateAndTime.DateDiff(DateInterval.Weekday, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));			
+			Assert.AreEqual(2,DateAndTime.DateDiff(DateInterval.Year, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
 
-			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.Day, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.DayOfYear, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(17448,DateAndTime.DateDiff(DateInterval.Hour, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(1046880,DateAndTime.DateDiff(DateInterval.Minute, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(24,DateAndTime.DateDiff(DateInterval.Month, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(8,DateAndTime.DateDiff(DateInterval.Quarter, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(62812800,DateAndTime.DateDiff(DateInterval.Second, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(103,DateAndTime.DateDiff(DateInterval.Weekday, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));			
-			Assert.AreEqual(2,DateAndTime.DateDiff(DateInterval.Year, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.Day, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.DayOfYear, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(17448,DateAndTime.DateDiff(DateInterval.Hour, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(1046880,DateAndTime.DateDiff(DateInterval.Minute, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(24,DateAndTime.DateDiff(DateInterval.Month, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(8,DateAndTime.DateDiff(DateInterval.Quarter, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(62812800,DateAndTime.DateDiff(DateInterval.Second, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(103,DateAndTime.DateDiff(DateInterval.Weekday, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));			
+			Assert.AreEqual(2,DateAndTime.DateDiff(DateInterval.Year, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
 
-			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.Day, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.DayOfYear, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(17448,DateAndTime.DateDiff(DateInterval.Hour, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(1046880,DateAndTime.DateDiff(DateInterval.Minute, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(24,DateAndTime.DateDiff(DateInterval.Month, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(8,DateAndTime.DateDiff(DateInterval.Quarter, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(62812800,DateAndTime.DateDiff(DateInterval.Second, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(103,DateAndTime.DateDiff(DateInterval.Weekday, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));			
-			Assert.AreEqual(2,DateAndTime.DateDiff(DateInterval.Year, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.Day, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.DayOfYear, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(17448,DateAndTime.DateDiff(DateInterval.Hour, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(1046880,DateAndTime.DateDiff(DateInterval.Minute, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(24,DateAndTime.DateDiff(DateInterval.Month, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(8,DateAndTime.DateDiff(DateInterval.Quarter, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(62812800,DateAndTime.DateDiff(DateInterval.Second, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(103,DateAndTime.DateDiff(DateInterval.Weekday, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));			
+			Assert.AreEqual(2,DateAndTime.DateDiff(DateInterval.Year, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
 
-			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.Day, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.DayOfYear, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(17448,DateAndTime.DateDiff(DateInterval.Hour, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(1046880,DateAndTime.DateDiff(DateInterval.Minute, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(24,DateAndTime.DateDiff(DateInterval.Month, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(8,DateAndTime.DateDiff(DateInterval.Quarter, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(62812800,DateAndTime.DateDiff(DateInterval.Second, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(103,DateAndTime.DateDiff(DateInterval.Weekday, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));			
-			Assert.AreEqual(2,DateAndTime.DateDiff(DateInterval.Year, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.Day, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.DayOfYear, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(17448,DateAndTime.DateDiff(DateInterval.Hour, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(1046880,DateAndTime.DateDiff(DateInterval.Minute, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(24,DateAndTime.DateDiff(DateInterval.Month, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(8,DateAndTime.DateDiff(DateInterval.Quarter, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(62812800,DateAndTime.DateDiff(DateInterval.Second, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(103,DateAndTime.DateDiff(DateInterval.Weekday, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));			
+			Assert.AreEqual(2,DateAndTime.DateDiff(DateInterval.Year, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
 
-			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.Day, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.DayOfYear, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(17448,DateAndTime.DateDiff(DateInterval.Hour, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(1046880,DateAndTime.DateDiff(DateInterval.Minute, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(24,DateAndTime.DateDiff(DateInterval.Month, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(8,DateAndTime.DateDiff(DateInterval.Quarter, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(62812800,DateAndTime.DateDiff(DateInterval.Second, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(103,DateAndTime.DateDiff(DateInterval.Weekday, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));			
-			Assert.AreEqual(2,DateAndTime.DateDiff(DateInterval.Year, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.Day, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.DayOfYear, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(17448,DateAndTime.DateDiff(DateInterval.Hour, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(1046880,DateAndTime.DateDiff(DateInterval.Minute, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(24,DateAndTime.DateDiff(DateInterval.Month, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(8,DateAndTime.DateDiff(DateInterval.Quarter, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(62812800,DateAndTime.DateDiff(DateInterval.Second, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(103,DateAndTime.DateDiff(DateInterval.Weekday, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));			
+			Assert.AreEqual(2,DateAndTime.DateDiff(DateInterval.Year, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
 
-			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.Day, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.DayOfYear, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(17448,DateAndTime.DateDiff(DateInterval.Hour, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(1046880,DateAndTime.DateDiff(DateInterval.Minute, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(24,DateAndTime.DateDiff(DateInterval.Month, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(8,DateAndTime.DateDiff(DateInterval.Quarter, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(62812800,DateAndTime.DateDiff(DateInterval.Second, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(103,DateAndTime.DateDiff(DateInterval.Weekday, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));			
-			Assert.AreEqual(2,DateAndTime.DateDiff(DateInterval.Year, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.Day, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.DayOfYear, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(17448,DateAndTime.DateDiff(DateInterval.Hour, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(1046880,DateAndTime.DateDiff(DateInterval.Minute, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(24,DateAndTime.DateDiff(DateInterval.Month, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(8,DateAndTime.DateDiff(DateInterval.Quarter, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(62812800,DateAndTime.DateDiff(DateInterval.Second, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(103,DateAndTime.DateDiff(DateInterval.Weekday, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));			
+			Assert.AreEqual(2,DateAndTime.DateDiff(DateInterval.Year, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
 
-			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.Day, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.DayOfYear, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(17448,DateAndTime.DateDiff(DateInterval.Hour, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(1046880,DateAndTime.DateDiff(DateInterval.Minute, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(24,DateAndTime.DateDiff(DateInterval.Month, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(8,DateAndTime.DateDiff(DateInterval.Quarter, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(62812800,DateAndTime.DateDiff(DateInterval.Second, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(103,DateAndTime.DateDiff(DateInterval.Weekday, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));			
-			Assert.AreEqual(2,DateAndTime.DateDiff(DateInterval.Year, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.Day, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.DayOfYear, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(17448,DateAndTime.DateDiff(DateInterval.Hour, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(1046880,DateAndTime.DateDiff(DateInterval.Minute, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(24,DateAndTime.DateDiff(DateInterval.Month, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(8,DateAndTime.DateDiff(DateInterval.Quarter, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(62812800,DateAndTime.DateDiff(DateInterval.Second, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(103,DateAndTime.DateDiff(DateInterval.Weekday, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));			
+			Assert.AreEqual(2,DateAndTime.DateDiff(DateInterval.Year, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
 		}
 		
 		[Test]
 		public void DateDiff_FirstWeekOfYear_1()
 		{
-			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.Day, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
-			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.DayOfYear, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
-			Assert.AreEqual(17448,DateAndTime.DateDiff(DateInterval.Hour, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
-			Assert.AreEqual(1046880,DateAndTime.DateDiff(DateInterval.Minute, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
-			Assert.AreEqual(24,DateAndTime.DateDiff(DateInterval.Month, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
-			Assert.AreEqual(8,DateAndTime.DateDiff(DateInterval.Quarter, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
-			Assert.AreEqual(62812800,DateAndTime.DateDiff(DateInterval.Second, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
-			Assert.AreEqual(103,DateAndTime.DateDiff(DateInterval.Weekday, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));			
-			Assert.AreEqual(2,DateAndTime.DateDiff(DateInterval.Year, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
+			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.Day, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
+			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.DayOfYear, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
+			Assert.AreEqual(17448,DateAndTime.DateDiff(DateInterval.Hour, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
+			Assert.AreEqual(1046880,DateAndTime.DateDiff(DateInterval.Minute, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
+			Assert.AreEqual(24,DateAndTime.DateDiff(DateInterval.Month, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
+			Assert.AreEqual(8,DateAndTime.DateDiff(DateInterval.Quarter, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
+			Assert.AreEqual(62812800,DateAndTime.DateDiff(DateInterval.Second, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
+			Assert.AreEqual(103,DateAndTime.DateDiff(DateInterval.Weekday, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));			
+			Assert.AreEqual(2,DateAndTime.DateDiff(DateInterval.Year, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
 
-			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.Day, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
-			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.DayOfYear, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays ));
-			Assert.AreEqual(17448,DateAndTime.DateDiff(DateInterval.Hour, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
-			Assert.AreEqual(1046880,DateAndTime.DateDiff(DateInterval.Minute, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
-			Assert.AreEqual(24,DateAndTime.DateDiff(DateInterval.Month, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
-			Assert.AreEqual(8,DateAndTime.DateDiff(DateInterval.Quarter, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
-			Assert.AreEqual(62812800,DateAndTime.DateDiff(DateInterval.Second, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
-			Assert.AreEqual(103,DateAndTime.DateDiff(DateInterval.Weekday, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));			
-			Assert.AreEqual(2,DateAndTime.DateDiff(DateInterval.Year, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
+			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.Day, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
+			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.DayOfYear, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays ));
+			Assert.AreEqual(17448,DateAndTime.DateDiff(DateInterval.Hour, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
+			Assert.AreEqual(1046880,DateAndTime.DateDiff(DateInterval.Minute, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
+			Assert.AreEqual(24,DateAndTime.DateDiff(DateInterval.Month, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
+			Assert.AreEqual(8,DateAndTime.DateDiff(DateInterval.Quarter, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
+			Assert.AreEqual(62812800,DateAndTime.DateDiff(DateInterval.Second, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
+			Assert.AreEqual(103,DateAndTime.DateDiff(DateInterval.Weekday, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));			
+			Assert.AreEqual(2,DateAndTime.DateDiff(DateInterval.Year, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
 
-			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.Day, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
-			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.DayOfYear, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek  ));
-			Assert.AreEqual(17448,DateAndTime.DateDiff(DateInterval.Hour, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
-			Assert.AreEqual(1046880,DateAndTime.DateDiff(DateInterval.Minute, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
-			Assert.AreEqual(24,DateAndTime.DateDiff(DateInterval.Month, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
-			Assert.AreEqual(8,DateAndTime.DateDiff(DateInterval.Quarter, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
-			Assert.AreEqual(62812800,DateAndTime.DateDiff(DateInterval.Second, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
-			Assert.AreEqual(103,DateAndTime.DateDiff(DateInterval.Weekday, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));			
-			Assert.AreEqual(2,DateAndTime.DateDiff(DateInterval.Year, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
+			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.Day, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
+			Assert.AreEqual(727,DateAndTime.DateDiff(DateInterval.DayOfYear, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek  ));
+			Assert.AreEqual(17448,DateAndTime.DateDiff(DateInterval.Hour, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
+			Assert.AreEqual(1046880,DateAndTime.DateDiff(DateInterval.Minute, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
+			Assert.AreEqual(24,DateAndTime.DateDiff(DateInterval.Month, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
+			Assert.AreEqual(8,DateAndTime.DateDiff(DateInterval.Quarter, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
+			Assert.AreEqual(62812800,DateAndTime.DateDiff(DateInterval.Second, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
+			Assert.AreEqual(103,DateAndTime.DateDiff(DateInterval.Weekday, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));			
+			Assert.AreEqual(2,DateAndTime.DateDiff(DateInterval.Year, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
 		}
 
 		[Test]
 		public void DateDiff_DateInterval_WeekOfYear()
 		{
-			Assert.AreEqual(104,DateAndTime.DateDiff(DateInterval.WeekOfYear, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System,FirstWeekOfYear.System),"1");
-			Assert.AreEqual(104,DateAndTime.DateDiff("ww", DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System,FirstWeekOfYear.System),"2");
-			Assert.AreEqual(104,DateAndTime.DateDiff(DateInterval.WeekOfYear, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Sunday,FirstWeekOfYear.System),"3");
-			Assert.AreEqual(104,DateAndTime.DateDiff(DateInterval.WeekOfYear, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Monday,FirstWeekOfYear.System),"4");
-			Assert.AreEqual(104,DateAndTime.DateDiff(DateInterval.WeekOfYear, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Tuesday,FirstWeekOfYear.System));
-			Assert.AreEqual(104,DateAndTime.DateDiff(DateInterval.WeekOfYear, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Wednesday,FirstWeekOfYear.System));
-			Assert.AreEqual(104,DateAndTime.DateDiff(DateInterval.WeekOfYear, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Thursday,FirstWeekOfYear.System));
-			Assert.AreEqual(103,DateAndTime.DateDiff(DateInterval.WeekOfYear, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Friday,FirstWeekOfYear.System));
-			Assert.AreEqual(104,DateAndTime.DateDiff(DateInterval.WeekOfYear, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.Saturday,FirstWeekOfYear.System));
-			Assert.AreEqual(104,DateAndTime.DateDiff(DateInterval.WeekOfYear, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System,FirstWeekOfYear.Jan1 ));
-			Assert.AreEqual(104,DateAndTime.DateDiff(DateInterval.WeekOfYear, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System,FirstWeekOfYear.FirstFourDays  ));
-			Assert.AreEqual(104,DateAndTime.DateDiff(DateInterval.WeekOfYear, DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System,FirstWeekOfYear.FirstFullWeek   ));
+			Assert.AreEqual(104,DateAndTime.DateDiff(DateInterval.WeekOfYear, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System,FirstWeekOfYear.System),"1");
+			Assert.AreEqual(104,DateAndTime.DateDiff("ww", ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System,FirstWeekOfYear.System),"2");
+			Assert.AreEqual(104,DateAndTime.DateDiff(DateInterval.WeekOfYear, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Sunday,FirstWeekOfYear.System),"3");
+			Assert.AreEqual(104,DateAndTime.DateDiff(DateInterval.WeekOfYear, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Monday,FirstWeekOfYear.System),"4");
+			Assert.AreEqual(104,DateAndTime.DateDiff(DateInterval.WeekOfYear, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Tuesday,FirstWeekOfYear.System));
+			Assert.AreEqual(104,DateAndTime.DateDiff(DateInterval.WeekOfYear, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Wednesday,FirstWeekOfYear.System));
+			Assert.AreEqual(104,DateAndTime.DateDiff(DateInterval.WeekOfYear, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Thursday,FirstWeekOfYear.System));
+			Assert.AreEqual(103,DateAndTime.DateDiff(DateInterval.WeekOfYear, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Friday,FirstWeekOfYear.System));
+			Assert.AreEqual(104,DateAndTime.DateDiff(DateInterval.WeekOfYear, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.Saturday,FirstWeekOfYear.System));
+			Assert.AreEqual(104,DateAndTime.DateDiff(DateInterval.WeekOfYear, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System,FirstWeekOfYear.Jan1 ));
+			Assert.AreEqual(104,DateAndTime.DateDiff(DateInterval.WeekOfYear, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System,FirstWeekOfYear.FirstFourDays  ));
+			Assert.AreEqual(104,DateAndTime.DateDiff(DateInterval.WeekOfYear, ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System,FirstWeekOfYear.FirstFullWeek   ));
 		}
 
 		[Test]
@@ -469,7 +473,7 @@ namespace MonoTests.Microsoft_VisualBasic
 		public void DateDiff_1()
 		{
 			// Argument 'Interval' is not a valid value.
-			DateAndTime.DateDiff("k", DateTime.Parse("12/5/03"),DateTime.Parse("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System );
+			DateAndTime.DateDiff("k", ParseDateTime("12/5/03"),ParseDateTime("12/1/05"),FirstDayOfWeek.System ,FirstWeekOfYear.System );
 		}
 
 		[Test]
@@ -477,7 +481,7 @@ namespace MonoTests.Microsoft_VisualBasic
 		public void DateDiff_3()
 		{
 			// Argument 'Date2' cannot be converted to type 'Date'.
-			DateAndTime.DateDiff("d", DateTime.Parse("12/5/03"),"12test5/03", (FirstDayOfWeek)8 ,FirstWeekOfYear.System );
+			DateAndTime.DateDiff("d", ParseDateTime("12/5/03"),"12test5/03", (FirstDayOfWeek)8 ,FirstWeekOfYear.System );
 		}
 
 		#endregion
@@ -515,139 +519,139 @@ namespace MonoTests.Microsoft_VisualBasic
 		[Test]
 		public void DatePart_DateInterval_1()
 		{
-			Assert.AreEqual(5,DateAndTime.DatePart(DateInterval.Day, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(339,DateAndTime.DatePart(DateInterval.DayOfYear, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(15,DateAndTime.DatePart(DateInterval.Hour, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(22,DateAndTime.DatePart(DateInterval.Minute, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(12,DateAndTime.DatePart(DateInterval.Month, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(4,DateAndTime.DatePart(DateInterval.Quarter, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(33,DateAndTime.DatePart(DateInterval.Second, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(6,DateAndTime.DatePart(DateInterval.Weekday, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(49,DateAndTime.DatePart(DateInterval.WeekOfYear, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(2003,DateAndTime.DatePart(DateInterval.Year, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(5,DateAndTime.DatePart(DateInterval.Day, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(339,DateAndTime.DatePart(DateInterval.DayOfYear, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(15,DateAndTime.DatePart(DateInterval.Hour, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(22,DateAndTime.DatePart(DateInterval.Minute, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(12,DateAndTime.DatePart(DateInterval.Month, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(4,DateAndTime.DatePart(DateInterval.Quarter, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(33,DateAndTime.DatePart(DateInterval.Second, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(6,DateAndTime.DatePart(DateInterval.Weekday, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(49,DateAndTime.DatePart(DateInterval.WeekOfYear, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(2003,DateAndTime.DatePart(DateInterval.Year, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
 		}
 
 		[Test]
 		public void DatePart_String_1()
 		{
-			Assert.AreEqual(5,DateAndTime.DatePart("d", DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(339,DateAndTime.DatePart("y", DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(15,DateAndTime.DatePart("h", DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(22,DateAndTime.DatePart("n", DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(12,DateAndTime.DatePart("m", DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(4,DateAndTime.DatePart("q", DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(33,DateAndTime.DatePart("s", DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(6,DateAndTime.DatePart("w", DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(49,DateAndTime.DatePart("ww", DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
-			Assert.AreEqual(2003,DateAndTime.DatePart("yyyy", DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(5,DateAndTime.DatePart("d", ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(339,DateAndTime.DatePart("y", ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(15,DateAndTime.DatePart("h", ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(22,DateAndTime.DatePart("n", ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(12,DateAndTime.DatePart("m", ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(4,DateAndTime.DatePart("q", ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(33,DateAndTime.DatePart("s", ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(6,DateAndTime.DatePart("w", ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(49,DateAndTime.DatePart("ww", ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
+			Assert.AreEqual(2003,DateAndTime.DatePart("yyyy", ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.System));
 		}
 
 		[Test]
 		public void DatePart_FirstDayOfWeek_1()
 		{
-			Assert.AreEqual(5,DateAndTime.DatePart(DateInterval.Day, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
-			Assert.AreEqual(339,DateAndTime.DatePart(DateInterval.DayOfYear , DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
-			Assert.AreEqual(15,DateAndTime.DatePart(DateInterval.Hour, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
-			Assert.AreEqual(22,DateAndTime.DatePart(DateInterval.Minute, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
-			Assert.AreEqual(12,DateAndTime.DatePart(DateInterval.Month, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
-			Assert.AreEqual(4,DateAndTime.DatePart(DateInterval.Quarter, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
-			Assert.AreEqual(33,DateAndTime.DatePart(DateInterval.Second, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
-			Assert.AreEqual(6,DateAndTime.DatePart(DateInterval.Weekday, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));			
-			Assert.AreEqual(2003,DateAndTime.DatePart(DateInterval.Year, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
+			Assert.AreEqual(5,DateAndTime.DatePart(DateInterval.Day, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
+			Assert.AreEqual(339,DateAndTime.DatePart(DateInterval.DayOfYear , ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
+			Assert.AreEqual(15,DateAndTime.DatePart(DateInterval.Hour, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
+			Assert.AreEqual(22,DateAndTime.DatePart(DateInterval.Minute, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
+			Assert.AreEqual(12,DateAndTime.DatePart(DateInterval.Month, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
+			Assert.AreEqual(4,DateAndTime.DatePart(DateInterval.Quarter, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
+			Assert.AreEqual(33,DateAndTime.DatePart(DateInterval.Second, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
+			Assert.AreEqual(6,DateAndTime.DatePart(DateInterval.Weekday, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));			
+			Assert.AreEqual(2003,DateAndTime.DatePart(DateInterval.Year, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Sunday  ,FirstWeekOfYear.System));
 
-			Assert.AreEqual(5,DateAndTime.DatePart(DateInterval.Day, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(339,DateAndTime.DatePart(DateInterval.DayOfYear , DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(15,DateAndTime.DatePart(DateInterval.Hour, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(22,DateAndTime.DatePart(DateInterval.Minute, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(12,DateAndTime.DatePart(DateInterval.Month, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(4,DateAndTime.DatePart(DateInterval.Quarter, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(33,DateAndTime.DatePart(DateInterval.Second, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(5,DateAndTime.DatePart(DateInterval.Weekday, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));			
-			Assert.AreEqual(2003,DateAndTime.DatePart(DateInterval.Year, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(5,DateAndTime.DatePart(DateInterval.Day, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(339,DateAndTime.DatePart(DateInterval.DayOfYear , ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(15,DateAndTime.DatePart(DateInterval.Hour, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(22,DateAndTime.DatePart(DateInterval.Minute, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(12,DateAndTime.DatePart(DateInterval.Month, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(4,DateAndTime.DatePart(DateInterval.Quarter, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(33,DateAndTime.DatePart(DateInterval.Second, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(5,DateAndTime.DatePart(DateInterval.Weekday, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));			
+			Assert.AreEqual(2003,DateAndTime.DatePart(DateInterval.Year, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Monday   ,FirstWeekOfYear.System));
 
-			Assert.AreEqual(5,DateAndTime.DatePart(DateInterval.Day, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(339,DateAndTime.DatePart(DateInterval.DayOfYear , DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(15,DateAndTime.DatePart(DateInterval.Hour, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(22,DateAndTime.DatePart(DateInterval.Minute, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(12,DateAndTime.DatePart(DateInterval.Month, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(4,DateAndTime.DatePart(DateInterval.Quarter, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(33,DateAndTime.DatePart(DateInterval.Second, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(4,DateAndTime.DatePart(DateInterval.Weekday, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));			
-			Assert.AreEqual(2003,DateAndTime.DatePart(DateInterval.Year, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(5,DateAndTime.DatePart(DateInterval.Day, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(339,DateAndTime.DatePart(DateInterval.DayOfYear , ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(15,DateAndTime.DatePart(DateInterval.Hour, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(22,DateAndTime.DatePart(DateInterval.Minute, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(12,DateAndTime.DatePart(DateInterval.Month, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(4,DateAndTime.DatePart(DateInterval.Quarter, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(33,DateAndTime.DatePart(DateInterval.Second, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(4,DateAndTime.DatePart(DateInterval.Weekday, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));			
+			Assert.AreEqual(2003,DateAndTime.DatePart(DateInterval.Year, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Tuesday    ,FirstWeekOfYear.System));
 
-			Assert.AreEqual(5,DateAndTime.DatePart(DateInterval.Day, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(339,DateAndTime.DatePart(DateInterval.DayOfYear , DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(15,DateAndTime.DatePart(DateInterval.Hour, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(22,DateAndTime.DatePart(DateInterval.Minute, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(12,DateAndTime.DatePart(DateInterval.Month, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(4,DateAndTime.DatePart(DateInterval.Quarter, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(33,DateAndTime.DatePart(DateInterval.Second, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(3,DateAndTime.DatePart(DateInterval.Weekday, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));			
-			Assert.AreEqual(2003,DateAndTime.DatePart(DateInterval.Year, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(5,DateAndTime.DatePart(DateInterval.Day, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(339,DateAndTime.DatePart(DateInterval.DayOfYear , ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(15,DateAndTime.DatePart(DateInterval.Hour, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(22,DateAndTime.DatePart(DateInterval.Minute, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(12,DateAndTime.DatePart(DateInterval.Month, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(4,DateAndTime.DatePart(DateInterval.Quarter, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(33,DateAndTime.DatePart(DateInterval.Second, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(3,DateAndTime.DatePart(DateInterval.Weekday, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));			
+			Assert.AreEqual(2003,DateAndTime.DatePart(DateInterval.Year, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Wednesday     ,FirstWeekOfYear.System));
 
-			Assert.AreEqual(5,DateAndTime.DatePart(DateInterval.Day, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(339,DateAndTime.DatePart(DateInterval.DayOfYear , DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(15,DateAndTime.DatePart(DateInterval.Hour, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(22,DateAndTime.DatePart(DateInterval.Minute, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(12,DateAndTime.DatePart(DateInterval.Month, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(4,DateAndTime.DatePart(DateInterval.Quarter, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(33,DateAndTime.DatePart(DateInterval.Second, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
-			Assert.AreEqual(2,DateAndTime.DatePart(DateInterval.Weekday, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));			
-			Assert.AreEqual(2003,DateAndTime.DatePart(DateInterval.Year, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(5,DateAndTime.DatePart(DateInterval.Day, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(339,DateAndTime.DatePart(DateInterval.DayOfYear , ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(15,DateAndTime.DatePart(DateInterval.Hour, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(22,DateAndTime.DatePart(DateInterval.Minute, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(12,DateAndTime.DatePart(DateInterval.Month, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(4,DateAndTime.DatePart(DateInterval.Quarter, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(33,DateAndTime.DatePart(DateInterval.Second, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
+			Assert.AreEqual(2,DateAndTime.DatePart(DateInterval.Weekday, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));			
+			Assert.AreEqual(2003,DateAndTime.DatePart(DateInterval.Year, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Thursday   ,FirstWeekOfYear.System));
 
-			Assert.AreEqual(5,DateAndTime.DatePart(DateInterval.Day, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(339,DateAndTime.DatePart(DateInterval.DayOfYear , DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(15,DateAndTime.DatePart(DateInterval.Hour, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(22,DateAndTime.DatePart(DateInterval.Minute, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(12,DateAndTime.DatePart(DateInterval.Month, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(4,DateAndTime.DatePart(DateInterval.Quarter, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(33,DateAndTime.DatePart(DateInterval.Second, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
-			Assert.AreEqual(1,DateAndTime.DatePart(DateInterval.Weekday, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));			
-			Assert.AreEqual(2003,DateAndTime.DatePart(DateInterval.Year, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(5,DateAndTime.DatePart(DateInterval.Day, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(339,DateAndTime.DatePart(DateInterval.DayOfYear , ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(15,DateAndTime.DatePart(DateInterval.Hour, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(22,DateAndTime.DatePart(DateInterval.Minute, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(12,DateAndTime.DatePart(DateInterval.Month, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(4,DateAndTime.DatePart(DateInterval.Quarter, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(33,DateAndTime.DatePart(DateInterval.Second, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
+			Assert.AreEqual(1,DateAndTime.DatePart(DateInterval.Weekday, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));			
+			Assert.AreEqual(2003,DateAndTime.DatePart(DateInterval.Year, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Friday    ,FirstWeekOfYear.System));
 
-			Assert.AreEqual(5,DateAndTime.DatePart(DateInterval.Day, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(339,DateAndTime.DatePart(DateInterval.DayOfYear , DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(15,DateAndTime.DatePart(DateInterval.Hour, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(22,DateAndTime.DatePart(DateInterval.Minute, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(12,DateAndTime.DatePart(DateInterval.Month, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(4,DateAndTime.DatePart(DateInterval.Quarter, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(33,DateAndTime.DatePart(DateInterval.Second, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
-			Assert.AreEqual(7,DateAndTime.DatePart(DateInterval.Weekday, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));			
-			Assert.AreEqual(2003,DateAndTime.DatePart(DateInterval.Year, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(5,DateAndTime.DatePart(DateInterval.Day, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(339,DateAndTime.DatePart(DateInterval.DayOfYear , ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(15,DateAndTime.DatePart(DateInterval.Hour, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(22,DateAndTime.DatePart(DateInterval.Minute, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(12,DateAndTime.DatePart(DateInterval.Month, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(4,DateAndTime.DatePart(DateInterval.Quarter, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(33,DateAndTime.DatePart(DateInterval.Second, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
+			Assert.AreEqual(7,DateAndTime.DatePart(DateInterval.Weekday, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));			
+			Assert.AreEqual(2003,DateAndTime.DatePart(DateInterval.Year, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.Saturday     ,FirstWeekOfYear.System));
 		}
 
 		[Test]
 		public void DatePart_FirstWeekOfYear_1()
 		{
-			Assert.AreEqual(5,DateAndTime.DatePart(DateInterval.Day, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
-			Assert.AreEqual(339,DateAndTime.DatePart(DateInterval.DayOfYear, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
-			Assert.AreEqual(15,DateAndTime.DatePart(DateInterval.Hour, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
-			Assert.AreEqual(22,DateAndTime.DatePart(DateInterval.Minute, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
-			Assert.AreEqual(12,DateAndTime.DatePart(DateInterval.Month, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
-			Assert.AreEqual(4,DateAndTime.DatePart(DateInterval.Quarter, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
-			Assert.AreEqual(33,DateAndTime.DatePart(DateInterval.Second, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
-			Assert.AreEqual(6,DateAndTime.DatePart(DateInterval.Weekday, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));			
-			Assert.AreEqual(2003,DateAndTime.DatePart(DateInterval.Year, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
+			Assert.AreEqual(5,DateAndTime.DatePart(DateInterval.Day, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
+			Assert.AreEqual(339,DateAndTime.DatePart(DateInterval.DayOfYear, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
+			Assert.AreEqual(15,DateAndTime.DatePart(DateInterval.Hour, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
+			Assert.AreEqual(22,DateAndTime.DatePart(DateInterval.Minute, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
+			Assert.AreEqual(12,DateAndTime.DatePart(DateInterval.Month, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
+			Assert.AreEqual(4,DateAndTime.DatePart(DateInterval.Quarter, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
+			Assert.AreEqual(33,DateAndTime.DatePart(DateInterval.Second, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
+			Assert.AreEqual(6,DateAndTime.DatePart(DateInterval.Weekday, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));			
+			Assert.AreEqual(2003,DateAndTime.DatePart(DateInterval.Year, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.Jan1 ));
 
-			Assert.AreEqual(5,DateAndTime.DatePart(DateInterval.Day, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
-			Assert.AreEqual(339,DateAndTime.DatePart(DateInterval.DayOfYear, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays ));
-			Assert.AreEqual(15,DateAndTime.DatePart(DateInterval.Hour, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
-			Assert.AreEqual(22,DateAndTime.DatePart(DateInterval.Minute, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
-			Assert.AreEqual(12,DateAndTime.DatePart(DateInterval.Month, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
-			Assert.AreEqual(4,DateAndTime.DatePart(DateInterval.Quarter, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
-			Assert.AreEqual(33,DateAndTime.DatePart(DateInterval.Second, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
-			Assert.AreEqual(6,DateAndTime.DatePart(DateInterval.Weekday, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));			
-			Assert.AreEqual(2003,DateAndTime.DatePart(DateInterval.Year, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
+			Assert.AreEqual(5,DateAndTime.DatePart(DateInterval.Day, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
+			Assert.AreEqual(339,DateAndTime.DatePart(DateInterval.DayOfYear, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays ));
+			Assert.AreEqual(15,DateAndTime.DatePart(DateInterval.Hour, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
+			Assert.AreEqual(22,DateAndTime.DatePart(DateInterval.Minute, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
+			Assert.AreEqual(12,DateAndTime.DatePart(DateInterval.Month, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
+			Assert.AreEqual(4,DateAndTime.DatePart(DateInterval.Quarter, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
+			Assert.AreEqual(33,DateAndTime.DatePart(DateInterval.Second, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
+			Assert.AreEqual(6,DateAndTime.DatePart(DateInterval.Weekday, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));			
+			Assert.AreEqual(2003,DateAndTime.DatePart(DateInterval.Year, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFourDays  ));
 
-			Assert.AreEqual(5,DateAndTime.DatePart(DateInterval.Day, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
-			Assert.AreEqual(339,DateAndTime.DatePart(DateInterval.DayOfYear, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek  ));
-			Assert.AreEqual(15,DateAndTime.DatePart(DateInterval.Hour, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
-			Assert.AreEqual(22,DateAndTime.DatePart(DateInterval.Minute, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
-			Assert.AreEqual(12,DateAndTime.DatePart(DateInterval.Month, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
-			Assert.AreEqual(4,DateAndTime.DatePart(DateInterval.Quarter, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
-			Assert.AreEqual(33,DateAndTime.DatePart(DateInterval.Second, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
-			Assert.AreEqual(6,DateAndTime.DatePart(DateInterval.Weekday, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));			
-			Assert.AreEqual(2003,DateAndTime.DatePart(DateInterval.Year, DateTime.Parse("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
+			Assert.AreEqual(5,DateAndTime.DatePart(DateInterval.Day, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
+			Assert.AreEqual(339,DateAndTime.DatePart(DateInterval.DayOfYear, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek  ));
+			Assert.AreEqual(15,DateAndTime.DatePart(DateInterval.Hour, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
+			Assert.AreEqual(22,DateAndTime.DatePart(DateInterval.Minute, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
+			Assert.AreEqual(12,DateAndTime.DatePart(DateInterval.Month, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
+			Assert.AreEqual(4,DateAndTime.DatePart(DateInterval.Quarter, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
+			Assert.AreEqual(33,DateAndTime.DatePart(DateInterval.Second, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
+			Assert.AreEqual(6,DateAndTime.DatePart(DateInterval.Weekday, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));			
+			Assert.AreEqual(2003,DateAndTime.DatePart(DateInterval.Year, ParseDateTime("12/5/03 15:22:33"),FirstDayOfWeek.System ,FirstWeekOfYear.FirstFullWeek   ));
 		}
 
 		[Test]
@@ -655,7 +659,7 @@ namespace MonoTests.Microsoft_VisualBasic
 		public void DatePart_1()
 		{
 			// Argument 'Interval' is not a valid value.
-			DateAndTime.DatePart("k", DateTime.Parse("12/5/03"),FirstDayOfWeek.System ,FirstWeekOfYear.System );
+			DateAndTime.DatePart("k", ParseDateTime("12/5/03"),FirstDayOfWeek.System ,FirstWeekOfYear.System );
 		}
 
 		[Test]
@@ -683,15 +687,15 @@ namespace MonoTests.Microsoft_VisualBasic
 		[Test]
 		public void DateSerial_1()
 		{
-			Assert.AreEqual(DateTime.Parse("12/1/2003"),DateAndTime.DateSerial(2003,12,1));
+			Assert.AreEqual(ParseDateTime("12/1/2003"),DateAndTime.DateSerial(2003,12,1));
 
 			Assert.AreEqual(new DateTime(DateTime.Now.Year - 6,5,24),DateAndTime.DateSerial(-5,-6,-7));
 
-			Assert.AreEqual(DateTime.Parse("12/1/9999"),DateAndTime.DateSerial(9999,12,1));
-			Assert.AreEqual(DateTime.Parse("12/1/2003"),DateAndTime.DateSerial(03,12,1));
-			Assert.AreEqual(DateTime.Parse("12/1/2025"),DateAndTime.DateSerial(25,12,1));
+			Assert.AreEqual(ParseDateTime("12/1/9999"),DateAndTime.DateSerial(9999,12,1));
+			Assert.AreEqual(ParseDateTime("12/1/2003"),DateAndTime.DateSerial(03,12,1));
+			Assert.AreEqual(ParseDateTime("12/1/2025"),DateAndTime.DateSerial(25,12,1));
 
-			Assert.AreEqual(DateTime.Parse("12/1/2000"),DateAndTime.DateSerial(0,12,1));
+			Assert.AreEqual(ParseDateTime("12/1/2000"),DateAndTime.DateSerial(0,12,1));
 			Assert.AreEqual(new DateTime(DateTime.Now.Year - 1,12,1),DateAndTime.DateSerial(-1,12,1));
 			Assert.AreEqual(new DateTime(DateTime.Now.Year - 99,12,1),DateAndTime.DateSerial(-99,12,1));
 		}
@@ -699,21 +703,21 @@ namespace MonoTests.Microsoft_VisualBasic
 		[Test]
 		public void DateSerial_2()
 		{
-			Assert.AreEqual(DateTime.Parse("1/1/2003"),DateAndTime.DateSerial(2003,1,1));
-			Assert.AreEqual(DateTime.Parse("12/1/2002"),DateAndTime.DateSerial(2003,0,1));
-			Assert.AreEqual(DateTime.Parse("11/1/2002"),DateAndTime.DateSerial(2003,-1,1));
-			Assert.AreEqual(DateTime.Parse("1/1/2004"),DateAndTime.DateSerial(2003,13,1));
+			Assert.AreEqual(ParseDateTime("1/1/2003"),DateAndTime.DateSerial(2003,1,1));
+			Assert.AreEqual(ParseDateTime("12/1/2002"),DateAndTime.DateSerial(2003,0,1));
+			Assert.AreEqual(ParseDateTime("11/1/2002"),DateAndTime.DateSerial(2003,-1,1));
+			Assert.AreEqual(ParseDateTime("1/1/2004"),DateAndTime.DateSerial(2003,13,1));
 
-			Assert.AreEqual(DateTime.Parse("2/1/2001"),DateAndTime.DateSerial(2003,-22,1));
+			Assert.AreEqual(ParseDateTime("2/1/2001"),DateAndTime.DateSerial(2003,-22,1));
 		}
 
 		[Test]
 		public void DateSerial_3()
 		{
-			Assert.AreEqual(DateTime.Parse("5/1/2003"),DateAndTime.DateSerial(2003,5,1));
-			Assert.AreEqual(DateTime.Parse("4/30/2003"),DateAndTime.DateSerial(2003,5,0));
-			Assert.AreEqual(DateTime.Parse("4/29/2003"),DateAndTime.DateSerial(2003,5,-1));
-			Assert.AreEqual(DateTime.Parse("6/24/2003"),DateAndTime.DateSerial(2003,5,55));
+			Assert.AreEqual(ParseDateTime("5/1/2003"),DateAndTime.DateSerial(2003,5,1));
+			Assert.AreEqual(ParseDateTime("4/30/2003"),DateAndTime.DateSerial(2003,5,0));
+			Assert.AreEqual(ParseDateTime("4/29/2003"),DateAndTime.DateSerial(2003,5,-1));
+			Assert.AreEqual(ParseDateTime("6/24/2003"),DateAndTime.DateSerial(2003,5,55));
 		}
 
 		#endregion
@@ -803,11 +807,11 @@ namespace MonoTests.Microsoft_VisualBasic
 			if (Helper.OnMono)
 				Assert.Ignore ("Buggy mono: #81535");
 				
-			Assert.AreEqual(DateTime.Parse("12/30/1991"),DateAndTime.DateValue("12/30/1991"));
-			Assert.AreEqual(DateTime.Parse("12/30/1991"),DateAndTime.DateValue("12/30/91"));
-			Assert.AreEqual(DateTime.Parse("12/30/1991"),DateAndTime.DateValue("December 30, 1991"));
-			Assert.AreEqual(DateTime.Parse("12/30/1991"),DateAndTime.DateValue("Dec 30, 1991"));
-			Assert.AreEqual(DateTime.Parse("12/30/1991"),DateAndTime.DateValue("12/30/91 12:13:14"));
+			Assert.AreEqual(ParseDateTime("12/30/1991"),DateAndTime.DateValue("12/30/1991"));
+			Assert.AreEqual(ParseDateTime("12/30/1991"),DateAndTime.DateValue("12/30/91"));
+			Assert.AreEqual(ParseDateTime("12/30/1991"),DateAndTime.DateValue("December 30, 1991"));
+			Assert.AreEqual(ParseDateTime("12/30/1991"),DateAndTime.DateValue("Dec 30, 1991"));
+			Assert.AreEqual(ParseDateTime("12/30/1991"),DateAndTime.DateValue("12/30/91 12:13:14"));
 		}
 		
 		[Test]
@@ -820,7 +824,7 @@ namespace MonoTests.Microsoft_VisualBasic
 		[Test]
 		public void DateValue_3()
 		{
-			 Assert.AreEqual(DateTime.Parse("1/1/0001 00:00:00"),DateAndTime.DateValue("22:33"));
+			 Assert.AreEqual(ParseDateTime("1/1/0001 00:00:00"),DateAndTime.DateValue("22:33"));
 		}
 
 		#endregion
@@ -837,11 +841,11 @@ namespace MonoTests.Microsoft_VisualBasic
 		[Test]
 		public void Day_1()
 		{
-			Assert.AreEqual(3,DateAndTime.Day(DateTime.Parse("2/3/2003")));
-			Assert.AreEqual(28,DateAndTime.Day(DateTime.Parse("2/28/2003")));
+			Assert.AreEqual(3,DateAndTime.Day(ParseDateTime("2/3/2003")));
+			Assert.AreEqual(28,DateAndTime.Day(ParseDateTime("2/28/2003")));
 
-			Assert.AreEqual(1,DateAndTime.Day(DateTime.Parse("1/1/0001")));
-			Assert.AreEqual(31,DateAndTime.Day(DateTime.Parse("12/31/9999")));
+			Assert.AreEqual(1,DateAndTime.Day(ParseDateTime("1/1/0001")));
+			Assert.AreEqual(31,DateAndTime.Day(ParseDateTime("12/31/9999")));
 		}
 
 		#endregion
@@ -858,10 +862,10 @@ namespace MonoTests.Microsoft_VisualBasic
 		[Test]
 		public void Hour_1()
 		{
-			Assert.AreEqual(0,DateAndTime.Hour(DateTime.Parse("2/2/03 12:11:23 AM")));
-			Assert.AreEqual(15,DateAndTime.Hour(DateTime.Parse("2/2/03 03:11:23 PM")));
-			Assert.AreEqual(17,DateAndTime.Hour(DateTime.Parse("2/2/03 17:11:23")));
-			Assert.AreEqual(15,DateAndTime.Hour(DateTime.Parse("2/2/03 03:11:23 pm")));
+			Assert.AreEqual(0,DateAndTime.Hour(ParseDateTime("2/2/03 12:11:23 AM")));
+			Assert.AreEqual(15,DateAndTime.Hour(ParseDateTime("2/2/03 03:11:23 PM")));
+			Assert.AreEqual(17,DateAndTime.Hour(ParseDateTime("2/2/03 17:11:23")));
+			Assert.AreEqual(15,DateAndTime.Hour(ParseDateTime("2/2/03 03:11:23 pm")));
 		}
 
 		#endregion
@@ -879,10 +883,10 @@ namespace MonoTests.Microsoft_VisualBasic
 		[Test]
 		public void Minute_1()
 		{
-			Assert.AreEqual(11,DateAndTime.Minute(DateTime.Parse("2/2/03 12:11:23 AM")));
-			Assert.AreEqual(0,DateAndTime.Minute(DateTime.Parse("2/2/03 03:00:23 PM")));
-			Assert.AreEqual(59,DateAndTime.Minute(DateTime.Parse("2/2/03 17:59:23")));
-			Assert.AreEqual(16,DateAndTime.Minute(DateTime.Parse("2/2/03 03:16:23 pm")));
+			Assert.AreEqual(11,DateAndTime.Minute(ParseDateTime("2/2/03 12:11:23 AM")));
+			Assert.AreEqual(0,DateAndTime.Minute(ParseDateTime("2/2/03 03:00:23 PM")));
+			Assert.AreEqual(59,DateAndTime.Minute(ParseDateTime("2/2/03 17:59:23")));
+			Assert.AreEqual(16,DateAndTime.Minute(ParseDateTime("2/2/03 03:16:23 pm")));
 		}
 
 		#endregion
@@ -900,10 +904,10 @@ namespace MonoTests.Microsoft_VisualBasic
 		[Test]
 		public void Month_1()
 		{
-			Assert.AreEqual(1,DateAndTime.Month(DateTime.Parse("1/1/03 12:11:23 AM")));
-			Assert.AreEqual(2,DateAndTime.Month(DateTime.Parse("2/27/03 03:00:23 PM")));
-			Assert.AreEqual(12,DateAndTime.Month(DateTime.Parse("12/12/03 17:59:23")));
-			Assert.AreEqual(5,DateAndTime.Month(DateTime.Parse("5/5/03 03:16:23 pm")));
+			Assert.AreEqual(1,DateAndTime.Month(ParseDateTime("1/1/03 12:11:23 AM")));
+			Assert.AreEqual(2,DateAndTime.Month(ParseDateTime("2/27/03 03:00:23 PM")));
+			Assert.AreEqual(12,DateAndTime.Month(ParseDateTime("12/12/03 17:59:23")));
+			Assert.AreEqual(5,DateAndTime.Month(ParseDateTime("5/5/03 03:16:23 pm")));
 		}
 
 		#endregion
@@ -1052,10 +1056,10 @@ namespace MonoTests.Microsoft_VisualBasic
 		[Test]
 		public void Second_1()
 		{
-			Assert.AreEqual(23,DateAndTime.Second(DateTime.Parse("2/2/03 12:11:23 AM")));
-			Assert.AreEqual(0,DateAndTime.Second(DateTime.Parse("2/2/03 03:11:00 PM")));
-			Assert.AreEqual(59,DateAndTime.Second(DateTime.Parse("2/2/03 17:11:59")));
-			Assert.AreEqual(6,DateAndTime.Second(DateTime.Parse("2/2/03 03:11:06 pm")));
+			Assert.AreEqual(23,DateAndTime.Second(ParseDateTime("2/2/03 12:11:23 AM")));
+			Assert.AreEqual(0,DateAndTime.Second(ParseDateTime("2/2/03 03:11:00 PM")));
+			Assert.AreEqual(59,DateAndTime.Second(ParseDateTime("2/2/03 17:11:59")));
+			Assert.AreEqual(6,DateAndTime.Second(ParseDateTime("2/2/03 03:11:06 pm")));
 		}
 
 		#endregion
@@ -1087,9 +1091,9 @@ namespace MonoTests.Microsoft_VisualBasic
 		{
 			DateTime dt = DateAndTime.TimeOfDay;
 			try {
-				DateAndTime.TimeOfDay = DateTime.Parse("12/2/03 23:34:45");
+				DateAndTime.TimeOfDay = ParseDateTime("12/2/03 23:34:45");
 
-				DateTime d1 = DateTime.Parse ("1/1/0001 23:34:45");
+				DateTime d1 = ParseDateTime ("1/1/0001 23:34:45");
 				DateTime d2 = DateAndTime.TimeOfDay;
 				Assert.IsTrue(Math.Abs((d1 - d2).TotalMilliseconds) < 50);
 			} catch (System.UnauthorizedAccessException exception) {
@@ -1131,12 +1135,12 @@ namespace MonoTests.Microsoft_VisualBasic
 		[Test]
 		public void TimeSerial_1()
 		{
-			Assert.AreEqual(DateTime.Parse("1/1/0001 02:03:04"),DateAndTime.TimeSerial(2,3,4));
-			Assert.AreEqual(DateTime.Parse("1/1/0001 21:56:56"),DateAndTime.TimeSerial(-2,-3,-4));
-			Assert.AreEqual(DateTime.Parse("1/1/0001 22:33:34"),DateAndTime.TimeSerial(22,33,34));
-			Assert.AreEqual(DateTime.Parse("1/1/0001 01:26:16"),DateAndTime.TimeSerial(-22,-33,-44));
-			Assert.AreEqual(DateTime.Parse("1/2/0001 05:30:34"),DateAndTime.TimeSerial(28,89,94));
-			Assert.AreEqual(DateTime.Parse("1/1/0001 00:00:00"),DateAndTime.TimeSerial(-24,0,0));
+			Assert.AreEqual(ParseDateTime("1/1/0001 02:03:04"),DateAndTime.TimeSerial(2,3,4));
+			Assert.AreEqual(ParseDateTime("1/1/0001 21:56:56"),DateAndTime.TimeSerial(-2,-3,-4));
+			Assert.AreEqual(ParseDateTime("1/1/0001 22:33:34"),DateAndTime.TimeSerial(22,33,34));
+			Assert.AreEqual(ParseDateTime("1/1/0001 01:26:16"),DateAndTime.TimeSerial(-22,-33,-44));
+			Assert.AreEqual(ParseDateTime("1/2/0001 05:30:34"),DateAndTime.TimeSerial(28,89,94));
+			Assert.AreEqual(ParseDateTime("1/1/0001 00:00:00"),DateAndTime.TimeSerial(-24,0,0));
 		}
 
 		[Test]
@@ -1258,12 +1262,12 @@ namespace MonoTests.Microsoft_VisualBasic
 		[Test]
 		public void TimeValue_1()
 		{
-			Assert.AreEqual(DateTime.Parse("1/1/0001 11:23:44"),DateAndTime.TimeValue("11:23:44"));
-			Assert.AreEqual(DateTime.Parse("1/1/0001 23:23:44"),DateAndTime.TimeValue("11:23:44 PM"));
-			Assert.AreEqual(DateTime.Parse("1/1/0001 17:02:34"),DateAndTime.TimeValue("5:2:34 pm"));
-			Assert.AreEqual(DateTime.Parse("1/1/0001 10:11:00"),DateAndTime.TimeValue("10:11 am"));
+			Assert.AreEqual(ParseDateTime("1/1/0001 11:23:44"),DateAndTime.TimeValue("11:23:44"));
+			Assert.AreEqual(ParseDateTime("1/1/0001 23:23:44"),DateAndTime.TimeValue("11:23:44 PM"));
+			Assert.AreEqual(ParseDateTime("1/1/0001 17:02:34"),DateAndTime.TimeValue("5:2:34 pm"));
+			Assert.AreEqual(ParseDateTime("1/1/0001 10:11:00"),DateAndTime.TimeValue("10:11 am"));
 
-			Assert.AreEqual(DateTime.Parse("1/1/0001 10:11:00"),DateAndTime.TimeValue("1/2/03 10:11 am"));
+			Assert.AreEqual(ParseDateTime("1/1/0001 10:11:00"),DateAndTime.TimeValue("1/2/03 10:11 am"));
 		}
 		
 		[Test]
@@ -1291,8 +1295,8 @@ namespace MonoTests.Microsoft_VisualBasic
 		{
 			Assert.AreEqual(new DateTime(DateTime.Now.Year,DateTime.Now.Month,DateTime.Now.Day,0,0,0,0),DateAndTime.Today);
 
-			DateAndTime.Today = DateTime.Parse("12/12/03 12:33:34");
-			Assert.AreEqual(DateTime.Parse("12/12/03 00:00:00"),DateAndTime.Today);
+			DateAndTime.Today = ParseDateTime("12/12/03 12:33:34");
+			Assert.AreEqual(ParseDateTime("12/12/03 00:00:00"),DateAndTime.Today);
 		}
 
 		#endregion
@@ -1309,14 +1313,14 @@ namespace MonoTests.Microsoft_VisualBasic
 		[Test]
 		public void Weekday_1()
 		{
-			Assert.AreEqual(6,DateAndTime.Weekday(DateTime.Parse("12/12/03"),FirstDayOfWeek.System));
-			Assert.AreEqual(6,DateAndTime.Weekday(DateTime.Parse("12/12/03"),FirstDayOfWeek.Sunday));
-			Assert.AreEqual(5,DateAndTime.Weekday(DateTime.Parse("12/12/03"),FirstDayOfWeek.Monday));
-			Assert.AreEqual(4,DateAndTime.Weekday(DateTime.Parse("12/12/03"),FirstDayOfWeek.Tuesday));
-			Assert.AreEqual(3,DateAndTime.Weekday(DateTime.Parse("12/12/03"),FirstDayOfWeek.Wednesday));
-			Assert.AreEqual(2,DateAndTime.Weekday(DateTime.Parse("12/12/03"),FirstDayOfWeek.Thursday));
-			Assert.AreEqual(1,DateAndTime.Weekday(DateTime.Parse("12/12/03"),FirstDayOfWeek.Friday));
-			Assert.AreEqual(7,DateAndTime.Weekday(DateTime.Parse("12/12/03"),FirstDayOfWeek.Saturday));
+			Assert.AreEqual(6,DateAndTime.Weekday(ParseDateTime("12/12/03"),FirstDayOfWeek.System));
+			Assert.AreEqual(6,DateAndTime.Weekday(ParseDateTime("12/12/03"),FirstDayOfWeek.Sunday));
+			Assert.AreEqual(5,DateAndTime.Weekday(ParseDateTime("12/12/03"),FirstDayOfWeek.Monday));
+			Assert.AreEqual(4,DateAndTime.Weekday(ParseDateTime("12/12/03"),FirstDayOfWeek.Tuesday));
+			Assert.AreEqual(3,DateAndTime.Weekday(ParseDateTime("12/12/03"),FirstDayOfWeek.Wednesday));
+			Assert.AreEqual(2,DateAndTime.Weekday(ParseDateTime("12/12/03"),FirstDayOfWeek.Thursday));
+			Assert.AreEqual(1,DateAndTime.Weekday(ParseDateTime("12/12/03"),FirstDayOfWeek.Friday));
+			Assert.AreEqual(7,DateAndTime.Weekday(ParseDateTime("12/12/03"),FirstDayOfWeek.Saturday));
 		}
 
 		#endregion
@@ -1531,10 +1535,10 @@ namespace MonoTests.Microsoft_VisualBasic
 		[Test]
 		public void Year_1()
 		{
-			Assert.AreEqual(2003,DateAndTime.Year(DateTime.Parse("1/1/03 12:11:23 AM")));
-			Assert.AreEqual(1003,DateAndTime.Year(DateTime.Parse("2/27/1003 03:00:23 PM")));
-			Assert.AreEqual(9999,DateAndTime.Year(DateTime.Parse("12/12/9999 17:59:23")));
-			Assert.AreEqual(1,DateAndTime.Year(DateTime.Parse("5/5/0001 03:16:23 pm")));
+			Assert.AreEqual(2003,DateAndTime.Year(ParseDateTime("1/1/03 12:11:23 AM")));
+			Assert.AreEqual(1003,DateAndTime.Year(ParseDateTime("2/27/1003 03:00:23 PM")));
+			Assert.AreEqual(9999,DateAndTime.Year(ParseDateTime("12/12/9999 17:59:23")));
+			Assert.AreEqual(1,DateAndTime.Year(ParseDateTime("5/5/0001 03:16:23 pm")));
 		}
 
 		#endregion
