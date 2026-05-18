@@ -310,6 +310,7 @@ net_4_x_parallel_dirs = \
 	System.Drawing.Design		\
 	Microsoft.CSharp	\
 	Microsoft.VisualBasic	\
+	Microsoft.VisualBasic.Compatibility	\
 	System.ServiceModel.Internals	\
 	SMDiagnostics	\
 	System.Runtime.Serialization	\
