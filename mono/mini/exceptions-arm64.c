@@ -382,9 +382,15 @@ get_throw_trampoline (int size, gboolean corlib, gboolean rethrow, gboolean llvm
 
 	MINI_BEGIN_CODEGEN ();
 
+	mono_add_unwind_op_def_cfa (unwind_ops, code, start, ARMREG_SP, 0);
+
 	/* Setup a frame */
 	arm_stpx_pre (code, ARMREG_FP, ARMREG_LR, ARMREG_SP, -frame_size);
+	mono_add_unwind_op_def_cfa_offset (unwind_ops, code, start, frame_size);
+	mono_add_unwind_op_offset (unwind_ops, code, start, ARMREG_FP, -frame_size);
+	mono_add_unwind_op_offset (unwind_ops, code, start, ARMREG_LR, -frame_size + 8);
 	arm_movspx (code, ARMREG_FP, ARMREG_SP);
+	mono_add_unwind_op_def_cfa_reg (unwind_ops, code, start, ARMREG_FP);
 
 	/* Save gregs */
 	code = mono_arm_emit_store_regarray (code, 0xffffffff, ARMREG_FP, gregs_offset);
