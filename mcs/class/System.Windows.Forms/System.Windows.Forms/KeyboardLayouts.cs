@@ -2080,6 +2080,7 @@ namespace System.Windows.Forms
 			VK_ICO_HELP = 0xE3,
 			VK_ICO_00 = 0xE4,
 			VK_PROCESSKEY = 0xE5,
+			VK_PACKET = 0xE7,
 			VK_OEM_ATTN = 0xF0,
 			VK_OEM_COPY = 0xF2,
 			VK_OEM_AUTO = 0xF3,
