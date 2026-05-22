@@ -56,7 +56,7 @@ test-csi:
 
 test-bundle:
 	mkdir -p $(TEST_BUNDLE_PATH)/tests/csi
-	cp -L $(ROSLYN_CSC_DIR)/* $(TEST_BUNDLE_PATH)/tests/csi/
+	cp -rL $(ROSLYN_CSC_DIR)/* $(TEST_BUNDLE_PATH)/tests/csi/
 
 endif
 
