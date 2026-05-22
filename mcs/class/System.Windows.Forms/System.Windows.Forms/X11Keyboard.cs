@@ -392,9 +392,9 @@ namespace System.Windows.Forms {
 
 			string text = msg.refobject as string;
 			if (!String.IsNullOrEmpty (text)) {
-				Msg message = (msg.message == Msg.WM_KEYDOWN ? Msg.WM_CHAR : Msg.WM_SYSCHAR);
+				Msg text_message = (msg.message == Msg.WM_KEYDOWN ? Msg.WM_CHAR : Msg.WM_SYSCHAR);
 				foreach (char c in text)
-					XplatUI.PostMessage (msg.hwnd, message, (IntPtr) c, msg.lParam);
+					XplatUI.PostMessage (msg.hwnd, text_message, (IntPtr) c, msg.lParam);
 				return true;
 			}
 
