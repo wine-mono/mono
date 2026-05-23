@@ -33,7 +33,7 @@ namespace System.Windows.Forms
 		#region Create Keyboards
 		void LoadLayouts()
 		{
-			KeyboardLayout[] table = new KeyboardLayout[64];
+			KeyboardLayout[] table = new KeyboardLayout[66];
 
 			table[0] = new KeyboardLayout(1033, "United States keyboard layout", 0, 0, new uint[][] {
 				new uint [] {0x60, 0x7e, }, new uint [] {0x31, 0x21, },
@@ -1699,6 +1699,58 @@ namespace System.Windows.Forms
 				new uint [] {0x2c, 0x3b, }, new uint [] {0x2e, 0x3a, },
 				new uint [] {0x2d, 0x3d, }, new uint [] {0x5b, 0x5d, },
 				new uint [] {},         });
+			table[64] = new KeyboardLayout(1036, "French BEPO AFNOR keyboard layout", ScanTableIndex.Qwerty, VKeyTableIndex.Bepo, new uint[][] {
+				new uint [] {0x24, 0x23, }, new uint [] {0x22, 0x31, },
+				new uint [] {0xffffffab, 0x32, }, new uint [] {0xffffffbb, 0x33, },
+				new uint [] {0x28, 0x34, }, new uint [] {0x29, 0x35, },
+				new uint [] {0x40, 0x36, }, new uint [] {0x2b, 0x37, },
+				new uint [] {0x2d, 0x38, }, new uint [] {0x2f, 0x39, },
+				new uint [] {0x2a, 0x30, }, new uint [] {0x3d, 0xffffffb0, },
+				new uint [] {0x25, 0x60, }, new uint [] {0x62, 0x42, },
+				new uint [] {0xffffffe9, 0xffffffc9, }, new uint [] {0x70, 0x50, },
+				new uint [] {0x6f, 0x4f, }, new uint [] {0xffffffe8, 0xffffffc8, },
+				new uint [] {0x5e, 0x21, }, new uint [] {0x76, 0x56, },
+				new uint [] {0x64, 0x44, }, new uint [] {0x6c, 0x4c, },
+				new uint [] {0x6a, 0x4a, }, new uint [] {0x7a, 0x5a, },
+				new uint [] {0x77, 0x57, }, new uint [] {0x61, 0x41, },
+				new uint [] {0x75, 0x55, }, new uint [] {0x69, 0x49, },
+				new uint [] {0x65, 0x45, }, new uint [] {0x2c, 0x3b, },
+				new uint [] {0x63, 0x43, }, new uint [] {0x74, 0x54, },
+				new uint [] {0x73, 0x53, }, new uint [] {0x72, 0x52, },
+				new uint [] {0x6e, 0x4e, }, new uint [] {0x6d, 0x4d, },
+				new uint [] {0xffffffe7, 0xffffffc7, }, new uint [] {0xffffffe0, 0xffffffc0, },
+				new uint [] {0x79, 0x59, }, new uint [] {0x78, 0x58, },
+				new uint [] {0x2e, 0x3a, }, new uint [] {0x6b, 0x4b, },
+				new uint [] {0x0, 0x3f, }, new uint [] {0x71, 0x51, },
+				new uint [] {0x67, 0x47, }, new uint [] {0x68, 0x48, },
+				new uint [] {0x66, 0x46, }, new uint [] {0xffffffea, 0xffffffca, },
+				new uint [] {},         });
+			table[65] = new KeyboardLayout(1036, "French BEPO keyboard layout", ScanTableIndex.Qwerty, VKeyTableIndex.Bepo, new uint[][] {
+				new uint [] {0x24, 0x23, }, new uint [] {0x22, 0x31, },
+				new uint [] {0xffffffab, 0x32, }, new uint [] {0xffffffbb, 0x33, },
+				new uint [] {0x28, 0x34, }, new uint [] {0x29, 0x35, },
+				new uint [] {0x40, 0x36, }, new uint [] {0x2b, 0x37, },
+				new uint [] {0x2d, 0x38, }, new uint [] {0x2f, 0x39, },
+				new uint [] {0x2a, 0x30, }, new uint [] {0x3d, 0xffffffb0, },
+				new uint [] {0x25, 0x60, }, new uint [] {0x62, 0x42, },
+				new uint [] {0xffffffe9, 0xffffffc9, }, new uint [] {0x70, 0x50, },
+				new uint [] {0x6f, 0x4f, }, new uint [] {0xffffffe8, 0xffffffc8, },
+				new uint [] {0x5e, 0x21, }, new uint [] {0x76, 0x56, },
+				new uint [] {0x64, 0x44, }, new uint [] {0x6c, 0x4c, },
+				new uint [] {0x6a, 0x4a, }, new uint [] {0x7a, 0x5a, },
+				new uint [] {0x77, 0x57, }, new uint [] {0x61, 0x41, },
+				new uint [] {0x75, 0x55, }, new uint [] {0x69, 0x49, },
+				new uint [] {0x65, 0x45, }, new uint [] {0x2c, 0x3b, },
+				new uint [] {0x63, 0x43, }, new uint [] {0x74, 0x54, },
+				new uint [] {0x73, 0x53, }, new uint [] {0x72, 0x52, },
+				new uint [] {0x6e, 0x4e, }, new uint [] {0x6d, 0x4d, },
+				new uint [] {0xffffffe7, 0xffffffc7, }, new uint [] {0xffffffe0, 0xffffffc0, },
+				new uint [] {0x79, 0x59, }, new uint [] {0x78, 0x58, },
+				new uint [] {0x2e, 0x3a, }, new uint [] {0x6b, 0x4b, },
+				new uint [] {0x27, 0x3f, }, new uint [] {0x71, 0x51, },
+				new uint [] {0x67, 0x47, }, new uint [] {0x68, 0x48, },
+				new uint [] {0x66, 0x46, }, new uint [] {0xffffffea, 0xffffffca, },
+				new uint [] {},         });
 
 			keyboard_layouts = table;
 
@@ -1710,7 +1762,8 @@ namespace System.Windows.Forms
 			VirtualKeys[][] vkeys = new VirtualKeys[][] {
 				main_key_vkey_qwerty, main_key_vkey_qwertz, main_key_vkey_dvorak,
 				main_key_vkey_qwertz_105, main_key_vkey_azerty, main_key_vkey_qwerty_v2,
-				main_key_vkey_abnt_qwerty, main_key_vkey_qwerty_jp106, main_key_vkey_vnc
+				main_key_vkey_abnt_qwerty, main_key_vkey_qwerty_jp106, main_key_vkey_vnc,
+				main_key_vkey_bepo
 			};
 
 			vkey_table = new int[vkeys.Length][];
@@ -1923,6 +1976,23 @@ namespace System.Windows.Forms
 			VirtualKeys.VK_X, VirtualKeys.VK_C, VirtualKeys.VK_V, VirtualKeys.VK_B, VirtualKeys.VK_N,
 			VirtualKeys.VK_M, VirtualKeys.VK_OEM_COMMA, VirtualKeys.VK_OEM_PERIOD, VirtualKeys.VK_OEM_1,
 			VirtualKeys.VK_OEM_2, VirtualKeys.VK_OEM_5
+		};
+
+		private static readonly VirtualKeys[] main_key_vkey_bepo = new VirtualKeys[]
+		{
+			// NOTE: this layout must concur with the scan codes layout above
+			VirtualKeys.VK_OEM_3, VirtualKeys.VK_1, VirtualKeys.VK_2, VirtualKeys.VK_3, VirtualKeys.VK_4,
+			VirtualKeys.VK_5, VirtualKeys.VK_6, VirtualKeys.VK_7, VirtualKeys.VK_8, VirtualKeys.VK_9,
+			VirtualKeys.VK_0, VirtualKeys.VK_OEM_PLUS, VirtualKeys.VK_OEM_1, VirtualKeys.VK_B,
+			VirtualKeys.VK_OEM_7, VirtualKeys.VK_P, VirtualKeys.VK_O, VirtualKeys.VK_OEM_4,
+			VirtualKeys.VK_OEM_6, VirtualKeys.VK_V, VirtualKeys.VK_D, VirtualKeys.VK_L,
+			VirtualKeys.VK_J, VirtualKeys.VK_Z, VirtualKeys.VK_W, VirtualKeys.VK_A,
+			VirtualKeys.VK_U, VirtualKeys.VK_I, VirtualKeys.VK_E, VirtualKeys.VK_OEM_COMMA,
+			VirtualKeys.VK_C, VirtualKeys.VK_T, VirtualKeys.VK_S, VirtualKeys.VK_R,
+			VirtualKeys.VK_N, VirtualKeys.VK_M, VirtualKeys.VK_OEM_8, VirtualKeys.VK_OEM_MINUS,
+			VirtualKeys.VK_Y, VirtualKeys.VK_X, VirtualKeys.VK_OEM_PERIOD, VirtualKeys.VK_K,
+			VirtualKeys.VK_OEM_2, VirtualKeys.VK_Q, VirtualKeys.VK_G, VirtualKeys.VK_H,
+			VirtualKeys.VK_F, VirtualKeys.VK_OEM_102 // the 102nd key (actually to the right of l-shift)
 		};
 
 		/*
@@ -2147,7 +2217,8 @@ namespace System.Windows.Forms
 		QwertyV2,
 		AbntQwerty,
 		QwertyJp106,
-		Vnc
+		Vnc,
+		Bepo
 	}
 
 	internal enum ScanTableIndex
@@ -2159,4 +2230,3 @@ namespace System.Windows.Forms
 		Vnc
 	}
 }
-
