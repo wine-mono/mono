@@ -47,6 +47,9 @@ macos-arm64-build:
     script:
         - "scripts/ci/update-submodules.sh"
         - "scripts/ci/build.sh"
+    artifacts:
+        paths:
+            - test-bundle/
 
 build-dist:
     stage: build

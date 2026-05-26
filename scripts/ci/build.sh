@@ -15,9 +15,7 @@ do_build ()
 
 	make -C runtime xunit-test || exit 1
 
-	if test x$CI_PLATFORM != xmac; then
-		make -j1 TEST_BUNDLE_PATH=$PWD/test-bundle test-bundle || exit 1
-	fi
+	make -j1 TEST_BUNDLE_PATH=$PWD/test-bundle test-bundle || exit 1
 
 	if test x$CI_PLATFORM = xlinux; then
 		make -j1 -C mcs/class package-monolite-latest-all-platforms || exit 1
