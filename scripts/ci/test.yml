@@ -12,6 +12,8 @@ linux-amd64-test:
         paths:
             - test-results/
         expire_in: 1 week
+    before_script:
+        - export CI_PLATFORM=linux
     script:
         - "scripts/ci/test.sh"
 
