@@ -181,7 +181,7 @@ if [ "$test_suite" = "--mini" ]; then
     cd tests/mini || exit 1
 
 	case "$test_argument_1" in
-		--aot=*) rm -f *.exe.so *.exe.dylib *.exe.dylib.dSYM *.exe.dll; "${MONO_EXECUTABLE}" --config "$r/_tmpinst/etc/mono/config" "$test_argument_1" ./*.exe || exit 1;;
+		--aot=*) rm -rfv *.exe.so *.exe.dylib *.exe.dylib.dSYM *.exe.dll; "${MONO_EXECUTABLE}" --config "$r/_tmpinst/etc/mono/config" "$test_argument_1" ./*.exe || exit 1;;
 		*) true;;
 	esac
 
@@ -208,7 +208,7 @@ if [ "$test_suite" = "--mini" ]; then
         </assemblies>" >> "${xunit_results_path}";
 
 	case "$test_argument_1" in
-		--aot=*) rm -f *.exe.so *.exe.dylib *.exe.dylib.dSYM *.exe.dll;;
+		--aot=*) rm -rfv *.exe.so *.exe.dylib *.exe.dylib.dSYM *.exe.dll;;
 		*) true;;
 	esac
 
