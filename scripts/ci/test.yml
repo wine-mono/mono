@@ -34,9 +34,33 @@ linux-amd64-test-monolite:
         - export CCACHE_DIR="$BASEDIR/ccache"
         - export CCACHE_COMPILERCHECK=content
         - export PATH="/usr/lib/ccache:$PATH"
+        - export CI_PLATFORM=linux
         - git config --global --add safe.directory $CI_PROJECT_DIR
         - rm -fr .git/rebase-merge  # in case a previous CI run failed in git rebase
     script:
         - "scripts/ci/update-submodules.sh"
         - "scripts/ci/test-monolite.sh"
 
+macos-arm64-test:
+    stage: test
+    image: winehq-sequoia-pristine
+    variables:
+        TART_EXECUTOR_SSH_USERNAME: "gitlab"
+        TART_EXECUTOR_SSH_PASSWORD: "gitlab"
+    rules:
+        - if: $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_PROJECT_NAMESPACE == 'mono'
+    interruptible: true
+    tags:
+        - mac
+    needs:
+        - job: macos-arm64-build
+    artifacts:
+        when: always
+        paths:
+            - test-results/
+        expire_in: 1 week
+    before_script:
+        - export CI_PLATFORM=mac
+        - export CI_LIMITED=y
+    script:
+        - "scripts/ci/test.sh"

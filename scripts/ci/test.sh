@@ -6,7 +6,7 @@ if test x$CI_PLATFORM = xlinux -a ! -e test-bundle/mono-libgdiplus.so; then
 	cp usr/local/lib/libgdiplus.so test-bundle/mono-libgdiplus.so || exit 1
 fi
 
-if test x$GITLAB_CI = xtrue; then
+if test x$GITLAB_CI = xtrue -a x$CI_PLATFORM = xlinux; then
 	cat >$HOME/xorg.conf << EOF
 Section "Device"
   Identifier "dummy"
