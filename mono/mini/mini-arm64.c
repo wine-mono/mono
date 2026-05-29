@@ -4978,16 +4978,17 @@ mono_arch_emit_prolog (MonoCompile *cfg)
 		arm_pacibsp (code);
 
 	/* Setup frame */
+	cfa_offset += cfg->stack_offset;
 	if (arm_is_ldpx_imm (-cfg->stack_offset)) {
 		arm_stpx_pre (code, ARMREG_FP, ARMREG_LR, ARMREG_SP, -cfg->stack_offset);
+		mono_emit_unwind_op_def_cfa_offset (cfg, code, cfa_offset);
 	} else {
 		/* sp -= cfg->stack_offset */
 		/* This clobbers ip0/ip1 */
 		code = emit_subx_sp_imm (code, cfg->stack_offset);
+		mono_emit_unwind_op_def_cfa_offset (cfg, code, cfa_offset);
 		arm_stpx (code, ARMREG_FP, ARMREG_LR, ARMREG_SP, 0);
 	}
-	cfa_offset += cfg->stack_offset;
-	mono_emit_unwind_op_def_cfa_offset (cfg, code, cfa_offset);
 	mono_emit_unwind_op_offset (cfg, code, ARMREG_FP, (- cfa_offset) + 0);
 	mono_emit_unwind_op_offset (cfg, code, ARMREG_LR, (- cfa_offset) + 8);
 	arm_movspx (code, ARMREG_FP, ARMREG_SP);

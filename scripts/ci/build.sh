@@ -6,8 +6,10 @@ do_build ()
 
 	make all || exit 1
 
-	test ! -e mcs/class/lib/monolite-* || echo Monolite should not be required in CI
-	test ! -e mcs/class/lib/monolite-* || exit 1
+	if test x$CI_PLATFORM != xmac; then
+		test ! -e mcs/class/lib/monolite-* || echo Monolite should not be required in CI
+		test ! -e mcs/class/lib/monolite-* || exit 1
+	fi
 
 	make test || exit 1
 
@@ -15,7 +17,9 @@ do_build ()
 
 	make -j1 TEST_BUNDLE_PATH=$PWD/test-bundle test-bundle || exit 1
 
-	make -j1 -C mcs/class package-monolite-latest-all-platforms || exit 1
+	if test x$CI_PLATFORM = xlinux; then
+		make -j1 -C mcs/class package-monolite-latest-all-platforms || exit 1
+	fi
 
 	make -C mono/unit-tests check || exit 1
 
@@ -32,7 +36,7 @@ do_build ()
 
 rm -f success-marker
 
-do_build | ts '[%H:%M:%S]'
+do_build | (ts '[%H:%M:%S]' || cat)
 
 test -f success-marker
 

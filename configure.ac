@@ -180,6 +180,12 @@ case "$host" in
 			RID="win-x64"
 			COREARCH="x64"
 			;;
+		aarch64-*-*)
+			support_boehm=no
+			with_gc=sgen
+			RID="win-arm64"
+			COREARCH="arm64"
+			;;
 		esac
 
 		# Windows 7 or later is required

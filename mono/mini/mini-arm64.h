@@ -38,6 +38,40 @@ void win32_seh_set_handler(int type, MonoW32ExceptionHandler handler);
 
 LONG CALLBACK seh_handler(EXCEPTION_POINTERS* ep);
 
+// Unwind format described at:
+// https://learn.microsoft.com/en-us/cpp/build/arm64-exception-handling
+
+#define UWOP_ALLOC_S 0
+#define UWOP_SAVE_FPLR 0x40
+#define UWOP_SAVE_FPLR_X 0x80
+#define UWOP_ALLOC_M 0xc000
+#define UWOP_SAVE_REGP 0xc800
+#define UWOP_SAVE_REG 0xd000
+#define UWOP_SET_FP 0xe1
+#define UWOP_NOP 0xe3
+#define UWOP_END 0xe4
+#define UWOP_SAVE_NEXT 0xe6
+
+typedef guint8 UNWIND_CODE;
+
+#define MONO_MAX_UNWIND_CODES 32
+
+#define UNWIND_INFO_ALIGN 4
+
+typedef struct UNWIND_INFO {
+	IMAGE_ARM64_RUNTIME_FUNCTION_ENTRY_XDATA xdata;
+	UNWIND_CODE unwind_codes[MONO_MAX_UNWIND_CODES];
+
+	// fields not used by Win32 API:
+	guint32 code_count;
+} UNWIND_INFO, *PUNWIND_INFO;
+
+static inline guint
+mono_arch_unwindinfo_get_size (PUNWIND_INFO unwind_info)
+{
+	return sizeof(unwind_info->xdata) + ((unwind_info->code_count + 3) & ~3);
+}
+
 typedef struct {
 	SRWLOCK lock;
 	PVOID handle;
@@ -49,35 +83,6 @@ typedef struct {
 } DynamicFunctionTableEntry;
 
 #define MONO_UNWIND_INFO_RT_FUNC_SIZE 128
-
-typedef BOOLEAN (WINAPI* RtlInstallFunctionTableCallbackPtr)(
-	DWORD64 TableIdentifier,
-	DWORD64 BaseAddress,
-	DWORD Length,
-	PGET_RUNTIME_FUNCTION_CALLBACK Callback,
-	PVOID Context,
-	PCWSTR OutOfProcessCallbackDll);
-
-typedef BOOLEAN (WINAPI* RtlDeleteFunctionTablePtr)(
-	PRUNTIME_FUNCTION FunctionTable);
-
-// On Win8/Win2012Server and later we can use dynamic growable function tables
-// instead of RtlInstallFunctionTableCallback. This gives us the benefit to
-// include all needed unwind upon registration.
-typedef DWORD (NTAPI* RtlAddGrowableFunctionTablePtr)(
-    PVOID * DynamicTable,
-    PRUNTIME_FUNCTION FunctionTable,
-    DWORD EntryCount,
-    DWORD MaximumEntryCount,
-    ULONG_PTR RangeBase,
-    ULONG_PTR RangeEnd);
-
-typedef VOID (NTAPI* RtlGrowFunctionTablePtr)(
-    PVOID DynamicTable,
-    DWORD NewEntryCount);
-
-typedef VOID (NTAPI* RtlDeleteGrowableFunctionTablePtr)(
-    PVOID DynamicTable);
 
 #endif /* HOST_WIN32 */
 
@@ -180,6 +185,9 @@ typedef struct {
 	MonoInst *bp_tramp_var;
 	guint8 *thunks;
 	int thunks_size;
+#ifdef HOST_WIN32
+	PUNWIND_INFO unwindinfo;
+#endif
 } MonoCompileArch;
 
 #define MONO_ARCH_EMULATE_FCONV_TO_U4 1
@@ -262,6 +270,32 @@ typedef struct {
 
 #if defined(TARGET_IOS) || defined(TARGET_WATCHOS)
 #define MONO_ARCH_HAVE_UNWIND_BACKTRACE 1
+#endif
+
+#if defined(TARGET_WIN32) && !defined(DISABLE_JIT)
+
+#define MONO_ARCH_HAVE_UNWIND_TABLE 1
+#define MONO_ARCH_HAVE_CODE_CHUNK_TRACKING 1
+
+#endif
+
+#ifdef MONO_ARCH_HAVE_UNWIND_TABLE
+
+guint
+mono_arch_unwindinfo_init_method_unwind_info (gpointer cfg);
+
+void
+mono_arch_unwindinfo_install_method_unwind_info (PUNWIND_INFO *unwind_info, gpointer code, guint code_size);
+
+void
+mono_arch_unwindinfo_install_tramp_unwind_info (GSList *unwind_ops, gpointer code, guint code_size);
+
+void
+mono_arch_code_chunk_new (void *chunk, int size);
+
+void
+mono_arch_code_chunk_destroy (void *chunk);
+
 #endif
 
 /* Relocations */
