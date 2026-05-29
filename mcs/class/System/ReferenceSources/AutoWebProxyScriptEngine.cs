@@ -114,7 +114,7 @@ namespace System.Net
 				
 		WebProxyData InitializeRegistryGlobalProxy ()
 		{
-			int iProxyEnable = (int)Microsoft.Win32.Registry.GetValue ("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", "ProxyEnable", 0);
+			int iProxyEnable = (int)(Microsoft.Win32.Registry.GetValue ("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", "ProxyEnable", null) ?? 0);
 
 			if (iProxyEnable > 0) {
 				string strHttpProxy = "";
