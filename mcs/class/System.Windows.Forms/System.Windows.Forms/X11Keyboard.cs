@@ -328,10 +328,16 @@ namespace System.Windows.Forms {
 				return;
 			}
 
+			string text = null;
+			if (xevent.type == XEventName.KeyPress && ascii_chars != 0)
+				text = lookup_buffer.ToString (0, lookup_buffer.Length);
+
 			AltGrMask = xevent.KeyEvent.state & (0x6000 | (int) KeyMasks.ModMasks);
 			int vkey = EventToVkey (xevent);
 			if (vkey == 0 && ascii_chars != 0) {
-				vkey = (int) VirtualKeys.VK_NONAME;
+				vkey = (int) VirtualKeys.VK_PACKET;
+			} else {
+				text = null;
 			}
 
 			if (FilterKey (xevent, vkey))
@@ -363,7 +369,7 @@ namespace System.Windows.Forms {
 					dw_flags |= KeybdEventFlags.KeyUp;
 				if ((vkey & 0x100) != 0)
 					dw_flags |= KeybdEventFlags.ExtendedKey;
-				msg = SendKeyboardInput ((VirtualKeys) (vkey & 0xFF), bscan, xevent.KeyEvent.keycode, dw_flags, event_time);
+				msg = SendKeyboardInput ((VirtualKeys) (vkey & 0xFF), bscan, xevent.KeyEvent.keycode, dw_flags, event_time, text);
 				msg.hwnd = hwnd;
 				break;
 			}
@@ -383,6 +389,14 @@ namespace System.Windows.Forms {
 
 			if (msg.message != Msg.WM_KEYDOWN && msg.message != Msg.WM_SYSKEYDOWN)
 				return res;
+
+			string text = msg.refobject as string;
+			if (!String.IsNullOrEmpty (text)) {
+				Msg text_message = (msg.message == Msg.WM_KEYDOWN ? Msg.WM_CHAR : Msg.WM_SYSCHAR);
+				foreach (char c in text)
+					XplatUI.PostMessage (msg.hwnd, text_message, (IntPtr) c, msg.lParam);
+				return true;
+			}
 
 			if ((key_state_table [(int) VirtualKeys.VK_MENU] & 0x80) != 0 && msg.wParam != (IntPtr) 0x12)
 				menu_state = true;
@@ -565,6 +579,11 @@ namespace System.Windows.Forms {
 
 		private MSG SendKeyboardInput (VirtualKeys vkey, int scan, int keycode, KeybdEventFlags dw_flags, uint time)
 		{
+			return SendKeyboardInput (vkey, scan, keycode, dw_flags, time, null);
+		}
+
+		private MSG SendKeyboardInput (VirtualKeys vkey, int scan, int keycode, KeybdEventFlags dw_flags, uint time, string text)
+		{
 			Msg message;
 
 			if ((dw_flags & KeybdEventFlags.KeyUp) != 0) {
@@ -586,6 +605,7 @@ namespace System.Windows.Forms {
 			msg.message = message;
 			msg.wParam = (IntPtr) vkey;
 			msg.lParam = GenerateLParam (msg, keycode);
+			msg.refobject = text;
 			return msg;
 		}
 
