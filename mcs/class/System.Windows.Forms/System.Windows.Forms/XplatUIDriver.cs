@@ -330,6 +330,10 @@ namespace System.Windows.Forms {
 		internal abstract void SetModal(IntPtr handle, bool Modal);
 		internal abstract void Invalidate(IntPtr handle, Rectangle rc, bool clear);
 		internal abstract void InvalidateNC(IntPtr handle);
+		internal virtual Graphics CreateGraphics (IntPtr handle)
+		{
+			return Graphics.FromHwnd (handle);
+		}
 		internal abstract IntPtr DefWndProc(ref Message msg);
 		internal abstract void HandleException(Exception e);
 		internal abstract void DoEvents();
