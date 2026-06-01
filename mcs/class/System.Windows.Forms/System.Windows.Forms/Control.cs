@@ -3603,7 +3603,7 @@ namespace System.Windows.Forms
 			if (!IsHandleCreated) {
 				this.CreateHandle();
 			}
-			return Graphics.FromHwnd(this.window.Handle);
+			return XplatUI.CreateGraphics (this.window.Handle);
 		}
 
 		public DragDropEffects DoDragDrop(object data, DragDropEffects allowedEffects) {
