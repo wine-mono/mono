@@ -177,6 +177,9 @@ struct _MonoArray {
 
 #define MONO_SIZEOF_MONO_ARRAY (MONO_STRUCT_OFFSET_CONSTANT (MonoArray, vector))
 
+// WINE MONO HACK: extra padding for SMILE GAME BUILDER engine
+#define MONO_ARRAY_PAD_BYTES 8
+
 struct _MonoString {
 	MonoObject object;
 	int32_t length;

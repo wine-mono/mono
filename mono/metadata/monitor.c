@@ -422,7 +422,7 @@ mon_new (gsize id)
 		if (!monitor_freelist) {
 			MonitorArray *last;
 			LOCK_DEBUG (g_message ("%s: allocating more monitors: %d", __func__, array_size));
-			marray = (MonitorArray *)g_malloc0 (MONO_SIZEOF_MONO_ARRAY + array_size * sizeof (MonoThreadsSync));
+			marray = (MonitorArray *)g_malloc0 (MONO_SIZEOF_MONO_ARRAY + array_size * sizeof (MonoThreadsSync) + MONO_ARRAY_PAD_BYTES);
 			marray->num_monitors = array_size;
 			array_size *= 2;
 			/* link into the freelist */

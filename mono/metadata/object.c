@@ -6393,9 +6393,9 @@ mono_array_calc_byte_len (MonoClass *klass, uintptr_t len, uintptr_t *res)
 	if (CHECK_MUL_OVERFLOW_UN (byte_len, len))
 		return FALSE;
 	byte_len *= len;
-	if (CHECK_ADD_OVERFLOW_UN (byte_len, MONO_SIZEOF_MONO_ARRAY))
+	if (CHECK_ADD_OVERFLOW_UN (byte_len, MONO_SIZEOF_MONO_ARRAY + MONO_ARRAY_PAD_BYTES))
 		return FALSE;
-	byte_len += MONO_SIZEOF_MONO_ARRAY;
+	byte_len += MONO_SIZEOF_MONO_ARRAY + MONO_ARRAY_PAD_BYTES;
 
 	*res = byte_len;
 
@@ -7271,7 +7271,7 @@ mono_object_get_size_internal (MonoObject* o)
 		return MONO_SIZEOF_MONO_STRING + 2 * mono_string_length_internal ((MonoString*) o) + 2;
 	} else if (o->vtable->rank) {
 		MonoArray *array = (MonoArray*)o;
-		size_t size = MONO_SIZEOF_MONO_ARRAY + mono_array_element_size (klass) * mono_array_length_internal (array);
+		size_t size = MONO_SIZEOF_MONO_ARRAY + mono_array_element_size (klass) * mono_array_length_internal (array) + MONO_ARRAY_PAD_BYTES;
 		if (array->bounds) {
 			size += 3;
 			size &= ~3;

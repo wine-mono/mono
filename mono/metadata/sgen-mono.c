@@ -380,7 +380,7 @@ sgen_client_array_fill_range (char *start, size_t size)
 {
 	MonoArray *o;
 
-	if (size < MONO_SIZEOF_MONO_ARRAY) {
+	if (size < MONO_SIZEOF_MONO_ARRAY + MONO_ARRAY_PAD_BYTES) {
 		memset (start, 0, size);
 		return FALSE;
 	}
@@ -391,8 +391,8 @@ sgen_client_array_fill_range (char *start, size_t size)
 	o->obj.synchronisation = (MonoThreadsSync *)GINT_TO_POINTER (-1);
 	o->bounds = NULL;
 	/* We use array of int64 */
-	g_assert ((size - MONO_SIZEOF_MONO_ARRAY) % 8 == 0);
-	o->max_length = (mono_array_size_t)((size - MONO_SIZEOF_MONO_ARRAY) / 8);
+	g_assert ((size - MONO_SIZEOF_MONO_ARRAY - MONO_ARRAY_PAD_BYTES) % 8 == 0);
+	o->max_length = (mono_array_size_t)((size - MONO_SIZEOF_MONO_ARRAY - MONO_ARRAY_PAD_BYTES) / 8);
 
 	return TRUE;
 }
@@ -1227,7 +1227,7 @@ sgen_client_cardtable_scan_object (GCObject *obj, guint8 *cards, ScanCopyContext
 		mword bounds_size;
 		mword obj_size = sgen_mono_array_size (vt, arr, &bounds_size, sgen_vtable_get_descriptor (vt));
 		/* We don't want to scan the bounds entries at the end of multidimensional arrays */
-		char *obj_end = (char*)obj + obj_size - bounds_size;
+		char *obj_end = (char*)obj + obj_size - bounds_size - MONO_ARRAY_PAD_BYTES;
 		size_t card_count;
 		size_t extra_idx = 0;
 

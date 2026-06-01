@@ -89,7 +89,7 @@ sgen_mono_array_size (GCVTable vtable, MonoArray *array, mword *bounds_size, mwo
 	else
 		element_size = m_class_get_sizes (vtable->klass).element_size;
 
-	size_without_bounds = size = MONO_SIZEOF_MONO_ARRAY + (mword)element_size * mono_array_length_internal (array);
+	size_without_bounds = size = MONO_SIZEOF_MONO_ARRAY + (mword)element_size * mono_array_length_internal (array) + MONO_ARRAY_PAD_BYTES;
 
 	if (G_UNLIKELY (array->bounds)) {
 		size += sizeof (mono_array_size_t) - 1;
