@@ -5890,8 +5890,8 @@ mono_marshal_type_size (MonoType *type, MonoMarshalSpec *mspec, guint32 *align,
 		klass = mono_class_from_mono_type_internal (type);
 		if (klass == mono_defaults.object_class &&
 			(mspec && mspec->native == MONO_NATIVE_STRUCT)) {
-			*align = 16;
-			return 16;
+			*align = MONO_ABI_ALIGNOF (double);
+			return (TARGET_SIZEOF_VOID_P == 8) ? 24 : 16;
 		} 
 		padded_size = mono_class_native_size (klass, align);
 		if (padded_size == 0)
