@@ -20,6 +20,12 @@ EOF
 	startx -- -config $HOME/xorg.conf $DISPLAY &
 fi
 
+if which gtimeout timeout > /dev/null; then
+	TIMEOUT="$(which gtimeout timeout|head -n1) -v 300"
+else
+	TIMEOUT=
+fi
+
 rm -rf test-results
 
 mkdir test-results
@@ -34,7 +40,7 @@ run_test ()
 	shift 1
 
 	echo Running \"$SUITE\" tests...
-	timeout -v 300 test-bundle/mono-test.sh "$@" > "$TEST_RESULTS_DIR"/"$SUITE".log 2>&1 && echo "Succeeded." && return 0
+	$TIMEOUT test-bundle/mono-test.sh "$@" > "$TEST_RESULTS_DIR"/"$SUITE".log 2>&1 && echo "Succeeded." && return 0
 
 	if test x$RETRIES = x -o x$RETRIES = x0; then
 		echo $SUITE >> "$TEST_RESULTS_DIR"/test-failures.txt; echo "Failed."
