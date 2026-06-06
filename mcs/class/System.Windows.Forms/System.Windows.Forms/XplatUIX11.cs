@@ -2727,6 +2727,27 @@ namespace System.Windows.Forms {
 				}
 			}
 
+			string res_name;
+			string res_class;
+			
+			try {
+				res_class = Path.GetFileNameWithoutExtension (Environment.GetCommandLineArgs ()[0]);
+			}
+			catch (Exception) {
+				res_class = "Mono";
+			}
+
+			res_name = Environment.GetEnvironmentVariable ("RESOURCE_NAME");
+			if (res_name == null)
+				res_name = res_class.ToLowerInvariant ();
+
+			var classHints = new XClassHint
+			{
+				res_name = res_name,
+				res_class = res_class
+			};
+			XSetClassHint(DisplayHandle, hwnd.whole_window, ref classHints);
+
 			lock (XlibLock) {
 				XSelectInput(DisplayHandle, hwnd.whole_window, new IntPtr ((int)(SelectInputMask | EventMask.StructureNotifyMask | EventMask.PropertyChangeMask | Keyboard.KeyEventMask)));
 				if (hwnd.whole_window != hwnd.client_window)
@@ -6099,11 +6120,6 @@ namespace System.Windows.Forms {
 			Hwnd hwnd = Hwnd.ObjectFromHandle(handle);
 			if (hwnd == null)
 				return true;
-            var classHints = new XClassHint
-            {
-                res_name = text,
-                res_class = text
-            };
 
 			lock (XlibLock) {
 				XChangeProperty(DisplayHandle, hwnd.whole_window, _NET_WM_NAME, UTF8_STRING, 8,
@@ -6115,8 +6131,6 @@ namespace System.Windows.Forms {
 				// to compound text if it's in a
 				// different charset.
 				XStoreName(DisplayHandle, hwnd.whole_window, text);
-
-				XSetClassHint(DisplayHandle, hwnd.whole_window, ref classHints);
 			}
 
 			return true;
