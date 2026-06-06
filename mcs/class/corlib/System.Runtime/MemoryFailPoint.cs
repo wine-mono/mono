@@ -36,7 +36,8 @@ namespace System.Runtime
 		[MonoTODO]
 		public MemoryFailPoint (int sizeInMegabytes)
 		{
-			throw new NotImplementedException ();
+			// WINE MONO HACK
+			// throw new NotImplementedException ();
 		}
 
 		~MemoryFailPoint ()
@@ -46,7 +47,8 @@ namespace System.Runtime
 		[MonoTODO]
 		public void Dispose ()
 		{
-			throw new NotImplementedException ();
+			// WINE MONO HACK
+			// throw new NotImplementedException ();
 		}
 	}
 }
