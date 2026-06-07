@@ -83,6 +83,9 @@ ves_icall_System_Runtime_InteropServices_Marshal_StringToHGlobalAnsi (const guni
 char*
 ves_icall_System_Runtime_InteropServices_Marshal_StringToHGlobalAnsi (const gunichar2 *s, int length)
 {
+	if (!s)
+		return NULL;
+
 	ERROR_DECL (error);
 	size_t len = WideCharToMultiByte (CP_ACP, 0, s, length, NULL, 0, NULL, NULL);
 	char* res = mono_marshal_alloc_hglobal_error (len+1, error);
