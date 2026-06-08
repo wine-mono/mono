@@ -292,7 +292,7 @@ namespace System.Windows.Forms
 		{
 			base.Dispose (disposing);
 
-			if (control.Created && !control.IsDisposed)
+			if (disposing && control.Created && !control.IsDisposed)
 				control.Dispose ();
 		}
 		
