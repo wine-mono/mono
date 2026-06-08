@@ -1949,16 +1949,19 @@ namespace System.Windows.Forms {
 
 		protected override void Dispose(bool disposing)
 		{
-			if (owned_forms != null) {
-				for (int i = 0; i < owned_forms.Count; i++)
-					((Form)owned_forms[i]).Owner = null;
+			if (disposing) {
+				if (owned_forms != null) {
+					for (int i = 0; i < owned_forms.Count; i++)
+						((Form)owned_forms[i]).Owner = null;
 
-				owned_forms.Clear ();
+					owned_forms.Clear ();
+				}
+				Owner = null;
 			}
-			Owner = null;
 			base.Dispose (disposing);
 			
-			Application.RemoveForm (this);
+			if (disposing)
+				Application.RemoveForm (this);
 		}
 
 		[EditorBrowsable(EditorBrowsableState.Advanced)]
