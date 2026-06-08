@@ -285,6 +285,7 @@ namespace System.Windows.Forms {
 			
 			menu.Wnd = new PopUpWindow (tracker.GrabControl, menu);
 			menu.Wnd.Location =  menu.Wnd.PointToClient (pnt);
+			XplatUI.SetOwner (menu.Wnd.Handle, tracker.GrabControl.Handle);
 			((PopUpWindow)menu.Wnd).ShowWindow ();
 
 			bool no_quit = true;
@@ -422,6 +423,7 @@ namespace System.Windows.Forms {
 			puw.Location = pnt;
 			item.Wnd = puw;
 
+			XplatUI.SetOwner (puw.Handle, GrabControl.Handle);
 			puw.ShowWindow ();
 			if (menu.Tracker.ShowSubPopupEvent != null)
 				menu.Tracker.ShowSubPopupEvent (this, new SubPopupEventArgs (item));
