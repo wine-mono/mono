@@ -789,6 +789,12 @@ namespace System.Windows.Forms {
 		}
 
 
+		internal static Graphics CreateGraphics (IntPtr handle)
+		{
+			DriverDebug ("CreateGraphics ({0}): Called", Window (handle));
+			return driver.CreateGraphics (handle);
+		}
+
 		internal static bool IsEnabled (IntPtr handle)
 		{
 			#if DriverDebug || DriverDebugState

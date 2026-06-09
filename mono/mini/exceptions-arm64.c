@@ -1482,6 +1482,7 @@ mono_arch_setup_async_callback (MonoContext *ctx, void (*async_cb)(void *fun), g
 void
 mono_arch_setup_resume_sighandler_ctx (MonoContext *ctx, gpointer func)
 {
+	ctx->regs [ARMREG_LR] = (host_mgreg_t)(MONO_CONTEXT_GET_IP (ctx));
 	MONO_CONTEXT_SET_IP (ctx,func);
 }
 

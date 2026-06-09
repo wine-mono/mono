@@ -30,6 +30,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.ComponentModel;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms.Layout;
 using System.Collections.Generic;
 using System.ComponentModel.Design.Serialization;
@@ -998,17 +999,29 @@ namespace System.Windows.Forms
 				ToolStripItem tsi = displayed_items[i];
 				
 				if (tsi.Visible) {
-					e.Graphics.TranslateTransform (tsi.Bounds.Left, tsi.Bounds.Top);
-					tsi.FireEvent (e, ToolStripItemEventType.Paint);
-					e.Graphics.ResetTransform ();
+					GraphicsState state = e.Graphics.Save ();
+					try {
+						// Preserve any transform supplied by the backend.  A
+						// ResetTransform here would throw away HiDPI scaling.
+						e.Graphics.TranslateTransform (tsi.Bounds.Left, tsi.Bounds.Top);
+						tsi.FireEvent (e, ToolStripItemEventType.Paint);
+					} finally {
+						e.Graphics.Restore (state);
+					}
 				}
 			}
 
 			// Paint the Overflow button if it's visible
 			if (this.overflow_button != null && this.overflow_button.Visible) {
-				e.Graphics.TranslateTransform (this.overflow_button.Bounds.Left, this.overflow_button.Bounds.Top);
-				this.overflow_button.FireEvent (e, ToolStripItemEventType.Paint);
-				e.Graphics.ResetTransform ();
+				GraphicsState state = e.Graphics.Save ();
+				try {
+					// Preserve any transform supplied by the backend.  A
+					// ResetTransform here would throw away HiDPI scaling.
+					e.Graphics.TranslateTransform (this.overflow_button.Bounds.Left, this.overflow_button.Bounds.Top);
+					this.overflow_button.FireEvent (e, ToolStripItemEventType.Paint);
+				} finally {
+					e.Graphics.Restore (state);
+				}
 			}
 
 			Rectangle affected_bounds = new Rectangle (Point.Empty, this.Size);
@@ -1040,15 +1053,22 @@ namespace System.Windows.Forms
 			if (eh != null)
 				eh (this, e);
 
-			if (!(this is MenuStrip)) {
-				if (this.orientation == Orientation.Horizontal)
-					e.Graphics.TranslateTransform (2, 0);
-				else
-					e.Graphics.TranslateTransform (0, 2);
-			}
+			GraphicsState state = e.Graphics.Save ();
+			try {
+				// The grip offset is local ToolStrip state.  Do not use
+				// ResetTransform after it, because the incoming Graphics may
+				// already carry a backend transform such as HiDPI scaling.
+				if (!(this is MenuStrip)) {
+					if (this.orientation == Orientation.Horizontal)
+						e.Graphics.TranslateTransform (2, 0);
+					else
+						e.Graphics.TranslateTransform (0, 2);
+				}
 
-			this.Renderer.DrawGrip (new ToolStripGripRenderEventArgs (e.Graphics, this, this.GripRectangle, this.GripDisplayStyle, this.grip_style));
-			e.Graphics.ResetTransform ();
+				this.Renderer.DrawGrip (new ToolStripGripRenderEventArgs (e.Graphics, this, this.GripRectangle, this.GripDisplayStyle, this.grip_style));
+			} finally {
+				e.Graphics.Restore (state);
+			}
 		}
 
 		protected virtual void OnRendererChanged (EventArgs e)

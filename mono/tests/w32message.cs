@@ -11,13 +11,15 @@ class X {
 		return new Win32Exception (c).Message;
 	}
 
-	static bool check (int c, string s)
+	static bool check (int c, params string[] s)
 	{
-		if (msg (c) != s) {
-			Console.Error.WriteLine ("For {0} expected {1} got {2}", c, s, msg (c));
-			return false;
+		string actual = msg (c);
+		foreach (string expected in s) {
+			if (actual == expected)
+				return true;
 		}
-		return true;
+		Console.Error.WriteLine ("For {0} expected {1} got {2}", c, s[0], actual);
+		return false;
 	}
 	
 	static int Main ()
@@ -33,9 +35,8 @@ class X {
 		Exception a = new Win32Exception (99999);
 		a = new Win32Exception (9805);
 
-		if (!check (2, "Cannot find the specified file"))
+		if (!check (2, "Cannot find the specified file", "The system cannot find the file specified.\r\n"))
 			return 1;
-
 
 		return 0;
 	}

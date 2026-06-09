@@ -210,7 +210,7 @@ public class Test
 		if (Marshal.SizeOf (typeof (TestStruct6)) != IntPtr.Size)
 			return 12;
 		// a VARIANT is 
-		if (Marshal.SizeOf (typeof (TestStruct7)) != 16)
+		if (Marshal.SizeOf (typeof (TestStruct7)) != ((IntPtr.Size == 8) ? 24 : 16))
 			return 13;
 		if (IsOSX () && IntPtr.Size == 4) {
 			if (Marshal.SizeOf (typeof (TestStruct8)) != 12)
