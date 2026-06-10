@@ -740,6 +740,14 @@ namespace System.IO {
 					// don't overwrite path segments below the limit
 					if (target > limit)
 						target--;
+				} else if (Environment.IsRunningOnWindows && dirs[i].Length != 0 && dirs[i][dirs[i].Length - 1] == '.') {
+					// . at end of file or directory name is ignored, along with any whitespace in between.
+					int len = dirs[i].Length - 1;
+					while (len != 0 && (dirs[i][len - 1] == '.' || char.IsWhiteSpace (dirs[i][len - 1])))
+						len--;
+
+					if (len != 0)
+						dirs[target++] = dirs[i].Substring (0, len);
 				} else
 					dirs[target++] = dirs[i];
 			}
