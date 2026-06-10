@@ -850,5 +850,17 @@
 		<type fullname="Mono.ValueTuple`3" preserve="fields"/>
 		<type fullname="Mono.ValueTuple`4" preserve="fields"/>
 		<type fullname="Mono.ValueTuple`5" preserve="fields"/>
+
+		<type fullname="System.ValueTuple" preserve="all"/>
+		<type fullname="System.ValueTuple`1" preserve="all"/>
+		<type fullname="System.ValueTuple`2" preserve="all"/>
+		<type fullname="System.ValueTuple`3" preserve="all"/>
+		<type fullname="System.ValueTuple`4" preserve="all"/>
+		<type fullname="System.ValueTuple`5" preserve="all"/>
+		<type fullname="System.ValueTuple`6" preserve="all"/>
+		<type fullname="System.ValueTuple`7" preserve="all"/>
+		<type fullname="System.ValueTuple`8" preserve="all"/>
+		<type fullname="System.TupleExtensions" preserve="all"/>
+		<type fullname="System.Runtime.CompilerServices.TupleElementNamesAttribute" preserve="all"/>
 	</assembly>
 </linker>
