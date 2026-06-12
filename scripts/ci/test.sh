@@ -71,12 +71,12 @@ run_test runtime --runtime
 run_test aot-test --aot-test
 
 if test x$CI_PLATFORM != xmac; then
-	for name in corlib System Mono.Posix ; do
+	for name in System Mono.Posix ; do
 		run_test $name --nunit net_4_x/tests/net_4_x_${name}_test.dll
 	done
 fi
 
-for name in Mono.Security System.Security System.Core Mono.Debugger.Soft; do
+for name in corlib Mono.Security System.Security System.Core Mono.Debugger.Soft; do
 	run_test $name --nunit net_4_x/tests/net_4_x_${name}_test.dll
 done
 
