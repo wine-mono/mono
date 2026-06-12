@@ -4490,6 +4490,7 @@ static const _wapi_drive_type _wapi_drive_types[] = {
 	{ DRIVE_FIXED, "udf" },
 	{ DRIVE_REMOTE, "webdav" },
 	{ DRIVE_FIXED, "ufsd_NTFS"},
+	{ DRIVE_FIXED, "AppleVirtIOFS"},
 	{ DRIVE_UNKNOWN, NULL }
 #elif __linux__
 	{ DRIVE_FIXED, ADFS_SUPER_MAGIC, "adfs"},
