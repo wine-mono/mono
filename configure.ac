@@ -1337,7 +1337,7 @@ with_wasm_default=no
 
 with_bitcode_default=no
 enable_cooperative_suspend_default=no
-enable_hybrid_suspend_default=no
+enable_hybrid_suspend_default=yes
 
 # For the sake of clearer error messages, these numbers should all be different from each other.
 INVARIANT_AOT_OPTIONS=nimt-trampolines=2000,ntrampolines=10000,nrgctx-fetch-trampolines=256,ngsharedvt-trampolines=4400,nftnptr-arg-trampolines=4000,nrgctx-trampolines=21000
@@ -5555,27 +5555,6 @@ dnl *****************************
 dnl *** Thread suspend policy ***
 dnl *****************************
 
-dnl Set a default hybrid or cooperative suspend on some platforms
-
-dnl Coop default is set by the bitcode preset.
-
-dnl If coop isn't on by default, maybe hybrid should be?
-if test x$enable_cooperative_suspend_default != xyes; then
-	case $HOST in
-	X86 | AMD64)
-		dnl Some host/target confusion, there's no host_osx (and
-		dnl host_darwin would be true on iOS not just macOS).
-		if test x$target_osx = xyes; then
-			enable_hybrid_suspend_default=yes
-		elif test x$host_linux = xyes -o x$host_win32 = xyes; then
-			enable_hybrid_suspend_default=yes
-		fi
-		;;
-	esac
-fi
-
-dnl Now check if there were flags overriding the defaults
-
 AC_ARG_WITH(cooperative_gc,        [  --with-cooperative-gc=yes|no        Enable cooperative stop-the-world garbage collection (sgen only) (defaults to no)], [AC_MSG_WARN([--with-cooperative-gc is deprecated, use --enable-cooperative-suspend instead])], [with_cooperative_gc=default])
 AC_ARG_ENABLE(cooperative_suspend, [  --enable-cooperative-suspend      Enable cooperative stop-the-world garbage collection (sgen only) (defaults to no)], [], [enable_cooperative_suspend=default])
 
@@ -5594,7 +5573,7 @@ fi
 
 AM_CONDITIONAL([ENABLE_COOP_SUSPEND], [test x$enable_cooperative_suspend != xno])
 
-AC_ARG_ENABLE(hybrid_suspend, [ --enable-hybrid-suspend     Enable hybrid stop-the-world garbage collection (sgen only) - cooperative suspend for threads running managed and runtime code, and preemptive suspend for threads running native and P/Invoke code (defaults to no)], [], [enable_hybrid_suspend=default])
+AC_ARG_ENABLE(hybrid_suspend, [ --enable-hybrid-suspend     Enable hybrid stop-the-world garbage collection (sgen only) - cooperative suspend for threads running managed and runtime code, and preemptive suspend for threads running native and P/Invoke code (defaults to yes)], [], [enable_hybrid_suspend=default])
 
 if test x$enable_hybrid_suspend = xdefault; then
    enable_hybrid_suspend=$enable_hybrid_suspend_default
