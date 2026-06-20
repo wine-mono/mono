@@ -1182,6 +1182,17 @@ add_valuetype (CallInfo *cinfo, ArgInfo *ainfo, MonoType *t)
 	guint32 align;
 
 	size = mini_type_stack_size_full (t, &align, cinfo->pinvoke);
+#ifdef TARGET_WIN32
+	/*
+	* Standard C and C++ doesn't allow empty structs, empty structs will always have a size of 1 byte.
+	* GCC have an extension to allow empty structs, https://gcc.gnu.org/onlinedocs/gcc/Empty-Structures.html.
+	* This cause a little dilemma since runtime build using non-GCC compiler will not be compatible with
+	* GCC build C libraries and the other way around. On platforms where empty structs has size of 1 byte
+	* it must be represented in call and cannot be dropped.
+	*/
+	if (size == 0 && MONO_TYPE_ISSTRUCT (t))
+		size = 1;
+#endif
 	align_size = ALIGN_TO (size, 8);
 
 	nregs = align_size / 8;
