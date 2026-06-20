@@ -543,7 +543,7 @@ namespace MonoTests.Microsoft_VisualBasic
 		[Test]
 		public void FormatCurrency1()
 		{
-			Assert.AreEqual("($2,344.33)",Strings.FormatCurrency(-2344.33,-1,TriState.UseDefault,TriState.UseDefault,TriState.UseDefault));
+			Assert.AreEqual("($2,344.33)",Strings.FormatCurrency(-2344.33,-1,TriState.UseDefault,TriState.True,TriState.True));
 			Assert.AreEqual("$234.430",Strings.FormatCurrency(234.43,3,TriState.UseDefault,TriState.UseDefault,TriState.UseDefault));
 			Assert.AreEqual("$234.4",Strings.FormatCurrency(234.43,1,TriState.UseDefault,TriState.UseDefault,TriState.UseDefault));
 		}
