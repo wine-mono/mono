@@ -2532,7 +2532,9 @@ mono_handle_exception_internal (MonoContext *ctx, MonoObject *obj, gboolean resu
 						}
 					}
 
-					if (mono_trace_is_enabled () && mono_trace_eval (method))
+					if (mono_trace_is_enabled () &&
+						(mono_trace_eval (method) || 
+						 (mono_ex && mono_trace_eval_exception (mono_object_class (mono_ex)))))
 						g_print ("EXCEPTION: catch found at clause %d of %s\n", i, mono_method_full_name (method, TRUE));
 
 					/*
