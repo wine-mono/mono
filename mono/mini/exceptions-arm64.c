@@ -766,6 +766,19 @@ push_unwind_op2 (PUNWIND_INFO unwindinfo, guint16 op)
 }
 
 static void
+push_unwind_op4 (PUNWIND_INFO unwindinfo, guint32 op)
+{
+	unwindinfo->code_count+=4;
+	g_assert (unwindinfo->code_count <= MONO_MAX_UNWIND_CODES);
+	unwindinfo->unwind_codes[MONO_MAX_UNWIND_CODES - unwindinfo->code_count] = op >> 24;
+	unwindinfo->unwind_codes[MONO_MAX_UNWIND_CODES - unwindinfo->code_count + 1] = op >> 16;
+	unwindinfo->unwind_codes[MONO_MAX_UNWIND_CODES - unwindinfo->code_count + 2] = op >> 8;
+	unwindinfo->unwind_codes[MONO_MAX_UNWIND_CODES - unwindinfo->code_count + 3] = op;
+	unwindinfo->xdata.CodeWords = (unwindinfo->code_count + 3) >> 2;
+	DEBUG_UWOP ("UNWIND OP: %x\n", op);
+}
+
+static void
 initialize_unwind_info_internal_ex (GSList *unwind_ops, PUNWIND_INFO unwindinfo)
 {
 	if (unwindinfo != NULL)
@@ -843,8 +856,10 @@ initialize_unwind_info_internal_ex (GSList *unwind_ops, PUNWIND_INFO unwindinfo)
 						push_unwind_op1 (unwindinfo, UWOP_ALLOC_S | (alloc_amount >> 4));
 					else if ((alloc_amount & 0xffff800f) == 0)
 						push_unwind_op2 (unwindinfo, UWOP_ALLOC_M | (alloc_amount >> 4));
+					else if ((alloc_amount & 0xf000000f) == 0)
+						push_unwind_op4 (unwindinfo, UWOP_ALLOC_L | (alloc_amount >> 4));
 					else
-						g_assert_not_reached (); // TODO: UWOP_ALLOC_L
+						g_assert_not_reached ();
 					prev_when = unwind_op_data->when;
 					prev_cfa_ofs = unwind_op_data->val;
 					break;

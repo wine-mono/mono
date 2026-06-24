@@ -47,6 +47,7 @@ LONG CALLBACK seh_handler(EXCEPTION_POINTERS* ep);
 #define UWOP_ALLOC_M 0xc000
 #define UWOP_SAVE_REGP 0xc800
 #define UWOP_SAVE_REG 0xd000
+#define UWOP_ALLOC_L 0xe0000000
 #define UWOP_SET_FP 0xe1
 #define UWOP_NOP 0xe3
 #define UWOP_END 0xe4
