@@ -4993,6 +4993,30 @@ mono_arch_emit_prolog (MonoCompile *cfg)
 	if (arm_is_ldpx_imm (-cfg->stack_offset)) {
 		arm_stpx_pre (code, ARMREG_FP, ARMREG_LR, ARMREG_SP, -cfg->stack_offset);
 		mono_emit_unwind_op_def_cfa_offset (cfg, code, cfa_offset);
+#ifdef TARGET_WIN32
+	} else if (cfg->stack_offset > 0x1000) {
+		static void *pChkstk;
+		const int prealloc = 0x40;
+
+		if (!pChkstk) {
+			HMODULE hntdll = GetModuleHandleW (L"ntdll");
+			pChkstk = GetProcAddress (hntdll, "__chkstk");
+		}
+
+		arm_stpx_pre (code, ARMREG_FP, ARMREG_LR, ARMREG_SP, -prealloc);
+		mono_emit_unwind_op_def_cfa_offset (cfg, code, prealloc);
+		mono_emit_unwind_op_offset (cfg, code, ARMREG_FP, (- prealloc) + 0);
+		mono_emit_unwind_op_offset (cfg, code, ARMREG_LR, (- prealloc) + 8);
+
+		code = emit_imm (code, ARMREG_R15, (cfg->stack_offset - prealloc) / 16);
+		code = emit_imm64 (code, ARMREG_IP0, (guint64)pChkstk);
+		code = emit_blrx (code, ARMREG_IP0);
+		arm_ldpx (code, ARMREG_FP, ARMREG_LR, ARMREG_SP, 0);
+
+		code = emit_subx_sp_imm (code, cfg->stack_offset - prealloc);
+		mono_emit_unwind_op_def_cfa_offset (cfg, code, cfa_offset);
+		arm_stpx (code, ARMREG_FP, ARMREG_LR, ARMREG_SP, 0);
+#endif
 	} else {
 		/* sp -= cfg->stack_offset */
 		/* This clobbers ip0/ip1 */
