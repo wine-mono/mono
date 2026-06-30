@@ -109,7 +109,6 @@ Namespace Microsoft.VisualBasic
         Public RecordLength As Integer = -1
         Public RecordWidth As Integer = 0
         Public Stream As FileStream
-        Public Reader As StreamReader
         Public Writer As StreamWriter
         Public BinaryWriter As BinaryWriter
         Public BinaryReader As BinaryReader
@@ -133,7 +132,6 @@ Namespace Microsoft.VisualBasic
             Dim enc As System.Text.Encoding = System.Text.Encoding.Default
 
             If Me.Access = OpenAccess.Read OrElse Me.Access = OpenAccess.ReadWrite Then
-                Reader = New StreamReader(Stream)
                 BinaryReader = New BinaryReader(Stream, enc)
             End If
             If Me.Access = OpenAccess.Write OrElse Me.Access = OpenAccess.ReadWrite Then
@@ -1015,8 +1013,9 @@ Namespace Microsoft.VisualBasic
 
             VerifyReadAccessWeirdly()
             VerifyFileModes(OpenMode.Input, OpenMode.Binary)
-            Dim chars(CharCount - 1) As Char
-            If Reader.ReadBlock(chars, 0, CharCount) <> CharCount Then
+            Dim chars As Char()
+            chars = BinaryReader.ReadChars(CharCount)
+            If chars.Length <> CharCount Then
                 Throw New EndOfStreamException() 'TODO: Find exact message
             End If
             Dim str As New StringBuilder(CharCount)
@@ -1032,7 +1031,23 @@ Namespace Microsoft.VisualBasic
 
             If IsEOF() Then Throw Microsoft.VisualBasic.CompilerServices.ExceptionUtils.GetVBException(VBErrors.ERR62_Input_past_end_of_file)
 
-            Return Reader.ReadLine()
+            Dim builder As New StringBuilder
+            Dim ch as Char
+
+            Try
+                ch = BinaryReader.ReadChar()
+                While ch <> CChar(Constants.vbCr) AndAlso ch <> CChar(Constants.vbLf)
+                    If ch <> Nothing Then builder.Append(ch)
+                    ch = BinaryReader.ReadChar()
+                End While
+
+                If ch = Conversions.ToChar(Constants.vbCr) AndAlso Strings.Chr(BinaryReader.PeekChar) = Conversions.ToChar(Constants.vbLf) Then
+                    BinaryReader.ReadChar()
+                End If
+            Catch ex As EndOfStreamException
+            End Try
+
+            Return builder.ToString
         End Function
 
         Public Function Loc() As Long

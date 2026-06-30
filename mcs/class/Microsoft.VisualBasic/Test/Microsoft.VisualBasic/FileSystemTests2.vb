@@ -400,6 +400,29 @@ Public Class FileSystemTests2
 
 
     <Test()> _
+    Public Sub FileOpenTestMultiLine()
+        Try
+            Dim data As String = Nothing
+            Dim filename As String = IO.Path.Combine(DATA_DIR, System.Reflection.MethodInfo.GetCurrentMethod.Name)
+            Initialize(filename, "line1" & vbCrLf & "line2" & vbCr & "line3" & vbLf & "line4")
+
+            'Default access and share
+            FileOpen(1, filename, OpenMode.Input, OpenAccess.Default, OpenShare.Default)
+            Assert.IsFalse(EOF(1))
+            Assert.AreEqual("line1", LineInput(1), "#01")
+            Assert.IsFalse(EOF(1))
+            Assert.AreEqual("line2", LineInput(1), "#02")
+            Assert.IsFalse(EOF(1))
+            Assert.AreEqual("line3", LineInput(1), "#03")
+            Assert.IsFalse(EOF(1))
+            Assert.AreEqual("line4", LineInput(1), "#04")
+            Assert.IsTrue(EOF(1))
+        Finally
+            CleanUp()
+        End Try
+    End Sub
+
+    <Test()> _
     Public Sub FileOpenTestInput1()
         Try
             Dim data As String = Nothing
