@@ -277,7 +277,7 @@ namespace MonoTests.System.Net.Http
 			handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
 
 			var httpClient = new HttpClient (handler) {
-				BaseAddress = new Uri ("https://www.example.com"),
+				BaseAddress = new Uri ("https://www.winehq.org"),
 				Timeout = TimeSpan.FromMilliseconds (1)
 			};
 
@@ -353,7 +353,7 @@ namespace MonoTests.System.Net.Http
 				request.UseProxy = false;
 
 				var client = new HttpClient (request);
-				Assert.IsTrue (client.GetAsync ("http://www.example.com").Wait (5000), "needs internet access");
+				Assert.IsTrue (client.GetAsync ("http://www.winehq.org").Wait (5000), "needs internet access");
 			} finally {
 				WebRequest.DefaultWebProxy = pp;
 			}
@@ -365,7 +365,7 @@ namespace MonoTests.System.Net.Http
 			var mh = new HttpMessageHandlerMock ();
 
 			var client = new HttpClient (mh);
-			client.BaseAddress = new Uri ("http://www.example.com");
+			client.BaseAddress = new Uri ("http://www.winehq.org");
 			var request = new HttpRequestMessage ();
 			var response = new HttpResponseMessage ();
 
@@ -402,9 +402,9 @@ namespace MonoTests.System.Net.Http
 			var mh = new HttpMessageHandlerMock ();
 
 			var client = new HttpClient (mh);
-			client.DefaultRequestHeaders.Referrer = new Uri ("http://www.example.com");
+			client.DefaultRequestHeaders.Referrer = new Uri ("http://www.winehq.org");
 
-			var request = new HttpRequestMessage (HttpMethod.Get, "http://www.example.org");
+			var request = new HttpRequestMessage (HttpMethod.Get, "http://test.winehq.org");
 			var response = new HttpResponseMessage ();
 
 			mh.OnSend = l => {

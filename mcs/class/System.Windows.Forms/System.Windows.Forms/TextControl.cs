@@ -1551,7 +1551,7 @@ namespace System.Windows.Forms {
 						if (caret.line.text.ToString(caret.pos, 1) == " ") {
 							if (caret.pos != 0) {
 								caret.pos++;
-							} else {
+							} else if (caret.line.line_no > 1) {
 								caret.line = GetLine(caret.line.line_no - 1);
 								caret.pos = caret.line.text.Length;
 							}

@@ -1182,6 +1182,17 @@ add_valuetype (CallInfo *cinfo, ArgInfo *ainfo, MonoType *t)
 	guint32 align;
 
 	size = mini_type_stack_size_full (t, &align, cinfo->pinvoke);
+#ifdef TARGET_WIN32
+	/*
+	* Standard C and C++ doesn't allow empty structs, empty structs will always have a size of 1 byte.
+	* GCC have an extension to allow empty structs, https://gcc.gnu.org/onlinedocs/gcc/Empty-Structures.html.
+	* This cause a little dilemma since runtime build using non-GCC compiler will not be compatible with
+	* GCC build C libraries and the other way around. On platforms where empty structs has size of 1 byte
+	* it must be represented in call and cannot be dropped.
+	*/
+	if (size == 0 && MONO_TYPE_ISSTRUCT (t))
+		size = 1;
+#endif
 	align_size = ALIGN_TO (size, 8);
 
 	nregs = align_size / 8;
@@ -4982,6 +4993,30 @@ mono_arch_emit_prolog (MonoCompile *cfg)
 	if (arm_is_ldpx_imm (-cfg->stack_offset)) {
 		arm_stpx_pre (code, ARMREG_FP, ARMREG_LR, ARMREG_SP, -cfg->stack_offset);
 		mono_emit_unwind_op_def_cfa_offset (cfg, code, cfa_offset);
+#ifdef TARGET_WIN32
+	} else if (cfg->stack_offset > 0x1000) {
+		static void *pChkstk;
+		const int prealloc = 0x40;
+
+		if (!pChkstk) {
+			HMODULE hntdll = GetModuleHandleW (L"ntdll");
+			pChkstk = GetProcAddress (hntdll, "__chkstk");
+		}
+
+		arm_stpx_pre (code, ARMREG_FP, ARMREG_LR, ARMREG_SP, -prealloc);
+		mono_emit_unwind_op_def_cfa_offset (cfg, code, prealloc);
+		mono_emit_unwind_op_offset (cfg, code, ARMREG_FP, (- prealloc) + 0);
+		mono_emit_unwind_op_offset (cfg, code, ARMREG_LR, (- prealloc) + 8);
+
+		code = emit_imm (code, ARMREG_R15, (cfg->stack_offset - prealloc) / 16);
+		code = emit_imm64 (code, ARMREG_IP0, (guint64)pChkstk);
+		code = emit_blrx (code, ARMREG_IP0);
+		arm_ldpx (code, ARMREG_FP, ARMREG_LR, ARMREG_SP, 0);
+
+		code = emit_subx_sp_imm (code, cfg->stack_offset - prealloc);
+		mono_emit_unwind_op_def_cfa_offset (cfg, code, cfa_offset);
+		arm_stpx (code, ARMREG_FP, ARMREG_LR, ARMREG_SP, 0);
+#endif
 	} else {
 		/* sp -= cfg->stack_offset */
 		/* This clobbers ip0/ip1 */

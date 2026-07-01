@@ -49,11 +49,23 @@ $(AOTDIR)/%.exe: %.exe
 	mkdir -p $(AOTDIR)
 	cp $< $@
 
+do-check: $(AOT_IMAGES) $(TEST_IMAGES)
+	MONO_PATH="$(AOTDIR)$(PLATFORM_PATH_SEPARATOR)$(CLASS)" $(MONO_EXE) --aot-path=$(AOTDIR) --full-aot-interp $(AOTDIR)/lambda.exe
+
 if !X86
 if !DISABLE_INTERPRETER
 if !ENABLE_COOP_SUSPEND
-check: $(AOT_IMAGES) $(TEST_IMAGES)
-	MONO_PATH="$(AOTDIR)$(PLATFORM_PATH_SEPARATOR)$(CLASS)" $(MONO_EXE) --aot-path=$(AOTDIR) --full-aot-interp $(AOTDIR)/lambda.exe
+
+if !TARGET_WIN32
+check: do-check
+endif
+
+if TARGET_WIN32
+if AMD64
+check: do-check
+endif
+endif
+
 endif
 endif
 endif
