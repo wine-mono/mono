@@ -62,6 +62,10 @@ run_test ()
 	fi
 }
 
+if test x$CI_PLATFORM = xmac; then
+	export ADDITIONAL_TEST_EXCLUDES=NotOnMac
+fi
+
 run_test mini --mini
 
 run_test mini-aot --mini --aot="mcpu=native"
