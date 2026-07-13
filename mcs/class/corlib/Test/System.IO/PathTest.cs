@@ -789,6 +789,7 @@ namespace MonoTests.System.IO
 				Assert.AreEqual (Directory.GetCurrentDirectory () + @"\abc\def", Path.GetFullPath (@"abc//def"), "GetFullPath w#12");
 				Assert.AreEqual (Directory.GetCurrentDirectory ().Substring (0, 2) + @"\abc\def", Path.GetFullPath ("/abc/def"), "GetFullPath w#13");
 				Assert.AreEqual (@"\\abc\def", Path.GetFullPath ("//abc/def"), "GetFullPath w#14");
+				Assert.AreEqual (@"\\.\pipe\Name", Path.GetFullPath (@"\\.\pipe\Name"), "GetFullPath w#15");
 			} else {
 				Assert.AreEqual ("/", Path.GetFullPath ("/"), "#01");
 				Assert.AreEqual ("/hey", Path.GetFullPath ("/hey"), "#02");
