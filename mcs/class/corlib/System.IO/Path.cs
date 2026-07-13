@@ -748,6 +748,8 @@ namespace System.IO {
 
 					if (len != 0)
 						dirs[target++] = dirs[i].Substring (0, len);
+					else
+						dirs[target++] = dirs[i];
 				} else
 					dirs[target++] = dirs[i];
 			}
