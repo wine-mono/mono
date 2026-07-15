@@ -68,7 +68,7 @@ mono_get_module_file_name (HMODULE module_handle)
 HMODULE coree_module_handle = NULL;
 static gboolean init_from_coree = FALSE;
 
-#if defined(HAVE_API_SUPPORT_WIN32_COREE) && (!defined(_WIN64) || defined(_M_IA64) || defined(_M_AMD64))
+#if defined(HAVE_API_SUPPORT_WIN32_COREE) && (!defined(_WIN64) || defined(_M_IA64) || defined(_M_AMD64) || defined(__aarch64__))
 #include <shellapi.h>
 
 /* Entry point called by LdrLoadDll of ntdll.dll after _CorValidateImage. */
@@ -648,7 +648,7 @@ STDAPI MonoFixupCorEE(HMODULE ModuleHandle)
 			*(Trampoline)++ = 0xFF;
 			*(Trampoline)++ = 0xE3;
 #else
-#error Unsupported architecture.
+			g_assert_not_reached ();
 #endif
 #else
 			ProcRva = (DWORD)(ExportFixup->ProcAddress.DWordPtr - (DWORD_PTR)DosHeader);
