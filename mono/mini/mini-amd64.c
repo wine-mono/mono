@@ -8048,6 +8048,7 @@ mono_arch_emit_exceptions (MonoCompile *cfg)
 
 			/* The SSE opcodes require a 16 byte alignment */
 			code = (guint8*)ALIGN_TO (code, 16);
+			memset (orig_code, 0, code - orig_code);
 
 			pos = cfg->native_code + patch_info->ip.i;
 			if (IS_REX (pos [1])) {
