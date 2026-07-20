@@ -5348,13 +5348,26 @@ mini_init (const char *filename, const char *runtime_version)
 	mono_register_opcode_emulation (OP_LCONV_TO_R8, "__emul_lconv_to_r8", "double long", mono_lconv_to_r8, FALSE);
 #endif
 #ifdef MONO_ARCH_EMULATE_LCONV_TO_R4
+	#ifdef MONO_ARCH_SOFT_FLOAT
+	/*
+	 * Soft-float ARM represents the managed F value in core registers using
+	 * the same "double" helper ABI as the rest of this backend.  The helper
+	 * still rounds through float; the signature describes the transport ABI.
+	 */
+	mono_register_opcode_emulation (OP_LCONV_TO_R4, "__emul_lconv_to_r4", "double long", mono_lconv_to_r4, FALSE);
+#else
 	mono_register_opcode_emulation (OP_LCONV_TO_R4, "__emul_lconv_to_r4", "float long", mono_lconv_to_r4, FALSE);
+#endif
 #endif
 #ifdef MONO_ARCH_EMULATE_LCONV_TO_R8_UN
 	mono_register_opcode_emulation (OP_LCONV_TO_R_UN, "__emul_lconv_to_r8_un", "double long", mono_lconv_to_r8_un, FALSE);
 #endif
 #ifdef MONO_ARCH_EMULATE_FREM
+	#if defined(__arm__) && defined(__ARM_PCS_VFP)
+	mono_register_opcode_emulation (OP_FREM, "__emul_frem", "double double double", mono_frem, FALSE);
+#else
 	mono_register_opcode_emulation (OP_FREM, "__emul_frem", "double double double", fmod, FALSE);
+#endif
 #endif
 
 #ifdef MONO_ARCH_SOFT_FLOAT

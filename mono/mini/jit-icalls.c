@@ -329,12 +329,20 @@ mono_imul_ovf_un (guint32 a, guint32 b)
 #endif
 
 #if defined(MONO_ARCH_EMULATE_MUL_DIV) || defined(MONO_ARCH_SOFT_FLOAT)
-double
+double MONO_JIT_ICALL_FP_ABI
 mono_fdiv (double a, double b)
 {
 	MONO_ARCH_SAVE_REGS;
 
 	return a / b;
+}
+#endif
+
+#if defined(__arm__) && defined(__ARM_PCS_VFP)
+double MONO_JIT_ICALL_FP_ABI
+mono_frem (double a, double b)
+{
+	return fmod (a, b);
 }
 #endif
 
@@ -437,169 +445,169 @@ mono_lshr (gint64 a, gint32 shamt)
 
 #ifdef MONO_ARCH_SOFT_FLOAT
 
-double
+double MONO_JIT_ICALL_FP_ABI
 mono_fsub (double a, double b)
 {
 	return a - b;
 }
 
-double
+double MONO_JIT_ICALL_FP_ABI
 mono_fadd (double a, double b)
 {
 	return a + b;
 }
 
-double
+double MONO_JIT_ICALL_FP_ABI
 mono_fmul (double a, double b)
 {
 	return a * b;
 }
 
-double
+double MONO_JIT_ICALL_FP_ABI
 mono_fneg (double a)
 {
 	return -a;
 }
 
-double
+double MONO_JIT_ICALL_FP_ABI
 mono_fconv_r4 (double a)
 {
 	return (float)a;
 }
 
-double
+double MONO_JIT_ICALL_FP_ABI
 mono_conv_to_r8 (int a)
 {
 	return (double)a;
 }
 
-double
+double MONO_JIT_ICALL_FP_ABI
 mono_conv_to_r4 (int a)
 {
 	return (double)(float)a;
 }
 
-gint8
+gint8 MONO_JIT_ICALL_FP_ABI
 mono_fconv_i1 (double a)
 {
 	return (gint8)a;
 }
 
-gint16
+gint16 MONO_JIT_ICALL_FP_ABI
 mono_fconv_i2 (double a)
 {
 	return (gint16)a;
 }
 
-gint32
+gint32 MONO_JIT_ICALL_FP_ABI
 mono_fconv_i4 (double a)
 {
 	return (gint32)a;
 }
 
-guint8
+guint8 MONO_JIT_ICALL_FP_ABI
 mono_fconv_u1 (double a)
 {
 	return (guint8)a;
 }
 
-guint16
+guint16 MONO_JIT_ICALL_FP_ABI
 mono_fconv_u2 (double a)
 {
 	return (guint16)a;
 }
 
-gboolean
+gboolean MONO_JIT_ICALL_FP_ABI
 mono_fcmp_eq (double a, double b)
 {
 	return a == b;
 }
 
-gboolean
+gboolean MONO_JIT_ICALL_FP_ABI
 mono_fcmp_ge (double a, double b)
 {
 	return a >= b;
 }
 
-gboolean
+gboolean MONO_JIT_ICALL_FP_ABI
 mono_fcmp_gt (double a, double b)
 {
 	return a > b;
 }
 
-gboolean
+gboolean MONO_JIT_ICALL_FP_ABI
 mono_fcmp_le (double a, double b)
 {
 	return a <= b;
 }
 
-gboolean
+gboolean MONO_JIT_ICALL_FP_ABI
 mono_fcmp_lt (double a, double b)
 {
 	return a < b;
 }
 
-gboolean
+gboolean MONO_JIT_ICALL_FP_ABI
 mono_fcmp_ne_un (double a, double b)
 {
 	return isunordered (a, b) || a != b;
 }
 
-gboolean
+gboolean MONO_JIT_ICALL_FP_ABI
 mono_fcmp_ge_un (double a, double b)
 {
 	return isunordered (a, b) || a >= b;
 }
 
-gboolean
+gboolean MONO_JIT_ICALL_FP_ABI
 mono_fcmp_gt_un (double a, double b)
 {
 	return isunordered (a, b) || a > b;
 }
 
-gboolean
+gboolean MONO_JIT_ICALL_FP_ABI
 mono_fcmp_le_un (double a, double b)
 {
 	return isunordered (a, b) || a <= b;
 }
 
-gboolean
+gboolean MONO_JIT_ICALL_FP_ABI
 mono_fcmp_lt_un (double a, double b)
 {
 	return isunordered (a, b) || a < b;
 }
 
-gboolean
+gboolean MONO_JIT_ICALL_FP_ABI
 mono_fceq (double a, double b)
 {
 	return a == b;
 }
 
-gboolean
+gboolean MONO_JIT_ICALL_FP_ABI
 mono_fcgt (double a, double b)
 {
 	return a > b;
 }
 
-gboolean
+gboolean MONO_JIT_ICALL_FP_ABI
 mono_fcgt_un (double a, double b)
 {
 	return isunordered (a, b) || a > b;
 }
 
-gboolean
+gboolean MONO_JIT_ICALL_FP_ABI
 mono_fclt (double a, double b)
 {
 	return a < b;
 }
 
-gboolean
+gboolean MONO_JIT_ICALL_FP_ABI
 mono_fclt_un (double a, double b)
 {
 	return isunordered (a, b) || a < b;
 }
 
-gboolean
+gboolean MONO_JIT_ICALL_FP_ABI
 mono_isfinite (double a)
 {
 #ifdef HAVE_ISFINITE
@@ -610,20 +618,20 @@ mono_isfinite (double a)
 #endif
 }
 
-double
+double MONO_JIT_ICALL_FP_ABI
 mono_fload_r4 (float *ptr)
 {
 	return *ptr;
 }
 
-void
+void MONO_JIT_ICALL_FP_ABI
 mono_fstore_r4 (double val, float *ptr)
 {
 	*ptr = (float)val;
 }
 
 /* returns the integer bitpattern that is passed in the regs or stack */
-guint32
+guint32 MONO_JIT_ICALL_FP_ABI
 mono_fload_r4_arg (double val)
 {
 	float v = (float)val;
@@ -817,14 +825,14 @@ mono_ldtoken_wrapper_generic_shared (MonoImage *image, int token, MonoMethod *me
 	return mono_ldtoken_wrapper (image, token, generic_context);
 }
 
-guint64
+guint64 MONO_JIT_ICALL_FP_ABI
 mono_fconv_u8 (double v)
 {
 	return (guint64)v;
 }
 
 #ifdef MONO_ARCH_EMULATE_FCONV_TO_I8
-gint64
+gint64 MONO_JIT_ICALL_FP_ABI
 mono_fconv_i8 (double v)
 {
 	/* no need, no exceptions: MONO_ARCH_SAVE_REGS;*/
@@ -832,7 +840,7 @@ mono_fconv_i8 (double v)
 }
 #endif
 
-guint32
+guint32 MONO_JIT_ICALL_FP_ABI
 mono_fconv_u4 (double v)
 {
 	/* no need, no exceptions: MONO_ARCH_SAVE_REGS;*/
@@ -850,7 +858,7 @@ extern long double aintl (long double);
 #endif
 #endif /* HAVE_TRUNC */
 
-gint64
+gint64 MONO_JIT_ICALL_FP_ABI
 mono_fconv_ovf_i8 (double v)
 {
 	gint64 res;
@@ -865,7 +873,7 @@ mono_fconv_ovf_i8 (double v)
 	return res;
 }
 
-guint64
+guint64 MONO_JIT_ICALL_FP_ABI
 mono_fconv_ovf_u8 (double v)
 {
 	guint64 res;
@@ -895,7 +903,7 @@ mono_fconv_ovf_u8 (double v)
 }
 
 #ifdef MONO_ARCH_EMULATE_LCONV_TO_R8
-double
+double MONO_JIT_ICALL_FP_ABI
 mono_lconv_to_r8 (gint64 a)
 {
 	return (double)a;
@@ -903,7 +911,11 @@ mono_lconv_to_r8 (gint64 a)
 #endif
 
 #ifdef MONO_ARCH_EMULATE_LCONV_TO_R4
-float
+#ifdef MONO_ARCH_SOFT_FLOAT
+double MONO_JIT_ICALL_FP_ABI
+#else
+float MONO_JIT_ICALL_FP_ABI
+#endif
 mono_lconv_to_r4 (gint64 a)
 {
 	return (float)a;
@@ -911,7 +923,7 @@ mono_lconv_to_r4 (gint64 a)
 #endif
 
 #ifdef MONO_ARCH_EMULATE_CONV_R8_UN
-double
+double MONO_JIT_ICALL_FP_ABI
 mono_conv_to_r8_un (guint32 a)
 {
 	return (double)a;
@@ -919,7 +931,7 @@ mono_conv_to_r8_un (guint32 a)
 #endif
 
 #ifdef MONO_ARCH_EMULATE_LCONV_TO_R8_UN
-double
+double MONO_JIT_ICALL_FP_ABI
 mono_lconv_to_r8_un (guint64 a)
 {
 	return (double)a;

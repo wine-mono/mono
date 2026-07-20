@@ -131,6 +131,18 @@
 
 #endif
 
+/*
+ * Some old ARM backends deliberately use the base AAPCS for generated helper
+ * calls even when the C compiler targets armhf/VFP PCS.  Runtime entry points
+ * annotated with this macro must match those generated calls; unannotated C
+ * functions continue to use the platform ABI.
+ */
+#if defined(__arm__) && defined(__GNUC__) && defined(__ARM_PCS_VFP)
+#define MONO_ICALL_FP_ABI __attribute__((pcs("aapcs")))
+#else
+#define MONO_ICALL_FP_ABI
+#endif
+
 /* Deal with Microsoft C compiler differences */
 #ifdef _MSC_VER
 
