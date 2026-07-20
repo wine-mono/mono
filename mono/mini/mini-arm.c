@@ -1089,29 +1089,47 @@ add_general (guint *gr, guint *stack_size, ArgInfo *ainfo, gboolean simple)
 			split = TRUE;
 
 		ainfo->size = 8;
-		if (*gr == ARMREG_R3 && split) {
+		if (eabi_supported) {
+			/*
+			 * AAPCS requires 64-bit core-register arguments to start in an
+			 * even-numbered argument register.  If alignment skips past r3,
+			 * there is no remaining argument register; the whole argument belongs
+			 * on the stack.  The existing r3/stack split remains correct for
+			 * 4-byte-aligned ABIs such as Darwin/iOS ARM.
+			 */
+			if (i8_align == 8 && ((*gr) & 1))
+				(*gr) ++;
+			if (*gr > ARMREG_R3) {
+				if (i8_align == 8) {
+					*stack_size += 7;
+					*stack_size &= ~7;
+				}
+				ainfo->offset = *stack_size;
+				ainfo->reg = ARMREG_SP; /* in the caller */
+				ainfo->storage = RegTypeBase;
+				*stack_size += 8;
+			} else if (*gr == ARMREG_R3 && i8_align == 4) {
+				/* first word in r3 and the second on the stack */
+				ainfo->offset = *stack_size;
+				ainfo->reg = ARMREG_SP; /* in the caller */
+				ainfo->storage = RegTypeBaseGen;
+				*stack_size += 4;
+			} else {
+				ainfo->storage = RegTypeIRegPair;
+				ainfo->reg = *gr;
+			}
+		} else if (*gr == ARMREG_R3 && split) {
 			/* first word in r3 and the second on the stack */
 			ainfo->offset = *stack_size;
 			ainfo->reg = ARMREG_SP; /* in the caller */
 			ainfo->storage = RegTypeBaseGen;
 			*stack_size += 4;
 		} else if (*gr >= ARMREG_R3) {
-			if (eabi_supported) {
-				/* darwin aligns longs to 4 byte only */
-				if (i8_align == 8) {
-					*stack_size += 7;
-					*stack_size &= ~7;
-				}
-			}
 			ainfo->offset = *stack_size;
 			ainfo->reg = ARMREG_SP; /* in the caller */
 			ainfo->storage = RegTypeBase;
 			*stack_size += 8;
 		} else {
-			if (eabi_supported) {
-				if (i8_align == 8 && ((*gr) & 1))
-					(*gr) ++;
-			}
 			ainfo->storage = RegTypeIRegPair;
 			ainfo->reg = *gr;
 		}
