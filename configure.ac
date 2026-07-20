@@ -5757,6 +5757,9 @@ if test "x$enable_btls" = "xyes"; then
 				fi
 				;;
 		esac
+		if test x$host_darwin = xyes; then
+			BTLS_CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES=x86_64"
+		fi
 		;;
 	arm)
 		btls_arch=arm
