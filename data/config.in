@@ -49,6 +49,8 @@
 	<!-- architecture-specific dll mapping for MonoPosixHelper in Wine Mono -->
 	<dllmap dll="MonoPosixHelper" target="$mono_libdir\x86\MonoPosixHelper.dll" os="windows" cpu="x86"/>
 	<dllmap dll="MonoPosixHelper" target="$mono_libdir\x86_64\MonoPosixHelper.dll" os="windows" cpu="x86-64"/>
+	<dllmap dll="MonoPosixHelper" target="$mono_libdir\arm64\MonoPosixHelper.dll" os="windows" cpu="armv8"/>
 	<dllmap dll="libmono-btls-shared" target="$mono_libdir\x86\libmono-btls-shared.dll" os="windows" cpu="x86"/>
 	<dllmap dll="libmono-btls-shared" target="$mono_libdir\x86_64\libmono-btls-shared.dll" os="windows" cpu="x86-64"/>
+	<dllmap dll="libmono-btls-shared" target="$mono_libdir\arm64\libmono-btls-shared.dll" os="windows" cpu="armv8"/>
 </configuration>
