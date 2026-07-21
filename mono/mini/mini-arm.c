@@ -600,10 +600,30 @@ add_general (guint *gr, guint *stack_size, ArgInfo *ainfo, gboolean simple)
 			ainfo->reg = *gr;
 		}
 	} else {
-		if (*gr == ARMREG_R3
 #ifdef __ARM_EABI__
-				&& 0
-#endif
+		/*
+		 * AAPCS requires 64-bit core-register arguments to start in an
+		 * even-numbered argument register.  If the next register is r3,
+		 * aligning would skip to r4, but r4 is callee-saved, not an
+		 * argument register.  The whole 64-bit argument must therefore be
+		 * passed on the stack.  Recording r4 here corrupts managed calls
+		 * such as ILGenerator.Emit(OpCode, double), where a preceding
+		 * value-type argument leaves gr == r3 before the double argument.
+		 */
+		if ((*gr) & 1)
+			(*gr) ++;
+		if (*gr > ARMREG_R3) {
+			*stack_size += 7;
+			*stack_size &= ~7;
+			ainfo->offset = *stack_size;
+			ainfo->reg = ARMREG_SP; /* in the caller */
+			ainfo->regtype = RegTypeBase;
+			*stack_size += 8;
+		} else {
+			ainfo->reg = *gr;
+		}
+#else
+		if (*gr == ARMREG_R3
 					) {
 			/* first word in r3 and the second on the stack */
 			ainfo->offset = *stack_size;
@@ -620,12 +640,9 @@ add_general (guint *gr, guint *stack_size, ArgInfo *ainfo, gboolean simple)
 			ainfo->regtype = RegTypeBase;
 			*stack_size += 8;
 		} else {
-#ifdef __ARM_EABI__
-			if ((*gr) & 1)
-				(*gr) ++;
-#endif
 			ainfo->reg = *gr;
 		}
+#endif
 		(*gr) ++;
 	}
 	(*gr) ++;
