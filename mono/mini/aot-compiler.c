@@ -55,6 +55,7 @@
 #include <mono/utils/mono-time.h>
 #include <mono/utils/mono-mmap.h>
 #include <mono/utils/mono-rand.h>
+#include <mono/utils/mono-digest.h>
 #include <mono/utils/json.h>
 #include <mono/utils/mono-threads-coop.h>
 #include <mono/profiler/aot.h>
@@ -10670,6 +10671,42 @@ generate_aotid (guint8* aotid)
 	mono_rand_close (rand_handle);
 }
 
+/*
+ * reproducible_build:
+ *
+ * Returns TRUE if a reproducible build was requested through the
+ * SOURCE_DATE_EPOCH environment variable, see
+ * https://reproducible-builds.org/specs/source-date-epoch/
+ */
+static gboolean
+reproducible_build (void)
+{
+	gchar *epoch = g_getenv ("SOURCE_DATE_EPOCH");
+	gboolean res = epoch && *epoch;
+
+	g_free (epoch);
+	return res;
+}
+
+/*
+ * generate_deterministic_aotid:
+ *
+ * Derive the aotid from the contents of the input assembly instead of
+ * generating it randomly, so that compiling identical inputs produces
+ * identical images.  The version and variant bits are set so the result
+ * is a valid GUID.
+ */
+static void
+generate_deterministic_aotid (MonoImage *image)
+{
+	guchar digest [20];
+
+	mono_sha1_get_digest ((const guchar*)image->raw_data, image->raw_data_len, digest);
+	digest [7] = (digest [7] & 0x0F) | 0x40;
+	digest [8] = (digest [8] & 0x3F) | 0x80;
+	memcpy (image->aotid, digest, 16);
+}
+
 static void
 emit_exception_info (MonoAotCompile *acfg)
 {
@@ -13660,7 +13697,9 @@ mono_compile_assembly (MonoAssembly *ass, guint32 opts, const char *aot_options,
 	if (!acfg->dedup_collect_only)
 		aot_printf (acfg, "Mono Ahead of Time compiler - compiling assembly %s\n", image->name);
 
-	if (!acfg->aot_opts.deterministic)
+	if (acfg->aot_opts.deterministic || reproducible_build ())
+		generate_deterministic_aotid (acfg->image);
+	else
 		generate_aotid ((guint8*) &acfg->image->aotid);
 
 	char *aotid = mono_guid_to_string (acfg->image->aotid);
@@ -14047,6 +14086,19 @@ emit_aot_image (MonoAotCompile *acfg)
 
 	if (acfg->w)
 		mono_img_writer_emit_start (acfg->w);
+
+#ifndef TARGET_MACH
+	if (acfg->fp && !acfg->aot_opts.llvm_only) {
+		/*
+		 * Emit a stable STT_FILE symbol.  Without it, the native linker
+		 * synthesizes one from the name of the input object file, which is
+		 * a random temporary file name, making the output non-reproducible.
+		 */
+		char *basename = g_path_get_basename (acfg->image->name);
+		fprintf (acfg->fp, ".file \"%s\"\n", basename);
+		g_free (basename);
+	}
+#endif
 
 	if (acfg->dwarf)
 		mono_dwarf_writer_emit_base_info (acfg->dwarf, g_path_get_basename (acfg->image->name), mono_unwind_get_cie_program ());

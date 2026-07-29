@@ -50,6 +50,11 @@ namespace Microsoft.Build.Tasks {
 		{
 			base.AddResponseFileCommands (commandLine);
 
+			// When SOURCE_DATE_EPOCH is set, a reproducible build is requested
+			if (!String.IsNullOrEmpty (Environment.GetEnvironmentVariable ("SOURCE_DATE_EPOCH")) &&
+			    ToolExe.StartsWith ("vbc", StringComparison.OrdinalIgnoreCase))
+				commandLine.AppendSwitch ("/deterministic+");
+
 			commandLine.AppendSwitchIfNotNull ("/libpath:", AdditionalLibPaths, ",");
 
 			commandLine.AppendSwitchIfNotNull ("/baseaddress:", BaseAddress);
