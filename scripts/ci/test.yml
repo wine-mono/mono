@@ -64,3 +64,27 @@ macos-arm64-test:
         - export CI_LIMITED=y
     script:
         - "scripts/ci/test.sh"
+
+macos-arm64-test-full:
+    stage: test
+    image: winehq-sequoia-pristine
+    when: manual
+    variables:
+        TART_EXECUTOR_SSH_USERNAME: "gitlab"
+        TART_EXECUTOR_SSH_PASSWORD: "gitlab"
+    rules:
+        - if: $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_PROJECT_NAMESPACE == 'mono'
+    interruptible: true
+    tags:
+        - mac
+    needs:
+        - job: macos-arm64-build
+    artifacts:
+        when: always
+        paths:
+            - test-results/
+        expire_in: 1 week
+    before_script:
+        - export CI_PLATFORM=mac
+    script:
+        - "scripts/ci/test.sh"
