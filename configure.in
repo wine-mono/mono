@@ -2751,22 +2751,23 @@ if test ${TARGET} = ARM && test x$cross_compiling = xno && test x$enable_mcs_bui
 
 	fpu=NONE
 	if gcc -v 2>&1 | grep -q -- '--with-float=hard'; then
-	   fpu=VFP_HARD
-	fi
-
-	if test x$fpu = xNONE; then
+	   # Hard-float ABI is not supported by the backend yet.
+	   # Force NONE and skip FPA (legacy) checks.
+	   fpu=NONE
+	else
 	   ORIG_CFLAGS=$CFLAGS
 	   CFLAGS="$CFLAGS -mfpu=vfp -mfloat-abi=softfp"
 	   AC_TRY_RUN([
 				int main () { __asm__ ("faddd	d7, d6, d7"); return 0; }
 				], fpu=VFP, fpu=NONE)
 	   CFLAGS=$ORIG_CFLAGS
-	fi
 
-	if test x$fpu = xNONE; then
+
+	   if test x$fpu = xNONE; then
 		AC_TRY_COMPILE([], [
 			__asm__ ("ldfd f0, [r0]");
 			], fpu=FPA, fpu=NONE)
+	   fi
 	fi
 
 	AC_MSG_RESULT($fpu)
