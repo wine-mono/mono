@@ -3014,23 +3014,19 @@ if test ${TARGET} = ARM; then
 			#endif
 			return 0;
 		], [
-			fpu=VFP_HARD
-		], [
 			fpu=NONE
-		])
-	fi
-
-	# No 'hard' ABI. 'soft' or 'softfp'?
-	if test x$fpu = xNONE; then
-		AC_TRY_COMPILE([], [
-			#ifdef __SOFTFP__
-			#error "Float ABI is not 'softfp'"
-			#endif
-			return 0;
 		], [
-			fpu=VFP
-		], [
-			fpu=NONE
+			# No 'hard' ABI. 'soft' or 'softfp'?
+			AC_TRY_COMPILE([], [
+				#ifdef __SOFTFP__
+				#error "Float ABI is not 'softfp'"
+				#endif
+				return 0;
+			], [
+				fpu=VFP
+			], [
+				fpu=NONE
+			])
 		])
 	fi
 
