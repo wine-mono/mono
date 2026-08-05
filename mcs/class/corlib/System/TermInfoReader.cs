@@ -89,8 +89,8 @@ namespace System {
 		{
 			using (FileStream st = File.OpenRead (filename)) {
 				long length = st.Length;
-				if (length > 4096)
-					throw new Exception ("File must be smaller than 4K");
+				if (length > 32768)
+					throw new Exception ("File must be smaller than 32K");
 
 				buffer = new byte [(int) length];
 				if (st.Read (buffer, 0, buffer.Length) != buffer.Length)
