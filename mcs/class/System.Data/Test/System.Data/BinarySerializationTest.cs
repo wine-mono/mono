@@ -560,9 +560,9 @@ public class BinarySerializationTest
 		tb2.Columns.Add ("eid", typeof (int));
 		tb2.Columns.Add ("SSN", typeof (int));
 		tb2.Columns.Add ("DOJ", typeof (DateTime));
-		tb2.Rows.Add (new object[] {1, 111, "07-25-06"});
-		tb2.Rows.Add (new object[] {2, 112, "07-19-06"});
-		tb2.Rows.Add (new object[] {3, 113, "07-22-06"});
+		tb2.Rows.Add (new object[] {1, 111, DateTime.Parse("2006-07-25").ToShortDateString()});
+		tb2.Rows.Add (new object[] {2, 112, DateTime.Parse("2006-07-19").ToShortDateString()});
+		tb2.Rows.Add (new object[] {3, 113, DateTime.Parse("2006-07-22").ToShortDateString()});
 		ds.Tables.Add (tb2);
 		//Table3
 		DataTable tb3 = new DataTable ();
@@ -576,8 +576,8 @@ public class BinarySerializationTest
 		tb4.Columns.Add ("ssn", typeof (int));
 		tb4.Columns.Add ("Name", typeof (string));
 		tb4.Columns.Add ("DOB", typeof (DateTime));
-		tb4.Rows.Add (new object[] {112, "A", "09-12-81"});
-		tb4.Rows.Add (new object[] {113, "B", "09-12-82"});
+		tb4.Rows.Add (new object[] {112, "A", DateTime.Parse("1981-09-12").ToShortDateString()});
+		tb4.Rows.Add (new object[] {113, "B", DateTime.Parse("1982-09-12").ToShortDateString()});
 		ds.Tables.Add (tb4);
 		
 		//Constraints
