@@ -106,6 +106,11 @@ typedef struct my_ucontext {
 /* nothing to do */
 #define setup_context(ctx)
 
+#define ARM_RESTORE_CONTEXT_SIZE 128
+#define ARM_CALL_FILTER_SIZE 320
+#define ARM_THROW_EXCEPTION_SIZE 132
+#define ARM_THROW_EXCEPTION_BY_NAME_SIZE 168
+
 /*
  * arch_get_restore_context:
  *
@@ -116,13 +121,13 @@ gpointer
 mono_arch_get_restore_context (void)
 {
 	guint8 *code;
-	static guint8 start [128];
-	static int inited = 0;
+	static guint8 *start = NULL;
 
-	if (inited)
+	if (start)
 		return start;
-	inited = 1;
 
+	/* Generated ARM instructions must live in executable code memory, not .bss. */
+	start = mono_global_codeman_reserve (ARM_RESTORE_CONTEXT_SIZE);
 	code = start;
 	restore_regs_from_context (ARMREG_R0, ARMREG_R1, ARMREG_R2);
 	/* restore also the stack pointer, FIXME: handle sp != fp */
@@ -134,7 +139,7 @@ mono_arch_get_restore_context (void)
 	/* never reached */
 	ARM_DBRK (code);
 
-	g_assert ((code - start) < sizeof(start));
+	g_assert ((code - start) < ARM_RESTORE_CONTEXT_SIZE);
 	mono_arch_flush_icache (start, code - start);
 	return start;
 }
@@ -149,15 +154,15 @@ mono_arch_get_restore_context (void)
 gpointer
 mono_arch_get_call_filter (void)
 {
-	static guint8 start [320];
-	static int inited = 0;
+	static guint8 *start = NULL;
 	guint8 *code;
 	int alloc_size, pos, i;
 
-	if (inited)
+	if (start)
 		return start;
 
-	inited = 1;
+	/* Generated ARM instructions must live in executable code memory, not .bss. */
+	start = mono_global_codeman_reserve (ARM_CALL_FILTER_SIZE);
 	/* call_filter (MonoContext *ctx, unsigned long eip, gpointer exc) */
 	code = start;
 
@@ -175,7 +180,7 @@ mono_arch_get_call_filter (void)
 	/* epilog */
 	ARM_POP_NWB (code, 0xff0 | ((1 << ARMREG_SP) | (1 << ARMREG_PC)));
 
-	g_assert ((code - start) < sizeof(start));
+	g_assert ((code - start) < ARM_CALL_FILTER_SIZE);
 	mono_arch_flush_icache (start, code - start);
 	return start;
 }
@@ -281,13 +286,13 @@ mono_arch_get_throw_exception_generic (guint8 *start, int size, int by_name, gbo
 gpointer
 mono_arch_get_rethrow_exception (void)
 {
-	static guint8 start [132];
-	static int inited = 0;
+	static guint8 *start = NULL;
 
-	if (inited)
+	if (start)
 		return start;
-	mono_arch_get_throw_exception_generic (start, sizeof (start), FALSE, TRUE);
-	inited = 1;
+	/* Generated throw helpers are entered as code during exception dispatch. */
+	start = mono_global_codeman_reserve (ARM_THROW_EXCEPTION_SIZE);
+	mono_arch_get_throw_exception_generic (start, ARM_THROW_EXCEPTION_SIZE, FALSE, TRUE);
 	return start;
 }
 /**
@@ -305,13 +310,13 @@ mono_arch_get_rethrow_exception (void)
 gpointer 
 mono_arch_get_throw_exception (void)
 {
-	static guint8 start [132];
-	static int inited = 0;
+	static guint8 *start = NULL;
 
-	if (inited)
+	if (start)
 		return start;
-	mono_arch_get_throw_exception_generic (start, sizeof (start), FALSE, FALSE);
-	inited = 1;
+	/* Generated throw helpers are entered as code during exception dispatch. */
+	start = mono_global_codeman_reserve (ARM_THROW_EXCEPTION_SIZE);
+	mono_arch_get_throw_exception_generic (start, ARM_THROW_EXCEPTION_SIZE, FALSE, FALSE);
 	return start;
 }
 
@@ -330,13 +335,13 @@ mono_arch_get_throw_exception (void)
 gpointer 
 mono_arch_get_throw_exception_by_name (void)
 {
-	static guint8 start [168];
-	static int inited = 0;
+	static guint8 *start = NULL;
 
-	if (inited)
+	if (start)
 		return start;
-	mono_arch_get_throw_exception_generic (start, sizeof (start), TRUE, FALSE);
-	inited = 1;
+	/* Generated throw helpers are entered as code during exception dispatch. */
+	start = mono_global_codeman_reserve (ARM_THROW_EXCEPTION_BY_NAME_SIZE);
+	mono_arch_get_throw_exception_generic (start, ARM_THROW_EXCEPTION_BY_NAME_SIZE, TRUE, FALSE);
 	return start;
 }	
 
