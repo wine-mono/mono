@@ -107,15 +107,25 @@ if test x$CI_LIMITED = x; then
 
 	RETRIES=9 run_test System.Runtime.Caching --nunit net_4_x/tests/net_4_x_System.Runtime.Caching_test.dll
 
-	for name in System.Xml System.Data System.Web System.Web.Services System.Runtime.Serialization.Formatters.Soap System.Runtime.Remoting Cscompmgd Commons.Xml.Relaxng System.ServiceProcess I18N.CJK I18N.West I18N.MidEast I18N.Rare I18N.Other System.DirectoryServices Microsoft.Build.Engine Microsoft.Build.Framework Microsoft.Build.Tasks Microsoft.Build.Utilities Mono.C5 Mono.Options Mono.Tasklets System.Configuration System.Transactions System.Web.Extensions System.Drawing System.Windows.Forms Microsoft.VisualBasic System.Windows.Forms.DataVisualization System.Xml.Linq System.Data.DataSetExtensions System.Web.Abstractions System.Web.Routing System.Runtime.Serialization System.IdentityModel System.ServiceModel System.ServiceModel.Web System.ComponentModel.DataAnnotations Mono.CodeContracts System.Data.Services System.Web.DynamicData Mono.CSharp WindowsBase System.Numerics System.Runtime.DurableInstancing System.ServiceModel.Discovery System.Xaml System.Net.Http System.Net.Http.WebRequest System.Json System.Threading.Tasks.Dataflow Microsoft.Build System.IO.Compression Mono.Data.Sqlite System.Data.OracleClient Mono.Messaging Mono.Messaging.RabbitMQ WebMatrix.Data; do
+	for name in System.Xml System.Data System.Web System.Web.Services System.Runtime.Serialization.Formatters.Soap System.Runtime.Remoting Cscompmgd Commons.Xml.Relaxng System.ServiceProcess I18N.CJK I18N.West I18N.MidEast I18N.Rare I18N.Other System.DirectoryServices Microsoft.Build.Engine Microsoft.Build.Framework Microsoft.Build.Tasks Microsoft.Build.Utilities Mono.C5 Mono.Options Mono.Tasklets System.Configuration System.Transactions System.Web.Extensions Microsoft.VisualBasic System.Windows.Forms.DataVisualization System.Xml.Linq System.Data.DataSetExtensions System.Web.Abstractions System.Web.Routing System.Runtime.Serialization System.IdentityModel System.ServiceModel System.ServiceModel.Web System.ComponentModel.DataAnnotations Mono.CodeContracts System.Data.Services System.Web.DynamicData Mono.CSharp WindowsBase System.Numerics System.Runtime.DurableInstancing System.ServiceModel.Discovery System.Xaml System.Net.Http System.Net.Http.WebRequest System.Json System.Threading.Tasks.Dataflow Microsoft.Build System.IO.Compression Mono.Data.Sqlite System.Data.OracleClient Mono.Messaging Mono.Messaging.RabbitMQ WebMatrix.Data; do
 		run_test $name --nunit net_4_x/tests/net_4_x_${name}_test.dll
 	done
 
 	run_test Microsoft.VisualBasic_vbtest --nunit net_4_x/tests/net_4_x_Microsoft.VisualBasic_vbtest.dll
 
-	for name in System.Xml System.Runtime.CompilerServices.Unsafe System.Json System.Xml.Linq System.ComponentModel.Composition System.Drawing System.Security System.Runtime.Serialization System.Net.Http.UnitTests System.Net.Http.FunctionalTests Mono.Profiler.Log System.Data System.Numerics System.Threading.Tasks.Dataflow System.ComponentModel.Composition Microsoft.CSharp System.IO.Compression; do
+	for name in System.Xml System.Runtime.CompilerServices.Unsafe System.Json System.Xml.Linq System.ComponentModel.Composition System.Security System.Runtime.Serialization System.Net.Http.UnitTests System.Net.Http.FunctionalTests System.Data System.Numerics System.Threading.Tasks.Dataflow System.ComponentModel.Composition Microsoft.CSharp System.IO.Compression; do
 		run_test ${name}-xunit --xunit net_4_x/tests/net_4_x_${name}_xunit-test.dll
 	done
+
+	if test x$CI_PLATFORM != xmac; then
+		for name in System.Drawing System.Windows.Forms; do
+			run_test $name --nunit net_4_x/tests/net_4_x_${name}_test.dll
+		done
+
+		for name in Mono.Profiler.Log System.Drawing; do
+			run_test ${name}-xunit --xunit net_4_x/tests/net_4_x_${name}_xunit-test.dll
+		done
+	fi
 fi
 
 touch "$TEST_RESULTS_DIR"/expected-failures.txt

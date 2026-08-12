@@ -293,8 +293,8 @@ namespace MonoTests.Microsoft_VisualBasic
 		{
 			Assert.AreEqual("123443.21%",Strings.Format(1234.4321, "Percent"));
 			Assert.AreEqual("123443.21%",Strings.Format(1234.4321, "percent"));
-			Assert.AreEqual("123,443.21 %",Strings.Format(1234.4321, "P"));
-			Assert.AreEqual("123,443.21 %",Strings.Format(1234.4321, "p"));
+			Assert.AreEqual((1234.4321).ToString("P"),Strings.Format(1234.4321, "P"));
+			Assert.AreEqual((1234.4321).ToString("p"),Strings.Format(1234.4321, "p"));
 			Assert.AreEqual("%",Strings.Format(1234.4321, "%"));
 		}
 
@@ -488,8 +488,8 @@ namespace MonoTests.Microsoft_VisualBasic
 			DateTime d = new DateTime (2006, 6, 19, 14, 22, 35, 78);
 			
 			Assert.AreEqual("-1",Strings.Format(d, "-1"));
-			Assert.AreEqual("6/19/2006 2:22:35 PM",Strings.Format(d, null));
-			Assert.AreEqual("6/19/2006 2:22:35 PM",Strings.Format(d, String.Empty));
+			Assert.AreEqual(d.ToString(),Strings.Format(d, null));
+			Assert.AreEqual(d.ToString(),Strings.Format(d, String.Empty));
 		}
 
 		[Test]
@@ -551,15 +551,14 @@ namespace MonoTests.Microsoft_VisualBasic
 		[Test]
 		public void FormatCurrency_TriState1()
 		{
-			Assert.AreEqual("($123.42)",Strings.FormatCurrency(-123.42,2,TriState.UseDefault,TriState.UseDefault,TriState.UseDefault));
-			Assert.AreEqual("($123.42)",Strings.FormatCurrency(-123.42,2,TriState.False,TriState.UseDefault,TriState.UseDefault));
-			Assert.AreEqual("($123.42)",Strings.FormatCurrency(-123.42,2,TriState.True,TriState.UseDefault,TriState.UseDefault));
+			Assert.AreEqual("($123.42)",Strings.FormatCurrency(-123.42,2,TriState.UseDefault,TriState.True,TriState.UseDefault));
+			Assert.AreEqual("($123.42)",Strings.FormatCurrency(-123.42,2,TriState.False,TriState.True,TriState.UseDefault));
+			Assert.AreEqual("($123.42)",Strings.FormatCurrency(-123.42,2,TriState.True,TriState.True,TriState.UseDefault));
 		}
 		
 		[Test]
 		public void FormatCurrency_TriState2()
 		{
-			Assert.AreEqual("($123.42)",Strings.FormatCurrency(-123.42,2,TriState.UseDefault,TriState.UseDefault,TriState.UseDefault));
 			Assert.AreEqual("-$123.42",Strings.FormatCurrency(-123.42,2,TriState.UseDefault,TriState.False,TriState.UseDefault));
 			Assert.AreEqual("($123.42)",Strings.FormatCurrency(-123.42,2,TriState.UseDefault,TriState.True,TriState.UseDefault));
 		}
@@ -567,9 +566,9 @@ namespace MonoTests.Microsoft_VisualBasic
 		[Test]
 		public void FormatCurrency_TriState3()
 		{
-			Assert.AreEqual("($123.42)",Strings.FormatCurrency(-123.42,2,TriState.UseDefault,TriState.UseDefault,TriState.UseDefault));
-			Assert.AreEqual("($123.42)",Strings.FormatCurrency(-123.42,2,TriState.UseDefault,TriState.UseDefault,TriState.False));
-			Assert.AreEqual("($123.42)",Strings.FormatCurrency(-123.42,2,TriState.UseDefault,TriState.UseDefault,TriState.True));
+			Assert.AreEqual("($123.42)",Strings.FormatCurrency(-123.42,2,TriState.UseDefault,TriState.True,TriState.UseDefault));
+			Assert.AreEqual("($123.42)",Strings.FormatCurrency(-123.42,2,TriState.UseDefault,TriState.True,TriState.False));
+			Assert.AreEqual("($123.42)",Strings.FormatCurrency(-123.42,2,TriState.UseDefault,TriState.True,TriState.True));
 		}
 
 		[Test]
@@ -597,6 +596,15 @@ namespace MonoTests.Microsoft_VisualBasic
 
 		#region FormatDateTime Tests
 
+		private void CheckGeneralDate(string s)
+		{
+			DateTime dt = DateTime.Parse(s);
+			Assert.AreEqual(
+				dt.ToShortDateString(),
+				Strings.FormatDateTime(dt, DateFormat.GeneralDate),
+				s);
+		}
+
 		[Test]
 		public void FormatDateTime_GeneralDate()
 		{
@@ -604,29 +612,38 @@ namespace MonoTests.Microsoft_VisualBasic
             DateTime tmptime1 = new DateTime(2000, 12, 5, 3, 23, 45, 5);
             //DateTime tmptime2 = new DateTime(DateTime.MaxValue);
 
-			Assert.AreEqual("12/30/1215",Strings.FormatDateTime(DateTime.Parse("12/30/1215"),DateFormat.GeneralDate));
-            Assert.AreEqual("9/11/2038",Strings.FormatDateTime(DateTime.Parse("9/11/2038"),DateFormat.GeneralDate));
-			Assert.AreEqual("10/9/1001",Strings.FormatDateTime(DateTime.Parse("10/9/1001"),DateFormat.GeneralDate));
-			Assert.AreEqual("9/24/1918",Strings.FormatDateTime(DateTime.Parse("9/24/1918"),DateFormat.GeneralDate));
-			Assert.AreEqual("2/11/1946",Strings.FormatDateTime(DateTime.Parse("2/11/1946"),DateFormat.GeneralDate));
-			Assert.AreEqual("5/1/1980",Strings.FormatDateTime(DateTime.Parse("5/1/1980"),DateFormat.GeneralDate));
-			Assert.AreEqual("2/28/2001",Strings.FormatDateTime(DateTime.Parse("2/28/2001"),DateFormat.GeneralDate));
-			Assert.AreEqual("3/3/2003",Strings.FormatDateTime(DateTime.Parse("3/3/2003"),DateFormat.GeneralDate));
-			Assert.AreEqual("9/10/1972",Strings.FormatDateTime(DateTime.Parse("9/10/1972"),DateFormat.GeneralDate));
-			Assert.AreEqual("1/12/1487",Strings.FormatDateTime(DateTime.Parse("1/12/1487"),DateFormat.GeneralDate));
-			Assert.AreEqual("7/7/0100",Strings.FormatDateTime(DateTime.Parse("7/7/0100"),DateFormat.GeneralDate));
-			Assert.AreEqual("2/1/2022",Strings.FormatDateTime(DateTime.Parse("2/1/22"),DateFormat.GeneralDate));
-			Assert.AreEqual("6/6/0666",Strings.FormatDateTime(DateTime.Parse("6/6/0666"),DateFormat.GeneralDate));
-			Assert.AreEqual("1/1/2000",Strings.FormatDateTime(DateTime.Parse("1/1/2000"),DateFormat.GeneralDate));
-			Assert.AreEqual("12/31/2000",Strings.FormatDateTime(DateTime.Parse("12/31/2000"),DateFormat.GeneralDate));
-			Assert.AreEqual("5/5/1000",Strings.FormatDateTime(DateTime.Parse("5/5/1000"),DateFormat.GeneralDate));
-			Assert.AreEqual("1/1/1970",Strings.FormatDateTime(DateTime.Parse("1/1/1970"),DateFormat.GeneralDate));
-			Assert.AreEqual("2/2/2002",Strings.FormatDateTime(DateTime.Parse("2/2/2002"),DateFormat.GeneralDate));
+			CheckGeneralDate("12/30/1215");
+            CheckGeneralDate("9/11/2038");
+			CheckGeneralDate("10/9/1001");
+			CheckGeneralDate("9/24/1918");
+			CheckGeneralDate("2/11/1946");
+			CheckGeneralDate("5/1/1980");
+			CheckGeneralDate("2/28/2001");
+			CheckGeneralDate("3/3/2003");
+			CheckGeneralDate("9/10/1972");
+			CheckGeneralDate("1/12/1487");
+			CheckGeneralDate("7/7/0100");
+			CheckGeneralDate("2/1/2022");
+			CheckGeneralDate("6/6/0666");
+			CheckGeneralDate("1/1/2000");
+			CheckGeneralDate("12/31/2000");
+			CheckGeneralDate("5/5/1000");
+			CheckGeneralDate("1/1/1970");
+			CheckGeneralDate("2/2/2002");
             
 			Assert.AreEqual(tmptime.ToLongTimeString(),Strings.FormatDateTime(new DateTime(1,1,1,1,1,1,1),DateFormat.GeneralDate),"DT11");
             //  Assert.AreEqual(tmptime.ToLongTimeString(), Strings.FormatDateTime(DateTime.MinValue, DateFormat.GeneralDate));
             //  Assert.AreEqual(tmptime.ToLongDateString() + tmptime.ToLongTimeString(), Strings.FormatDateTime(DateTime.MaxValue, DateFormat.GeneralDate));
 		    //Assert.AreEqual(tmptime.ToLongDateString() + tmptime.ToLongTimeString(),Strings.FormatDateTime(new DateTime(2000,12,5,3,23,45,5),DateFormat.GeneralDate));
+		}
+
+		private void CheckLongDate(string s)
+		{
+			DateTime dt = DateTime.Parse(s);
+			Assert.AreEqual(
+				dt.ToLongDateString(),
+				Strings.FormatDateTime(dt, DateFormat.LongDate),
+				s);
 		}
 
 		[Test]
@@ -635,27 +652,36 @@ namespace MonoTests.Microsoft_VisualBasic
 			if (Helper.OnMono)
 				Assert.Ignore ("Buggy mono: #81535");
 				
-			Assert.AreEqual("Wednesday, December 30, 1215",Strings.FormatDateTime(DateTime.Parse("12/30/1215"),DateFormat.LongDate));
-			Assert.AreEqual("Saturday, September 11, 2038",Strings.FormatDateTime(DateTime.Parse("9/11/2038"),DateFormat.LongDate));
-			Assert.AreEqual("Friday, October 09, 1001",Strings.FormatDateTime(DateTime.Parse("10/9/1001"),DateFormat.LongDate));
-			Assert.AreEqual("Tuesday, September 24, 1918",Strings.FormatDateTime(DateTime.Parse("9/24/1918"),DateFormat.LongDate));
-			Assert.AreEqual("Monday, February 11, 1946",Strings.FormatDateTime(DateTime.Parse("2/11/1946"),DateFormat.LongDate));
-			Assert.AreEqual("Thursday, May 01, 1980",Strings.FormatDateTime(DateTime.Parse("5/1/1980"),DateFormat.LongDate));
-			Assert.AreEqual("Wednesday, February 28, 2001",Strings.FormatDateTime(DateTime.Parse("2/28/2001"),DateFormat.LongDate));
-			Assert.AreEqual("Monday, March 03, 2003",Strings.FormatDateTime(DateTime.Parse("3/3/2003"),DateFormat.LongDate));
-			Assert.AreEqual("Sunday, September 10, 1972",Strings.FormatDateTime(DateTime.Parse("9/10/1972"),DateFormat.LongDate));
-			Assert.AreEqual("Wednesday, January 12, 1487",Strings.FormatDateTime(DateTime.Parse("1/12/1487"),DateFormat.LongDate));
-			Assert.AreEqual("Wednesday, July 07, 0100",Strings.FormatDateTime(DateTime.Parse("7/7/100"),DateFormat.LongDate));
-			Assert.AreEqual("Tuesday, February 01, 2022",Strings.FormatDateTime(DateTime.Parse("2/1/22"),DateFormat.LongDate));
-			Assert.AreEqual("Wednesday, June 06, 0666",Strings.FormatDateTime(DateTime.Parse("6/6/666"),DateFormat.LongDate));
-			Assert.AreEqual("Saturday, January 01, 2000",Strings.FormatDateTime(DateTime.Parse("1/1/2000"),DateFormat.LongDate));
-			Assert.AreEqual("Sunday, December 31, 2000",Strings.FormatDateTime(DateTime.Parse("12/31/2000"),DateFormat.LongDate));
-			Assert.AreEqual("Monday, May 05, 1000",Strings.FormatDateTime(DateTime.Parse("5/5/1000"),DateFormat.LongDate));
-			Assert.AreEqual("Thursday, January 01, 1970",Strings.FormatDateTime(DateTime.Parse("1/1/1970"),DateFormat.LongDate));
-			Assert.AreEqual("Saturday, February 02, 2002",Strings.FormatDateTime(DateTime.Parse("2/2/2002"),DateFormat.LongDate));
+			CheckLongDate("12/30/1215");
+            CheckLongDate("9/11/2038");
+			CheckLongDate("10/9/1001");
+			CheckLongDate("9/24/1918");
+			CheckLongDate("2/11/1946");
+			CheckLongDate("5/1/1980");
+			CheckLongDate("2/28/2001");
+			CheckLongDate("3/3/2003");
+			CheckLongDate("9/10/1972");
+			CheckLongDate("1/12/1487");
+			CheckLongDate("7/7/0100");
+			CheckLongDate("2/1/2022");
+			CheckLongDate("6/6/0666");
+			CheckLongDate("1/1/2000");
+			CheckLongDate("12/31/2000");
+			CheckLongDate("5/5/1000");
+			CheckLongDate("1/1/1970");
+			CheckLongDate("2/2/2002");
 			
-			Assert.AreEqual("Monday, January 01, 0001",Strings.FormatDateTime(new DateTime(1,1,1,1,1,1,1),DateFormat.LongDate));
-			Assert.AreEqual("Tuesday, December 05, 2000",Strings.FormatDateTime(new DateTime(2000,12,5,3,23,45,5),DateFormat.LongDate));
+			Assert.AreEqual(new DateTime(1,1,1,1,1,1,1).ToLongDateString(),Strings.FormatDateTime(new DateTime(1,1,1,1,1,1,1),DateFormat.LongDate));
+			Assert.AreEqual(new DateTime(2000,12,5,3,23,45,5).ToLongDateString(),Strings.FormatDateTime(new DateTime(2000,12,5,3,23,45,5),DateFormat.LongDate));
+		}
+
+		private void CheckShortDate(string s)
+		{
+			DateTime dt = DateTime.Parse(s);
+			Assert.AreEqual(
+				dt.ToShortDateString(),
+				Strings.FormatDateTime(dt, DateFormat.ShortDate),
+				s);
 		}
 
 		[Test]
@@ -664,27 +690,27 @@ namespace MonoTests.Microsoft_VisualBasic
 			if (Helper.OnMono)
 				Assert.Ignore ("Buggy mono: #81535");
 				
-			Assert.AreEqual("12/30/1215",Strings.FormatDateTime(DateTime.Parse("12/30/1215"),DateFormat.ShortDate));
-			Assert.AreEqual("9/11/2038",Strings.FormatDateTime(DateTime.Parse("9/11/2038"),DateFormat.ShortDate));
-			Assert.AreEqual("10/9/1001",Strings.FormatDateTime(DateTime.Parse("10/9/1001"),DateFormat.ShortDate));
-			Assert.AreEqual("9/24/1918",Strings.FormatDateTime(DateTime.Parse("9/24/1918"),DateFormat.ShortDate));
-			Assert.AreEqual("2/11/1946",Strings.FormatDateTime(DateTime.Parse("2/11/1946"),DateFormat.ShortDate));
-			Assert.AreEqual("5/1/1980",Strings.FormatDateTime(DateTime.Parse("5/1/1980"),DateFormat.ShortDate));
-			Assert.AreEqual("2/28/2001",Strings.FormatDateTime(DateTime.Parse("2/28/2001"),DateFormat.ShortDate));
-			Assert.AreEqual("3/3/2003",Strings.FormatDateTime(DateTime.Parse("3/3/2003"),DateFormat.ShortDate));
-			Assert.AreEqual("9/10/1972",Strings.FormatDateTime(DateTime.Parse("9/10/1972"),DateFormat.ShortDate));
-			Assert.AreEqual("1/12/1487",Strings.FormatDateTime(DateTime.Parse("1/12/1487"),DateFormat.ShortDate));
-			Assert.AreEqual("7/7/0100",Strings.FormatDateTime(DateTime.Parse("7/7/100"),DateFormat.ShortDate));
-			Assert.AreEqual("2/1/2022",Strings.FormatDateTime(DateTime.Parse("2/1/22"),DateFormat.ShortDate));
-			Assert.AreEqual("6/6/0666",Strings.FormatDateTime(DateTime.Parse("6/6/666"),DateFormat.ShortDate));
-			Assert.AreEqual("1/1/2000",Strings.FormatDateTime(DateTime.Parse("1/1/2000"),DateFormat.ShortDate));
-			Assert.AreEqual("12/31/2000",Strings.FormatDateTime(DateTime.Parse("12/31/2000"),DateFormat.ShortDate));
-			Assert.AreEqual("5/5/1000",Strings.FormatDateTime(DateTime.Parse("5/5/1000"),DateFormat.ShortDate));
-			Assert.AreEqual("1/1/1970",Strings.FormatDateTime(DateTime.Parse("1/1/1970"),DateFormat.ShortDate));
-			Assert.AreEqual("2/2/2002",Strings.FormatDateTime(DateTime.Parse("2/2/2002"),DateFormat.GeneralDate));
+			CheckShortDate("12/30/1215");
+            CheckShortDate("9/11/2038");
+			CheckShortDate("10/9/1001");
+			CheckShortDate("9/24/1918");
+			CheckShortDate("2/11/1946");
+			CheckShortDate("5/1/1980");
+			CheckShortDate("2/28/2001");
+			CheckShortDate("3/3/2003");
+			CheckShortDate("9/10/1972");
+			CheckShortDate("1/12/1487");
+			CheckShortDate("7/7/0100");
+			CheckShortDate("2/1/2022");
+			CheckShortDate("6/6/0666");
+			CheckShortDate("1/1/2000");
+			CheckShortDate("12/31/2000");
+			CheckShortDate("5/5/1000");
+			CheckShortDate("1/1/1970");
+			CheckShortDate("2/2/2002");
 			
-			Assert.AreEqual("1/1/0001",Strings.FormatDateTime(new DateTime(1,1,1,1,1,1,1),DateFormat.ShortDate));
-			Assert.AreEqual("12/5/2000",Strings.FormatDateTime(new DateTime(2000,12,5,3,23,45,5),DateFormat.ShortDate));
+			Assert.AreEqual(new DateTime(1,1,1,1,1,1,1).ToShortDateString(),Strings.FormatDateTime(new DateTime(1,1,1,1,1,1,1),DateFormat.ShortDate));
+			Assert.AreEqual(new DateTime(2000,12,5,3,23,45,5).ToShortDateString(),Strings.FormatDateTime(new DateTime(2000,12,5,3,23,45,5),DateFormat.ShortDate));
 		}
 
 		[Test]

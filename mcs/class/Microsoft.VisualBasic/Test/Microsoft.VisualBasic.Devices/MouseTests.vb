@@ -32,6 +32,7 @@ Namespace Devices
     <TestFixture()> _
     Public Class MouseTests
         <Category("TargetJvmNotSupported")> _
+        <Category("NotOnMac")> _
         <Test()> _
         Public Sub Test()
             Dim testname As String = "Test"
