@@ -1131,6 +1131,39 @@ COND:   ldloc.0
 		ret
 	}
 
+	.method public static int32 test_64_fconv_neg_u1 () cil managed {
+		ldc.r4 -192.0
+		conv.u1
+		conv.i4
+		ret
+	}
+
+	.method public static int32 test_16384_fconv_neg_u2 () cil managed {
+		ldc.r4 -49152.0
+		conv.u2
+		conv.i4
+		ret
+	}
+
+	.method public static int32 test_1073741824_fconv_neg_u4 () cil managed {
+		ldc.r4 -3221225472.0
+		conv.u4
+		conv.i4
+		ret
+	}
+
+	.method public static int32 test_1_fconv_neg_u8 () cil managed {
+		.maxstack 16
+		ldc.r4 -1.0
+		conv.u8
+		ldc.i4 -1
+		conv.i8
+		conv.u8
+		div.un
+		conv.i4
+		ret
+	}
+
 	.method public static int32 test_0_get_type_from_handle_on_bblock_boundary () cil managed 
 	{
 		.maxstack 16
