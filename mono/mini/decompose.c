@@ -23,6 +23,7 @@
 
 #ifndef DISABLE_JIT
 
+#if SIZEOF_REGISTER == 8
 /*
  * Decompose complex long opcodes on 64 bit machines.
  * This is also used on 32 bit machines when using LLVM, so it needs to handle I/U correctly.
@@ -280,6 +281,7 @@ decompose_long_opcode (MonoCompile *cfg, MonoInst *ins, MonoInst **repl_ins)
 	*repl_ins = repl;
 	return TRUE;
 }
+#endif
 
 /*
  * mono_decompose_opcode:
