@@ -869,6 +869,7 @@ static int ccount = 0;
 
 /* This marks a place in code where an implicit exception could be thrown */
 #define MONO_EMIT_NEW_IMPLICIT_EXCEPTION(cfg) do { \
+		cfg->flags |= MONO_CFG_HAS_IMPLICIT_EXCEPTION;	 \
 	} while (0)
 
 /* Loads/Stores which can fault are handled correctly by the LLVM mono branch */

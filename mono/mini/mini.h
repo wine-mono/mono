@@ -1623,7 +1623,8 @@ typedef enum {
 	MONO_CFG_HAS_SPILLUP  = 1 << 6, /* spill var slots are allocated from bottom to top */
 	MONO_CFG_HAS_CHECK_THIS  = 1 << 7,
 	MONO_CFG_NEEDS_DECOMPOSE = 1 << 8,
-	MONO_CFG_HAS_TYPE_CHECK = 1 << 9
+	MONO_CFG_HAS_TYPE_CHECK = 1 << 9,
+	MONO_CFG_HAS_IMPLICIT_EXCEPTION = 1 << 10
 } MonoCompileFlags;
 
 typedef enum {
