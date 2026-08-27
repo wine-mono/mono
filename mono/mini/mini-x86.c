@@ -1084,7 +1084,7 @@ needs_stack_frame (MonoCompile *cfg)
 		result = TRUE;
 	else if (cfg->param_area)
 		result = TRUE;
-	else if (cfg->flags & (MONO_CFG_HAS_CALLS | MONO_CFG_HAS_ALLOCA | MONO_CFG_HAS_TAILCALL))
+	else if (cfg->flags & (MONO_CFG_HAS_CALLS | MONO_CFG_HAS_ALLOCA | MONO_CFG_HAS_TAILCALL | MONO_CFG_HAS_IMPLICIT_EXCEPTION))
 		result = TRUE;
 	else if (header->num_clauses)
 		result = TRUE;

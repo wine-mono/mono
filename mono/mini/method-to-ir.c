@@ -7248,6 +7248,8 @@ mono_method_to_ir (MonoCompile *cfg, MonoMethod *method, MonoBasicBlock *start_b
 			gboolean noreturn; noreturn = FALSE;
 			gboolean needs_stack_walk; needs_stack_walk = FALSE;
 
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
+
 			// Variables shared by CEE_CALLI and CEE_CALL/CEE_CALLVIRT.
 			common_call = FALSE;
 
@@ -8491,6 +8493,7 @@ calli_end:
 		case MONO_CEE_LDIND_R4:
 		case MONO_CEE_LDIND_R8:
 		case MONO_CEE_LDIND_REF:
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 			--sp;
 
 			ins = mini_emit_memory_load (cfg, m_class_get_byval_arg (ldind_to_type (il_op)), sp [0], 0, ins_flag);
@@ -8505,6 +8508,7 @@ calli_end:
 		case MONO_CEE_STIND_R4:
 		case MONO_CEE_STIND_R8:
 		case MONO_CEE_STIND_I: {
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 			sp -= 2;
 			if (il_op == MONO_CEE_STIND_REF && sp [1]->type != STACK_OBJ) {
 				/* stind.ref must only be used with object references. */
@@ -8587,11 +8591,18 @@ calli_end:
 						NULLIFY_INS (sp [1]);
 				}
 			}
+			if (((il_op == MONO_CEE_DIV || il_op == MONO_CEE_REM || il_op == MONO_CEE_REM_UN) &&
+				 (ins->type == STACK_R4 || ins->type == STACK_R8)) ||
+				il_op == MONO_CEE_DIV_UN)
+				MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 			MONO_ADD_INS ((cfg)->cbb, (ins));
 
 			*sp++ = mono_decompose_opcode (cfg, ins);
 			break;
 		}
+		case MONO_CEE_CONV_OVF_I8:
+		case MONO_CEE_CONV_OVF_U8:
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 		case MONO_CEE_NEG:
 		case MONO_CEE_NOT:
 		case MONO_CEE_CONV_I1:
@@ -8602,8 +8613,6 @@ calli_end:
 		case MONO_CEE_CONV_U4:
 		case MONO_CEE_CONV_I8:
 		case MONO_CEE_CONV_U8:
-		case MONO_CEE_CONV_OVF_I8:
-		case MONO_CEE_CONV_OVF_U8:
 		case MONO_CEE_CONV_R_UN:
 			/* Special case this earlier so we have long constants in the IR */
 			if ((il_op == MONO_CEE_CONV_I8 || il_op == MONO_CEE_CONV_U8) && (sp [-1]->opcode == OP_ICONST)) {
@@ -8636,6 +8645,7 @@ calli_end:
 		case MONO_CEE_CONV_OVF_I4_UN:
 		case MONO_CEE_CONV_OVF_I8_UN:
 		case MONO_CEE_CONV_OVF_I_UN:
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 			if (sp [-1]->type == STACK_R8 || sp [-1]->type == STACK_R4) {
 				/* floats are always signed, _UN has no effect */
 				ADD_UNOP (CEE_CONV_OVF_I8);
@@ -8653,6 +8663,7 @@ calli_end:
 		case MONO_CEE_CONV_OVF_U4_UN:
 		case MONO_CEE_CONV_OVF_U8_UN:
 		case MONO_CEE_CONV_OVF_U_UN:
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 			if (sp [-1]->type == STACK_R8 || sp [-1]->type == STACK_R4) {
 				/* floats are always signed, _UN has no effect */
 				ADD_UNOP (CEE_CONV_OVF_U8);
@@ -8674,9 +8685,11 @@ calli_end:
 		case MONO_CEE_MUL_OVF_UN:
 		case MONO_CEE_SUB_OVF:
 		case MONO_CEE_SUB_OVF_UN:
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 			ADD_BINOP (il_op);
 			break;
 		case MONO_CEE_CPOBJ:
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 			GSHAREDVT_FAILURE (il_op);
 			GSHAREDVT_FAILURE (*ip);
 			klass = mini_get_class (method, token, generic_context);
@@ -8689,6 +8702,7 @@ calli_end:
 			int loc_index = -1;
 			int stloc_len = 0;
 
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 			--sp;
 			klass = mini_get_class (method, token, generic_context);
 			CHECK_TYPELOAD (klass);
@@ -8826,6 +8840,7 @@ calli_end:
 			MonoInst *alloc;
 			MonoInst *vtable_arg = NULL;
 
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 			cmethod = mini_get_method (cfg, method, token, NULL, generic_context);
 			CHECK_CFG_ERROR;
 
@@ -9067,6 +9082,7 @@ calli_end:
 		}
 		case MONO_CEE_CASTCLASS:
 		case MONO_CEE_ISINST: {
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 			--sp;
 			klass = mini_get_class (method, token, generic_context);
 			CHECK_TYPELOAD (klass);
@@ -9089,6 +9105,7 @@ calli_end:
 		case MONO_CEE_UNBOX_ANY: {
 			MonoInst *res, *addr;
 
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 			--sp;
 			klass = mini_get_class (method, token, generic_context);
 			CHECK_TYPELOAD (klass);
@@ -9132,6 +9149,7 @@ calli_end:
 			MonoMethod *has_flag;
 			MonoMethodSignature *has_flag_sig;
 
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 			--sp;
 			val = *sp;
 			klass = mini_get_class (method, token, generic_context);
@@ -9327,6 +9345,7 @@ calli_end:
 			break;
 		}
 		case MONO_CEE_UNBOX: {
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 			--sp;
 			klass = mini_get_class (method, token, generic_context);
 			CHECK_TYPELOAD (klass);
@@ -9367,6 +9386,7 @@ calli_end:
 			MonoInst *store_val = NULL;
 			MonoInst *thread_ins;
 
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 			is_instance = (il_op == MONO_CEE_LDFLD || il_op == MONO_CEE_LDFLDA || il_op == MONO_CEE_STFLD);
 			if (is_instance) {
 				if (il_op == MONO_CEE_STFLD) {
@@ -9941,6 +9961,7 @@ field_access_end:
 			break;
 		}
 		case MONO_CEE_STOBJ:
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 			sp -= 2;
 			klass = mini_get_class (method, token, generic_context);
 			CHECK_TYPELOAD (klass);
@@ -9960,6 +9981,7 @@ field_access_end:
 			int data_size = 0;
 			guint32 field_token;
 
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 			--sp;
 
 			klass = mini_get_class (method, token, generic_context);
@@ -10073,6 +10095,7 @@ field_access_end:
 			break;
 		}
 		case MONO_CEE_LDLEN:
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 			--sp;
 			if (sp [0]->type != STACK_OBJ)
 				UNVERIFIED;
@@ -10091,6 +10114,7 @@ field_access_end:
 			*sp++ = ins;
 			break;
 		case MONO_CEE_LDELEMA:
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 			sp -= 2;
 			if (sp [0]->type != STACK_OBJ)
 				UNVERIFIED;
@@ -10127,6 +10151,7 @@ field_access_end:
 		case MONO_CEE_LDELEM_REF: {
 			MonoInst *addr;
 
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 			sp -= 2;
 
 			if (il_op == MONO_CEE_LDELEM) {
@@ -10170,6 +10195,7 @@ field_access_end:
 		case MONO_CEE_STELEM_R8:
 		case MONO_CEE_STELEM_REF:
 		case MONO_CEE_STELEM: {
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 			sp -= 3;
 
 			cfg->flags |= MONO_CFG_HAS_LDELEMA;
@@ -10192,6 +10218,7 @@ field_access_end:
 			break;
 		}
 		case MONO_CEE_CKFINITE: {
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 			--sp;
 
 			if (cfg->llvm_only) {
@@ -10215,6 +10242,7 @@ field_access_end:
 		case MONO_CEE_REFANYVAL: {
 			MonoInst *src_var, *src;
 
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 			int klass_reg = alloc_preg (cfg);
 			int dreg = alloc_preg (cfg);
 
@@ -10430,6 +10458,7 @@ field_access_end:
 			break;
 		}
 		case MONO_CEE_THROW:
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 			if (sp [-1]->type != STACK_OBJ)
 				UNVERIFIED;
 
@@ -11250,6 +11279,7 @@ mono_ldptr:
 		case MONO_CEE_LDVIRTFTN: {
 			MonoInst *args [2];
 
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 			cmethod = mini_get_method (cfg, method, n, NULL, generic_context);
 			CHECK_CFG_ERROR;
 
@@ -11411,12 +11441,14 @@ mono_ldptr:
 			CHECK_TYPELOAD (constrained_class);
 			break;
 		case MONO_CEE_CPBLK:
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 			sp -= 3;
 			mini_emit_memory_copy_bytes (cfg, sp [0], sp [1], sp [2], ins_flag);
 			ins_flag = 0;
 			inline_costs += 1;
 			break;
 		case MONO_CEE_INITBLK:
+			MONO_EMIT_NEW_IMPLICIT_EXCEPTION (cfg);
 			sp -= 3;
 			mini_emit_memory_init_bytes (cfg, sp [0], sp [1], sp [2], ins_flag);
 			ins_flag = 0;
