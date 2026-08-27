@@ -224,8 +224,33 @@ namespace MonoTests.Microsoft_VisualBasic.FileIO
 				t.HasFieldsEnclosedInQuotes = true;
 				Assert.AreEqual ("?b?", Strings.Join (t.ReadFields (), "?"), "#L1");
 			}
+
+
+			delimiters = new string [] { ";" };
+			text = "a;\"b" + Constants.vbNewLine + "b\";c";
+			using (StringReader reader = new StringReader (text))
+			using (TextFieldParser t = new TextFieldParser (reader)) {
+				t.SetDelimiters (delimiters);
+				t.TextFieldType = FieldType.Delimited;
+				t.HasFieldsEnclosedInQuotes = true;
+				Assert.AreEqual ("a:b" + Constants.vbNewLine + "b:c", Strings.Join (t.ReadFields (), ":"), "#M1");
+				Assert.AreEqual (null, Strings.Join (t.ReadFields (), ":"), "#M2");
+			}
+
+
+			delimiters = new string [] { ";" };
+			text = "a;\"" + Constants.vbNewLine + "b" + Constants.vbNewLine + "\";c";
+			using (StringReader reader = new StringReader (text))
+			using (TextFieldParser t = new TextFieldParser (reader)) {
+				t.SetDelimiters (delimiters);
+				t.TextFieldType = FieldType.Delimited;
+				t.HasFieldsEnclosedInQuotes = true;
+				t.TrimWhiteSpace = false;
+				Assert.AreEqual ("a:" + Constants.vbNewLine + "b" + Constants.vbNewLine + ":c", Strings.Join (t.ReadFields (), ":"), "#N1");
+				Assert.AreEqual (null, Strings.Join (t.ReadFields (), ":"), "#N2");
+			}
 		}
-		
+
 		[Test]
 		public void FixedTest1 ()
 		{
