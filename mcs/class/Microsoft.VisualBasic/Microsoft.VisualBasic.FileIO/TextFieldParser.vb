@@ -108,19 +108,16 @@ Namespace Microsoft.VisualBasic.FileIO
 
         Private Function GetNextField(ByVal line As String, ByVal startIndex As Integer, ByRef nextIndex As Integer) As String
             Dim inQuote As Boolean
-            Dim currentindex As Integer
 
             If nextIndex = Integer.MinValue Then
                 nextIndex = Integer.MaxValue
                 Return String.Empty
             End If
 
-            If m_HasFieldsEnclosedInQuotes AndAlso line(currentindex) = """"c Then
+            If m_HasFieldsEnclosedInQuotes AndAlso line(startIndex) = """"c Then
                 inQuote = True
                 startIndex += 1
             End If
-
-            currentindex = startIndex
 
             Dim mustMatch As Boolean
             For j As Integer = startIndex To line.Length - 1

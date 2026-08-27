@@ -89,6 +89,19 @@ namespace MonoTests.Microsoft_VisualBasic.FileIO
 
 
 			delimiters = new string [] { ";" };
+			text = "a;bb;ccc;dddd" + Constants.vbNewLine + "111;\"22;3\"";
+			using (StringReader reader = new StringReader (text))
+			using (TextFieldParser t = new TextFieldParser (reader)) {
+				t.SetDelimiters (delimiters);
+				t.TextFieldType = FieldType.Delimited;
+				t.HasFieldsEnclosedInQuotes = true;
+				Assert.AreEqual ("a:bb:ccc:dddd", Strings.Join (t.ReadFields (), ":"), "#C'1");
+				Assert.AreEqual ("111:22;3", Strings.Join (t.ReadFields (), ":"), "#C'2");
+				Assert.AreEqual (null, Strings.Join (t.ReadFields (), ":"), "#C'3");
+			}
+
+
+			delimiters = new string [] { ";" };
 			text = "\"";
 			using (StringReader reader = new StringReader (text))
 			using (TextFieldParser t = new TextFieldParser (reader)) {
