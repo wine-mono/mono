@@ -134,8 +134,13 @@ Namespace Microsoft.VisualBasic.FileIO
                         End If
                         line &= Constants.vbNewLine & nextLine
                     Else If line(j) = """"c Then
-                        inQuote = False
-                        mustMatch = True
+                        if j + 1 < line.Length AndAlso line(j + 1) = """"c Then
+                            ' Escaped quote, so skip two characters
+                            j += 1
+                        Else
+                            inQuote = False
+                            mustMatch = True
+                        End If
                     End If
                     j += 1
                     Continue While
@@ -148,7 +153,7 @@ Namespace Microsoft.VisualBasic.FileIO
                             nextIndex = Integer.MinValue
                         End If
                         If mustMatch Then
-                            Return line.Substring(startIndex, j - startIndex - 1)
+                            Return line.Substring(startIndex, j - startIndex - 1).Replace("""""", """")
                         Else
                             Return line.Substring(startIndex, j - startIndex)
                         End If
@@ -167,7 +172,7 @@ Namespace Microsoft.VisualBasic.FileIO
 
             nextIndex = line.Length
             If mustMatch Then
-                Return line.Substring(startIndex, nextIndex - startIndex - 1)
+                Return line.Substring(startIndex, nextIndex - startIndex - 1).Replace("""""", """")
             Else
                 Return line.Substring(startIndex)
             End If
