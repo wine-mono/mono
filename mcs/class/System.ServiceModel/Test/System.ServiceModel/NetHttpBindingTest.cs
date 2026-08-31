@@ -27,6 +27,7 @@
 //
 #if !MOBILE && !XAMMAC_4_5
 using System.ServiceModel;
+using System.ServiceModel.Channels;
 using NUnit.Framework;
 
 namespace MonoTests.System.ServiceModel
@@ -40,6 +41,20 @@ namespace MonoTests.System.ServiceModel
 			var n = new NetHttpBinding ();
 
 			Assert.AreEqual (BasicHttpSecurityMode.None, n.Security.Mode, "#1");
+		}
+
+		[Test]
+		public void CreateBindingElements ()
+		{
+			var b = new NetHttpBinding ();
+
+			// Binding elements
+			BindingElementCollection bec = b.CreateBindingElements ();
+			Assert.AreEqual (2, bec.Count, "#1");
+			Assert.AreEqual (typeof (BinaryMessageEncodingBindingElement),
+				bec [0].GetType (), "#2");
+			Assert.AreEqual (typeof (HttpTransportBindingElement),
+				bec [1].GetType (), "#3");
 		}
 	}
 }
