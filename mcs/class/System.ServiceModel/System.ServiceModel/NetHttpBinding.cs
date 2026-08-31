@@ -30,8 +30,8 @@ namespace System.ServiceModel {
 	[MonoTODO]
 	public class NetHttpBinding : HttpBindingBase {
 		public NetHttpBinding ()
+			: base()
 		{
-			throw new NotImplementedException ();
 		}
 		
 		public NetHttpBinding (BasicHttpSecurityMode securityMode)

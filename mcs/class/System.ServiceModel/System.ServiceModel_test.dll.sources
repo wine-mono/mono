@@ -187,6 +187,7 @@ System.ServiceModel/FaultReasonTest.cs
 System.ServiceModel/IntegratedConnectionTest.cs
 System.ServiceModel/MessageSecurityVersionTest.cs
 System.ServiceModel/MsmqTransportSecurityTest.cs
+System.ServiceModel/NetHttpBindingTest.cs
 System.ServiceModel/NetMsmqBindingTest.cs
 System.ServiceModel/NetPeerTcpBindingTest.cs
 System.ServiceModel/NetTcpBindingTest.cs
