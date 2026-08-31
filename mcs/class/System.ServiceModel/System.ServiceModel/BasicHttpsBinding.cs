@@ -141,7 +141,7 @@ namespace System.ServiceModel
 			}
 		}
 
-		TransportBindingElement GetTransport ()
+		new TransportBindingElement GetTransport ()
 		{
 			HttpsTransportBindingElement h = new HttpsTransportBindingElement ();
 
