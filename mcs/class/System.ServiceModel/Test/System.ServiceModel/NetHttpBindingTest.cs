@@ -38,6 +38,8 @@ namespace MonoTests.System.ServiceModel
 		public void DefaultValues ()
 		{
 			var n = new NetHttpBinding ();
+
+			Assert.AreEqual (BasicHttpSecurityMode.None, n.Security.Mode, "#1");
 		}
 	}
 }

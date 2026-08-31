@@ -29,14 +29,18 @@ using System.ServiceModel.Channels;
 namespace System.ServiceModel {
 	[MonoTODO]
 	public class NetHttpBinding : HttpBindingBase {
+		BasicHttpSecurity basic_http_security;
+
 		public NetHttpBinding ()
-			: base()
+			: this(BasicHttpSecurityMode.None)
 		{
 		}
-		
+
 		public NetHttpBinding (BasicHttpSecurityMode securityMode)
+			: base()
 		{
-			throw new NotImplementedException ();
+			this.basic_http_security = new BasicHttpSecurity();
+			this.basic_http_security.Mode = securityMode;
 		}
 		
 		public NetHttpBinding (string configurationName)
@@ -52,7 +56,11 @@ namespace System.ServiceModel {
 		
 		public NetHttpMessageEncoding MessageEncoding { get; set; }
 		public OptionalReliableSession ReliableSession { get; set; }
-		public BasicHttpSecurity Security { get; set; }
+
+		public BasicHttpSecurity Security {
+			get { return this.basic_http_security; }
+			set { throw new NotImplementedException (); }
+		}
 
 		public WebSocketTransportSettings WebSocketSettings {
 			get { throw new NotImplementedException (); }
