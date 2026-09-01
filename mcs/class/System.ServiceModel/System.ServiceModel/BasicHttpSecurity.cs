@@ -65,5 +65,14 @@ namespace System.ServiceModel
 			get { return transport; }
 			set { transport = value; }
 		}
+
+		internal SecurityBindingElement CreateMessageSecurity () {
+			if (this.mode == BasicHttpSecurityMode.Message
+				|| this.mode == BasicHttpSecurityMode.TransportWithMessageCredential) {
+				throw new NotImplementedException ();
+			} else {
+				return null;
+			}
+		}
 	}
 }
