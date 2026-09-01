@@ -77,10 +77,6 @@ namespace System.ServiceModel {
 		public WebSocketTransportSettings WebSocketSettings {
 			get { throw new NotImplementedException (); }
 		}
-		
-		public override string Scheme {
-			get { throw new NotImplementedException (); }
-		}
 
 		internal override BasicHttpSecurity BasicHttpSecurity {
 			get { return this.basic_http_security; }

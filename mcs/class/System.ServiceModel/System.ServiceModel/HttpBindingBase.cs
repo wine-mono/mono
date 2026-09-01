@@ -111,7 +111,7 @@ namespace System.ServiceModel
 		}
 
 		public override string Scheme {
-			get;
+			get { return this.GetTransport().Scheme; }
 		}
 
 		public EnvelopeVersion EnvelopeVersion {

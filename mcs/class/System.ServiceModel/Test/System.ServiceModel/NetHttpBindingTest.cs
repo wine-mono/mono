@@ -41,6 +41,7 @@ namespace MonoTests.System.ServiceModel
 			var n = new NetHttpBinding ();
 
 			Assert.AreEqual (BasicHttpSecurityMode.None, n.Security.Mode, "#1");
+			Assert.AreEqual ("http", n.Scheme, "#2");
 		}
 
 		[Test]
