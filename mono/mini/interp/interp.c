@@ -2023,9 +2023,113 @@ interp_entry (InterpEntryData *data)
 		stackval_to_data (type, frame.stack, data->res, FALSE);
 }
 
+#if defined(HOST_WIN32) && defined(TARGET_X86)
+static void
+do_icall_stdcall (int op, stackval *sp, gpointer ptr)
+{
+	switch (op) {
+	case MINT_ICALL_V_V: {
+		typedef void (__stdcall *T)(void);
+		T func = (T)ptr;
+		func ();
+		break;
+	}
+	case MINT_ICALL_V_P: {
+		typedef gpointer (__stdcall *T)(void);
+		T func = (T)ptr;
+		sp [0].data.p = func ();
+		break;
+	}
+	case MINT_ICALL_P_V: {
+		typedef void (__stdcall *T)(gpointer);
+		T func = (T)ptr;
+		func (sp [0].data.p);
+		break;
+	}
+	case MINT_ICALL_P_P: {
+		typedef gpointer (__stdcall *T)(gpointer);
+		T func = (T)ptr;
+		sp [0].data.p = func (sp [0].data.p);
+		break;
+	}
+	case MINT_ICALL_PP_V: {
+		typedef void (__stdcall *T)(gpointer,gpointer);
+		T func = (T)ptr;
+		func (sp [0].data.p, sp [1].data.p);
+		break;
+	}
+	case MINT_ICALL_PP_P: {
+		typedef gpointer (__stdcall *T)(gpointer,gpointer);
+		T func = (T)ptr;
+		sp [0].data.p = func (sp [0].data.p, sp [1].data.p);
+		break;
+	}
+	case MINT_ICALL_PPP_V: {
+		typedef void (__stdcall *T)(gpointer,gpointer,gpointer);
+		T func = (T)ptr;
+		func (sp [0].data.p, sp [1].data.p, sp [2].data.p);
+		break;
+	}
+	case MINT_ICALL_PPP_P: {
+		typedef gpointer (__stdcall *T)(gpointer,gpointer,gpointer);
+		T func = (T)ptr;
+		sp [0].data.p = func (sp [0].data.p, sp [1].data.p, sp [2].data.p);
+		break;
+	}
+	case MINT_ICALL_PPPP_V: {
+		typedef void (__stdcall *T)(gpointer,gpointer,gpointer,gpointer);
+		T func = (T)ptr;
+		func (sp [0].data.p, sp [1].data.p, sp [2].data.p, sp [3].data.p);
+		break;
+	}
+	case MINT_ICALL_PPPP_P: {
+		typedef gpointer (__stdcall *T)(gpointer,gpointer,gpointer,gpointer);
+		T func = (T)ptr;
+		sp [0].data.p = func (sp [0].data.p, sp [1].data.p, sp [2].data.p, sp [3].data.p);
+		break;
+	}
+	case MINT_ICALL_PPPPP_V: {
+		typedef void (__stdcall *T)(gpointer,gpointer,gpointer,gpointer,gpointer);
+		T func = (T)ptr;
+		func (sp [0].data.p, sp [1].data.p, sp [2].data.p, sp [3].data.p, sp [4].data.p);
+		break;
+	}
+	case MINT_ICALL_PPPPP_P: {
+		typedef gpointer (__stdcall *T)(gpointer,gpointer,gpointer,gpointer,gpointer);
+		T func = (T)ptr;
+		sp [0].data.p = func (sp [0].data.p, sp [1].data.p, sp [2].data.p, sp [3].data.p, sp [4].data.p);
+		break;
+	}
+	case MINT_ICALL_PPPPPP_V: {
+		typedef void (__stdcall *T)(gpointer,gpointer,gpointer,gpointer,gpointer,gpointer);
+		T func = (T)ptr;
+		func (sp [0].data.p, sp [1].data.p, sp [2].data.p, sp [3].data.p, sp [4].data.p, sp [5].data.p);
+		break;
+	}
+	case MINT_ICALL_PPPPPP_P: {
+		typedef gpointer (__stdcall *T)(gpointer,gpointer,gpointer,gpointer,gpointer,gpointer);
+		T func = (T)ptr;
+		sp [0].data.p = func (sp [0].data.p, sp [1].data.p, sp [2].data.p, sp [3].data.p, sp [4].data.p, sp [5].data.p);
+		break;
+	}
+	default:
+		g_assert_not_reached ();
+	}
+}
+#endif
+
 static void
 do_icall (MonoMethodSignature *sig, int op, stackval *sp, gpointer ptr, gboolean save_last_error)
 {
+
+#if defined(HOST_WIN32) && defined(TARGET_X86)
+	/* Under Windows, the default P/Invoke calling convention is stdcall. */
+	if (sig && sig->pinvoke &&
+	    (sig->call_convention == MONO_CALL_STDCALL || sig->call_convention == MONO_CALL_DEFAULT)) {
+		do_icall_stdcall (op, sp, ptr);
+		goto done;
+	}
+#endif
 
 	switch (op) {
 	case MINT_ICALL_V_V: {
@@ -2116,6 +2220,9 @@ do_icall (MonoMethodSignature *sig, int op, stackval *sp, gpointer ptr, gboolean
 		g_assert_not_reached ();
 	}
 
+#if defined(HOST_WIN32) && defined(TARGET_X86)
+done:
+#endif
 	if (save_last_error)
 		mono_marshal_set_last_error ();
 

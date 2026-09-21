@@ -1481,6 +1481,49 @@ public unsafe class Tests {
 		return 0;
 	}
 
+	[DllImport ("libtest", EntryPoint = "mono_test_stdcall_pointer", CallingConvention = CallingConvention.StdCall)]
+	static extern IntPtr stdcall_pointer (IntPtr value);
+
+	[DllImport ("libtest", EntryPoint = "mono_test_stdcall_pointer")]
+	static extern IntPtr winapi_pointer (IntPtr value);
+
+	[DllImport ("libtest", EntryPoint = "mono_test_cdecl_pointer", CallingConvention = CallingConvention.Cdecl)]
+	static extern IntPtr cdecl_pointer (IntPtr value);
+
+	public static int test_0_native_pointer_call_conventions () {
+		// Pointer signatures exercise the interpreter's fast native call path.
+		for (int i = 0; i < 256; ++i) {
+			IntPtr value = new IntPtr (i + 1);
+			if (cdecl_pointer (value) != value)
+				return 1;
+			if (stdcall_pointer (value) != value)
+				return 2;
+			if (winapi_pointer (value) != value)
+				return 3;
+		}
+		return 0;
+	}
+
+	public static int test_0_internal_call_signatures () {
+		// Exercise handle-based icalls alongside the native calling convention tests.
+		for (int i = 0; i < 256; ++i) {
+			// The array initializer uses RuntimeHelpers.InitializeArray.
+			int[] values = new int[] { 3, 5, 7, 11, 13, 17, 19, 23 };
+			int sum = 0;
+			foreach (int value in values)
+				sum += value;
+			if (sum != 98)
+				return 1;
+			string value_string = new string ('x', i + 1);
+			if (value_string.Length != i + 1 || value_string [i] != 'x')
+				return 2;
+			if (!typeof (object).IsAssignableFrom (typeof (string)) ||
+			    typeof (string).IsAssignableFrom (typeof (object)))
+				return 3;
+		}
+		return 0;
+	}
+
 	/* Float test */
 
 	[DllImport ("libtest", EntryPoint="mono_test_marshal_pass_return_float")]
@@ -2159,4 +2202,3 @@ public unsafe class Tests {
 		}
 	}
 }
-

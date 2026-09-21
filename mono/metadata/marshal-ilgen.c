@@ -6856,6 +6856,7 @@ emit_native_icall_wrapper_ilgen (MonoMethodBuilder *mb, MonoMethod *method, Mono
 		call_sig->param_count = csig->param_count;
 		call_sig->ret = csig->ret;
 		call_sig->pinvoke = csig->pinvoke;
+		call_sig->call_convention = csig->call_convention;
 
 		/* TODO support adding wrappers to non-static struct methods */
 		g_assert (!sig->hasthis || !m_class_is_valuetype (mono_method_get_class (method)));
