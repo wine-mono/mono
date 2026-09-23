@@ -58,7 +58,20 @@ namespace MonoTests.System.Configuration {
 			Assert.AreEqual (null, poker1.DefaultValue, "A2");
 			
 			ConfigurationProperty poker2 = new ConfigurationProperty("Name", typeof(String));
-			Assert.AreEqual (String.Empty, poker2.DefaultValue, "A1");
+			Assert.AreEqual (String.Empty, poker2.DefaultValue, "A3");
+		}
+
+		[Test]
+		[ExpectedException(typeof(ConfigurationErrorsException))]
+		public void InvalidDefaultValueTest() {
+			ConfigurationProperty prop = new ConfigurationProperty(
+				"Name",
+				typeof(string),
+				string.Empty,
+				null,
+				new StringValidator(1),
+				ConfigurationPropertyOptions.None
+			);
 		}
 	}
 }
