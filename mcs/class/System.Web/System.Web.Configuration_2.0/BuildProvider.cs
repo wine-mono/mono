@@ -43,10 +43,10 @@ namespace System.Web.Configuration
 
 		static BuildProvider ()
 		{
-			extensionProp = new ConfigurationProperty ("extension", typeof (string), "",
+			extensionProp = new ConfigurationProperty ("extension", typeof (string), null,
 								   TypeDescriptor.GetConverter (typeof (string)), PropertyHelper.NonEmptyStringValidator,
 								   ConfigurationPropertyOptions.IsRequired | ConfigurationPropertyOptions.IsKey);
-			typeProp = new ConfigurationProperty ("type", typeof (string), "",
+			typeProp = new ConfigurationProperty ("type", typeof (string), null,
 							      TypeDescriptor.GetConverter (typeof (string)), PropertyHelper.NonEmptyStringValidator,
 							      ConfigurationPropertyOptions.IsRequired);
 			properties = new ConfigurationPropertyCollection();

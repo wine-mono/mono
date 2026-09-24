@@ -44,12 +44,12 @@ namespace System.Web.Configuration {
 
 		static ExpressionBuilder ()
 		{
-			expressionPrefixProp = new ConfigurationProperty ("expressionPrefix", typeof (string), "",
+			expressionPrefixProp = new ConfigurationProperty ("expressionPrefix", typeof (string), null,
 									  TypeDescriptor.GetConverter (typeof (string)),
 									  PropertyHelper.NonEmptyStringValidator,
 									  ConfigurationPropertyOptions.IsRequired |
 									  ConfigurationPropertyOptions.IsKey);
-			typeProp = new ConfigurationProperty ("type", typeof (string), "",
+			typeProp = new ConfigurationProperty ("type", typeof (string), null,
 							      TypeDescriptor.GetConverter (typeof (string)),
 							      PropertyHelper.NonEmptyStringValidator,
 							      ConfigurationPropertyOptions.IsRequired);

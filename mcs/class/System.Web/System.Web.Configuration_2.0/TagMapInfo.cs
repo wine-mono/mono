@@ -49,7 +49,7 @@ namespace System.Web.Configuration
 								       TypeDescriptor.GetConverter (typeof (string)),
 								       PropertyHelper.NonEmptyStringValidator,
 								       ConfigurationPropertyOptions.None);
-			tagTypeProp = new ConfigurationProperty ("tagType", typeof (string), "",
+			tagTypeProp = new ConfigurationProperty ("tagType", typeof (string), null,
 								 TypeDescriptor.GetConverter (typeof (string)),
 								 PropertyHelper.NonEmptyStringValidator,
 								 ConfigurationPropertyOptions.IsRequired | ConfigurationPropertyOptions.IsKey);

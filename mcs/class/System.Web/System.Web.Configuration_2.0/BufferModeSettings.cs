@@ -60,7 +60,7 @@ namespace System.Web.Configuration {
 			maxFlushSizeProp = new ConfigurationProperty ("maxFlushSize", typeof (int), Int32.MaxValue,
 								      PropertyHelper.InfiniteIntConverter, iv,
 								      ConfigurationPropertyOptions.IsRequired);
-			nameProp = new ConfigurationProperty ("name", typeof (string), "",
+			nameProp = new ConfigurationProperty ("name", typeof (string), null,
 							      TypeDescriptor.GetConverter (typeof (string)), PropertyHelper.NonEmptyStringValidator,
 							      ConfigurationPropertyOptions.IsRequired | ConfigurationPropertyOptions.IsKey);
 			regularFlushIntervalProp = new ConfigurationProperty ("regularFlushInterval", typeof (TimeSpan), TimeSpan.FromSeconds (1),

@@ -59,7 +59,7 @@ namespace System.Web.Configuration {
 								     PropertyHelper.InfiniteTimeSpanConverter,
 								     PropertyHelper.DefaultValidator,
 								     ConfigurationPropertyOptions.None);
-			nameProp = new ConfigurationProperty ("name", typeof (string), "",
+			nameProp = new ConfigurationProperty ("name", typeof (string), null,
 							      TypeDescriptor.GetConverter (typeof (string)),
 							      PropertyHelper.NonEmptyStringValidator,
 							      ConfigurationPropertyOptions.IsRequired | ConfigurationPropertyOptions.IsKey);

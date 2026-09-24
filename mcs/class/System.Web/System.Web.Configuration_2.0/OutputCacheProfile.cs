@@ -59,7 +59,7 @@ namespace System.Web.Configuration {
 								  new GenericEnumConverter (typeof (OutputCacheLocation)),
 								  PropertyHelper.DefaultValidator,
 								  ConfigurationPropertyOptions.None);
-			nameProp = new ConfigurationProperty ("name", typeof (string), "",
+			nameProp = new ConfigurationProperty ("name", typeof (string), null,
 							      PropertyHelper.WhiteSpaceTrimStringConverter,
 							      PropertyHelper.NonEmptyStringValidator,
 							      ConfigurationPropertyOptions.IsRequired | ConfigurationPropertyOptions.IsKey);

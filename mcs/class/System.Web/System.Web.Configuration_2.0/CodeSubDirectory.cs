@@ -40,7 +40,7 @@ namespace System.Web.Configuration
 
 		static CodeSubDirectory ()
 		{
-			directoryNameProp = new ConfigurationProperty ("directoryName", typeof (string), "",
+			directoryNameProp = new ConfigurationProperty ("directoryName", typeof (string), null,
 								       PropertyHelper.WhiteSpaceTrimStringConverter,
 								       PropertyHelper.NonEmptyStringValidator,
 								       ConfigurationPropertyOptions.IsRequired | ConfigurationPropertyOptions.IsKey);

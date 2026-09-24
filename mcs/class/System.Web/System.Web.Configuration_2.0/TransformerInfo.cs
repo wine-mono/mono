@@ -44,11 +44,11 @@ namespace System.Web.Configuration {
 
 		static TransformerInfo ()
 		{
-			nameProp = new ConfigurationProperty ("name", typeof (string), "",
+			nameProp = new ConfigurationProperty ("name", typeof (string), null,
 							      TypeDescriptor.GetConverter (typeof (string)),
 							      PropertyHelper.NonEmptyStringValidator,
 							      ConfigurationPropertyOptions.IsRequired | ConfigurationPropertyOptions.IsKey);
-			typeProp = new ConfigurationProperty ("type", typeof (string), "",
+			typeProp = new ConfigurationProperty ("type", typeof (string), null,
 							      TypeDescriptor.GetConverter (typeof (string)),
 							      PropertyHelper.NonEmptyStringValidator,
 							      ConfigurationPropertyOptions.IsRequired);
