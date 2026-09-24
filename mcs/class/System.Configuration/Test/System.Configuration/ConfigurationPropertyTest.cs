@@ -73,6 +73,18 @@ namespace MonoTests.System.Configuration {
 				ConfigurationPropertyOptions.None
 			);
 		}
+
+		[Test]
+		public void NullDefaultValueTest() {
+			ConfigurationProperty prop = new ConfigurationProperty(
+				"Name",
+				typeof(string),
+				null,
+				null,
+				new StringValidator(1),
+				ConfigurationPropertyOptions.None
+			);
+		}
 	}
 }
 
