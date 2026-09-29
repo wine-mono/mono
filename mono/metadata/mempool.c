@@ -275,7 +275,7 @@ gpointer
 #endif
 
 	// If we have just overflowed the current block, we need to back up and try again.
-	if (G_UNLIKELY (pool->pos >= pool->end)) {
+	if (G_UNLIKELY (pool->pos >= pool->end || pool->pos < (guint8*)rval)) {
 		pool->pos -= size;  // Back out
 
 		// For large objects, allocate the object into its own block.
