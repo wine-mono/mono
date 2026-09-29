@@ -122,9 +122,9 @@ namespace System.Globalization
 
 		const string MSG_READONLY = "This instance is read only";
 
-		static volatile CultureInfo s_DefaultThreadCurrentUICulture;
-		static volatile CultureInfo s_DefaultThreadCurrentCulture;
-		
+		static volatile CultureInfo s_userDefaultUICulture;
+		static volatile CultureInfo s_userDefaultCulture;
+
 		public static CultureInfo InvariantCulture {
 			get {
 				return invariant_culture_info;
@@ -1082,22 +1082,22 @@ namespace System.Globalization
 		{
 			return new CultureNotFoundException ("name", "Culture name " + name + " is not supported.");
 		}
-		
+
 		public static CultureInfo DefaultThreadCurrentCulture {
 			get {
-				return s_DefaultThreadCurrentCulture;
+				return s_userDefaultCulture;
 			}
 			set {
-				s_DefaultThreadCurrentCulture = value;
+				s_userDefaultCulture = value;
 			}
 		}
-		
+
 		public static CultureInfo DefaultThreadCurrentUICulture {
 			get {
-				return s_DefaultThreadCurrentUICulture;
+				return s_userDefaultUICulture;
 			}
 			set {
-				s_DefaultThreadCurrentUICulture = value;
+				s_userDefaultUICulture = value;
 			}
 		}
 
