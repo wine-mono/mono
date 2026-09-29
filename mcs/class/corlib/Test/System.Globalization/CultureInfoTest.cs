@@ -10,6 +10,7 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,6 +33,8 @@ namespace MonoTests.System.Globalization
 		[TearDown]
 		public void TearDown ()
 		{
+			CultureInfo.DefaultThreadCurrentCulture = null;
+			CultureInfo.DefaultThreadCurrentUICulture = null;
 			Thread.CurrentThread.CurrentCulture = old_culture;
 		}
 
@@ -793,6 +796,27 @@ namespace MonoTests.System.Globalization
 		{
 			public InterceptingLocale () : base (string.Empty) { }
 			public override TextInfo TextInfo => throw new InvalidOperationException ("Shouldn't be called.");
+		}
+
+		[Test]
+		public void HackDefaultCurrentCulture() {
+			// pre-4.5, there was no api to do this properly so apps hacked a solution using reflection
+			var new_culture = new CultureInfo("fr-FR");
+
+			Type typeFromHandle = typeof(CultureInfo);
+			typeFromHandle.InvokeMember("s_userDefaultCulture", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.SetField, null, new_culture, new object[1] { new_culture });
+			typeFromHandle.InvokeMember("s_userDefaultUICulture", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.SetField, null, new_culture, new object[1] { new_culture });
+
+			Assert.AreEqual ("fr-FR", Thread.CurrentThread.CurrentCulture.Name, "#1");
+			Assert.AreEqual ("fr-FR", Thread.CurrentThread.CurrentUICulture.Name, "#2");
+
+			var thread = new Thread (() => {
+				Assert.AreEqual ("fr-FR", Thread.CurrentThread.CurrentCulture.Name, "#3");
+				Assert.AreEqual ("fr-FR", Thread.CurrentThread.CurrentUICulture.Name, "#4");
+			});
+
+			thread.Start();
+			thread.Join(5000);
 		}
 	}
 }
