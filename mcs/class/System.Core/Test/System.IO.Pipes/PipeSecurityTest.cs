@@ -48,6 +48,29 @@ namespace MonoTests.System.IO.Pipes
 		}
 
 		[Test]
+		public void RunAsClientInvokesWorker ()
+		{
+			if (PlatformID.Win32NT != Environment.OSVersion.Platform) {
+				Assert.Ignore ();
+			}
+
+			string name = "MonoTestPipeImpersonation-" + Guid.NewGuid ();
+			using (var server = new NamedPipeServerStream (name, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.None, 512, 512)) {
+				using (var client = new NamedPipeClientStream (".", name, PipeDirection.InOut, PipeOptions.None, TokenImpersonationLevel.Impersonation)) {
+					client.Connect (5000);
+					server.WaitForConnection ();
+					// ImpersonateNamedPipeClient impersonates the client security context
+					// associated with the last data read from the pipe.
+					client.WriteByte (0);
+					server.ReadByte ();
+					bool invoked = false;
+					server.RunAsClient (() => invoked = true);
+					Assert.IsTrue (invoked, "Worker was not invoked");
+				}
+			}
+		}
+
+		[Test]
 		public void NamedPipeDefaultPermissionsWork ()
 		{
 			if (PlatformID.Win32NT != Environment.OSVersion.Platform) {
