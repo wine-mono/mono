@@ -19,6 +19,34 @@ namespace MonoTests.System.IO.Pipes
 	[TestFixture]
 	public class PipeSecurityTest
 	{
+		[TestCase (false)]
+		[TestCase (true)]
+		public void NamedPipeConstructorPreservesSecurity (bool specifyInheritability)
+		{
+			if (PlatformID.Win32NT != Environment.OSVersion.Platform) {
+				Assert.Ignore ();
+			}
+
+			var identity = new SecurityIdentifier ("WD");
+			var security = new PipeSecurity ();
+			security.AddAccessRule (new PipeAccessRule (identity, PipeAccessRights.FullControl, AccessControlType.Allow));
+			string name = "MonoTestPipeSecurity-" + Guid.NewGuid ();
+			using (var server = specifyInheritability
+				? new NamedPipeServerStream (name, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.None, 512, 512, security, HandleInheritability.None)
+				: new NamedPipeServerStream (name, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.None, 512, 512, security)) {
+				var actual = server.GetAccessControl ();
+				var rules = actual.GetAccessRules (
+					includeExplicit: true,
+					includeInherited: false,
+					targetType: typeof (SecurityIdentifier));
+				Assert.AreEqual (1, rules.Count, "Access rule count");
+				var rule = (PipeAccessRule) rules [0];
+				Assert.AreEqual (identity, rule.IdentityReference, "Access rule identity");
+				Assert.AreEqual (PipeAccessRights.FullControl, rule.PipeAccessRights, "Access rights");
+				Assert.AreEqual (AccessControlType.Allow, rule.AccessControlType, "Access control type");
+			}
+		}
+
 		[Test]
 		public void NamedPipeDefaultPermissionsWork ()
 		{
