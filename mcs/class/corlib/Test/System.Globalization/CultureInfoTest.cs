@@ -23,18 +23,26 @@ namespace MonoTests.System.Globalization
 	public class CultureInfoTest
 	{
 		CultureInfo old_culture;
+		CultureInfo old_s_userDefaultCulture;
+		CultureInfo old_s_userDefaultUICulture;
 
 		[SetUp]
 		public void Setup ()
 		{
 			old_culture = Thread.CurrentThread.CurrentCulture;
+
+			Type typeFromHandle = typeof(CultureInfo);
+			old_s_userDefaultCulture = (CultureInfo)typeFromHandle.InvokeMember("s_userDefaultCulture", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.GetField, null, null, null);
+			old_s_userDefaultUICulture = (CultureInfo)typeFromHandle.InvokeMember("s_userDefaultUICulture", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.GetField, null, null, null);
 		}
 
 		[TearDown]
 		public void TearDown ()
 		{
-			CultureInfo.DefaultThreadCurrentCulture = null;
-			CultureInfo.DefaultThreadCurrentUICulture = null;
+			Type typeFromHandle = typeof(CultureInfo);
+			typeFromHandle.InvokeMember("s_userDefaultCulture", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.SetField, null, old_s_userDefaultCulture, new object[1] { old_s_userDefaultCulture });
+			typeFromHandle.InvokeMember("s_userDefaultUICulture", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.SetField, null, old_s_userDefaultUICulture, new object[1] { old_s_userDefaultUICulture });
+
 			Thread.CurrentThread.CurrentCulture = old_culture;
 		}
 
