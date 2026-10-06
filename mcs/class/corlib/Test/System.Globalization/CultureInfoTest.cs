@@ -800,23 +800,28 @@ namespace MonoTests.System.Globalization
 
 		[Test]
 		public void HackDefaultCurrentCulture() {
-			// pre-4.5, there was no api to do this properly so apps hacked a solution using reflection
-			var new_culture = new CultureInfo("fr-FR");
+			Action c = () => {
+				// pre-4.5, there was no api to do this properly so apps hacked a solution using reflection
+				var new_culture = new CultureInfo("fr-FR");
 
-			Type typeFromHandle = typeof(CultureInfo);
-			typeFromHandle.InvokeMember("s_userDefaultCulture", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.SetField, null, new_culture, new object[1] { new_culture });
-			typeFromHandle.InvokeMember("s_userDefaultUICulture", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.SetField, null, new_culture, new object[1] { new_culture });
+				Type typeFromHandle = typeof(CultureInfo);
+				typeFromHandle.InvokeMember("s_userDefaultCulture", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.SetField, null, new_culture, new object[1] { new_culture });
+				typeFromHandle.InvokeMember("s_userDefaultUICulture", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.SetField, null, new_culture, new object[1] { new_culture });
 
-			Assert.AreEqual ("fr-FR", Thread.CurrentThread.CurrentCulture.Name, "#1");
-			Assert.AreEqual ("fr-FR", Thread.CurrentThread.CurrentUICulture.Name, "#2");
+				Assert.AreEqual ("fr-FR", Thread.CurrentThread.CurrentCulture.Name, "#1");
+				Assert.AreEqual ("fr-FR", Thread.CurrentThread.CurrentUICulture.Name, "#2");
 
-			var thread = new Thread (() => {
-				Assert.AreEqual ("fr-FR", Thread.CurrentThread.CurrentCulture.Name, "#3");
-				Assert.AreEqual ("fr-FR", Thread.CurrentThread.CurrentUICulture.Name, "#4");
-			});
+				var thread = new Thread (() => {
+					Assert.AreEqual ("fr-FR", Thread.CurrentThread.CurrentCulture.Name, "#3");
+					Assert.AreEqual ("fr-FR", Thread.CurrentThread.CurrentUICulture.Name, "#4");
+				});
 
-			thread.Start();
-			thread.Join(5000);
+				thread.Start();
+				thread.Join(5000);
+			};
+
+			var ar = c.BeginInvoke (null, null);
+			ar.AsyncWaitHandle.WaitOne ();
 		}
 	}
 }
