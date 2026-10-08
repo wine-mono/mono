@@ -309,7 +309,9 @@ namespace MonoTests.System.Runtime.InteropServices {
 			}
 		}
 
+		// Primary interop assembly registration is unsupported by Mono, but supported by .NET Framework.
 		[Test]
+		[Category ("NotDotNet")]
 		public void PrimaryInteropAssemblyFailsBeforeRegistryChanges ()
 		{
 			string path = Path.Combine (Path.GetDirectoryName (typeof (RegistrationServicesRegistryTest).Assembly.Location),
@@ -373,6 +375,21 @@ namespace MonoTests.System.Runtime.InteropServices {
 		}
 
 		[Test]
+		public void InvalidCallbackThrowsInvalidOperationException ()
+		{
+			if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+				Assert.Ignore ("COM registration is only supported on Windows.");
+
+			Assembly assembly = LoadBoundaryTestAssembly ("RegistrationServicesInvalidCallbackTestAssembly.dll");
+			RegistrationServices services = new RegistrationServices ();
+			Assert.Throws<InvalidOperationException> (() =>
+				services.RegisterAssembly (assembly, AssemblyRegistrationFlags.None));
+		}
+
+		// Mono validates callbacks before writing registry keys and includes diagnostic context.
+		// .NET Framework checks the signature after registration and may localize the message.
+		[Test]
+		[Category ("NotDotNet")]
 		public void InvalidCallbackReportsAssemblyTypeAndMethodBeforeRegistryChanges ()
 		{
 			if (Environment.OSVersion.Platform != PlatformID.Win32NT)
@@ -393,6 +410,20 @@ namespace MonoTests.System.Runtime.InteropServices {
 		}
 
 		[Test]
+		public void GenericCallbackThrowsInvalidOperationException ()
+		{
+			if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+				Assert.Ignore ("COM registration is only supported on Windows.");
+
+			Assembly assembly = LoadBoundaryTestAssembly ("RegistrationServicesGenericCallbackTestAssembly.dll");
+			RegistrationServices services = new RegistrationServices ();
+			Assert.Throws<InvalidOperationException> (() =>
+				services.RegisterAssembly (assembly, AssemblyRegistrationFlags.None));
+		}
+
+		// .NET Framework rejects the generic callback when invoking it, after registry writes.
+		[Test]
+		[Category ("NotDotNet")]
 		public void GenericCallbackFailsBeforeRegistryChanges ()
 		{
 			if (Environment.OSVersion.Platform != PlatformID.Win32NT)
