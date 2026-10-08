@@ -157,25 +157,20 @@ namespace MonoTests.System.Runtime.InteropServices {
 		[SetUp]
 		public void SetUp ()
 		{
-			if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-				return;
-
 			try {
 				RemoveTestKeys ();
 				managedCategoryState = new ManagedCategoryState ();
 				registrySetupSucceeded = true;
 			} catch (UnauthorizedAccessException) {
-				Assert.Ignore ("COM registry tests require write access to their test keys and category fixture.");
+				Assert.Ignore ("Registry tests require write access to their test keys and category fixture.");
 			} catch (SecurityException) {
-				Assert.Ignore ("COM registry tests require write access to their test keys and category fixture.");
+				Assert.Ignore ("Registry tests require write access to their test keys and category fixture.");
 			}
 		}
 
 		[TearDown]
 		public void TearDown ()
 		{
-			if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-				return;
 			if (!registrySetupSucceeded)
 				return;
 
@@ -193,9 +188,6 @@ namespace MonoTests.System.Runtime.InteropServices {
 		[Test]
 		public void RegisterAndUnregisterAssembly ()
 		{
-			if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-				Assert.Ignore ("COM registration is only supported on Windows.");
-
 			string path = Path.Combine (Path.GetDirectoryName (typeof (RegistrationServicesRegistryTest).Assembly.Location),
 				"RegistrationServicesTestAssembly.dll");
 			Assembly assembly = Assembly.LoadFrom (path);
@@ -246,9 +238,6 @@ namespace MonoTests.System.Runtime.InteropServices {
 		[Test]
 		public void RegisterCreatesMissingManagedCategoryDescription ()
 		{
-			if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-				Assert.Ignore ("COM registration is only supported on Windows.");
-
 			using (RegistryKey categoryKey = Registry.ClassesRoot.OpenSubKey (ManagedCategoryPath, true))
 				categoryKey.DeleteValue ("0");
 
@@ -265,9 +254,6 @@ namespace MonoTests.System.Runtime.InteropServices {
 		[Test]
 		public void RegisterRepairsIncorrectManagedCategoryDescription ()
 		{
-			if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-				Assert.Ignore ("COM registration is only supported on Windows.");
-
 			using (RegistryKey categoryKey = Registry.ClassesRoot.OpenSubKey (ManagedCategoryPath, true))
 				categoryKey.SetValue ("0", "Incorrect Category");
 
@@ -284,9 +270,6 @@ namespace MonoTests.System.Runtime.InteropServices {
 		[Test]
 		public void EmptyProgIdPreservesForeignClassProgId ()
 		{
-			if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-				Assert.Ignore ("COM registration is only supported on Windows.");
-
 			const string foreignProgId = "Foreign.Component.ProgId";
 			string path = Path.Combine (Path.GetDirectoryName (typeof (RegistrationServicesRegistryTest).Assembly.Location),
 				"RegistrationServicesTestAssembly.dll");
@@ -327,19 +310,14 @@ namespace MonoTests.System.Runtime.InteropServices {
 				services.UnregisterAssembly (assembly));
 			StringAssert.Contains ("Primary interop assembly", unregisterError.Message, "unregister message");
 
-			if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
-				Assert.IsNull (Registry.ClassesRoot.OpenSubKey (ProgId), "no partial ProgID");
-				Assert.IsNull (Registry.ClassesRoot.OpenSubKey ("CLSID\\" + ClassId), "no partial CLSID");
-				Assert.IsNull (Registry.ClassesRoot.OpenSubKey (CallbackPath), "no callback");
-			}
+			Assert.IsNull (Registry.ClassesRoot.OpenSubKey (ProgId), "no partial ProgID");
+			Assert.IsNull (Registry.ClassesRoot.OpenSubKey ("CLSID\\" + ClassId), "no partial CLSID");
+			Assert.IsNull (Registry.ClassesRoot.OpenSubKey (CallbackPath), "no callback");
 		}
 
 		[Test]
 		public void UnregisterPreservesOtherVersionsAndForeignData ()
 		{
-			if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-				Assert.Ignore ("COM registration is only supported on Windows.");
-
 			string testDirectory = Path.GetDirectoryName (typeof (RegistrationServicesRegistryTest).Assembly.Location);
 			string assemblyName = "RegistrationServicesVersionedTestAssembly.dll";
 			Assembly first = Assembly.LoadFile (Path.Combine (testDirectory, "RegistrationVersion1", assemblyName));
@@ -377,9 +355,6 @@ namespace MonoTests.System.Runtime.InteropServices {
 		[Test]
 		public void InvalidCallbackThrowsInvalidOperationException ()
 		{
-			if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-				Assert.Ignore ("COM registration is only supported on Windows.");
-
 			Assembly assembly = LoadBoundaryTestAssembly ("RegistrationServicesInvalidCallbackTestAssembly.dll");
 			RegistrationServices services = new RegistrationServices ();
 			Assert.Throws<InvalidOperationException> (() =>
@@ -392,9 +367,6 @@ namespace MonoTests.System.Runtime.InteropServices {
 		[Category ("NotDotNet")]
 		public void InvalidCallbackReportsAssemblyTypeAndMethodBeforeRegistryChanges ()
 		{
-			if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-				Assert.Ignore ("COM registration is only supported on Windows.");
-
 			const string typeName = "MonoTests.RegistrationServices.InvalidCallbackObject";
 			const string methodName = "InvalidRegister";
 			Assembly assembly = LoadBoundaryTestAssembly ("RegistrationServicesInvalidCallbackTestAssembly.dll");
@@ -412,9 +384,6 @@ namespace MonoTests.System.Runtime.InteropServices {
 		[Test]
 		public void GenericCallbackThrowsInvalidOperationException ()
 		{
-			if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-				Assert.Ignore ("COM registration is only supported on Windows.");
-
 			Assembly assembly = LoadBoundaryTestAssembly ("RegistrationServicesGenericCallbackTestAssembly.dll");
 			RegistrationServices services = new RegistrationServices ();
 			Assert.Throws<InvalidOperationException> (() =>
@@ -426,9 +395,6 @@ namespace MonoTests.System.Runtime.InteropServices {
 		[Category ("NotDotNet")]
 		public void GenericCallbackFailsBeforeRegistryChanges ()
 		{
-			if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-				Assert.Ignore ("COM registration is only supported on Windows.");
-
 			const string typeName = "MonoTests.RegistrationServices.GenericCallbackObject";
 			const string methodName = "GenericRegister";
 			Assembly assembly = LoadBoundaryTestAssembly ("RegistrationServicesGenericCallbackTestAssembly.dll");
