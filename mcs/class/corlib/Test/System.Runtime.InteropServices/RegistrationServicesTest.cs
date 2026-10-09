@@ -151,16 +151,15 @@ namespace MonoTests.System.Runtime.InteropServices {
 		const string GenericCallbackClassId = "{86F43A7E-B430-4F56-9C6C-DD61BA460217}";
 		const string GenericCallbackProgId = "MonoTests.RegistrationServices.GenericCallbackObject";
 
-		ManagedCategoryState managedCategoryState;
-		bool registrySetupSucceeded;
-
 		[SetUp]
 		public void SetUp ()
 		{
 			try {
 				RemoveTestKeys ();
-				managedCategoryState = new ManagedCategoryState ();
-				registrySetupSucceeded = true;
+				using (RegistryKey key = Registry.ClassesRoot.CreateSubKey (ManagedCategoryPath)) {
+					key.SetValue ("0", ManagedCategoryDescription);
+					key.SetValue (ThirdPartyValue, "preserve");
+				}
 			} catch (UnauthorizedAccessException) {
 				Assert.Ignore ("Registry tests require write access to their test keys and category fixture.");
 			} catch (SecurityException) {
@@ -171,17 +170,14 @@ namespace MonoTests.System.Runtime.InteropServices {
 		[TearDown]
 		public void TearDown ()
 		{
-			if (!registrySetupSucceeded)
-				return;
-
 			try {
 				RemoveTestKeys ();
 			} finally {
-				if (managedCategoryState != null) {
-					managedCategoryState.Dispose ();
-					managedCategoryState = null;
+				// Leave the shared category in its registration state; remove only our test value.
+				using (RegistryKey key = Registry.ClassesRoot.OpenSubKey (ManagedCategoryPath, true)) {
+					if (key != null)
+						key.DeleteValue (ThirdPartyValue, false);
 				}
-				registrySetupSucceeded = false;
 			}
 		}
 
@@ -410,45 +406,6 @@ namespace MonoTests.System.Runtime.InteropServices {
 			Assert.IsNull (Registry.ClassesRoot.OpenSubKey ("CLSID\\" + GenericCallbackClassId), "no partial CLSID");
 		}
 
-		[Test]
-		public void RegistryValueStateRestoresMissingValues ()
-		{
-			using (RegistryKey key = Registry.ClassesRoot.CreateSubKey (CallbackPath)) {
-				RegistryValueState state = new RegistryValueState (key, "Missing");
-				Assert.IsFalse (state.Exists, "missing value");
-				key.SetValue ("Missing", "temporary");
-				state.Restore (key, "Missing");
-				Assert.IsNull (key.GetValue ("Missing"), "removed temporary value");
-
-				state = new RegistryValueState (null, "MissingKey");
-				key.SetValue ("MissingKey", "temporary");
-				state.Restore (key, "MissingKey");
-				Assert.IsNull (key.GetValue ("MissingKey"), "originally missing key");
-			}
-		}
-
-		[Test]
-		public void RegistryValueStateRestoresKindsAndUnexpandedValues ()
-		{
-			RegistryValueKind[] kinds = { RegistryValueKind.String, RegistryValueKind.ExpandString,
-				RegistryValueKind.DWord, RegistryValueKind.QWord, RegistryValueKind.Binary, RegistryValueKind.MultiString };
-			object[] values = { String.Empty, "%PATH%/literal", 123, 456L,
-				new byte[] { 0, 1, 255 }, new string[] { "one", "two" } };
-			using (RegistryKey key = Registry.ClassesRoot.CreateSubKey (CallbackPath)) {
-				for (int i = 0; i < kinds.Length; ++i) {
-					string name = kinds[i].ToString ();
-					key.SetValue (name, values[i], kinds[i]);
-					RegistryValueState state = new RegistryValueState (key, name);
-					Assert.IsTrue (state.Exists, name + " exists");
-					key.SetValue (name, "temporary", RegistryValueKind.String);
-					state.Restore (key, name);
-					Assert.AreEqual (values[i], key.GetValue (name, null,
-						RegistryValueOptions.DoNotExpandEnvironmentNames), name + " raw value");
-					Assert.AreEqual (kinds[i], key.GetValueKind (name), name + " kind");
-				}
-			}
-		}
-
 		static Assembly LoadBoundaryTestAssembly (string name)
 		{
 			return Assembly.LoadFrom (Path.Combine (
@@ -476,87 +433,6 @@ namespace MonoTests.System.Runtime.InteropServices {
 			Registry.ClassesRoot.DeleteSubKeyTree ("CLSID\\" + GenericCallbackClassId, false);
 		}
 
-		sealed class ManagedCategoryState : IDisposable {
-			readonly bool keyExisted;
-			readonly RegistryValueState description;
-			readonly RegistryValueState thirdPartyValue;
-			bool restored;
-
-			public ManagedCategoryState ()
-			{
-				using (RegistryKey key = Registry.ClassesRoot.OpenSubKey (ManagedCategoryPath)) {
-					keyExisted = key != null;
-					description = new RegistryValueState (key, "0");
-					thirdPartyValue = new RegistryValueState (key, ThirdPartyValue);
-				}
-
-				try {
-					using (RegistryKey key = Registry.ClassesRoot.CreateSubKey (ManagedCategoryPath)) {
-						key.SetValue ("0", ManagedCategoryDescription);
-						key.SetValue (ThirdPartyValue, "preserve");
-					}
-				} catch {
-					Restore ();
-					throw;
-				}
-			}
-
-			public void Dispose ()
-			{
-				Restore ();
-			}
-
-			void Restore ()
-			{
-				if (restored)
-					return;
-				restored = true;
-
-				using (RegistryKey key = Registry.ClassesRoot.CreateSubKey (ManagedCategoryPath)) {
-					description.Restore (key, "0");
-					thirdPartyValue.Restore (key, ThirdPartyValue);
-				}
-
-				if (!keyExisted)
-					DeleteManagedCategoryIfEmpty ();
-			}
-
-			static void DeleteManagedCategoryIfEmpty ()
-			{
-				bool empty = false;
-				using (RegistryKey key = Registry.ClassesRoot.OpenSubKey (ManagedCategoryPath)) {
-					if (key != null)
-						empty = key.SubKeyCount == 0 && key.ValueCount == 0;
-				}
-				if (empty)
-					Registry.ClassesRoot.DeleteSubKey (ManagedCategoryPath, false);
-			}
-		}
-
-		struct RegistryValueState {
-			static readonly object MissingValue = new object ();
-			readonly object value;
-			readonly RegistryValueKind kind;
-
-			public RegistryValueState (RegistryKey key, string name)
-			{
-				value = key == null ? MissingValue : key.GetValue (name, MissingValue,
-					RegistryValueOptions.DoNotExpandEnvironmentNames);
-				kind = Object.ReferenceEquals (value, MissingValue) ? RegistryValueKind.None : key.GetValueKind (name);
-			}
-
-			public bool Exists {
-				get { return !Object.ReferenceEquals (value, MissingValue); }
-			}
-
-			public void Restore (RegistryKey key, string name)
-			{
-				if (Exists)
-					key.SetValue (name, value, kind);
-				else
-					key.DeleteValue (name, false);
-			}
-		}
 	}
 }
 
