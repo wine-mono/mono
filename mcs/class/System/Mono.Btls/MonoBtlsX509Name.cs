@@ -52,40 +52,40 @@ namespace Mono.Btls
 			}
 		}
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_x509_name_print_bio (IntPtr handle, IntPtr bio);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_x509_name_print_string (IntPtr handle, IntPtr buffer, int size);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_x509_name_get_raw_data (IntPtr handle, out IntPtr buffer, int use_canon_enc);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static long mono_btls_x509_name_hash (IntPtr handle);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static long mono_btls_x509_name_hash_old (IntPtr handle);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_x509_name_get_entry_count (IntPtr handle);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static MonoBtlsX509NameEntryType mono_btls_x509_name_get_entry_type (IntPtr name, int index);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_x509_name_get_entry_oid (IntPtr name, int index, IntPtr buffer, int size);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_x509_name_get_entry_oid_data (IntPtr name, int index, out IntPtr data);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_x509_name_get_entry_value (IntPtr name, int index, out int tag, out IntPtr str);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern unsafe static IntPtr mono_btls_x509_name_from_data (void* data, int len, int use_canon_enc);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static void mono_btls_x509_name_free (IntPtr handle);
 
 		new internal BoringX509NameHandle Handle {

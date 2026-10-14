@@ -55,25 +55,25 @@ namespace Mono.Btls
 		}
 
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static IntPtr mono_btls_key_new ();
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static void mono_btls_key_free (IntPtr handle);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static IntPtr mono_btls_key_up_ref (IntPtr handle);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_key_get_bytes (IntPtr handle, out IntPtr data, out int size, int include_private_bits);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_key_get_bits (IntPtr handle);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_key_is_rsa (IntPtr handle);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_key_assign_rsa_private_key (IntPtr handle, byte[] der, int der_length);
 
 		new internal BoringKeyHandle Handle {

@@ -38,25 +38,25 @@ namespace Mono.Btls
 {
 	static class MonoBtlsError
 	{
-		[DllImport (MonoBtlsObject.BTLS_DYLIB)]
+		[DllImport (MonoBtlsObject.BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_error_peek_error ();
 
-		[DllImport (MonoBtlsObject.BTLS_DYLIB)]
+		[DllImport (MonoBtlsObject.BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_error_get_error ();
 
-		[DllImport (MonoBtlsObject.BTLS_DYLIB)]
+		[DllImport (MonoBtlsObject.BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static void mono_btls_error_clear_error ();
 
-		[DllImport (MonoBtlsObject.BTLS_DYLIB)]
+		[DllImport (MonoBtlsObject.BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_error_peek_error_line (out IntPtr file, out int line);
 
-		[DllImport (MonoBtlsObject.BTLS_DYLIB)]
+		[DllImport (MonoBtlsObject.BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_error_get_error_line (out IntPtr file, out int line);
 
-		[DllImport (MonoBtlsObject.BTLS_DYLIB)]
+		[DllImport (MonoBtlsObject.BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static void mono_btls_error_get_error_string_n (int error, IntPtr buf, int len);
 
-		[DllImport (MonoBtlsObject.BTLS_DYLIB)]
+		[DllImport (MonoBtlsObject.BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_error_get_reason (int error);
 
 		public static int PeekError ()

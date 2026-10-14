@@ -66,25 +66,25 @@ namespace Mono.Btls
 			return MonoBtlsBioMono.CreateStream (stream, false);
 		}
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_bio_read (IntPtr bio, IntPtr data, int len);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_bio_write (IntPtr bio, IntPtr data, int len);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_bio_flush (IntPtr bio);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_bio_indent (IntPtr bio, uint indent, uint max_indent);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_bio_hexdump (IntPtr bio, IntPtr data, int len, uint indent);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static void mono_btls_bio_print_errors (IntPtr bio);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static void mono_btls_bio_free (IntPtr handle);
 
 		public int Read (byte[] buffer, int offset, int size)
@@ -188,10 +188,10 @@ namespace Mono.Btls
 
 	class MonoBtlsBioMemory : MonoBtlsBio
 	{
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static IntPtr mono_btls_bio_mem_new ();
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_bio_mem_get_data (IntPtr handle, out IntPtr data);
 
 		public MonoBtlsBioMemory ()
@@ -277,10 +277,10 @@ namespace Mono.Btls
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 		delegate long BioControlFunc (IntPtr bio, ControlCommand command, long arg);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static IntPtr mono_btls_bio_mono_new ();
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static void mono_btls_bio_mono_initialize (IntPtr handle, IntPtr instance, IntPtr readFunc, IntPtr writeFunc, IntPtr controlFunc);
 
 		long Control (ControlCommand command, long arg)

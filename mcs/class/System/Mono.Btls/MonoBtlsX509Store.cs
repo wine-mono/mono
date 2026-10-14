@@ -62,28 +62,28 @@ namespace Mono.Btls
 			get { return (BoringX509StoreHandle)base.Handle; }
 		}
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static IntPtr mono_btls_x509_store_new ();
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static IntPtr mono_btls_x509_store_from_ctx (IntPtr ctx);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static IntPtr mono_btls_x509_store_from_ssl_ctx (IntPtr handle);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_x509_store_load_locations (IntPtr handle, IntPtr file, IntPtr path);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_x509_store_set_default_paths (IntPtr handle);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_x509_store_add_cert (IntPtr handle, IntPtr x509);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_x509_store_get_count (IntPtr handle);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static void mono_btls_x509_store_free (IntPtr handle);
 
 		Dictionary<IntPtr,MonoBtlsX509Lookup> lookupHash;

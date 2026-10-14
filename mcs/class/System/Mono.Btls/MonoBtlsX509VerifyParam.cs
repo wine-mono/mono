@@ -51,55 +51,55 @@ namespace Mono.Btls
 			get { return (BoringX509VerifyParamHandle)base.Handle; }
 		}
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static IntPtr mono_btls_x509_verify_param_new ();
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static IntPtr mono_btls_x509_verify_param_copy (IntPtr handle);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static IntPtr mono_btls_x509_verify_param_lookup (IntPtr name);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_x509_verify_param_can_modify (IntPtr param);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_x509_verify_param_set_name (IntPtr handle, IntPtr name);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_x509_verify_param_set_host (IntPtr handle, IntPtr name, int namelen);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_x509_verify_param_add_host (IntPtr handle, IntPtr name, int namelen);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static ulong mono_btls_x509_verify_param_get_flags (IntPtr handle);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_x509_verify_param_set_flags (IntPtr handle, ulong flags);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static MonoBtlsX509VerifyFlags mono_btls_x509_verify_param_get_mono_flags (IntPtr handle);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_x509_verify_param_set_mono_flags (IntPtr handle, MonoBtlsX509VerifyFlags flags);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_x509_verify_param_set_purpose (IntPtr handle, MonoBtlsX509Purpose purpose);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_x509_verify_param_get_depth (IntPtr handle);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_x509_verify_param_set_depth (IntPtr handle, int depth);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_x509_verify_param_set_time (IntPtr handle, long time);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static IntPtr mono_btls_x509_verify_param_get_peername (IntPtr handle);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static void mono_btls_x509_verify_param_free (IntPtr handle);
 
 		internal MonoBtlsX509VerifyParam ()
