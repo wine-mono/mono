@@ -151,8 +151,6 @@ namespace MonoTests.System.Runtime.InteropServices {
 		const string GenericCallbackClassId = "{86F43A7E-B430-4F56-9C6C-DD61BA460217}";
 		const string GenericCallbackProgId = "MonoTests.RegistrationServices.GenericCallbackObject";
 
-		bool registrySetupSucceeded;
-
 		[SetUp]
 		public void SetUp ()
 		{
@@ -162,7 +160,6 @@ namespace MonoTests.System.Runtime.InteropServices {
 					key.SetValue ("0", ManagedCategoryDescription);
 					key.SetValue (ThirdPartyValue, "preserve");
 				}
-				registrySetupSucceeded = true;
 			} catch (UnauthorizedAccessException) {
 				Assert.Ignore ("Registry tests require write access to their test keys and category fixture.");
 			} catch (SecurityException) {
@@ -173,8 +170,9 @@ namespace MonoTests.System.Runtime.InteropServices {
 		[TearDown]
 		public void TearDown ()
 		{
-			if (registrySetupSucceeded) {
+			try {
 				RemoveTestKeys ();
+			} finally {
 				// Leave the shared category in its registration state; remove only our test value.
 				using (RegistryKey key = Registry.ClassesRoot.OpenSubKey (ManagedCategoryPath, true)) {
 					if (key != null)
