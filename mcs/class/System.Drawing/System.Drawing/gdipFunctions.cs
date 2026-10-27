@@ -725,7 +725,7 @@ namespace System.Drawing
 		internal static extern Status GdipFillPath(IntPtr graphics, IntPtr brush, IntPtr path);
 
 		[DllImport(GdiPlus)]
-		internal static extern Status GdipGetNearestColor(IntPtr graphics, out int argb);
+		internal static extern Status GdipGetNearestColor(IntPtr graphics, ref int argb);
 
 		[DllImport(GdiPlus)]
 		internal static extern Status GdipIsVisiblePoint(IntPtr graphics, float x, float y, out bool result);

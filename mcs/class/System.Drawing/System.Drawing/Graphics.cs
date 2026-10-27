@@ -1824,9 +1824,9 @@ namespace System.Drawing
 		
 		public Color GetNearestColor (Color color)
 		{
-			int argb;
+			int argb = color.ToArgb ();
 			
-			Status status = GDIPlus.GdipGetNearestColor (nativeObject, out argb);
+			Status status = GDIPlus.GdipGetNearestColor (nativeObject, ref argb);
 			GDIPlus.CheckStatus (status);
 
 			return Color.FromArgb (argb);
