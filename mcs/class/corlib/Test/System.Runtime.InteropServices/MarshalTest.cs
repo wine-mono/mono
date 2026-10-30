@@ -314,6 +314,21 @@ namespace MonoTests.System.Runtime.InteropServices
 				Assert.AreEqual ("m", ex.ParamName, "#5");
 			}
 		}
+
+		[DllImport ("kernel32.dll", SetLastError = true)]
+		static extern void SetLastError (int dwErrCode);
+
+		[Test]
+		public void GetHRForLastWin32Error ()
+		{
+			if (RunningOnUnix)
+				Assert.Ignore ("GetHRForLastWin32Error only applies to Windows.");
+
+			const int ERROR_SHARING_VIOLATION = unchecked ((int) 0x80070020);
+
+			SetLastError (ERROR_SHARING_VIOLATION);
+			Assert.AreEqual (ERROR_SHARING_VIOLATION, Marshal.GetHRForLastWin32Error());
+		}
 #endif
 
 		[Test]
@@ -877,6 +892,12 @@ namespace MonoTests.System.Runtime.InteropServices
 		bool RunningOnMono {
 			get {
 				return (Type.GetType ("System.MonoType", false) != null);
+			}
+		}
+		bool RunningOnUnix {
+			get {
+				int platform = (int) Environment.OSVersion.Platform;
+				return ((platform == 4) || (platform == 128) || (platform == 6));
 			}
 		}
 

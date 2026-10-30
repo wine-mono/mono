@@ -554,7 +554,11 @@ namespace System.Runtime.InteropServices
 #if FULL_AOT_RUNTIME
 			throw new PlatformNotSupportedException ();
 #else
-			throw new NotImplementedException ();
+			int dwLastError = GetLastWin32Error();
+			if ((dwLastError & 0x80000000) == 0x80000000)
+				return dwLastError;
+			else
+				return (dwLastError & 0x0000FFFF) | unchecked((int)0x80070000);
 #endif
 		}
 
