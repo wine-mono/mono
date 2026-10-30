@@ -863,12 +863,16 @@ namespace MonoTests.System.Runtime.InteropServices
 		{
 			const int E_OUTOFMEMORY = unchecked ((int) 0x8007000E);
 			const int E_INVALIDARG = unchecked ((int) 0X80070057);
-			
+			const int ERROR_SHARING_VIOLATION = unchecked ((int) 0x80070020);
+
 			Exception ex = Marshal.GetExceptionForHR (E_OUTOFMEMORY);
 			Assert.AreEqual (typeof (OutOfMemoryException), ex.GetType (), "E_OUTOFMEMORY");
-			
+
 			ex = Marshal.GetExceptionForHR (E_INVALIDARG);
 			Assert.AreEqual (typeof (ArgumentException), ex.GetType (), "E_INVALIDARG");
+
+			ex = Marshal.GetExceptionForHR (ERROR_SHARING_VIOLATION);
+			Assert.AreEqual (typeof (FileLoadException), ex.GetType (), "ERROR_SHARING_VIOLATION");
 		}
 		bool RunningOnMono {
 			get {

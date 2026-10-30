@@ -1572,6 +1572,7 @@ namespace System.Runtime.InteropServices
 			const int COR_E_ARRAYTYPEMISMATCH = unchecked ((int)0x80131503L);
 			const int COR_E_BADIMAGEFORMAT = unchecked ((int)0x8007000BL);
 			const int ERROR_BAD_FORMAT = unchecked ((int)0x0B);
+			const int ERROR_SHARING_VIOLATION = unchecked ((int)0x80070020);
 			//const int COR_E_COMEMULATE_ERROR = unchecked ((int)?);
 			const int COR_E_CONTEXTMARSHAL = unchecked ((int)0x80131504L);
 			//const int COR_E_CORE = unchecked ((int)?);
@@ -1650,6 +1651,8 @@ namespace System.Runtime.InteropServices
 				case COR_E_BADIMAGEFORMAT:
 				case ERROR_BAD_FORMAT:
 					return new BadImageFormatException ();
+				case ERROR_SHARING_VIOLATION:
+					return new System.IO.FileLoadException ();
 //				case COR_E_COMEMULATE_ERROR:
 //					return new COMEmulateException ();
 				case COR_E_CONTEXTMARSHAL:
