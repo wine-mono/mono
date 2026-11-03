@@ -51,14 +51,14 @@ namespace Mono.Btls
 			get { return (BoringX509LookupMonoHandle)base.Handle; }
 		}
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static IntPtr mono_btls_x509_lookup_mono_new ();
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static void mono_btls_x509_lookup_mono_init (
 			IntPtr handle, IntPtr instance, IntPtr by_subject_func);
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static int mono_btls_x509_lookup_mono_free (IntPtr handle);
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]

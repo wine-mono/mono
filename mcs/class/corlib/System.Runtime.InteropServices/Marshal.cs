@@ -811,8 +811,32 @@ namespace System.Runtime.InteropServices
 		}
 
 
-		[MethodImplAttribute (MethodImplOptions.InternalCall)]
-		public extern static bool IsTypeVisibleFromCom (Type t);
+		public static bool IsTypeVisibleFromCom (Type t)
+		{
+			if (t == null)
+				throw new ArgumentNullException ("t");
+
+			if (t.IsGenericType || t.IsGenericParameter)
+				return false;
+
+			// Imported COM interfaces remain visible regardless of the managed
+			// visibility attributes applied to their containing assembly.
+			if (t.IsInterface && t.IsImport)
+				return true;
+
+			if (t.IsArray || !t.IsVisible)
+				return false;
+
+			object[] attributes = t.GetCustomAttributes (typeof (ComVisibleAttribute), false);
+			if (attributes.Length != 0)
+				return ((ComVisibleAttribute) attributes [0]).Value;
+
+			attributes = t.Assembly.GetCustomAttributes (typeof (ComVisibleAttribute), false);
+			if (attributes.Length != 0)
+				return ((ComVisibleAttribute) attributes [0]).Value;
+
+			return true;
+		}
 
 
 		public static int NumParamBytes (MethodInfo m)

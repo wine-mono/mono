@@ -106,9 +106,22 @@ namespace System.Runtime.CompilerServices
 			return SufficientExecutionStack ();
 		}
 
-//		[MonoTODO("Currently a no-op")]
 		public static void ExecuteCodeWithGuaranteedCleanup (TryCode code, CleanupCode backoutCode, Object userData)
 		{
+			if (code == null) {
+				throw new ArgumentNullException (nameof (code));
+			}
+			if (backoutCode == null) {
+				throw new ArgumentNullException (nameof (backoutCode));
+			}
+
+			bool exceptionThrown = true;
+			try {
+				code (userData);
+				exceptionThrown = false;
+			} finally {
+				backoutCode (userData, exceptionThrown);
+			}
 		}
 
 //		[MonoTODO("Currently a no-op")]

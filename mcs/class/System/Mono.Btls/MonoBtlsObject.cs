@@ -120,7 +120,7 @@ namespace Mono.Btls
 			throw new CryptographicException (message, error);
 		}
 
-		[DllImport (BTLS_DYLIB)]
+		[DllImport (BTLS_DYLIB, CallingConvention = CallingConvention.Cdecl)]
 		extern static void mono_btls_free (IntPtr data);
 
 		protected void FreeDataPtr (IntPtr data)

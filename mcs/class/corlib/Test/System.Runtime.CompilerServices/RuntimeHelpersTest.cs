@@ -15,6 +15,61 @@ namespace MonoTests.System.Runtime.CompilerServices {
 
 	[TestFixture]
 	public class RuntimeHelpersTest {
+		[Test]
+		public void ExecuteCodeWithGuaranteedCleanup_Success ()
+		{
+			var userData = new object ();
+			int stage = 0;
+			RuntimeHelpers.ExecuteCodeWithGuaranteedCleanup (delegate (object data) {
+				Assert.AreSame (userData, data, "Try data");
+				Assert.AreEqual (0, stage, "Try order");
+				stage = 1;
+			}, delegate (object data, bool exceptionThrown) {
+				Assert.AreSame (userData, data, "Cleanup data");
+				Assert.AreEqual (1, stage, "Cleanup order");
+				Assert.IsFalse (exceptionThrown, "Exception flag");
+				stage = 2;
+			}, userData);
+			Assert.AreEqual (2, stage, "Callbacks were not executed");
+		}
+
+		[Test]
+		public void ExecuteCodeWithGuaranteedCleanup_TryThrows ()
+		{
+			var userData = new object ();
+			var exception = new InvalidOperationException ();
+			bool cleaned = false;
+			var actual = Assert.Throws<InvalidOperationException> (() => RuntimeHelpers.ExecuteCodeWithGuaranteedCleanup (
+				delegate (object data) {
+					Assert.AreSame (userData, data, "Try data");
+					throw exception;
+				}, delegate (object data, bool exceptionThrown) {
+					Assert.AreSame (userData, data, "Cleanup data");
+					Assert.IsTrue (exceptionThrown, "Exception flag");
+					cleaned = true;
+				}, userData));
+			Assert.AreSame (exception, actual, "Original exception");
+			Assert.IsTrue (cleaned, "Cleanup was not executed");
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void ExecuteCodeWithGuaranteedCleanup_CleanupThrows (bool throwFromTry)
+		{
+			var exception = new InvalidOperationException ();
+			var actual = Assert.Throws<InvalidOperationException> (() => RuntimeHelpers.ExecuteCodeWithGuaranteedCleanup (
+				delegate {
+					if (throwFromTry) {
+						throw new ArgumentException ();
+					}
+				}, delegate (object data, bool exceptionThrown) {
+					Assert.IsNull (data, "Null user data");
+					Assert.AreEqual (throwFromTry, exceptionThrown, "Exception flag");
+					throw exception;
+				}, null));
+			Assert.AreSame (exception, actual, "Cleanup exception");
+		}
+
 	    struct FooStruct {
 			public int i;
 			public string j;
