@@ -937,7 +937,9 @@ guint32
 mono_fconv_u4 (double v)
 {
 	/* MS.NET behaves like this for some reason */
-	if (mono_isinf (v) || mono_isnan (v))
+	const double two63 = 2147483648.0 * 4294967296.0;
+	const double mtwo63 = -two63;
+	if (mono_isinf (v) || mono_isnan (v) || v >= two63 || v <= mtwo63)
 		return 0;
 	return (guint32)v;
 }
