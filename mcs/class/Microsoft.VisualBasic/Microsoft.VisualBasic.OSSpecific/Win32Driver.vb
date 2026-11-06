@@ -51,6 +51,10 @@ Namespace Microsoft.VisualBasic.OSSpecific
             time.Day = CShort(newDate.Day)
 
             If SetLocalTime(time) = 0 Then
+                If Marshal.GetLastWin32Error = 1314 Then
+                    ' ERROR_PRIVILEGE_NOT_HELD
+                    Throw New System.Security.SecurityException
+                End If
                 Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error)
             End If
         End Sub
@@ -71,6 +75,10 @@ Namespace Microsoft.VisualBasic.OSSpecific
             time.Milliseconds = CShort(newTime.Millisecond)
 
             If SetLocalTime(time) = 0 Then
+                If Marshal.GetLastWin32Error = 1314 Then
+                    ' ERROR_PRIVILEGE_NOT_HELD
+                    Throw New System.Security.SecurityException
+                End If
                 Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error)
             End If
         End Sub
