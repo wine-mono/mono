@@ -72,6 +72,10 @@ namespace MonoTests.Microsoft_VisualBasic
 			{
 				// Need admin privs to set time.
 			}
+			catch (System.Security.SecurityException)
+			{
+				// Need admin privs to set time.
+			}
 		}
 
 
@@ -759,6 +763,8 @@ namespace MonoTests.Microsoft_VisualBasic
 				DateAndTime.DateString = "9/5/03";
 				Assert.AreEqual("09-05-2003",DateAndTime.DateString);
 				Assert.AreEqual(Strings.Format(DateTime.Now,"MM-dd-yyyy"),DateAndTime.DateString);
+			} catch (System.Security.SecurityException exception) {
+				Assert.Ignore (exception.Message);
 			} catch (System.UnauthorizedAccessException exception) {
 				Assert.Ignore (exception.Message);			
 			} finally {
@@ -1091,6 +1097,8 @@ namespace MonoTests.Microsoft_VisualBasic
 				DateTime d1 = ParseDateTime ("1/1/0001 23:34:45");
 				DateTime d2 = DateAndTime.TimeOfDay;
 				Assert.IsTrue(Math.Abs((d1 - d2).TotalMilliseconds) < 50);
+			} catch (System.Security.SecurityException exception) {
+				Assert.Ignore (exception.Message);
 			} catch (System.UnauthorizedAccessException exception) {
 				Assert.Ignore (exception.Message);
 			} finally {
@@ -1210,6 +1218,8 @@ namespace MonoTests.Microsoft_VisualBasic
 				DateAndTime.TimeString = "1:3";
 				Assert.AreEqual("01:03:00",DateAndTime.TimeString);
 				Assert.AreEqual(Strings.Format(DateTime.Now,"HH:mm:ss"),DateAndTime.TimeString);
+			} catch (System.Security.SecurityException exception) {
+				Assert.Ignore (exception.Message);
 			} catch (UnauthorizedAccessException exception) {
 				Assert.Ignore (exception.Message);
 			} finally {
