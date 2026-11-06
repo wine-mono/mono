@@ -783,9 +783,6 @@ HANDLES(MARSHAL_48a, "IsPinnableType", ves_icall_System_Runtime_InteropServices_
 #ifndef DISABLE_COM
 HANDLES(MARSHAL_27, "IsTypeMarshalledAsInterfaceInternal", ves_icall_System_Runtime_InteropServices_Marshal_IsTypeMarshalledAsInterfaceInternal, MonoBoolean, 1, (MonoReflectionType))
 #endif
-#ifndef DISABLE_COM
-HANDLES(MARSHAL_24, "IsTypeVisibleFromCom", ves_icall_System_Runtime_InteropServices_Marshal_IsTypeVisibleFromCom, MonoBoolean, 1, (MonoReflectionType))
-#endif
 HANDLES(MARSHAL_12, "OffsetOf", ves_icall_System_Runtime_InteropServices_Marshal_OffsetOf, int, 2, (MonoReflectionType, MonoString))
 HANDLES(MARSHAL_13, "Prelink", ves_icall_System_Runtime_InteropServices_Marshal_Prelink, void, 1, (MonoReflectionMethod))
 HANDLES(MARSHAL_14, "PrelinkAll", ves_icall_System_Runtime_InteropServices_Marshal_PrelinkAll, void, 1, (MonoReflectionType))
