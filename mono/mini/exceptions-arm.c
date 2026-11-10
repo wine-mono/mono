@@ -285,19 +285,15 @@ get_throw_trampoline (int size, gboolean corlib, gboolean rethrow, gboolean llvm
 	}
 	/* int regs */
 	ARM_ADD_REG_IMM8 (code, ARMREG_R3, ARMREG_SP, (cfa_offset - (MONO_ARM_NUM_SAVED_REGS * sizeof (target_mgreg_t))));
-	if (resume_unwind || corlib) {
-		/* fp regs */
-		ARM_ADD_REG_IMM8 (code, ARMREG_LR, ARMREG_SP, 8);
-		ARM_STR_IMM (code, ARMREG_LR, ARMREG_SP, 0);
-	} else {
+	if (!resume_unwind && !corlib) {
 		/* preserve_ips */
 		ARM_MOV_REG_IMM8 (code, ARMREG_R5, preserve_ips);
 		ARM_STR_IMM (code, ARMREG_R5, ARMREG_SP, 4);
-
-		/* fp regs */
-		ARM_ADD_REG_IMM8 (code, ARMREG_LR, ARMREG_SP, 8);
-		ARM_STR_IMM (code, ARMREG_LR, ARMREG_SP, 0);
 	}
+
+	/* fp regs */
+	ARM_ADD_REG_IMM8 (code, ARMREG_LR, ARMREG_SP, param_size);
+	ARM_STR_IMM (code, ARMREG_LR, ARMREG_SP, 0);
 
 	if (aot) {
 		MonoJitICallId icall_id;
